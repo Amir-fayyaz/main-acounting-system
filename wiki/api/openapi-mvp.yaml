@@ -1,0 +1,165 @@
+openapi: 3.0.3
+info:
+  title: Accounting SaaS MVP API
+  version: 1.0.0
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+paths:
+  /auth/register:
+    post:
+      security: []
+      summary: Register an Owner and initial Tenant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterRequest' }
+      responses:
+        '201': { description: Created }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /auth/login:
+    post:
+      security: []
+      summary: Authenticate a User
+      responses:
+        '200': { description: Authenticated }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /me/tenants:
+    get:
+      summary: List Tenants available to the current User
+      responses:
+        '200': { description: Tenant list }
+  /me/active-tenant:
+    post:
+      summary: Select the active Tenant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tenant_id]
+              properties: { tenant_id: { type: string } }
+      responses:
+        '200': { description: Active Tenant selected }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /products:
+    get: { summary: List products, responses: { '200': { description: Product list } } }
+    post:
+      summary: Create a product or service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductRequest' }
+      responses:
+        '201': { description: Created }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /sales/invoices:
+    get: { summary: List sales invoices, responses: { '200': { description: Invoice list } } }
+    post:
+      summary: Confirm a sales invoice atomically
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SalesInvoiceRequest' }
+      responses:
+        '201': { description: Confirmed invoice }
+        '409': { description: Insufficient stock or duplicate request }
+        '422': { $ref: '#/components/responses/BusinessRuleViolation' }
+  /sales/invoices/{invoiceId}/returns:
+    post:
+      summary: Create a return linked to a sales invoice
+      parameters:
+        - { $ref: '#/components/parameters/InvoiceId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      responses:
+        '201': { description: Return document created }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /purchases/invoices:
+    post:
+      summary: Confirm a purchase invoice atomically
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      responses:
+        '201': { description: Confirmed purchase }
+        '422': { $ref: '#/components/responses/BusinessRuleViolation' }
+  /inventory/adjustments:
+    post:
+      summary: Record a reasoned inventory adjustment
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      responses:
+        '201': { description: Inventory movement created }
+        '422': { $ref: '#/components/responses/BusinessRuleViolation' }
+  /reports/profit-loss:
+    get:
+      summary: Get profit and loss report for the active Tenant
+      parameters:
+        - { in: query, name: from, required: true, schema: { type: string, format: date } }
+        - { in: query, name: to, required: true, schema: { type: string, format: date } }
+      responses:
+        '200': { description: Report }
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }
+  parameters:
+    IdempotencyKey:
+      in: header
+      name: Idempotency-Key
+      required: true
+      schema: { type: string, minLength: 16 }
+    InvoiceId:
+      in: path
+      name: invoiceId
+      required: true
+      schema: { type: string }
+  responses:
+    Unauthorized: { description: Authentication required }
+    Forbidden: { description: Role or Tenant access denied }
+    NotFound: { description: Resource not found in active Tenant }
+    Conflict: { description: Resource conflict }
+    BusinessRuleViolation: { description: Business rule rejected the request }
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [owner_name, credential, tenant_name]
+      properties:
+        owner_name: { type: string }
+        credential: { type: string, format: email }
+        tenant_name: { type: string }
+    ProductRequest:
+      type: object
+      required: [name, type, sale_price]
+      properties:
+        name: { type: string }
+        type: { type: string, enum: [PRODUCT, SERVICE] }
+        sku: { type: string }
+        barcode: { type: string }
+        sale_price: { type: number, minimum: 0 }
+    SalesInvoiceRequest:
+      type: object
+      required: [items, payments]
+      properties:
+        customer_id: { type: string, nullable: true }
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [product_id, quantity, unit_price]
+            properties:
+              product_id: { type: string }
+              quantity: { type: number, exclusiveMinimum: 0 }
+              unit_price: { type: number, minimum: 0 }
+        payments:
+          type: array
+          items:
+            type: object
+            required: [method, amount]
+            properties:
+              method: { type: string, enum: [CASH, CARD, CREDIT] }
+              amount: { type: number, exclusiveMinimum: 0 }
