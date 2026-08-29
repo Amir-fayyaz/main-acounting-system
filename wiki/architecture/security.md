@@ -689,6 +689,16 @@ The following invariants must remain true regardless of implementation:
 
 ## 28. Open Decisions
 
+The MVP roles are `Super Admin`, `Owner`, `Accountant`, `Cashier`, and `Stock
+Keeper`. Accountant is a Tenant employee with full operational and financial
+workflow access, excluding ownership changes and deletion of financial
+documents. The canonical matrix is in `product/roles-and-permissions.md`.
+
+Closed MVP authentication decisions are Argon2id password hashing,
+15-minute access JWTs, and hashed rotating refresh tokens. Remaining open
+items are provider-specific OTP policy and production secret-management
+vendor selection.
+
 The following items remain to be finalized:
 
 1. Authentication/session architecture.

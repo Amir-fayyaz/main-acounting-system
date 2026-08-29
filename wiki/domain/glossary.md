@@ -53,6 +53,12 @@ domain, API, and database documentation.
 
 ## 3. Terminology Rules
 
+### 3.0 Accountant
+
+An Accountant is an active MVP Tenant employee role with operational and
+financial/accounting permissions. The Accountant cannot change Tenant
+ownership or delete financial documents.
+
 ### 3.1 Shop vs Tenant
 
 Use `Shop` when discussing the business concept visible to users.

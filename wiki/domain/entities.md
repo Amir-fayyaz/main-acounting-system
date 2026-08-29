@@ -403,6 +403,17 @@ The existence and exact structure of Accounting Event remains `TBD`.
 
 ## 9. Entity Status Summary
 
+### MVP Clarifications
+
+User roles include `Super Admin`, `Owner`, `Accountant`, `Cashier`, and `Stock
+Keeper`. Users are connected to Tenants through `tenant_memberships`; one User
+may own multiple Tenants and each Tenant has exactly one Owner.
+
+Sales and purchase invoice lifecycle is defined in
+`state-machines-mvp.md`. Confirmed invoices are immutable. Return, reversal,
+and correction are new linked documents. InventoryMovement is the source of
+truth and InventoryBalance is a rebuildable projection.
+
 | Entity             | Scope           | MVP Status                | Source of Truth Status |
 | ------------------ | --------------- | ------------------------- | ---------------------- |
 | User               | Platform        | Must                      | Defined conceptually   |
