@@ -19,6 +19,9 @@ belong to the architecture and security documentation.
 
 ## 2. Roles
 
+The MVP has five roles: `Super Admin`, `Owner`, `Accountant`, `Cashier`, and
+`Stock Keeper`. Accountant is a Tenant employee role, not a future-only role.
+
 The current product requirements define four roles.
 
 | Role         | Scope             | Description                                                                                                     |
@@ -207,8 +210,7 @@ Therefore, the following capabilities are currently considered `TBD`:
 | Manage cash/bank accounts | TBD        |
 | Manage users              | TBD        |
 
-The exact Stock Keeper permission set must be defined before the role is
-implemented as a complete authorization policy.
+The Stock Keeper permissions above are the complete MVP policy.
 
 ---
 
@@ -247,7 +249,7 @@ Legend:
 | Multiple cash/bank accounts      |           — |           ✓ / Should |             TBD |               — |
 | Check management                 |           — |            ✓ / Could |             TBD |               — |
 | Sales reports                    |           — |                    ✓ |             TBD |               — |
-| Profit/loss report               |           — |                    ✓ |               ✗ |         ✗ / TBD |
+| Profit/loss report               |           — |                    ✓ |               ✗ |               ✗ |
 | Inventory report                 |           — |           ✓ / Should |             TBD |             TBD |
 | Debtors/creditors report         |           — |                    ✓ |             TBD |               — |
 | Financial dashboard              |           — |                    ✓ |             TBD |               — |

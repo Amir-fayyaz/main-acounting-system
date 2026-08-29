@@ -101,7 +101,9 @@ The Stock Keeper is a shop-level operational user focused on inventory.
 The current requirements identify this role as responsible for inventory
 management, but do not fully define its permission matrix.
 
-The exact capabilities available to this actor remain `TBD`.
+Stock Keeper is an MVP Tenant employee who manages stock visibility and
+inventory movements only. The approved permissions are defined in
+`product/roles-and-permissions.md`.
 
 ---
 
@@ -125,8 +127,9 @@ audited mechanism.
 
 ### 3.5 Accountant
 
-An accountant is a product audience and future/full-capability actor rather
-than a fully defined role in the current MVP requirements.
+An Accountant is an MVP Tenant employee with full operational and financial
+workflows, including customers, suppliers, sales, purchases, payments,
+expenses, reports, and approved corrections.
 
 The product is intentionally designed to remain usable by business owners
 without requiring professional accounting knowledge.
@@ -134,8 +137,7 @@ without requiring professional accounting knowledge.
 The architecture is also intended to support a future professional accounting
 experience based on double-entry bookkeeping.
 
-Until the accountant role is explicitly defined as a product role, its
-permissions and tenant relationship remain `TBD`.
+Accountant cannot change Tenant ownership or delete financial documents.
 
 ---
 

@@ -297,7 +297,8 @@ The current User Story source contains a detailed priority on each story as well
 as a final summary table.
 
 The story-level priorities and the final summary table are not fully
-consistent.
+consistent. For release planning, the detailed story priorities are
+authoritative.
 
 For example, the detailed stories mark US-1.9 (Tenant Isolation) as Must,
 while the final summary table reports a different Must/Should/Could
@@ -310,5 +311,6 @@ Therefore:
   authoritative count until it is reconciled.
 - No story priority is silently changed as part of this documentation work.
 
-A later backlog-reconciliation step should produce the canonical numerical
-summary for release planning.
+Canonical MVP count from the detailed stories: Users/Shops contains 7 Must
+stories (`US-1.1`–`US-1.6` and `US-1.9`) and 2 Should stories (`US-1.7`,
+`US-1.8`). The summary table is superseded by this count.

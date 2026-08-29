@@ -104,8 +104,9 @@ to the return policy.
 If selling more than the available quantity is not permitted, the sale must
 fail with an insufficient-stock error.
 
-The current requirements explicitly allow this behavior to be configurable,
-so the final policy is `TBD`.
+Selling more than available stock is never permitted in the MVP. The command
+must fail with `INSUFFICIENT_STOCK` and no invoice, payment, or inventory
+movement may be committed.
 
 ### BR-INV-005 — Low Stock Threshold
 

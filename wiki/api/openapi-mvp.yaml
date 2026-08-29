@@ -31,6 +31,12 @@ paths:
       summary: List Tenants available to the current User
       responses:
         '200': { description: Tenant list }
+  /me:
+    get:
+      summary: Get the authenticated User and active Tenant context
+      responses:
+        '200': { description: Current User }
+        '401': { $ref: '#/components/responses/Unauthorized' }
   /me/active-tenant:
     post:
       summary: Select the active Tenant
@@ -54,6 +60,13 @@ paths:
         content:
           application/json:
             schema: { $ref: '#/components/schemas/ProductRequest' }
+      responses:
+        '201': { description: Created }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /products/categories:
+    get: { summary: List product categories, responses: { '200': { description: Category list } } }
+    post:
+      summary: Create a product category
       responses:
         '201': { description: Created }
         '403': { $ref: '#/components/responses/Forbidden' }
@@ -95,6 +108,15 @@ paths:
       responses:
         '201': { description: Inventory movement created }
         '422': { $ref: '#/components/responses/BusinessRuleViolation' }
+  /expenses:
+    post:
+      summary: Record an expense
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      responses:
+        '201': { description: Expense recorded }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /checks:
+    get: { summary: List checks, responses: { '200': { description: Check list } } }
   /reports/profit-loss:
     get:
       summary: Get profit and loss report for the active Tenant
@@ -163,3 +185,4 @@ components:
             properties:
               method: { type: string, enum: [CASH, CARD, CREDIT] }
               amount: { type: number, exclusiveMinimum: 0 }
+        description: "Mixed payment is represented by multiple payment rows on the same invoice; MIXED is not a separate row method."
