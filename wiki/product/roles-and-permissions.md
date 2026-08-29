@@ -155,28 +155,27 @@ The Cashier is a limited-access shop user focused on sales.
 
 #### Explicitly Supported Permissions
 
-| Capability                                | Permission             |
-| ----------------------------------------- | ---------------------- |
-| Login                                     | Allowed                |
-| Search products by name/barcode           | Allowed                |
-| Create sales invoice                      | Allowed                |
-| Select payment type                       | Allowed                |
-| Process sales return                      | Allowed / Should       |
-| Print/send invoice                        | Allowed / Should       |
-| Access profit/loss report                 | Denied                 |
-| Access shop-wide financial administration | Not explicitly defined |
-| Manage products                           | TBD                    |
-| Manage inventory                          | TBD                    |
-| Manage customers                          | TBD                    |
-| Record purchases                          | TBD                    |
-| Manage cash/bank accounts                 | TBD                    |
+| Capability                                | Permission |
+| ----------------------------------------- | ---------- |
+| Login                                     | Allowed    |
+| Search products by name/barcode           | Allowed    |
+| Create sales invoice                      | Allowed    |
+| Select cash/card/credit/mixed payment     | Allowed    |
+| Register customer                          | Allowed    |
+| Process sales return                      | Allowed    |
+| Print/send invoice                        | Allowed    |
+| Access profit/loss report                 | Denied     |
+| Access shop-wide financial administration | Denied     |
+| Manage products                           | Denied     |
+| Manage inventory                          | Denied     |
+| Record purchases                          | Denied     |
+| Manage cash/bank accounts                 | Denied     |
 
 The requirements explicitly define that a Cashier can perform sales and that a
 Cashier attempting to access the profit/loss report must receive `403
 Forbidden`.
 
-The remaining permissions require explicit product decisions before being
-implemented as authorization rules.
+These permissions are the complete MVP Cashier policy.
 
 ---
 
@@ -189,32 +188,53 @@ management.
 
 #### Explicitly Supported Permissions
 
-The current User Story source identifies the Stock Keeper role and describes
-it as an inventory-management role, but does not define its complete
-permission matrix.
-
-Therefore, the following capabilities are currently considered `TBD`:
+The Stock Keeper has the following complete MVP permissions:
 
 | Capability                | Permission |
 | ------------------------- | ---------- |
 | Login                     | Allowed    |
-| Manage products           | TBD        |
-| Manage product categories | TBD        |
-| View inventory            | TBD        |
-| Update inventory          | TBD        |
-| View low-stock alerts     | TBD        |
-| Search products           | TBD        |
-| Create sales invoice      | TBD        |
-| Record purchase invoice   | TBD        |
-| Access financial reports  | TBD        |
-| Manage cash/bank accounts | TBD        |
-| Manage users              | TBD        |
+| Manage products           | Denied     |
+| Manage product categories | Denied     |
+| View inventory            | Allowed    |
+| Update inventory          | Allowed, with reason |
+| View low-stock alerts     | Allowed    |
+| Search products           | Allowed    |
+| Create sales invoice      | Denied     |
+| Record purchase invoice   | Denied     |
+| Access financial reports  | Denied     |
+| Manage cash/bank accounts | Denied     |
+| Manage users              | Denied     |
 
 The Stock Keeper permissions above are the complete MVP policy.
 
 ---
 
 ## 5. Permission Matrix
+
+The following is the authoritative MVP matrix. Any older row in this section
+that still contains `TBD` is superseded and must not be implemented.
+
+| Capability | Owner | Accountant | Cashier | Stock Keeper |
+| --- | --- | --- | --- | --- |
+| Product/service management | Allowed | Allowed | Denied | Denied |
+| Product search | Allowed | Allowed | Allowed | Allowed |
+| Inventory management | Allowed | Allowed | Denied | Allowed |
+| Sales invoice creation | Allowed | Allowed | Allowed | Denied |
+| Sales returns | Allowed | Allowed | Allowed | Denied |
+| Purchase invoices | Allowed | Allowed | Denied | Denied |
+| Register customer | Allowed | Allowed | Allowed | Denied |
+| Customer/supplier management | Allowed | Allowed | Register customer only | Denied |
+| Customer account history | Allowed | Allowed | Denied | Denied |
+| Cash in/out and accounts | Allowed | Allowed | Denied | Denied |
+| Sales reports | Allowed | Allowed | Denied | Denied |
+| Profit/loss report | Allowed | Allowed | Denied | Denied |
+| Inventory report | Allowed | Allowed | Denied | Allowed |
+| Debtors/creditors report | Allowed | Allowed | Denied | Denied |
+| Financial dashboard | Allowed | Allowed | Denied | Denied |
+
+Inventory updates by Stock Keeper require a reason and create an immutable
+inventory movement. Accountant and Owner may perform approved corrections,
+but no role may delete a financial document.
 
 The following matrix captures the current requirements without inventing
 permissions that are not explicitly defined.
