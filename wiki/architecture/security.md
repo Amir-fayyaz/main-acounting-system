@@ -223,17 +223,18 @@ Denied
 
 ## 9. Role-Based Access Control
 
-The current product defines the following roles:
+The current product defines the following MVP roles:
 
 - Super Admin
 - Owner
+- Accountant
 - Cashier
 - Stock Keeper
 
 The role responsibilities and currently known permissions are documented in:
 
 ```text
-docs/01-product/roles-and-permissions.md
+wiki/product/roles-and-permissions.md
 ```
 
 Role definitions should remain separate from tenant isolation.
@@ -283,7 +284,7 @@ The same principle applies to:
 Tenant authorization is documented in detail in:
 
 ```text
-docs/02-architecture/multi-tenancy.md
+wiki/architecture/multi-tenancy.md
 ```
 
 The security invariant is:

@@ -299,7 +299,7 @@ implementation details should remain outside the core business domain.
 | Cashier      | Perform sales and invoice operations                          |
 | Stock Keeper | Perform inventory operations                                  |
 | Super Admin  | Manage platform-level shop and subscription operations        |
-| Accountant   | Future professional accounting workflows                      |
+| Accountant   | Tenant financial and operational workflows                     |
 
 ---
 
@@ -350,7 +350,7 @@ Tenant membership/ownership and resource ownership must also be evaluated.
 The detailed implementation of tenant context is documented separately in:
 
 ```text
-docs/02-architecture/multi-tenancy.md
+wiki/architecture/multi-tenancy.md
 ```
 
 ---
@@ -396,7 +396,7 @@ The following items remain intentionally undefined:
 2. Exact email provider.
 3. Exact file/PDF storage solution.
 4. Whether online payment gateway integration will be introduced.
-5. Exact accountant role and permission model.
+5. Future professional double-entry accounting model.
 6. Exact integration mechanism for notifications.
 7. Whether document files are stored persistently or generated on demand.
 8. Failure/retry policy for external providers.

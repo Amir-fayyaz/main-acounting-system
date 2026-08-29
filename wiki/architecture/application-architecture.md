@@ -188,10 +188,9 @@ in `evolutionary-architecture.md`.
 ## 17. Open Decisions
 
 - Exact NestJS module/folder conventions
-- ORM and repository implementation
-- Event bus implementation
-- Queue implementation
-- Cache implementation
-- Transaction management mechanism
-- Queue and outbox technology, while the transactional outbox contract is
-  required from the beginning
+- ORM and repository implementation are resolved as Prisma with PostgreSQL.
+- Transaction management is resolved as PostgreSQL application transactions.
+- Queue implementation is resolved as BullMQ with Redis.
+- Transactional outbox is required from the beginning.
+- Remaining open items are exact module naming conventions, event bus wiring,
+  and future cache policy.

@@ -19,11 +19,12 @@ domain, API, and database documentation.
 | Shop                 | The business/store represented by a tenant in the current MVP model.                                     |
 | User                 | An authenticated identity that may operate on the platform or a shop.                                    |
 | Owner                | A shop-level user responsible for managing one or more shops.                                            |
+| Accountant           | A Tenant employee with operational and financial/accounting permissions, excluding ownership changes and deletion of financial documents. |
 | Cashier              | A shop-level user focused primarily on sales operations.                                                 |
 | Stock Keeper         | A shop-level user focused on inventory operations.                                                       |
 | Super Admin          | A platform-level administrator who manages platform operations rather than ordinary shop financial data. |
 | Product              | A sellable or purchasable item with pricing and potentially inventory.                                   |
-| Service              | A non-stock or service-type item that can participate in business transactions; exact model is TBD.      |
+| Service              | A non-stock or service-type item that can participate in business transactions.                          |
 | Category             | A shop-owned classification for products.                                                                |
 | Customer             | A party that buys from the shop and may have a receivable/account balance.                               |
 | Supplier             | A party that sells to the shop and may have a payable/account balance.                                   |

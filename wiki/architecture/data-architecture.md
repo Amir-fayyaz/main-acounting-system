@@ -109,11 +109,10 @@ Potentially destructive migrations require explicit review and backup/recovery c
 
 ## 13. Open Decisions
 
-- Database engine
-- ORM
-- ID strategy
-- Exact table ownership model
-- Soft-delete policy
-- Audit retention
-- Reporting/read-model strategy
-- Partitioning strategy if scale later requires it
+- Database engine: PostgreSQL.
+- ORM: Prisma.
+- ID strategy: UUID v4.
+- Table ownership: explicit Tenant ownership.
+- Normal-entity lifecycle: `is_active`; financial history is immutable.
+- Remaining open items are audit retention, advanced reporting strategy, and
+  partitioning if scale later requires it.

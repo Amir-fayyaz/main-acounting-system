@@ -31,6 +31,7 @@ Known roles:
 
 - Super Admin
 - Owner
+- Accountant
 - Cashier
 - Stock Keeper
 
@@ -73,7 +74,7 @@ Exact business profile fields: `TBD`.
 
 Represents an authorization role.
 
-The current product defines four roles but does not require a dedicated
+The current product defines five roles but does not require a dedicated
 persisted Role entity; implementation may use another representation.
 
 Roles:

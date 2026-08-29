@@ -300,17 +300,19 @@ Extensibility should come from explicit boundaries rather than premature abstrac
 
 ## 15. Architectural Unknowns
 
-The following are intentionally left open until dedicated architecture decisions are made:
+MVP decisions are resolved in `technical-decisions-mvp.md` and the accepted
+ADRs: NestJS Modular Monolith, PostgreSQL, Prisma, JWT with rotated refresh
+tokens, transactional outbox, BullMQ/Redis, and UUID v4. Remaining items are:
 
 - Exact framework/module structure
-- Exact database technology and ORM
+- Future database topology
 - Exact tenant-context propagation mechanism
-- Exact authentication/session strategy
+- Future authentication/session extensions
 - Exact authorization implementation
 - Exact accounting posting model
-- Exact event/outbox strategy
+- Future event schema evolution
 - Exact caching strategy
-- Exact background job infrastructure
+- Future worker extraction
 - Exact observability stack
 
 These should be resolved in dedicated architecture documents or ADRs rather than embedded prematurely in this overview.
