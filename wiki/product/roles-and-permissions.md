@@ -211,8 +211,9 @@ The Stock Keeper permissions above are the complete MVP policy.
 
 ## 5. Permission Matrix
 
-The following is the authoritative MVP matrix. Any older row in this section
-that still contains `TBD` is superseded and must not be implemented.
+The following is the authoritative MVP matrix. The legacy matrix below is
+retained only for historical traceability and is superseded; it must not be
+implemented.
 
 | Capability | Owner | Accountant | Cashier | Stock Keeper |
 | --- | --- | --- | --- | --- |

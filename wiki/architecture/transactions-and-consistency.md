@@ -60,7 +60,9 @@ This is especially important for:
 - Notification-triggering operations
 - Network retries
 
-The exact idempotency-key strategy remains TBD.
+Financial and inventory commands require `Idempotency-Key`. The key is stored
+with `(tenant_id, user_id, request_hash, response, status, expires_at)` for 24
+hours. Reuse with a different request returns `409 Conflict`.
 
 ## 7. Concurrency
 
@@ -91,7 +93,9 @@ The exact states and transitions will be defined in domain/workflow documents.
 
 External side effects such as SMS, email, file generation, or payment-provider calls should not create inconsistent business state merely because the provider is temporarily unavailable.
 
-The exact outbox/retry strategy is TBD.
+Committed events are written to the transactional outbox in the same database
+transaction. BullMQ with Redis processes them with bounded exponential retries
+followed by a dead-letter queue. Consumers are idempotent.
 
 ## 10. Consistency Model
 
@@ -113,9 +117,10 @@ Asynchronous processing may be used for secondary side effects where temporary d
 
 ## 12. Open Decisions
 
+MVP idempotency, outbox, retry, and inventory row-locking decisions are closed
+above. Remaining decisions are database isolation-level tuning and exact
+compensation rules for future business operations.
+
 - Database isolation level
 - Locking strategy
-- Optimistic vs. pessimistic concurrency
-- Idempotency mechanism
-- Outbox/event strategy
-- Retry and compensation rules
+- Optimistic vs. pessimistic concurrency for non-inventory operations
