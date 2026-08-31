@@ -20,3 +20,22 @@ do not call repositories directly.
 See `../wiki/architecture/evolutionary-architecture.md` and
 `../wiki/architecture/technical-decisions-mvp.md` for the architectural
 decisions.
+# Backend
+
+The backend is a NestJS modular monolith following the boundaries described in
+`../wiki/architecture/application-architecture.md`.
+
+## Start locally
+
+Use `../wiki/operations/developer-runbook.md` for the complete setup.
+
+```bash
+pnpm install
+pnpm test
+pnpm build
+pnpm start:dev
+```
+
+Implementation order: identity/tenants, catalog/contacts, inventory, sales and
+purchases, payments, then reports. Every command resolves tenant context on
+the server; financial and inventory mutations are idempotent.

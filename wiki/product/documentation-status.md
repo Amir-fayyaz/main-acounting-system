@@ -12,12 +12,21 @@ The detailed sources are `mvp-clarifications.md`,
 `technical-decisions-mvp.md`, the accepted ADRs, and the relevant domain/API
 documents.
 
+The final implementation baseline is `mvp-decisions-final.md`. It supersedes
+remaining MVP `TBD` markers in older exploratory documents. The executable
+contracts are `api/mvp-api-implementation.md` and
+`data/prisma-mvp-model.md`.
+
 ## Intentionally Deferred
 
 OTP provider and exact OTP policy, SMS/email/file providers, online payment
 gateway, VAT/tax, opening balances, fiscal periods, observability vendor,
 retention durations, production RPO/RTO, and advanced accounting remain open.
 They are not blockers for the core MVP domain implementation.
+
+Membership shape, money representation, discount behavior, credit payment
+rules, FIFO/LIFO layer behavior, return semantics, and MVP plan limits are now
+closed by `mvp-decisions-final.md`.
 
 ## Source of Truth Rule
 
