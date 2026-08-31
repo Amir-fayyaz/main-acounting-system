@@ -32,7 +32,7 @@ inventory
 sales
 purchases
 contacts
-cash-and-banking
+cash-management
 accounting
 reporting
 subscriptions
@@ -166,7 +166,7 @@ src/
 │   ├── sales/
 │   ├── purchases/
 │   ├── contacts/
-│   ├── cash/
+│   ├── cash-management/
 │   ├── accounting/
 │   ├── reporting/
 │   └── subscriptions/
