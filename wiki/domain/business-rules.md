@@ -11,6 +11,10 @@ validation rules.
 
 Rules that are not supported by the current requirements are marked `TBD`.
 
+When an older rule in this document says `TBD` but a newer approved decision
+exists in `wiki/product/mvp-decisions-final.md`, the final decision wins.
+See `wiki/product/documentation-status.md` for the source-of-truth rule.
+
 ---
 
 ## 2. Tenant Rules
@@ -68,17 +72,12 @@ A product must contain the information required to identify and sell it.
 
 ### BR-PRODUCT-002 — Product Code Uniqueness
 
-A barcode/code that must be unique within a shop cannot be duplicated within
-that shop.
-
-Whether products without a barcode are allowed and the exact uniqueness rule
-are `TBD`.
+SKU and barcode are optional on a product. When present, both must be unique
+within the tenant. Products without a barcode/SKU are allowed.
 
 ### BR-PRODUCT-003 — Non-Negative Price
 
-The sales price cannot be negative.
-
-The complete pricing rule set is `TBD`.
+Product and service prices are non-negative. A service never creates stock.
 
 ---
 
@@ -130,10 +129,9 @@ pricing/discount rules.
 
 ### BR-SALE-003 — Discount Cannot Exceed Allowed Range
 
-The discount cannot result in an invalid value such as 120%.
-
-The exact allowed maximum and whether discounts may be defined as amount,
-percentage, or both remain `TBD`.
+MVP supports a document-level **fixed** discount in minor units only. The
+discount cannot make the invoice total negative. Percentage discounts are
+explicitly deferred to a later iteration.
 
 ### BR-SALE-004 — Cash Payment
 
@@ -217,17 +215,14 @@ A cash payment decreases the selected cash balance.
 
 ### BR-CASH-003 — Insufficient Cash
 
-A payment larger than available cash must warn or fail according to the
-configured insufficient-balance policy.
-
-The final policy is `TBD`.
+A cash or card payment larger than the selected account's available balance
+must fail. The transaction cannot be partially applied.
 
 ### BR-CASH-004 — Account Selection
 
-When multiple cash/bank accounts are supported, a financial transaction must
-identify the relevant account.
-
-The exact allocation model is `TBD`.
+Every cash and card payment row must reference an active financial account.
+Credit rows do not require an account. When the Tenant has multiple financial
+accounts, the user chooses the receiving/paying account per payment row.
 
 ---
 
@@ -249,7 +244,10 @@ The current MVP definition is:
 Net Profit = Sales - Cost of Goods Sold - Expenses
 ```
 
-The exact cost-of-goods-sold calculation method is `TBD`.
+Cost of Goods Sold is calculated from `InventoryMovement` using stock layers.
+The Tenant chooses **FIFO** (default) or **LIFO** as the valuation method; the
+method is configured at Tenant level and applies from the effective date
+forward — historical calculations are never rewritten.
 
 ### BR-REPORT-003 — Debtors and Creditors
 
@@ -268,11 +266,11 @@ This is a Should capability.
 
 ### BR-SUB-001 — Plan Limits
 
-A paid/free plan may define usage limits.
-
-The current example is a monthly invoice limit on a free plan.
-
-Exact plan features and limit behavior are `TBD`.
+MVP only defines two plan labels: `FREE` and `PAID`. The only enforced limit
+is an optional monthly count of confirmed invoices on the `FREE` plan; the
+default during MVP development is **unlimited**. Billing provider, VAT, tax,
+opening balances, fiscal periods, and online payments are explicitly out of
+scope for MVP.
 
 ### BR-SUB-002 — Expired Paid Plan
 
