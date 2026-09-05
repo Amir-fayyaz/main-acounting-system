@@ -11,8 +11,10 @@ infrastructure -> application/domain
 domain -> no framework or infrastructure dependency
 ```
 
-Controllers never call repositories directly. ORM entities, migrations, HTTP
-DTOs, and framework decorators stay outside the Domain layer.
+Controllers never call repositories directly. Prisma models, migrations, HTTP
+DTOs, and framework decorators stay outside the Domain layer. Prisma is an
+infrastructure concern; see `architecture/technical-decisions-mvp.md` for the
+ORM decision.
 
 ## Required module layout
 
@@ -39,7 +41,7 @@ src/modules/{module}/
 │   └── index.ts           # Public application exports
 ├── infrastructure/
 │   ├── persistence/
-│   │   ├── typeorm/       # ORM entities, repositories, mappers
+│   │   ├── prisma/        # Prisma client wrapper, repositories, mappers
 │   │   └── migrations/
 │   ├── providers/         # Concrete external-service adapters
 │   ├── messaging/         # Outbox and broker adapters
@@ -61,7 +63,8 @@ src/modules/{module}/
 - Errors: `*.error.ts`.
 - Repository ports: `*.repository.ts`.
 - Provider ports: `*.provider.ts`.
-- TypeORM adapters: `*.typeorm-repository.ts` and `*.orm-entity.ts`.
+- Prisma adapters: `*.prisma-repository.ts` and Prisma model files under
+  `infrastructure/persistence/prisma/`.
 - Application handlers: `*.handler.ts`.
 - HTTP DTOs: `*.request.dto.ts` and `*.response.dto.ts`.
 
@@ -74,12 +77,13 @@ src/modules/{module}/
   in Infrastructure.
 - Application handlers may depend on Domain ports, but Domain never imports
   Application.
-- TypeORM classes must map to Domain objects through explicit mappers.
+- Prisma models live under `infrastructure/persistence/prisma/` and map to
+  Domain objects through explicit mappers; Domain code never imports Prisma.
 - Cross-module references use IDs and ports, not direct infrastructure imports.
 
 ## Required review check
 
 Every pull request must verify that each new file has one clear layer and
-responsibility, no Domain import comes from NestJS/TypeORM, and no controller
+responsibility, no Domain import comes from NestJS/Prisma, and no controller
 accesses a repository without an Application handler.
 
