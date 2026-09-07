@@ -1,0 +1,11 @@
+{
+  "name": "accounting-saas",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "pnpm --filter @accounting-saas/ddd-core build && pnpm --filter accounting-saas-backend build",
+    "typecheck": "pnpm --filter @accounting-saas/ddd-core build && pnpm --filter @accounting-saas/ddd-core typecheck && pnpm --filter accounting-saas-backend typecheck",
+    "test": "pnpm --filter @accounting-saas/ddd-core build && pnpm --filter @accounting-saas/ddd-core test && pnpm --filter accounting-saas-backend test",
+    "test:e2e": "pnpm --filter @accounting-saas/ddd-core build && pnpm --filter accounting-saas-backend test:e2e"
+  }
+}
