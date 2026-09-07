@@ -1,0 +1,21 @@
+# Root workspace (pnpm)
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+out/
+coverage/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.*
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+*.log
