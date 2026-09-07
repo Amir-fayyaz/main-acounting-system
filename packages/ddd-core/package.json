@@ -1,0 +1,28 @@
+{
+  "name": "@accounting-saas/ddd-core",
+  "version": "0.1.0",
+  "description": "Framework-free DDD & hexagonal architecture building blocks: entities, aggregate roots, value objects, domain events, errors, ports, and adapters.",
+  "private": true,
+  "license": "UNLICENSED",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "jest --runInBand",
+    "test:watch": "jest --watch",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\""
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.0.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.5.3",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.7.3"
+  }
+}

@@ -1,8 +1,2 @@
-export abstract class Entity<TId> {
-  protected constructor(public readonly id: TId) {}
-
-  equals(other?: Entity<TId>): boolean {
-    return Boolean(other && this.id === other.id);
-  }
-}
-
+/** Re-exported from @accounting-saas/ddd-core (kept for import-path stability). */
+export { Entity } from '@accounting-saas/ddd-core';

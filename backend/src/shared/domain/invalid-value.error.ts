@@ -1,3 +1,2 @@
-import { DomainError } from './domain.error';
-export class InvalidValueError extends DomainError {}
-
+/** Re-exported from @accounting-saas/ddd-core (kept for import-path stability). */
+export { InvalidValueError } from '@accounting-saas/ddd-core';

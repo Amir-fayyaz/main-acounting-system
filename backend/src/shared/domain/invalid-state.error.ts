@@ -1,3 +1,2 @@
-import { DomainError } from './domain.error';
-export class InvalidStateError extends DomainError {}
-
+/** Re-exported from @accounting-saas/ddd-core (kept for import-path stability). */
+export { InvalidStateError } from '@accounting-saas/ddd-core';

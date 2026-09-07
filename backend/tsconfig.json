@@ -5,11 +5,18 @@
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
+    "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "target": "ES2022",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
+    "paths": {
+      "@app/*": ["src/*", "dist/*"],
+      "@shared/*": ["src/shared/*", "dist/shared/*"],
+      "@modules/*": ["src/modules/*", "dist/modules/*"],
+      "@infra/*": ["src/infrastructure/*", "dist/infrastructure/*"]
+    },
     "incremental": true,
     "strict": true,
     "skipLibCheck": true
