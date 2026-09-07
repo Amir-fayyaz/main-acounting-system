@@ -1,0 +1,17 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": ".",
+  "testEnvironment": "node",
+  "testRegex": ".e2e-spec.ts$",
+  "setupFiles": ["<rootDir>/env.setup.ts"],
+  "moduleNameMapper": {
+    "^@accounting-saas/ddd-core$": "<rootDir>/../../packages/ddd-core/src/index.ts",
+    "^@app/(.*)$": "<rootDir>/../src/$1",
+    "^@shared/(.*)$": "<rootDir>/../src/shared/$1",
+    "^@modules/(.*)$": "<rootDir>/../src/modules/$1",
+    "^@infra/(.*)$": "<rootDir>/../src/infrastructure/$1"
+  },
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  }
+}
