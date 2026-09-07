@@ -18,7 +18,7 @@ export class User extends AggregateRoot<string> {
     if (!name.trim() || !credential.trim() || !passwordHash)
       throw new InvalidValueError('Invalid user registration');
     const user = new User(id, name.trim(), credential.trim().toLowerCase(), passwordHash, 'ACTIVE');
-    user.addEvent(new UserRegistered(id));
+    user.addDomainEvent(new UserRegistered(id));
     return user;
   }
   suspend(): void {

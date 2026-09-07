@@ -72,14 +72,16 @@ class Invoice extends AggregateRoot<string> {
   confirm(): void {
     if (this.confirmed) throw new InvalidStateError('Invoice already confirmed');
     this.confirmed = true;
-    this.addEvent(new InvoiceConfirmed(this.id));
+    this.addDomainEvent(new InvoiceConfirmed(this.id));
   }
 }
 
 // The aggregate carries its events; the use case saves it and publishes.
 const invoice = Invoice.issue('inv-1', Money.of(1250n, 'USD'));
 invoice.confirm();
-const events = invoice.pullEvents();
+const events = invoice.getDomainEvents();
+// ...events are dispatched, then:
+invoice.clearEvents();
 ```
 
 ### Ports in a NestJS backend
