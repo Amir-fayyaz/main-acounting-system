@@ -31,7 +31,7 @@ export type { EventPublisher } from './domain/ports/event-publisher.port';
 export { Command } from './application/command';
 export { Query } from './application/query';
 export type { UseCase } from './application/use-case';
-export { ok, fail, isOk, isFail } from './application/result';
+export { ok, fail, isOk, isFail, map, flatMap, unwrap } from './application/result';
 export type { Result } from './application/result';
 
 // Application ports (driven)
