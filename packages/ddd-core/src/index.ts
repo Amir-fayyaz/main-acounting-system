@@ -14,6 +14,10 @@ export { ValueObject } from './domain/value-object';
 export { DomainError } from './domain/errors/domain.error';
 export { InvalidValueError } from './domain/errors/invalid-value.error';
 export { InvalidStateError } from './domain/errors/invalid-state.error';
+export { NotFoundError } from './domain/errors/not-found.error';
+export { ConflictError } from './domain/errors/conflict.error';
+export { ValidationError } from './domain/errors/validation.error';
+export { UnauthorizedError } from './domain/errors/unauthorized.error';
 
 // Generic value objects
 export { Money } from './domain/value-objects/money';
@@ -38,6 +42,11 @@ export type { Result } from './application/result';
 export type { OutboxMessage, OutboxPort } from './application/ports/outbox.port';
 export { UNIT_OF_WORK } from './application/ports/unit-of-work.port';
 export type { UnitOfWork } from './application/ports/unit-of-work.port';
+export { PASSWORD_HASHER } from './application/ports/password-hasher.port';
+export type { PasswordHasher } from './application/ports/password-hasher.port';
+export { TOKEN_PROVIDER } from './application/ports/token-provider.port';
+export type { TokenPayload, TokenProvider } from './application/ports/token-provider.port';
+export type { Persistable, RepositoryPort } from './application/ports/repository.port';
 
 // Reference adapters (infrastructure)
 export { SystemClock } from './adapters/system-clock';
