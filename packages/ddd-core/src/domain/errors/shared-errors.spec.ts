@@ -5,6 +5,7 @@ import { InvalidValueError } from './invalid-value.error';
 import { NotFoundError } from './not-found.error';
 import { UnauthorizedError } from './unauthorized.error';
 import { ValidationError } from './validation.error';
+import { BusinessRuleValidationError } from './business-rule-validation.error';
 
 describe('shared domain errors', () => {
   describe('inheritance and Error contract', () => {
@@ -13,6 +14,7 @@ describe('shared domain errors', () => {
       { ctor: ConflictError, code: 'CONFLICT' },
       { ctor: ValidationError, code: 'VALIDATION_ERROR' },
       { ctor: UnauthorizedError, code: 'UNAUTHENTICATED' },
+      { ctor: BusinessRuleValidationError, code: 'BUSINESS_RULE_VIOLATION' },
     ] as const;
 
     for (const { ctor, code } of cases) {
@@ -82,6 +84,7 @@ describe('shared domain errors', () => {
         new ConflictError('b'),
         new ValidationError('c'),
         new UnauthorizedError('d'),
+        new BusinessRuleValidationError('e'),
       ];
 
       const byCode = new Map<string, DomainError>();
@@ -91,6 +94,7 @@ describe('shared domain errors', () => {
       expect(byCode.get('CONFLICT')?.message).toBe('b');
       expect(byCode.get('VALIDATION_ERROR')?.message).toBe('c');
       expect(byCode.get('UNAUTHENTICATED')?.message).toBe('d');
+      expect(byCode.get('BUSINESS_RULE_VIOLATION')?.message).toBe('e');
     });
   });
 
@@ -104,6 +108,7 @@ describe('shared domain errors', () => {
         new ConflictError('b'),
         new ValidationError('c'),
         new UnauthorizedError('d'),
+        new BusinessRuleValidationError('e'),
       ]) {
         expect(typeof err.code).toBe('string');
         expect(err.code.length).toBeGreaterThan(0);
@@ -120,6 +125,21 @@ describe('shared domain errors', () => {
       expect(notFound).not.toBeInstanceOf(ConflictError);
       expect(conflict).not.toBeInstanceOf(NotFoundError);
       expect(notFound.code).not.toBe(conflict.code);
+    });
+  });
+
+  describe('BusinessRuleValidationError', () => {
+    it('carries an optional ruleId for adapter diagnostics', () => {
+      const err = new BusinessRuleValidationError('LIFO requires PAID plan', 'BR-SUB-001');
+      expect(err).toBeInstanceOf(DomainError);
+      expect(err.code).toBe('BUSINESS_RULE_VIOLATION');
+      expect(err.message).toBe('LIFO requires PAID plan');
+      expect(err.ruleId).toBe('BR-SUB-001');
+    });
+
+    it('allows the ruleId to be omitted', () => {
+      const err = new BusinessRuleValidationError('rule broken');
+      expect(err.ruleId).toBeUndefined();
     });
   });
 });

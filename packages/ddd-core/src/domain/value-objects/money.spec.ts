@@ -34,4 +34,17 @@ describe('Money', () => {
     expect(() => usd.add(Money.of(1n, 'EUR'))).toThrow(InvalidValueError);
     expect(() => usd.subtract(Money.of(2000n, 'USD'))).toThrow(InvalidValueError);
   });
+
+  describe('zero factory', () => {
+    it('creates a zero amount in the requested currency', () => {
+      const money = Money.zero('USD');
+      expect(money.amount).toBe(0n);
+      expect(money.currency).toBe('USD');
+      expect(money.isZero()).toBe(true);
+    });
+
+    it('rejects an invalid currency', () => {
+      expect(() => Money.zero('usd')).toThrow(InvalidValueError);
+    });
+  });
 });
