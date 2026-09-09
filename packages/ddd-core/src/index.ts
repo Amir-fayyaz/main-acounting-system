@@ -18,10 +18,14 @@ export { NotFoundError } from './domain/errors/not-found.error';
 export { ConflictError } from './domain/errors/conflict.error';
 export { ValidationError } from './domain/errors/validation.error';
 export { UnauthorizedError } from './domain/errors/unauthorized.error';
+export { BusinessRuleValidationError } from './domain/errors/business-rule-validation.error';
 
 // Generic value objects
 export { Money } from './domain/value-objects/money';
 export { Quantity } from './domain/value-objects/quantity';
+export { TenantId } from './domain/value-objects/tenant-id.vo';
+export { PhoneNumber } from './domain/value-objects/phone-number.vo';
+export { Address } from './domain/value-objects/address.vo';
 
 // Domain ports (driven)
 export { CLOCK } from './domain/ports/clock.port';
