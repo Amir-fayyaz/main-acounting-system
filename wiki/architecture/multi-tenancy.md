@@ -792,7 +792,119 @@ The following invariants must remain true regardless of implementation:
 
 ---
 
-## 24. Open Decisions
+## 25. Tenant Legal & Financial Identity
+
+Following the domain refactoring (issues #22, #24), the Tenant aggregate
+now serves as the **legal & financial identity** of a shop, not just an
+isolation boundary. It encapsulates the information required for official
+financial invoicing.
+
+### 25.1 TaxInfo Value Object
+
+Every tenant must carry a `TaxInfo` value object consisting of:
+
+- **legalName** — the registered company name (required, max 100 chars)
+- **nationalId** — the tax registration number (10-digit numeric string)
+
+`TaxInfo` is immutable and validated at creation. It can be updated through
+the `updateTaxInfo()` domain method, but only while the tenant is `ACTIVE`.
+
+### 25.2 Base Currency
+
+Every tenant is assigned an immutable base `Currency` at creation. The
+tenant's books are kept in this currency and it never changes after creation.
+
+Accepted currencies (MVP): `IRR`, `USD`, `EUR`, `GBP`, `AED`.
+
+The currency is stored as an uppercase ISO 4217 alpha-3 code.
+
+### 25.3 Creation Invariants
+
+When a tenant is created, the following invariants hold:
+
+- `TaxInfo` must be non-empty and contain a valid 10-digit national ID.
+- `BaseCurrency` must be one of the accepted ISO 4217 codes.
+- `TenantStatus` is initialized to `ACTIVE`.
+- `TenantCreatedDomainEvent` is raised, carrying `tenantId`, `legalName`,
+  `baseCurrency`, and `createdAt`.
+
+---
+
+## 26. TenantStatus Lifecycle
+
+The tenant lifecycle is modeled by `TenantStatus`, a value object that
+captures the current state of the tenant.
+
+### 26.1 Status Values
+
+| Value          | Meaning                                      |
+| -------------- | -------------------------------------------- |
+| `ACTIVE`       | Normal operating state                       |
+| `SUSPENDED`    | Temporarily suspended (e.g. unpaid billing)  |
+| `DEACTIVATED`  | Legacy deactivation (backward-compatible)    |
+| `ARCHIVED`     | Permanent end-of-life (records preserved)    |
+
+### 26.2 State Transitions
+
+```text
+                    suspend(reason)
+         ACTIVE  ─────────────────────>  SUSPENDED
+          │  ^                              │  |
+          │  |     reactivate()             │  |
+          │  └──────────────────────────────┘  |
+          │                                    |
+          │ deactivate()               reactivate()
+          ▼                                    │
+     DEACTIVATED  ────────────────────────────┘
+```
+
+### 26.3 Transition Rules
+
+- `suspend()` requires the tenant to be `ACTIVE`.
+- `reactivate()` accepts `SUSPENDED` or `DEACTIVATED` (backward-compatible).
+- `deactivate()` is idempotent; calling it on a `DEACTIVATED` tenant throws
+  `TenantAlreadyDeactivatedError`.
+- Every transition raises a `TenantStatusChangedDomainEvent` carrying the
+  `previousStatus`, `newStatus`, and `reason`.
+
+---
+
+## 27. Domain Events (Tenants Module)
+
+The tenants module publishes the following domain events:
+
+### 27.1 TenantCreatedDomainEvent
+
+Raised once when a tenant is first created.
+
+| Field           | Type     | Description                            |
+| --------------- | -------- | -------------------------------------- |
+| `tenantId`      | `string` | The tenant identifier                  |
+| `legalName`     | `string` | Registered company name                |
+| `baseCurrency`  | `string` | ISO 4217 currency code                 |
+| `createdAt`     | `Date`   | Timestamp of creation                  |
+
+### 27.2 TenantStatusChangedDomainEvent
+
+Raised on every lifecycle status transition.
+
+| Field            | Type     | Description                           |
+| ---------------- | -------- | ------------------------------------- |
+| `tenantId`       | `string` | The tenant identifier                 |
+| `previousStatus` | `string` | Status before the transition          |
+| `newStatus`      | `string` | Status after the transition           |
+| `reason`         | `string` | Human-readable reason for the change |
+
+### 27.3 Legacy Events
+
+- **TenantDeactivatedEvent** — raised alongside `TenantStatusChangedDomainEvent`
+  when `deactivate()` is called, for backward-compatible event consumers.
+- **TenantValuationMethodChangedEvent** — raised when the inventory valuation
+  method changes (FIFO/LIFO).
+
+---
+
+## 28. Open Decisions
 
 The following decisions remain to be finalized:
 
