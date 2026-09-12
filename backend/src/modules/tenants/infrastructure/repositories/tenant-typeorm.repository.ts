@@ -30,7 +30,7 @@ export class TenantTypeOrmRepository implements TenantRepositoryPort {
     return TenantMapper.toDomain(entity);
   }
 
-  async exists(id: TenantId): Promise<boolean> {
-    return (await this.repository.count({ where: { id } })) > 0;
+  async existsByNationalId(nationalId: string): Promise<boolean> {
+    return (await this.repository.count({ where: { nationalId } })) > 0;
   }
 }
