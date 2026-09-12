@@ -6,7 +6,7 @@ jest.mock('@nestjs/typeorm', () => ({
 
 import { TenantTypeOrmRepository } from './tenant-typeorm.repository';
 import { TenantOrmEntity } from '../entities/tenant.orm-entity';
-import { ShopName, tenantId, Tenant } from '@modules/tenants/domain';
+import { Currency, ShopName, TaxInfo, tenantId, Tenant } from '@modules/tenants/domain';
 
 /** Minimal mock of the TypeORM repository public surface used by the adapter. */
 const createMockRepository = () => {
@@ -26,7 +26,12 @@ describe('TenantTypeOrmRepository', () => {
   it('persists a tenant through the ORM entity mapping', async () => {
     const { repository, save } = createMockRepository();
     const adapter = new TenantTypeOrmRepository(repository);
-    const tenant = Tenant.create({ id: tenantId('tenant-1'), shopName: ShopName.of('Acme Mart') });
+    const tenant = Tenant.create({
+      id: tenantId('tenant-1'),
+      shopName: ShopName.of('Acme Mart'),
+      taxInfo: TaxInfo.of({ legalName: 'Acme Trading LLC', nationalId: '1234567890' }),
+      baseCurrency: Currency.of('IRR'),
+    });
 
     await adapter.save(tenant);
 
@@ -43,6 +48,9 @@ describe('TenantTypeOrmRepository', () => {
     const entity = new TenantOrmEntity();
     entity.id = 'tenant-1';
     entity.shopName = 'Acme Mart';
+    entity.legalName = 'Acme Trading LLC';
+    entity.nationalId = '1234567890';
+    entity.baseCurrency = 'IRR';
     entity.inventoryValuationMethod = 'FIFO';
     entity.subscriptionPlan = 'FREE';
     entity.status = 'ACTIVE';

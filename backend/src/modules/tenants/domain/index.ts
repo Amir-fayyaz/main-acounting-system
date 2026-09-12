@@ -5,6 +5,8 @@
 export { Tenant } from './aggregates/tenant.aggregate';
 export { tenantId, type TenantId } from './value-objects/tenant-id';
 export { ShopName } from './value-objects/shop-name.vo';
+export { TaxInfo } from './value-objects/tax-info.vo';
+export { Currency } from './value-objects/currency.vo';
 export {
   InventoryValuationMethod,
   type InventoryValuationMethodValue,
@@ -13,6 +15,7 @@ export { SubscriptionPlan, type SubscriptionPlanValue } from './value-objects/su
 export { TenantStatus, type TenantStatusValue } from './value-objects/tenant-status.vo';
 export { InvalidShopNameError } from './errors/invalid-shop-name.error';
 export { TenantAlreadyDeactivatedError } from './errors/tenant-already-deactivated.error';
-export { TenantCreatedEvent } from './events/tenant-created.event';
+export { TenantCreatedDomainEvent } from './events/tenant-created.event';
+export { TenantStatusChangedDomainEvent } from './events/tenant-status-changed.event';
 export { TenantValuationMethodChangedEvent } from './events/tenant-valuation-method-changed.event';
 export { TenantDeactivatedEvent } from './events/tenant-deactivated.event';
