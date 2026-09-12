@@ -13,6 +13,15 @@ export class TenantOrmEntity {
   @Column('varchar', { name: 'shop_name', length: 100, unique: true })
   shopName!: string;
 
+  @Column('varchar', { name: 'legal_name', length: 100 })
+  legalName!: string;
+
+  @Column('varchar', { name: 'national_id', length: 10 })
+  nationalId!: string;
+
+  @Column('varchar', { name: 'base_currency', length: 3, default: 'IRR' })
+  baseCurrency!: string;
+
   @Column('varchar', { name: 'inventory_valuation_method', length: 10, default: 'FIFO' })
   inventoryValuationMethod!: string;
 

@@ -12,6 +12,9 @@ import type {
 export interface TenantResponseDto {
   readonly id: TenantId;
   readonly shopName: string;
+  readonly legalName: string;
+  readonly nationalId: string;
+  readonly baseCurrency: string;
   readonly valuationMethod: InventoryValuationMethodValue;
   readonly subscriptionPlan: SubscriptionPlanValue;
   readonly status: TenantStatusValue;

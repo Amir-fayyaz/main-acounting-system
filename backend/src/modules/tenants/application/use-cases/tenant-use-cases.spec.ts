@@ -6,13 +6,16 @@ import { DeactivateTenantUseCase } from './deactivate-tenant.use-case';
 import type { TenantRepositoryPort } from '../ports/tenant-repository.port';
 import type { TenantId } from '@modules/tenants/domain';
 import {
+  Currency,
   ShopName,
   SubscriptionPlan,
   InventoryValuationMethod,
+  TaxInfo,
   TenantStatus,
   Tenant,
   tenantId,
 } from '@modules/tenants/domain';
+import { InvalidValueError } from '@shared/domain/invalid-value.error';
 import { NotFoundError } from '@shared/domain/errors/not-found.error';
 import { InvalidShopNameError, TenantAlreadyDeactivatedError } from '@modules/tenants/domain';
 import { SubscriptionPolicyService } from '../services/subscription-policy.service';
@@ -36,10 +39,14 @@ class InMemoryTenantRepository implements TenantRepositoryPort {
   }
 }
 
+const taxInfo = () => TaxInfo.of({ legalName: 'Corner Shop LLC', nationalId: '1234567890' });
+
 const freeTenant = () =>
   Tenant.reconstitute({
     id: tenantId('tenant-1'),
     shopName: ShopName.of('Free Mart'),
+    taxInfo: taxInfo(),
+    baseCurrency: Currency.of('IRR'),
     valuationMethod: InventoryValuationMethod.fifo(),
     subscriptionPlan: SubscriptionPlan.free(),
     status: TenantStatus.active(),
@@ -49,6 +56,8 @@ const paidTenant = () =>
   Tenant.reconstitute({
     id: tenantId('tenant-1'),
     shopName: ShopName.of('Paid Mart'),
+    taxInfo: taxInfo(),
+    baseCurrency: Currency.of('IRR'),
     valuationMethod: InventoryValuationMethod.fifo(),
     subscriptionPlan: SubscriptionPlan.paid(),
     status: TenantStatus.active(),
@@ -58,14 +67,19 @@ const fixedIdGenerator = { nextId: (): string => 'generated-1' };
 
 describe('Tenant use cases', () => {
   describe('CreateTenantUseCase', () => {
-    it('creates a tenant with default FIFO/FREE state and resolves the id via ID_GENERATOR', async () => {
+    it('creates a tenant with legal identity and default FIFO/FREE state', async () => {
       const repository = new InMemoryTenantRepository();
       const useCase = new CreateTenantUseCase(repository, fixedIdGenerator);
 
-      const response = await useCase.execute(new CreateTenantCommand('  Corner Shop  '));
+      const response = await useCase.execute(
+        new CreateTenantCommand('  Corner Shop  ', 'Corner Shop LLC', '1234567890', 'IRR'),
+      );
 
       expect(response.id).toBe('generated-1');
       expect(response.shopName).toBe('Corner Shop');
+      expect(response.legalName).toBe('Corner Shop LLC');
+      expect(response.nationalId).toBe('1234567890');
+      expect(response.baseCurrency).toBe('IRR');
       expect(response.valuationMethod).toBe('FIFO');
       expect(response.subscriptionPlan).toBe('FREE');
       expect(response.status).toBe('ACTIVE');
@@ -76,7 +90,9 @@ describe('Tenant use cases', () => {
       const repository = new InMemoryTenantRepository();
       const useCase = new CreateTenantUseCase(repository, fixedIdGenerator);
 
-      const response = await useCase.execute(new CreateTenantCommand('Shop', 'PAID'));
+      const response = await useCase.execute(
+        new CreateTenantCommand('Shop', 'Shop LLC', '1234567890', 'IRR', 'PAID'),
+      );
 
       expect(response.subscriptionPlan).toBe('PAID');
     });
@@ -84,7 +100,25 @@ describe('Tenant use cases', () => {
     it('rejects an empty shop name', async () => {
       const useCase = new CreateTenantUseCase(new InMemoryTenantRepository(), fixedIdGenerator);
 
-      await expect(useCase.execute(new CreateTenantCommand('  '))).rejects.toThrow(InvalidShopNameError);
+      await expect(
+        useCase.execute(new CreateTenantCommand('  ', 'Shop LLC', '1234567890', 'IRR')),
+      ).rejects.toThrow(InvalidShopNameError);
+    });
+
+    it('rejects an invalid national ID', async () => {
+      const useCase = new CreateTenantUseCase(new InMemoryTenantRepository(), fixedIdGenerator);
+
+      await expect(
+        useCase.execute(new CreateTenantCommand('Shop', 'Shop LLC', 'BAD', 'IRR')),
+      ).rejects.toThrow(InvalidValueError);
+    });
+
+    it('rejects an unsupported currency', async () => {
+      const useCase = new CreateTenantUseCase(new InMemoryTenantRepository(), fixedIdGenerator);
+
+      await expect(
+        useCase.execute(new CreateTenantCommand('Shop', 'Shop LLC', '1234567890', 'XYZ')),
+      ).rejects.toThrow(InvalidValueError);
     });
   });
 

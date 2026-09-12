@@ -1,17 +1,17 @@
 import { TenantDomainEvent } from '@shared/domain/events/tenant-domain-event';
 
 /**
- * Raised when a new shop/tenant is registered (BR-TENANT-001). Carries the
- * immutable identity attributes captured at creation.
+ * Raised when a new tenant is registered with its legal & financial identity
+ * (issue #22). Carries the immutable attributes captured at creation.
  */
-export class TenantCreatedEvent extends TenantDomainEvent {
+export class TenantCreatedDomainEvent extends TenantDomainEvent {
   readonly eventName = 'TenantCreated';
 
   constructor(
     tenantId: string,
-    public readonly shopName: string,
-    public readonly inventoryValuationMethod: string,
-    public readonly subscriptionPlan: string,
+    public readonly legalName: string,
+    public readonly baseCurrency: string,
+    public readonly createdAt: Date,
   ) {
     super(tenantId);
   }

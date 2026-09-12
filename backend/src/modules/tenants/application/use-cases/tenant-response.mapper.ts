@@ -6,6 +6,9 @@ export function toTenantResponse(tenant: Tenant): TenantResponseDto {
   return {
     id: tenant.id,
     shopName: tenant.storeName.value,
+    legalName: tenant.taxIdentity.legalName,
+    nationalId: tenant.taxIdentity.nationalId,
+    baseCurrency: tenant.currency.value,
     valuationMethod: tenant.valuation.value,
     subscriptionPlan: tenant.plan.value,
     status: tenant.tenantStatus.value,

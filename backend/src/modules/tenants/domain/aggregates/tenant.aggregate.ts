@@ -5,21 +5,28 @@ import type { TenantId } from '../value-objects/tenant-id';
 import type { ShopName } from '../value-objects/shop-name.vo';
 import { InventoryValuationMethod } from '../value-objects/inventory-valuation-method.vo';
 import { SubscriptionPlan } from '../value-objects/subscription-plan.vo';
-import { TenantStatus } from '../value-objects/tenant-status.vo';
-import { TenantCreatedEvent } from '../events/tenant-created.event';
+import type { Currency } from '../value-objects/currency.vo';
+import type { TaxInfo } from '../value-objects/tax-info.vo';
+import { TenantStatus, type TenantStatusValue } from '../value-objects/tenant-status.vo';
+import { TenantCreatedDomainEvent } from '../events/tenant-created.event';
+import { TenantStatusChangedDomainEvent } from '../events/tenant-status-changed.event';
 import { TenantValuationMethodChangedEvent } from '../events/tenant-valuation-method-changed.event';
 import { TenantDeactivatedEvent } from '../events/tenant-deactivated.event';
 import { TenantAlreadyDeactivatedError } from '../errors/tenant-already-deactivated.error';
 
 /**
  * Aggregate root for the tenant (shop) boundary, responsible for data
- * isolation (BR-TENANT-001, BR-TENANT-002). Created with a default FIFO
- * valuation (BR-REPORT-002), FREE plan (BR-SUB-001) and ACTIVE status.
+ * isolation (BR-TENANT-001, BR-TENANT-002). Acts as the legal & financial
+ * identity for accounting: it encapsulates the immutable `TaxInfo` and base
+ * `Currency` (issue #22) alongside inventory valuation, subscription plan and
+ * the lifecycle status (ACTIVE ⇄ SUSPENDED → ARCHIVED).
  */
 export class Tenant extends AggregateRoot<TenantId> {
   private constructor(
     id: TenantId,
     private readonly shopName: ShopName,
+    private taxInfo: TaxInfo,
+    private readonly baseCurrency: Currency,
     private valuationMethod: InventoryValuationMethod,
     private subscriptionPlan: SubscriptionPlan,
     private status: TenantStatus,
@@ -27,21 +34,24 @@ export class Tenant extends AggregateRoot<TenantId> {
     super(id);
   }
 
-  static create(args: { id: TenantId; shopName: ShopName; subscriptionPlan?: SubscriptionPlan }): Tenant {
+  static create(args: {
+    id: TenantId;
+    shopName: ShopName;
+    taxInfo: TaxInfo;
+    baseCurrency: Currency;
+    subscriptionPlan?: SubscriptionPlan;
+  }): Tenant {
     const tenant = new Tenant(
       args.id,
       args.shopName,
+      args.taxInfo,
+      args.baseCurrency,
       InventoryValuationMethod.fifo(),
       args.subscriptionPlan ?? SubscriptionPlan.free(),
       TenantStatus.active(),
     );
     tenant.addDomainEvent(
-      new TenantCreatedEvent(
-        args.id,
-        args.shopName.value,
-        tenant.valuationMethod.value,
-        tenant.subscriptionPlan.value,
-      ),
+      new TenantCreatedDomainEvent(args.id, args.taxInfo.legalName, args.baseCurrency.value, new Date()),
     );
     return tenant;
   }
@@ -53,11 +63,21 @@ export class Tenant extends AggregateRoot<TenantId> {
   static reconstitute(args: {
     id: TenantId;
     shopName: ShopName;
+    taxInfo: TaxInfo;
+    baseCurrency: Currency;
     valuationMethod: InventoryValuationMethod;
     subscriptionPlan: SubscriptionPlan;
     status: TenantStatus;
   }): Tenant {
-    return new Tenant(args.id, args.shopName, args.valuationMethod, args.subscriptionPlan, args.status);
+    return new Tenant(
+      args.id,
+      args.shopName,
+      args.taxInfo,
+      args.baseCurrency,
+      args.valuationMethod,
+      args.subscriptionPlan,
+      args.status,
+    );
   }
 
   /** Switch inventory valuation between FIFO and LIFO (BR-REPORT-002). */
@@ -76,13 +96,36 @@ export class Tenant extends AggregateRoot<TenantId> {
     if (this.status.value === 'DEACTIVATED') {
       throw new TenantAlreadyDeactivatedError('Tenant is already deactivated');
     }
+    const previous = this.status.value;
     this.status = TenantStatus.deactivated();
+    this.addDomainEvent(
+      new TenantStatusChangedDomainEvent(this.id, previous, 'DEACTIVATED', 'Deactivated by owner request'),
+    );
     this.addDomainEvent(new TenantDeactivatedEvent(this.id));
   }
 
-  /** Reactivate a previously deactivated tenant. */
+  /** Temporarily suspend the tenant (e.g. for an unpaid subscription). */
+  suspend(reason: string): void {
+    this.assertTransitionAllowed('SUSPENDED');
+    const previous = this.status.value;
+    this.status = TenantStatus.suspended();
+    this.addDomainEvent(new TenantStatusChangedDomainEvent(this.id, previous, 'SUSPENDED', reason));
+  }
+
+  /** Reactivate a suspended (or legacy-deactivated) tenant. */
   reactivate(): void {
+    if (this.status.value !== 'SUSPENDED' && this.status.value !== 'DEACTIVATED') {
+      throw new InvalidStateError(`Cannot reactivate a tenant that is ${this.status.value}`);
+    }
+    const previous = this.status.value;
     this.status = TenantStatus.active();
+    this.addDomainEvent(new TenantStatusChangedDomainEvent(this.id, previous, 'ACTIVE', 'Reactivated'));
+  }
+
+  /** Update the legal tax identity used for official financial invoicing. */
+  updateTaxInfo(taxInfo: TaxInfo): void {
+    this.assertActive();
+    this.taxInfo = taxInfo;
   }
 
   /** Upgrade the subscription tier from FREE to PAID (BR-SUB-001). */
@@ -100,8 +143,22 @@ export class Tenant extends AggregateRoot<TenantId> {
     }
   }
 
+  private assertTransitionAllowed(_target: TenantStatusValue): void {
+    if (this.status.value !== 'ACTIVE') {
+      throw new InvalidStateError(`Cannot suspend a tenant that is ${this.status.value}`);
+    }
+  }
+
   get storeName(): ShopName {
     return this.shopName;
+  }
+
+  get taxIdentity(): TaxInfo {
+    return this.taxInfo;
+  }
+
+  get currency(): Currency {
+    return this.baseCurrency;
   }
 
   get valuation(): InventoryValuationMethod {
