@@ -1,30 +1,39 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { EVENT_PUBLISHER, type EventPublisher } from '@accounting-saas/ddd-core';
+import { EVENT_PUBLISHER, InvalidValueError, type EventPublisher } from '@accounting-saas/ddd-core';
 import { NotFoundError } from '@shared/domain/errors/not-found.error';
-import { InventoryValuationMethod } from '@modules/tenants/domain';
 import type { Tenant } from '@modules/tenants/domain';
-import type { ChangeValuationMethodCommand } from '../dtos/change-valuation-method.command';
+import type { ChangeTenantStatusCommand } from '../dtos/change-tenant-status.command';
 import type { TenantResponseDto } from '../dtos/tenant-response.dto';
 import { toTenantResponse } from './tenant-response.mapper';
 import type { TenantRepositoryPort } from '../ports/tenant-repository.port';
-import { SubscriptionPolicyService } from '../services/subscription-policy.service';
 
+/**
+ * Changes a tenant's lifecycle status through the aggregate's domain methods
+ * (`suspend` / `reactivate`), so state transitions stay guarded and raise
+ * `TenantStatusChangedDomainEvent` (issue #24).
+ */
 @Injectable()
-export class ChangeTenantValuationMethodUseCase {
+export class ChangeTenantStatusUseCase {
   constructor(
     private readonly repository: TenantRepositoryPort,
-    private readonly subscriptionPolicy: SubscriptionPolicyService,
     @Inject(EVENT_PUBLISHER) private readonly eventPublisher: EventPublisher,
   ) {}
 
-  async execute(command: ChangeValuationMethodCommand): Promise<TenantResponseDto> {
+  async execute(command: ChangeTenantStatusCommand): Promise<TenantResponseDto> {
+    if (command.status !== 'SUSPENDED' && command.status !== 'ACTIVE') {
+      throw new InvalidValueError('Status must be ACTIVE or SUSPENDED');
+    }
+
     const tenant = await this.repository.findById(command.tenantId);
     if (tenant === null) {
       throw new NotFoundError('Tenant not found');
     }
 
-    this.subscriptionPolicy.assertCanUseValuationMethod(tenant.plan, command.method);
-    tenant.changeValuationMethod(InventoryValuationMethod.of(command.method));
+    if (command.status === 'SUSPENDED') {
+      tenant.suspend(command.reason);
+    } else {
+      tenant.reactivate();
+    }
     await this.repository.save(tenant);
     await this.dispatchEventsOf(tenant);
 

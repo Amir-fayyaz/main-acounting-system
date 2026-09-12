@@ -75,23 +75,23 @@ describe('TenantTypeOrmRepository', () => {
     expect(tenant).toBeNull();
   });
 
-  it('reports existence via the count query', async () => {
+  it('reports national ID existence via the count query', async () => {
     const { repository, count } = createMockRepository();
     count.mockResolvedValue(1);
     const adapter = new TenantTypeOrmRepository(repository);
 
-    const exists = await adapter.exists(tenantId('tenant-1'));
+    const exists = await adapter.existsByNationalId('1234567890');
 
-    expect(count).toHaveBeenCalledWith({ where: { id: 'tenant-1' } });
+    expect(count).toHaveBeenCalledWith({ where: { nationalId: '1234567890' } });
     expect(exists).toBe(true);
   });
 
-  it('reports non-existence when count is zero', async () => {
+  it('reports national ID non-existence when count is zero', async () => {
     const { repository, count } = createMockRepository();
     count.mockResolvedValue(0);
     const adapter = new TenantTypeOrmRepository(repository);
 
-    const exists = await adapter.exists(tenantId('missing'));
+    const exists = await adapter.existsByNationalId('missing-id');
 
     expect(exists).toBe(false);
   });
