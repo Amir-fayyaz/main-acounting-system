@@ -2,9 +2,11 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 /**
  * Creates the `tenants` table (case-insensitive column naming per TypeORM
- * convention, matching TenantOrmEntity). Unique constraint on shop_name and
- * defaults for inventory_valuation_method (FIFO), subscription_plan (FREE)
- * and status (ACTIVE).
+ * convention, matching TenantOrmEntity). The legal/tax identity and base
+ * currency columns are included because they are required by the current
+ * Tenant aggregate mapper. Unique constraint on shop_name and defaults for
+ * inventory_valuation_method (FIFO), subscription_plan (FREE) and status
+ * (ACTIVE).
  */
 export class CreateTenantsTable1700000000000 implements MigrationInterface {
   name = 'CreateTenantsTable1700000000000';
@@ -14,6 +16,9 @@ export class CreateTenantsTable1700000000000 implements MigrationInterface {
       CREATE TABLE "tenants" (
         "id" uuid NOT NULL,
         "shop_name" character varying(100) NOT NULL,
+        "legal_name" character varying(100) NOT NULL,
+        "national_id" character varying(10) NOT NULL,
+        "base_currency" character varying(3) NOT NULL DEFAULT 'IRR',
         "inventory_valuation_method" character varying(10) NOT NULL DEFAULT 'FIFO',
         "subscription_plan" character varying(20) NOT NULL DEFAULT 'FREE',
         "status" character varying(20) NOT NULL DEFAULT 'ACTIVE',
