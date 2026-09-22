@@ -1,10 +1,12 @@
 import { CallHandler, ExecutionContext, Inject, Injectable, NestInterceptor } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { finalize } from 'rxjs/operators';
 import type { Request } from 'express';
 import { TENANT_CONTEXT_PORT } from '@modules/tenants/application';
 import type { TenantContextPort } from '@modules/tenants/application';
 import { tenantId } from '@modules/tenants/domain';
+
+const UUID_V4_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
 /**
  * Bridges the `x-tenant-id` HTTP header into the application tenant context
@@ -21,18 +23,20 @@ export class TenantHeaderInterceptor implements NestInterceptor {
     const header = request.headers['x-tenant-id'];
     const tenantIdValue = this.parseTenantId(header);
 
+    this.context.clear();
     if (tenantIdValue !== null) {
       this.context.setTenantId(tenantId(tenantIdValue));
     }
 
-    return next.handle().pipe(tap({ complete: () => this.context.clear() }));
+    return next.handle().pipe(finalize(() => this.context.clear()));
   }
 
   private parseTenantId(header: string | string[] | undefined): string | null {
     if (typeof header !== 'string') {
       return null;
     }
-    const value = header.trim();
-    return value.length === 0 ? null : value;
+
+    const value = header.trim().toLowerCase();
+    return UUID_V4_PATTERN.test(value) ? value : null;
   }
 }
