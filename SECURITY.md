@@ -1,194 +1,175 @@
-# Security Policy
+# سیاست امنیتی
 
-## ⚠️ Project Status
+## وضعیت پروژه
 
-**Accounting SaaS is under active MVP development and is NOT production-ready.**
+این پروژه در مرحله توسعه فعال MVP قرار دارد و هنوز برای استقرار تجاری نهایی یا استفاده عملیاتی بدون طی‌کردن دروازه‌های آمادگی انتشار مناسب نیست.
 
-Please do **not** deploy this software against real financial data, real
-customer data, or any production environment. The codebase is being shaped
-toward a future production release, but at this stage:
+تا زمان عبور از الزامات امنیتی و آمادگی انتشار، موارد زیر ممکن است هنوز در حال تکمیل یا اعتبارسنجی باشند:
 
-- Security hardening is incomplete
-- Some attack surfaces have not been reviewed yet
-- Operational safeguards (rate limiting, WAF, audit logging) are not yet in
-  place
-- The threat model is still being defined
+- سخت‌سازی امنیتی و بازبینی کامل سطح حمله
+- کنترل‌های عملیاتی و پایش
+- سناریوهای تهدید و آزمون‌های امنیتی
+- آزمون واقعی پشتیبان‌گیری و بازیابی
+- برخی کنترل‌های مربوط به استقرار و محیط عملیاتی
 
-We welcome vulnerability reports so we can fix issues before they reach
-production — but please be patient, and please respect the disclosure
-process below.
+در این مرحله نیز گزارش آسیب‌پذیری‌ها بسیار ارزشمند است و برای اصلاح آن‌ها پیش از انتشار تجاری استفاده خواهد شد.
+
+> هرگز داده واقعی مشتری، اطلاعات مالی واقعی، توکن‌های دسترسی، کلیدها، رمزها یا اطلاعات محرمانه کسب‌وکار را در گزارش آسیب‌پذیری ارسال نکنید.
 
 ---
 
-## Supported Versions
+## نسخه‌های پشتیبانی‌شده
 
-Use this table to understand which versions of the project currently receive
-security updates.
+در وضعیت فعلی پروژه، فقط شاخه `main` خط اصلی توسعه و دریافت اصلاحات امنیتی است.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| `main`  | ✅ Active development |
-| latest tagged release | ⚠️ Best effort   |
-| older releases        | ❌ No support    |
+| نسخه / شاخه               | وضعیت پشتیبانی امنیتی           |
+| ------------------------- | ------------------------------- |
+| `main`                    | ✅ فعال                         |
+| نسخه‌های منتشرشده         | ⚠️ فقط در صورت اعلام رسمی پروژه |
+| شاخه‌ها و commitهای قدیمی | ❌ پشتیبانی نمی‌شوند            |
 
-Because the project has not yet published a 1.0 release, **only the `main`
-branch receives security fixes**. Older commits and unmerged branches are
-considered unsupported.
+نسخه‌های آزمایشی، شاخه‌های قدیمی و تاریخچه‌های نگهداری‌شده برای توسعه یا مقایسه ممکن است وجود داشته باشند، اما به‌عنوان نسخه پشتیبانی‌شده امنیتی تلقی نمی‌شوند.
 
 ---
 
-## Reporting a Vulnerability
+## گزارش آسیب‌پذیری
 
-Please **do not** open a public GitHub issue for security vulnerabilities.
+لطفاً آسیب‌پذیری‌های امنیتی را در Issue عمومی ثبت نکنید.
 
-Instead, use one of the following **private** channels:
+### روش ترجیحی: GitHub Security Advisories
 
-### Preferred: GitHub Security Advisories
+گزارش را از طریق قابلیت خصوصی **GitHub Security Advisories** برای همین مخزن ارسال کنید تا بررسی، هماهنگی اصلاح و افشای اطلاعات به‌صورت خصوصی انجام شود.
 
-Open a private security advisory:
+### موارد ضروری
 
-> 👉 <https://github.com/<OWNER>/<REPO>/security/advisories/new>
+در گزارش، تا حد امکان اطلاعات زیر را ارائه کنید:
 
-GitHub Advisories let us discuss the issue, review a proposed fix, and
-coordinate disclosure in a private workspace.
+1. **خلاصه** — شرح کوتاه آسیب‌پذیری
+2. **مولفه تحت تأثیر** — ماژول، فایل، endpoint، قابلیت یا جریان کسب‌وکار
+3. **نسخه یا شناسه** — commit، tag یا شاخه تحت تأثیر
+4. **نوع آسیب‌پذیری** — برای مثال عبور از کنترل دسترسی، افشای اطلاعات، تزریق، نقص احراز هویت یا نقص ایزوله‌سازی
+5. **شدت تقریبی** — در صورت امکان همراه با CVSS
+6. **سناریوی حمله** — مهاجم چه دسترسی یا پیش‌نیازی دارد و نتیجه چیست
+7. **مراحل بازتولید** — نمونه درخواست، داده آزمایشی، دستورها یا تصاویر لازم
+8. **اثر** — واقع‌بینانه‌ترین پیامد قابل انتظار
+9. **راهکار پیشنهادی** — در صورت وجود
+10. **اطلاعات تماس** — برای پیگیری و هماهنگی
+11. **برنامه افشا** — در صورت وجود برنامه مشخص برای انتشار عمومی
 
-### Alternative: Email
+برای بازتولید، فقط از داده‌های ساختگی استفاده کنید؛ برای مثال:
 
-If you cannot use GitHub Advisories, email the maintainers directly. The
-current maintainer contact address is the one listed in the repository's
-"People" or "Settings → People" tab.
-
----
-
-## What to Include in Your Report
-
-A good report helps us fix the issue faster. Please include as much of the
-following as you can:
-
-1. **Summary** — a one- or two-sentence description of the vulnerability
-2. **Affected component(s)** — module, file, endpoint, or feature
-3. **Affected version(s)** — commit SHA, branch, or tag
-4. **Vulnerability type** — e.g. SQL injection, IDOR, auth bypass, RCE,
-   information disclosure
-5. **Severity assessment** — your own CVSS score, if you have one
-6. **Attack scenario** — what does an attacker need, and what do they get?
-7. **Reproduction steps** — minimal reproducible example, `curl` commands,
-   screenshots — **with all real data anonymized or fictionalized**
-8. **Impact** — what is the worst realistic outcome?
-9. **Suggested fix** — if you have one, share it (we will still do our own
-   analysis)
-10. **Disclosure plans** — whether you plan to disclose publicly, and on
-    what timeline
-11. **Your contact info** — so we can follow up
-
-> 🚫 **Never include real customer data, real financial records, real API
-> tokens, or any non-public business information in your report.** Use
-> obviously-fake values like `tenant_42`, `invoice_0001`, `555-0100`.
+```text
+tenant_42
+invoice_0001
+user_test_01
+```
 
 ---
 
-## Our Commitment
+## تعهد ما در رسیدگی
 
-When you submit a report through the channels above, we commit to:
+هدف پروژه این است که گزارش‌های امنیتی با اولویت مناسب بررسی و تا حد امکان با شفافیت پیگیری شوند.
 
-| Step | Our target |
-| ---- | ---------- |
-| **Acknowledge receipt** | within **3 business days** |
-| **Initial triage** | within **10 business days** |
-| **Status updates** | at least every **14 days** until resolution |
-| **Patch in `main`** | as soon as a fix is verified |
-| **Credit** | in the release notes / advisory, unless you ask to remain anonymous |
-| **Coordinated disclosure** | we will agree on a disclosure date with you |
+ترتیب کلی رسیدگی:
 
-These targets are best-effort for an MVP-stage project and may slip. We will
-keep you informed if they do.
+1. دریافت و ثبت محرمانه گزارش
+2. بررسی اولیه و تعیین دامنه و شدت
+3. بازتولید و تحلیل علت ریشه‌ای
+4. طراحی و پیاده‌سازی اصلاح
+5. اجرای آزمون‌های لازم
+6. انتشار اصلاح در نسخه یا شاخه مناسب
+7. هماهنگی برای افشای عمومی، در صورت نیاز
 
----
-
-## Disclosure Policy
-
-We follow a **coordinated disclosure** model:
-
-1. You report the issue privately.
-2. We investigate, develop a fix, and prepare a release.
-3. We agree on a disclosure date — typically **90 days** after the report,
-   or sooner if a fix is ready.
-4. After the fix is released, the advisory is published publicly with full
-   credit to the reporter (unless they prefer anonymity).
-
-We may shorten the timeline if:
-
-- The vulnerability is being actively exploited
-- The vulnerability is already publicly known
-- The fix is trivial and low-risk to deploy
-
-We may lengthen the timeline if:
-
-- The fix requires significant architectural change
-- A maintainer is unavailable for an extended period
+زمان‌بندی دقیق رسیدگی ممکن است بر اساس شدت آسیب‌پذیری، پیچیدگی اصلاح، وضعیت نسخه و دسترس‌پذیری نگهدارندگان تغییر کند.
 
 ---
 
-## Out-of-Scope Issues
+## سیاست افشا
 
-The following are generally **out of scope** for security advisories and are
-better handled as regular bug reports:
+اصل پروژه، **افشای هماهنگ‌شده** است.
 
-- 🐛 Missing security headers that have no demonstrable impact (issues still
-  welcome, just not as "security")
-- 🐛 Rate limiting not enforced (planned feature, not yet implemented)
-- 🐛 Lack of HTTPS enforcement in development tooling
-- 🐛 UI/UX issues that don't expose data or enable privilege escalation
-- 🐛 Theoretical attacks that require capabilities the attacker does not
-  realistically have (e.g. physical access to a developer's machine)
+به‌طور معمول:
 
-If you're unsure, report it anyway — we'll triage.
+1. گزارش به‌صورت خصوصی ارسال می‌شود.
+2. آسیب‌پذیری بررسی و اصلاح می‌شود.
+3. درباره زمان مناسب افشای عمومی هماهنگ می‌شود.
+4. پس از انتشار اصلاح، اطلاعات لازم برای آگاهی کاربران منتشر می‌شود.
 
----
+در صورتی که آسیب‌پذیری به‌صورت عمومی شناخته شده باشد یا در حال سوءاستفاده فعال باشد، ممکن است زمان‌بندی متفاوتی لازم شود.
 
-## Recognition
-
-We are grateful to security researchers who help us improve. With your
-permission, we will:
-
-- Credit you in the GitHub Security Advisory
-- Credit you in the release notes
-- Mention you in a future `SECURITY.md` acknowledgements section once the
-  project matures
-
-If you'd like to remain anonymous, just say so in your report — we will
-respect that.
+اعتباردهی به گزارش‌دهنده نیز در صورت تمایل او انجام خواهد شد.
 
 ---
 
-## Security-Related Configuration
+## موارد خارج از دامنه
 
-A few notes for deployers and operators:
+موارد زیر به‌تنهایی الزاماً یک گزارش امنیتی محسوب نمی‌شوند:
 
-- 🔐 **Generate strong secrets with:** `openssl rand -base64 48`
-- 🔐 **Never commit `.env` files.** They are git-ignored by default.
-- 🔐 **Rotate `JWT_ACCESS_SECRET`** if you suspect it has been exposed.
-- 🔐 **Run migrations only against isolated environments** in development.
-  Never run untrusted migrations against production.
+- پیشنهادهای عمومی درباره سخت‌سازی که بدون سناریوی اثر امنیتی مشخص هستند
+- قابلیت‌هایی که هنوز به‌صورت آگاهانه در MVP پیاده‌سازی نشده‌اند و فاقد اثر امنیتی مشخص هستند
+- مشکلات صرفاً ظاهری یا تجربه کاربری که موجب افشای داده یا افزایش سطح دسترسی نمی‌شوند
+- سناریوهای کاملاً نظری که پیش‌نیاز آن‌ها دسترسی غیرواقع‌بینانه به محیط توسعه یا زیرساخت است
 
-> 📖 See [`wiki/architecture/security.md`](wiki/architecture/security.md) for
-> the full security model and
-> [`wiki/operations/developer-runbook.md`](wiki/operations/developer-runbook.md)
-> for the operational checklist.
+با این حال، اگر در مورد امنیتی بودن یک مورد تردید دارید، آن را از مسیر خصوصی گزارش کنید تا بررسی شود.
 
 ---
 
-## Contact Summary
+## اصول امنیتی پروژه
 
-| Channel | When to use |
-| ------- | ----------- |
-| 🔐 GitHub Security Advisories | All security reports (preferred) |
-| ✉️ Maintainer email | If you can't use GitHub Advisories |
-| 🐛 GitHub Issues | Non-security bugs only |
-| 💬 GitHub Discussions | Questions, ideas, non-sensitive concerns |
+امنیت پروژه بر چند اصل اصلی استوار است:
+
+- **ایزوله‌سازی مستأجرها (Tenant Isolation)** و جلوگیری از دسترسی متقاطع بین شرکت‌ها
+- **کنترل دسترسی مبتنی بر نقش و مجوز**
+- **احراز هویت امن**
+- **ثبت رویدادهای ممیزی (Audit)**
+- **حفاظت از اطلاعات در حال انتقال و در حالت ذخیره**
+- **مدیریت امن اسرار و کلیدها**
+- **پشتیبان‌گیری رمزنگاری‌شده و آزمون واقعی بازیابی**
+- **بازبینی وابستگی‌ها و آسیب‌پذیری‌های شناخته‌شده**
+- **تفکیک مرزهای ماژول‌ها و جلوگیری از دسترسی مستقیم به داده‌های داخلی ماژول دیگر**
+- **اعتبارسنجی مجوزها و وضعیت جاری در عملیات حساس**
+
+برای جزئیات اجرایی، به مستندات امنیت مهندسی پروژه مراجعه کنید.
 
 ---
 
-Thank you for helping us ship a more secure product. 🙏
+## نکات امنیتی برای استقرار و توسعه
 
-**Last updated:** 2026
+- فایل‌های `.env` و اسرار واقعی را هرگز commit نکنید.
+- برای هر محیط از اسرار جداگانه استفاده کنید.
+- اسرار افشاشده را فوراً تعویض یا ابطال کنید.
+- سرویس‌های زیرساختی را با حداقل سطح دسترسی لازم اجرا کنید.
+- Migrationها را فقط در محیطی اجرا کنید که برای همان استقرار در نظر گرفته شده است.
+- قبل از استفاده عملیاتی، فرآیند backup و restore را واقعاً آزمایش کنید.
+- داده‌های آزمایشی و داده‌های واقعی را از یکدیگر جدا نگه دارید.
+- فایل‌ها و ورودی‌های خارجی را غیرقابل‌اعتماد فرض کنید و پیش از پردازش اعتبارسنجی کنید.
+
+---
+
+## مستندات مرتبط
+
+منبع اصلی مستندات امنیتی و معماری این پروژه در مسیر زیر قرار دارد:
+
+`docs/product/v1/11-engineering/06-security-engineering.md`
+
+همچنین تصمیم‌ها و محدودیت‌های معماری در مسیر زیر نگهداری می‌شوند:
+
+`docs/product/v1/10-architecture/`
+
+مستندات `docs/product/v1/` مرجع اصلی تصمیم‌های فعلی پروژه هستند.
+
+---
+
+## کانال‌های ارتباطی
+
+| کانال                      | کاربرد                              |
+| -------------------------- | ----------------------------------- |
+| GitHub Security Advisories | گزارش‌های امنیتی و آسیب‌پذیری‌ها    |
+| GitHub Issues              | خطاها و مسائل غیرامنیتی             |
+| GitHub Discussions         | پرسش‌ها، ایده‌ها و گفتگوهای غیرحساس |
+
+---
+
+از پژوهشگران و توسعه‌دهندگانی که با گزارش مسئولانه آسیب‌پذیری‌ها به بهبود امنیت پروژه کمک می‌کنند، صمیمانه سپاسگزاریم.
+
+**آخرین به‌روزرسانی: 2026-09-28**
