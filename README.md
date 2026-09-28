@@ -1,446 +1,456 @@
-<div align="center">
+<div dir="rtl" align="right">
 
-# Accounting SaaS
+# سامانه حسابداری هوشمند
 
-**A multi-tenant, accounting-ready business management platform for small businesses.**
+**سامانه مالی و حسابداری مبتنی بر عامل‌های هوشمند برای شرکت‌های ایرانی**
 
-Industry-agnostic · Simple by default · Clean / Hexagonal architecture
+این پروژه برای ساخت یک محصول مالی واقعی طراحی شده است؛ محصولی که عملیات مالی را از «ورود تکراری اطلاعات» به سمت «تشخیص، پیشنهاد، تأیید و اجرای کنترل‌شده» منتقل می‌کند.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Status: MVP](https://img.shields.io/badge/status-MVP-orange.svg)](#-status)
-[![Node: ≥22](https://img.shields.io/badge/node-%E2%89%A522-339933?logo=node.js&logoColor=white)]()
-[![pnpm: ≥9](https://img.shields.io/badge/pnpm-%E2%89%A59-F69220?logo=pnpm&logoColor=white)]()
-[![NestJS: 11](https://img.shields.io/badge/NestJS-11-E0234E?logo=nestjs&logoColor=white)]()
-[![TypeScript: 5.7](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white)]()
-[![PostgreSQL: 15](https://img.shields.io/badge/PostgreSQL-15-336791?logo=postgresql&logoColor=white)]()
-[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+**وضعیت پروژه:** در حال ساخت نسخه ۱  
+**نوع محصول:** نصب‌شونده و Dockerized  
+**تمرکز MVP:** شرکت‌های بازرگانی ساده  
+**زبان رابط کاربری MVP:** فارسی  
+**واحد پول فعال در MVP:** ریال ایران  
+**معماری:** Modular Monolith با مرزهای سخت بین ماژول‌ها
 
 </div>
 
 ---
 
-## 📑 Table of Contents
+<div dir="rtl" align="right">
 
-- [✨ Features](#-features)
-- [🏗️ Architecture](#-architecture)
-- [🚀 Quick Start](#-quick-start)
-- [🧰 Tech Stack](#-tech-stack)
-- [🔐 Environment Variables](#-environment-variables)
-- [🗄️ Database & Migrations](#-database--migrations)
-- [🌐 Internationalization](#-internationalization)
-- [📦 Deployment](#-deployment)
-- [🧪 Testing](#-testing)
-- [🗂️ Project Structure](#-project-structure)
-- [📚 Documentation](#-documentation)
-- [❓ FAQ](#-faq)
-- [🧭 Roadmap](#-roadmap)
-- [🤝 Contributing](#-contributing)
-- [💬 Support](#-support)
-- [🔒 Security](#-security)
-- [⭐ Show your support](#-show-your-support)
-- [📄 License](#-license)
+## فهرست مطالب
 
----
+</div>
 
-## ✨ Features
+- [معرفی](#معرفی)
+- [هدف محصول](#هدف-محصول)
+- [دامنه MVP](#دامنه-mvp)
+- [جریان‌های اصلی](#جریانهای-اصلی)
+- [عامل‌های هوشمند](#عاملهای-هوشمند)
+- [معماری](#معماری)
+- [فناوری‌های انتخاب‌شده](#فناوریهای-انتخابشده)
+- [ساختار پروژه](#ساختار-پروژه)
+- [اسناد پروژه](#اسناد-پروژه)
+- [اصول توسعه](#اصول-توسعه)
+- [وضعیت آمادگی توسعه](#وضعیت-آمادگی-توسعه)
+- [نسخه‌بندی](#نسخهبندی)
+- [مجوز](#مجوز)
 
-- 🧾 **Sales & Purchases** — invoices, items, discounts, returns, payments
-- 📦 **Inventory** — products, services, categories, stock levels, low-stock alerts
-- 👥 **Contacts** — customers, suppliers, and per-contact balances
-- 💵 **Cash & Banking** — accounts, receipts, payments, checks
-- 📊 **Reporting** — sales, inventory, receivables, basic P&L
-- 🏢 **Multi-Tenant** — strict tenant isolation built into every command
-- 👤 **Identity & Roles** — users, stores, granular permissions
-- 💳 **Subscriptions** — plan-based limits (planned)
-- 🌐 **i18n-ready** — money, time, and number formatting abstracted behind value objects
+<div dir="rtl" align="right">
 
----
+## معرفی
 
-## 🏗️ Architecture
+این پروژه یک سامانه مالی و حسابداری برای شرکت‌های ایرانی است که از ابتدا با این اصول طراحی شده است:
 
-This repository is a **pnpm monorepo** that hosts two packages:
+- تمرکز اصلی تجربه کاربری روی حسابدار است.
+- کاربر نباید یک اطلاعات را چند بار وارد کند.
+- همه عملیات حساس مالی مسیر دستی دارند.
+- عامل هوشمند جایگزین تصمیم‌گیر مالی نیست؛ تحلیل، استخراج، تطبیق، پیشنهاد و آماده‌سازی را انجام می‌دهد و اجرای عملیات حساس با تأیید کاربر انجام می‌شود.
+- اسناد مالی ثبت‌شده حذف یا ویرایش مستقیم نمی‌شوند و اصلاح از مسیرهای کنترل‌شده انجام می‌شود.
+- داده و منطق کسب‌وکار از رابط کاربری، پایگاه داده و سرویس‌های بیرونی جدا نگه داشته می‌شوند.
+- همه عملیات مهم باید قابل ردیابی، قابل بررسی و قابل بازیابی باشند.
 
+</div>
+
+<div dir="rtl" align="right">
+
+## هدف محصول
+
+هدف اصلی محصول:
+
+> کاهش کار دستی حسابدار، افزایش سرعت عملیات مالی، کاهش خطای انسانی و ایجاد یک سیستم مالی قابل اتکا که عملیات را از «ورود دستی» به «پیشنهاد و تأیید» تبدیل کند.
+
+دو معیار اصلی محصول:
+
+1. سرعت
+2. ثبات و یکپارچگی داده
+
+برای عامل‌های هوشمند نیز معیارهایی مانند دقت، نرخ تأیید، نرخ شکست اجرا، توضیح‌پذیری و قابلیت ردیابی بررسی می‌شوند.
+
+</div>
+
+<div dir="rtl" align="right">
+
+## دامنه MVP
+
+MVP به‌عنوان یک محصول حداقلی اما **واقعاً قابل استفاده برای شرکت واقعی** تعریف شده است؛ نه نمونه نمایشی.
+
+حوزه‌های اصلی MVP:
+
+- حسابداری و دفتر کل
+- خرید → موجودی → پرداختنی → حسابداری
+- فروش → موجودی → دریافتنی → دریافت → حسابداری
+- بانک → تطبیق → حسابداری
+- هزینه → پرداخت/بستانکاری → حسابداری
+- کنترل مالی → بستن دوره
+- حقوق و دستمزد → بیمه → حسابداری
+- مالیات و صورتحساب الکترونیکی → حسابداری
+- دارایی ثابت → استهلاک → حسابداری
+- طرف‌حساب‌ها
+- کالا و انبار
+- صندوق و خزانه
+- کاربران، نقش‌ها و دسترسی‌ها
+- اسناد و فایل‌ها
+- گزارش‌ها و داشبوردهای پایه
+- اعلان‌ها
+- عامل‌ها و برنامه‌های عملیاتی
+
+قابلیت‌هایی مانند BI پیشرفته، منابع انسانی کامل، CRM کامل، تولید و بهای تمام‌شده تولید، مدیریت شعب و چندارزی عملیاتی عمداً خارج از عمق MVP نگه داشته شده‌اند.
+
+</div>
+
+<div dir="rtl" align="right">
+
+## جریان‌های اصلی
+
+نسخه MVP بر اساس جریان‌های کامل کسب‌وکاری ساخته می‌شود، نه صرفاً صفحه‌ها یا ماژول‌ها:
+
+1. خرید → موجودی → پرداختنی → حسابداری
+2. فروش → موجودی → دریافتنی → دریافت → حسابداری
+3. بانک → تطبیق → حسابداری
+4. هزینه → پرداخت/بستانکاری → حسابداری
+5. کنترل مالی → بستن دوره
+6. حقوق → بیمه → حسابداری
+7. مالیات و صورتحساب الکترونیکی → حسابداری
+8. دارایی ثابت → استهلاک → حسابداری
+
+جزئیات این جریان‌ها در `docs/product/v1/08-detailed-backlog/` نگهداری می‌شود.
+
+</div>
+
+<div dir="rtl" align="right">
+
+## عامل‌های هوشمند
+
+عامل‌های هوشمند مالک حقیقت کسب‌وکار نیستند.
+
+</div>
+
+```text
+درخواست کاربر
+      ↓
+تحلیل عامل
+      ↓
+برنامه عملیاتی
+      ↓
+بازبینی / ویرایش کاربر
+      ↓
+تأیید
+      ↓
+اجرا
+      ↓
+اعتبارسنجی نتیجه
+      ↓
+ثبت ردپای حسابرسی
 ```
+
+<div dir="rtl" align="right">
+
+عامل می‌تواند:
+
+- داده را از فایل استخراج کند.
+- اطلاعات را تطبیق دهد.
+- مغایرت‌ها را پیدا کند.
+- پیشنهاد عملیات بدهد.
+- برنامه چندمرحله‌ای بسازد.
+- اثر عملیاتی و مالی را توضیح دهد.
+- نتیجه اجرا و خطاها را پیگیری کند.
+
+عامل اجازه ندارد قوانین دامنه را دور بزند، مستقیماً پایگاه داده را تغییر دهد یا عملیات حساس مالی را بدون تأیید لازم اجرا کند.
+
+</div>
+
+<div dir="rtl" align="right">
+
+## معماری
+
+معماری محصول **Modular Monolith** است.
+
+یعنی سیستم از نظر استقرار یک محصول واحد است، اما از نظر معماری به ماژول‌های دارای مرز سخت تقسیم می‌شود.
+
+اصول اصلی:
+
+- هر ماژول مالک داده خودش است.
+- دسترسی مستقیم به موجودیت یا پایگاه داده داخلی ماژول دیگر ممنوع است.
+- بین ماژول‌ها از قرارداد، فرمان، پرس‌وجو و رویداد استفاده می‌شود.
+- وابستگی دوری بین ماژول‌ها ممنوع است.
+- پایگاه داده در هر نصب مشترک است، ولی جداسازی شرکت‌ها کاملاً رعایت می‌شود.
+- کلاینت از طریق REST به برنامه متصل می‌شود.
+- پردازش‌های سنگین در Worker جدا از فرایند وب انجام می‌شوند.
+- رویدادهای داخلی در MVP با Redis مدیریت می‌شوند.
+- مسیر Microservices برای این محصول انتخاب نشده است.
+
+</div>
+
+```text
+Client
+  ↓
+REST API
+  ↓
+Application
+  ↓
+Domain
+  ↓
+Persistence / Infrastructure
+
+          ↘ Command / Query / Event
+                    ↓
+              Internal Event Bus
+                    ↓
+                  Redis
+```
+
+```text
+Dockerized Deployment
+├── Web / REST API
+├── Worker
+├── Scheduler
+├── MySQL
+└── Redis / MinIO
+```
+
+<div dir="rtl" align="right">
+
+## فناوری‌های انتخاب‌شده
+
+| حوزه              | انتخاب                                             |
+| ----------------- | -------------------------------------------------- |
+| Backend           | NestJS + TypeScript                                |
+| Frontend          | Next.js + TypeScript                               |
+| پایگاه داده       | MySQL                                              |
+| دسترسی داده       | Drizzle ORM                                        |
+| رویداد و صف داخلی | Redis                                              |
+| ذخیره فایل        | MinIO                                              |
+| استقرار           | Docker                                             |
+| قرارداد API       | REST + OpenAPI                                     |
+| مدیریت وابستگی    | pnpm                                               |
+| ساختار Repository | Monorepo                                           |
+| رابط کاربری       | Desktop-first Web UI                               |
+| احراز هویت        | داخلی، با مسیر توسعه برای اتصال Providerهای بیرونی |
+
+در MVP فقط ریال فعال است، اما مدل مالی از ابتدا بر پایه `Amount + Currency` طراحی شده است.
+
+</div>
+
+<div dir="rtl" align="right">
+
+## ساختار پروژه
+
+ساختار نهایی پیاده‌سازی بر اساس اسناد Engineering شکل می‌گیرد. نمای کلی:
+
+</div>
+
+```text
 .
-├── backend/              # NestJS modular monolith (HTTP API)
-└── packages/
-    └── ddd-core/         # Framework-free DDD & hexagonal building blocks
-```
-
-### Backend
-
-- **NestJS 11** modular monolith with strict module boundaries.
-- **Clean Architecture / Hexagonal**: each business module is split into
-  `domain`, `application`, `infrastructure`, and `presentation`.
-- Domain code **never** imports NestJS, TypeORM, HTTP, or provider SDKs.
-- Controllers call **use cases**, not repositories.
-- Modules are designed so individual workers can later be extracted to Go
-  without rewriting the domain.
-- Every command resolves the **tenant context on the server**; financial and
-  inventory mutations are **idempotent**.
-- Public API is mounted under **`/api/v1`**, with interactive Swagger docs at
-  **`/api/docs`** (non-production only).
-
-Current business modules:
-
-```
-identity · tenants · contacts · catalog · inventory
-sales · purchases · accounting · cash-management · reporting · subscriptions
-```
-
-### `@accounting-saas/ddd-core`
-
-Zero-dependency shared kernel providing:
-
-- **Domain** — `Entity`, `AggregateRoot`, `DomainEvent`, `ValueObject`,
-  `Money`, `Quantity`, `DomainError` hierarchy.
-- **Ports** — `Clock`, `IdGenerator`, `EventPublisher` (interfaces + injection symbols).
-- **Application** — `Command`, `Query`, `UseCase`, `Result<T, E>`,
-  `UnitOfWork`, `OutboxPort`.
-- **Reference adapters** — `SystemClock`, `UuidIdGenerator`.
-
-> The shared kernel has **zero runtime dependencies**, so it can be reused by
-> any future service (Go worker, edge function, etc.) without dragging
-> framework code into the domain.
-
-See [`packages/ddd-core/README.md`](packages/ddd-core/README.md) for the full API.
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-| Tool       | Version |
-| ---------- | ------- |
-| Node.js    | ≥ 22    |
-| pnpm       | ≥ 9     |
-| PostgreSQL | ≥ 15    |
-| Redis      | ≥ 7     |
-
-### Setup
-
-```bash
-# 1. Install dependencies
-pnpm install
-
-# 2. Configure the backend
-cp backend/.env.example backend/.env
-# then edit backend/.env (DATABASE_URL, REDIS_URL, JWT secrets, ...)
-
-# 3. Build the shared package and start the API
-pnpm build
-pnpm --filter accounting-saas-backend start:dev
-```
-
-The API will then be available at:
-
-- 🌐 HTTP API → `http://localhost:3000/api/v1`
-- 📘 Swagger UI → `http://localhost:3000/api/docs` (non-production only)
-- ❤️ Health check → `http://localhost:3000/api/v1/health`
-
----
-
-## 🧰 Tech Stack
-
-**Runtime**
-- Node.js 22 · TypeScript 5.7
-- NestJS 11 · Express · RxJS
-- TypeORM · PostgreSQL 15 · Redis 7
-
-**Tooling**
-- pnpm workspaces
-- Jest (unit + e2e) · Supertest
-- ESLint (flat config) · Prettier
-- Husky / lint-staged (planned)
-
-**Architecture & Patterns**
-- Domain-Driven Design (DDD)
-- Hexagonal / Ports & Adapters
-- CQRS-lite (Command / Query bus)
-- Outbox pattern for reliable event delivery
-- Result type for explicit error handling
-- Unit of Work for transactional consistency
-
----
-
-## 🔐 Environment Variables
-
-The backend reads its config from environment variables (loaded via
-`backend/.env` in development). **All values must be provided in production.**
-
-| Variable             | Required | Default                                | Description                                                                |
-| -------------------- | -------- | -------------------------------------- | -------------------------------------------------------------------------- |
-| `NODE_ENV`           | ✅       | —                                      | `development` / `test` / `production`                                       |
-| `PORT`               | ✅       | `3000`                                 | HTTP listen port                                                            |
-| `DATABASE_URL`       | ✅       | —                                      | PostgreSQL connection string (e.g. `postgresql://user:pass@host:5432/db`)   |
-| `REDIS_URL`          | ✅       | —                                      | Redis connection string (e.g. `redis://localhost:6379`)                     |
-| `JWT_ACCESS_SECRET`  | ✅       | —                                      | HMAC secret for access tokens. **Generate with `openssl rand -base64 48`** |
-| `JWT_ACCESS_TTL`     | ❌       | `15m`                                  | Access-token TTL                                                            |
-| `JWT_REFRESH_TTL`    | ❌       | `30d`                                  | Refresh-token TTL                                                           |
-| `CORS_ORIGINS`       | ❌       | `http://localhost:3001`                | Comma-separated allowed origins, or `*` to allow any                         |
-
-> Generate strong secrets with: `openssl rand -base64 48`
-
----
-
-## 🗄️ Database & Migrations
-
-- **PostgreSQL** is the system of record for all tenant data.
-- Schema is managed with **TypeORM**; migrations live in
-  `backend/src/infrastructure/persistence/migrations/`.
-- Migrations are **tenant-aware**: tenant-scoped tables carry a `tenant_id`
-  column and row-level filters are enforced at the repository layer.
-
-```bash
-# Generate a migration from current entity changes (after editing entities)
-pnpm --filter accounting-saas-backend migration:generate
-
-# Apply pending migrations
-pnpm --filter accounting-saas-backend migration:run
-
-# Revert the last migration
-pnpm --filter accounting-saas-backend migration:revert
-```
-
-See [`wiki/data/`](wiki/data/) for the full data-model and migration policy.
-
----
-
-## 🌐 Internationalization
-
-Although the MVP ships with English-only UI strings, the codebase is designed
-for internationalization from day one:
-
-- **Money** is stored as a minor-unit integer (`bigint`) with a currency code —
-  no float math, locale-independent arithmetic.
-- **Time** is handled through the `Clock` port — easy to mock and freeze in tests.
-- **Tenant configuration** (locale, timezone, currency, date format) lives in
-  the `tenants` bounded context so each business can use its own conventions.
-- All user-facing strings must live in a single i18n catalog before the first
-  production release.
-
-If you'd like to contribute a translation, see [`CONTRIBUTING.md`](CONTRIBUTING.md).
-
----
-
-## 📦 Deployment
-
-The project does **not** ship a production deployment story yet — it is
-intentionally MVP-stage. A few guiding principles already in place:
-
-- ✅ Stateless API process (safe to scale horizontally)
-- ✅ Strict config validation at bootstrap — missing env fails fast
-- ✅ Graceful shutdown hooks (`app.enableShutdownHooks()`)
-- ✅ Health endpoints for liveness / readiness probes
-- 🚧 Docker image & Helm chart (planned)
-- 🚧 CI/CD pipeline (planned)
-
-For local Docker-only smoke tests:
-
-```bash
-docker run -d --name postgres -p 5432:5432 \
-  -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=accounting_saas postgres:15
-docker run -d --name redis -p 6379:6379 redis:7
-pnpm install && pnpm build && pnpm --filter accounting-saas-backend start:prod
-```
-
-> ℹ️ Do **not** deploy this against real customer data yet.
-
----
-
-## 🧪 Testing
-
-```bash
-# Unit tests across the workspace
-pnpm test
-
-# End-to-end tests (backend)
-pnpm test:e2e
-
-# Type-check the whole workspace
-pnpm typecheck
-
-# Lint and format
-pnpm --filter accounting-saas-backend lint
-pnpm --filter accounting-saas-backend format
-```
-
-Testing conventions:
-
-- **Unit tests** live next to the code they cover (`*.spec.ts`).
-- **E2E tests** live under `backend/test/`.
-- Domain code is covered with pure unit tests — no NestJS test module required.
-- See [`wiki/quality/`](wiki/quality/) for the full testing strategy.
-
----
-
-## 🗂️ Project Structure
-
-```
-.
-├── backend/                     # NestJS API
-│   ├── src/
-│   │   ├── modules/             # Business modules (one folder per bounded context)
-│   │   │   └── <module>/
-│   │   │       ├── domain/          # Aggregates, value objects, domain services
-│   │   │       ├── application/     # Use cases, ports (in/out), DTOs
-│   │   │       ├── infrastructure/  # Adapters: persistence, messaging, etc.
-│   │   │       └── presentation/    # Controllers, HTTP DTOs
-│   │   ├── infrastructure/      # Cross-cutting adapters (config, db, http, ...)
-│   │   ├── shared/              # Cross-cutting concerns shared between modules
-│   │   ├── app.module.ts
-│   │   └── main.ts
-│   ├── test/                    # e2e tests
-│   └── .env.example
+├── apps/
+│   ├── backend/
+│   └── frontend/
 ├── packages/
-│   └── ddd-core/                # Shared kernel (D/Hex building blocks)
-└── wiki/                        # Living product & engineering documentation
-    ├── architecture/            # System design, decisions, patterns
-    ├── product/                 # Product overview, scope, MVP decisions
-    ├── domain/                  # Domain glossary & context maps
-    ├── data/                    # Data model & migrations guidelines
-    ├── api/                     # API conventions
-    ├── operations/              # Runbooks, deployment
-    └── quality/                 # Testing, observability, security
+├── infrastructure/
+├── docs/
+│   └── product/
+│       └── v1/
+├── docker-compose.yml
+├── package.json
+├── pnpm-workspace.yaml
+└── README.md
 ```
 
----
+<div dir="rtl" align="right">
 
-## 📚 Documentation
+جزئیات دقیق مرز ماژول‌ها، لایه‌ها و وابستگی‌ها در اسناد Architecture و Engineering تعریف شده و این README عمداً آن جزئیات را تکرار نمی‌کند.
 
-The [`wiki/`](wiki/) folder is the source of truth for design decisions and
-operational guidance:
+</div>
 
-| Topic                     | Where to start                                                                                             |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Product vision & scope    | [`wiki/product/overview.md`](wiki/product/overview.md)                                                     |
-| System context            | [`wiki/architecture/system-context.md`](wiki/architecture/system-context.md)                               |
-| Application architecture  | [`wiki/architecture/application-architecture.md`](wiki/architecture/application-architecture.md)           |
-| Module conventions        | [`wiki/architecture/module-structure-convention.md`](wiki/architecture/module-structure-convention.md)     |
-| Multi-tenancy model       | [`wiki/architecture/multi-tenancy.md`](wiki/architecture/multi-tenancy.md)                                 |
-| Security model            | [`wiki/architecture/security.md`](wiki/architecture/security.md)                                           |
-| Transactional consistency | [`wiki/architecture/transactions-and-consistency.md`](wiki/architecture/transactions-and-consistency.md)   |
-| MVP technical decisions   | [`wiki/architecture/technical-decisions-mvp.md`](wiki/architecture/technical-decisions-mvp.md)             |
-| Shared kernel API         | [`packages/ddd-core/README.md`](packages/ddd-core/README.md)                                               |
+<div dir="rtl" align="right">
 
----
+## اسناد پروژه
 
-## ❓ FAQ
+مرجع رسمی فعلی پروژه:
 
-**Q: Is this production-ready?**
-A: No. It's under active MVP development. The architecture is shaped for the
-future, but the surface area, security hardening, and ops story are still in
-progress. **Do not** run it against real financial data.
+</div>
 
-**Q: Why NestJS and not Fastify / Express / Hono?**
-A: We wanted a batteries-included container (DI, validation, OpenAPI, testing)
-on top of a battle-tested HTTP framework. See
-[`wiki/architecture/technical-decisions-mvp.md`](wiki/architecture/technical-decisions-mvp.md).
+```text
+docs/product/v1/
+```
 
-**Q: Why is TypeORM allowed in `infrastructure/` but banned in `domain/`?**
-A: The domain must stay framework-free so it can be unit-tested in isolation
-and later extracted to other runtimes (e.g. Go workers). See
-[`wiki/architecture/module-structure-convention.md`](wiki/architecture/module-structure-convention.md).
+<div dir="rtl" align="right">
 
-**Q: Can I run a single business module without the rest?**
-A: Yes, by design. Modules have minimal cross-context coupling — they
-communicate via domain events and explicit ports.
+ساختار اصلی:
 
-**Q: Why pnpm workspaces and not npm / yarn / nx / turborepo?**
-A: pnpm is fast, has first-class workspace support, and keeps the monorepo
-small while we validate the architecture. We can adopt Nx or Turborepo later
-without rewriting code.
+</div>
 
-**Q: How is multi-tenant data isolated?**
-A: Every tenant-scoped table carries a `tenant_id` column, every command
-resolves the tenant from the authenticated principal on the server (never
-trusting the client), and repositories always filter by tenant. See
-[`wiki/architecture/multi-tenancy.md`](wiki/architecture/multi-tenancy.md).
+```text
+01-product-dscovery.md
+02-bussines-procces-discovery.md
+03-requirments.md
+04-DomainModel-bussines-rules.md
+05-userStory-scope.md
+06-backlog.md
+07-release-roadmap.md
+08-detailed-backlog/
+09-domain/
+10-architecture/
+11-engineering/
+12-development-readiness/
+```
 
-**Q: Where is the frontend?**
-A: Not in this repository yet. The MVP focuses on a clean backend; UI is a
-separate future repository.
+<div dir="rtl" align="right">
 
----
+`08-detailed-backlog` شامل جریان‌های طلایی و User Storyهای تفصیلی است.
 
-## 🧭 Roadmap
+`09-domain` مدل دامنه را به تفکیک حوزه‌ها نگهداری می‌کند.
 
-Implementation order for the MVP:
+`10-architecture` شامل محرک‌های معماری، تصمیم‌های معماری و نمای کلی سیستم است.
 
-1. identity · tenants
-2. catalog · contacts
-3. inventory
-4. sales · purchases
-5. payments
-6. reports
+`11-engineering` شامل تصمیم‌های فناوری و قواعد توسعه، تست، امنیت، پایگاه داده، Agent Engineering و CI/CD است.
 
-Future capabilities intentionally kept behind a clean architectural seam:
+`12-development-readiness` دروازه آمادگی برای شروع توسعه را تعریف می‌کند.
 
-- 📒 Chart of accounts, journal entries, general ledger
-- 📈 Trial balance & advanced financial reports
-- 💳 Subscription billing & plan enforcement
-- 🌐 First-class i18n & locale-aware formatting
-- 🐳 Docker images, Helm chart, CI/CD
-- 🦫 Extracting modules into standalone Go workers
+**این مستندات Source of Truth فعلی پروژه هستند.** مستندات نسل قبلی دیگر مرجع توسعه نسخه فعلی نیستند.
 
----
+</div>
 
-## 🤝 Contributing
+<div dir="rtl" align="right">
 
-Contributions are welcome. Since this is an early-stage project, the
-[`wiki/`](wiki/) is the best starting point — it explains the *why* behind
-the architectural seams.
+## اصول توسعه
 
-A few rules of thumb:
+هر تغییر باید این اصول را رعایت کند:
 
-- Domain code must stay framework-free (no NestJS, TypeORM, HTTP, SDK imports).
-- Controllers call use cases; use cases call ports.
-- Every mutation is tenant-scoped and idempotent.
-- Public APIs and behavior changes must update the wiki.
-- Add or update tests alongside every change.
+- منطق کسب‌وکار در Domain باقی می‌ماند.
+- Entity دامنه و مدل ORM از یکدیگر جدا هستند.
+- ماژول‌ها مرز سخت دارند.
+- دسترسی مستقیم به داده داخلی ماژول دیگر ممنوع است.
+- تراکنش‌ها بر اساس مرز سازگاری کسب‌وکار تعریف می‌شوند.
+- عملیات حساس باید Idempotent باشند.
+- انتشار رویدادهای مهم با الگوی Outbox انجام می‌شود.
+- عملیات چندمرحله‌ای باید وضعیت و امکان Recovery داشته باشند.
+- داده مالی Hard Delete ندارد.
+- عملیات مهم Audit می‌شوند.
+- تست بخشی از پیاده‌سازی است، نه مرحله‌ای جدا بعد از آن.
+- هیچ قانون کسب‌وکاری از داخل Agent یا UI اختراع نمی‌شود.
+- تغییر معماری باید از مسیر تصمیم معماری ثبت شود.
 
-> 📘 A full [`CONTRIBUTING.md`](CONTRIBUTING.md) and
-> [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) will land before the first
-> public release.
+</div>
 
----
+<div dir="rtl" align="right">
 
-## 💬 Support
+## وضعیت آمادگی توسعه
 
-- 🐛 **Bug reports & feature requests** → GitHub Issues
-- 💡 **Questions & discussions** → GitHub Discussions
-- 🔐 **Security issues** → see [Security](#-security) below — **do not** file publicly
+تا این مرحله چهار لایه اصلی پیش از توسعه نهایی شده‌اند:
 
----
+</div>
 
-## 🔒 Security
+```text
+Product        ✅
+Domain         ✅
+Architecture   ✅
+Engineering    ✅
 
-This project is **not production-ready**. Please **do not** deploy it against
-real financial data yet.
+Development Readiness
+        ↓
+      READY
+```
 
-If you find a security issue, please **do not** open a public issue. Instead,
-contact the maintainers privately (see [`SECURITY.md`](SECURITY.md) once
-published) and we will respond as quickly as we can.
+<div dir="rtl" align="right">
 
----
+مرحله بعدی پروژه، تبدیل User Storyها به Issue و سپس Taskهای فنی قابل اجرا برای Developer Agent است.
 
-## ⭐ Show your support
+</div>
 
-If this project is useful to you, please consider:
+<div dir="rtl" align="right">
 
-- ⭐ **Starring** the repository
-- 🐛 **Filing issues** for bugs or missing features
-- 📖 **Improving the docs** in [`wiki/`](wiki/)
-- 🗣️ **Spreading the word** in your community
+## نسخه‌بندی
 
-It really helps the project grow.
+نسخه محصول از نسخه‌گذاری معنایی استفاده می‌کند:
 
----
+</div>
 
-## 📄 License
+```text
+MAJOR.MINOR.PATCH
+```
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE)
-file for the full text.
+<div dir="rtl" align="right">
 
-© 2026 Accounting SaaS contributors
+- `MAJOR`: تغییر ناسازگار
+- `MINOR`: قابلیت جدید سازگار
+- `PATCH`: اصلاح یا رفع خطا بدون شکستن سازگاری
+
+قراردادها و اجزای مهم می‌توانند نسخه مستقل داشته باشند؛ از جمله API، Schema پایگاه داده، Domain Event، Agent، Rule، Adapter / Provider و Document Schema.
+
+</div>
+
+<div dir="rtl" align="right">
+
+## وضعیت استفاده واقعی
+
+این Repository در حال ساخت نسخه جدید محصول است و تا زمانی که معیارهای Release و Pilot واقعی پاس نشوند، نباید به‌عنوان نرم‌افزار مالی آماده استفاده تجاری تلقی شود.
+
+پیش از استفاده واقعی باید حداقل موارد زیر با موفقیت بررسی شوند:
+
+- تست خودکار و یکپارچه
+- یکپارچگی داده
+- امنیت و جداسازی شرکت‌ها
+- Backup و Restore
+- Performance
+- ارزیابی Agentها
+- اجرای Golden Flowهای مرتبط با کاربر و شرکت واقعی
+
+</div>
+
+<div dir="rtl" align="right">
+
+## مشارکت در توسعه
+
+قواعد توسعه، ساختار پروژه و معیارهای بررسی در این مسیر قرار دارند:
+
+</div>
+
+```text
+docs/product/v1/11-engineering/
+```
+
+<div dir="rtl" align="right">
+
+برای هر تغییر:
+
+1. User Story مرتبط مشخص شود.
+2. Issue اجرایی ساخته شود.
+3. Taskهای فنی مشخص شوند.
+4. تغییر داخل مرز Domain و Architecture انجام شود.
+5. تست‌های لازم اضافه شوند.
+6. نتیجه و محدودیت‌های شناخته‌شده ثبت شود.
+
+</div>
+
+<div dir="rtl" align="right">
+
+## امنیت
+
+این پروژه یک محصول مالی است و امنیت آن بخش اختیاری محصول نیست.
+
+قواعد امنیتی اصلی شامل:
+
+- جداسازی کامل داده شرکت‌ها
+- احراز هویت
+- مجوزدهی در سطح نقش و شیء
+- مدیریت Secretها
+- رمزنگاری داده و ارتباط
+- ثبت رویدادهای امنیتی
+- Backup رمزنگاری‌شده
+- حداقل سطح دسترسی
+
+برای گزارش آسیب‌پذیری امنیتی، از `SECURITY.md` استفاده کنید و مسائل حساس را به‌صورت عمومی در Issue ثبت نکنید.
+
+</div>
+
+<div dir="rtl" align="right">
+
+## مجوز
+
+این پروژه تحت مجوز **MIT** منتشر می‌شود. برای متن کامل مجوز به فایل `LICENSE` مراجعه کنید.
+
+© 2026 مشارکت‌کنندگان پروژه
+
+</div>
