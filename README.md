@@ -31,6 +31,7 @@
 - [معماری](#معماری)
 - [فناوری‌های انتخاب‌شده](#فناوریهای-انتخابشده)
 - [ساختار پروژه](#ساختار-پروژه)
+- [راه‌اندازی سریع](#راهاندازی-سریع)
 - [اسناد پروژه](#اسناد-پروژه)
 - [اصول توسعه](#اصول-توسعه)
 - [وضعیت آمادگی توسعه](#وضعیت-آمادگی-توسعه)
@@ -248,6 +249,7 @@ Dockerized Deployment
 │   └── frontend/
 ├── packages/
 ├── infrastructure/
+├── tooling/
 ├── docs/
 │   └── product/
 │       └── v1/
@@ -260,6 +262,42 @@ Dockerized Deployment
 <div dir="rtl" align="right">
 
 جزئیات دقیق مرز ماژول‌ها، لایه‌ها و وابستگی‌ها در اسناد Architecture و Engineering تعریف شده و این README عمداً آن جزئیات را تکرار نمی‌کند.
+
+</div>
+
+<div dir="rtl" align="right">
+
+## راه‌اندازی سریع
+
+پیش‌نیازها: Node.js 22 یا بالاتر، pnpm 10 یا بالاتر و Docker برای سرویس‌های محلی.
+
+</div>
+
+```bash
+cp .env.example .env     # پیکربندی محیط توسعه
+pnpm install
+pnpm infra:up            # MySQL و Redis محلی
+docker compose ps
+pnpm dev                 # Backend روی پورت 3000 و Frontend روی پورت 3001
+```
+
+<div dir="rtl" align="right">
+
+بررسی‌های کیفیت:
+
+</div>
+
+```bash
+pnpm lint
+pnpm format:check
+pnpm typecheck
+pnpm test
+pnpm build
+```
+
+<div dir="rtl" align="right">
+
+پس از اجرا، سلامت Backend از مسیر `GET /api/health` قابل بررسی است.
 
 </div>
 

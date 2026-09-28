@@ -1,0 +1,56 @@
+# Local development dependency services.
+#
+#   cp .env.example .env
+#   docker compose up -d
+#
+# Only third-party dependencies run in containers for now. Backend, frontend,
+# worker and scheduler processes run on the host via pnpm during development.
+# See infrastructure/README.md for the deployment direction.
+
+name: accounting-saas
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: accounting-mysql
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-time-zone=+00:00
+      - --transaction-isolation=READ-COMMITTED
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-accounting}
+      MYSQL_USER: ${MYSQL_USER:-accounting}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-local-development-only}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-local-development-root-only}
+    ports:
+      - '${MYSQL_PORT:-3306}:3306'
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -u root -p"$$MYSQL_ROOT_PASSWORD" --silent']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  redis:
+    image: redis:8-alpine
+    container_name: accounting-redis
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    ports:
+      - '${REDIS_PORT:-6379}:6379'
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+volumes:
+  mysql-data:
+  redis-data:
