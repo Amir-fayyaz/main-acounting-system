@@ -1,0 +1,57 @@
+/*
+ * Global baseline styles.
+ *
+ * These are provisional tokens for the app shell only. The internal design
+ * system (TECH-005) defines the real token set and component layer, and screens
+ * must not couple directly to a UI library API.
+ */
+
+:root {
+  color-scheme: light;
+  --color-background: #f4f5f7;
+  --color-surface: #ffffff;
+  --color-text: #16191d;
+  --color-text-muted: #5a6472;
+  --font-family-base: system-ui, 'Segoe UI', Tahoma, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-family-base);
+  line-height: 1.7;
+}
+
+.app-shell {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 64px 24px;
+}
+
+.app-shell__title {
+  margin: 0 0 8px;
+  font-size: 1.75rem;
+}
+
+.app-shell__subtitle {
+  margin: 0 0 24px;
+  color: var(--color-text-muted);
+}
+
+.app-shell__note {
+  margin: 0;
+  padding: 16px;
+  border-radius: 8px;
+  background-color: var(--color-surface);
+  color: var(--color-text-muted);
+}

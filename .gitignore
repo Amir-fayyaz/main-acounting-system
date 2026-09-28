@@ -9,9 +9,13 @@ out/
 coverage/
 *.tsbuildinfo
 
+# Next.js
+.next/
+
 # Environment
 .env
 .env.*
+!.env.example
 
 # Editors / OS
 .DS_Store
@@ -19,3 +23,6 @@ Thumbs.db
 *.swp
 .idea/
 *.log
+
+# Local infrastructure data
+.tmp/
