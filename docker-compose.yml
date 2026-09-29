@@ -1,18 +1,47 @@
-# Local development dependency services.
+# Local development environment (FND-002).
 #
+# First-time setup:
 #   cp .env.example .env
+#
+# Infrastructure only (MySQL, Redis, MinIO) - the fast loop, applications run on
+# the host with `pnpm dev`:
 #   docker compose up -d
 #
-# Only third-party dependencies run in containers for now. Backend, frontend,
-# worker and scheduler processes run on the host via pnpm during development.
-# See infrastructure/README.md for the deployment direction.
+# Complete containerised environment (infrastructure + backend + frontend):
+#   docker compose --profile app up -d --build
+#
+# Shutdown (development data is kept in named volumes):
+#   docker compose --profile app down
+#
+# Full workflow and verification steps: infrastructure/README.md
 
 name: accounting-saas
 
+# Backend configuration used by the containerised application. Host addresses are
+# never used here: containers find each other by Compose service name.
+x-backend-environment: &backend-environment
+  NODE_ENV: ${NODE_ENV:-development}
+  BACKEND_HOST: 0.0.0.0
+  BACKEND_PORT: '3000'
+  BACKEND_API_PREFIX: ${BACKEND_API_PREFIX:-/api}
+  MYSQL_HOST: mysql
+  MYSQL_PORT: '3306'
+  MYSQL_DATABASE: ${MYSQL_DATABASE:-accounting}
+  MYSQL_USER: ${MYSQL_USER:-accounting}
+  MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD is required; copy .env.example to .env}
+  REDIS_HOST: redis
+  REDIS_PORT: '6379'
+  MINIO_ENDPOINT: minio
+  MINIO_PORT: '9000'
+  MINIO_USE_SSL: 'false'
+  MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY is required; copy .env.example to .env}
+  MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY is required; copy .env.example to .env}
+  MINIO_BUCKET: ${MINIO_BUCKET:-accounting-local}
+
 services:
+  # --- Infrastructure ------------------------------------------------------
   mysql:
     image: mysql:8.4
-    container_name: accounting-mysql
     restart: unless-stopped
     command:
       - --character-set-server=utf8mb4
@@ -22,28 +51,34 @@ services:
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE:-accounting}
       MYSQL_USER: ${MYSQL_USER:-accounting}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-local-development-only}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-local-development-root-only}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD is required; copy .env.example to .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is required; copy .env.example to .env}
     ports:
+      # Host port only; the container always listens on 3306 for the other services.
       - '${MYSQL_PORT:-3306}:3306'
     volumes:
       - mysql-data:/var/lib/mysql
+    networks:
+      - accounting
     healthcheck:
       test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -u root -p"$$MYSQL_ROOT_PASSWORD" --silent']
       interval: 10s
       timeout: 5s
       retries: 12
-      start_period: 30s
+      start_period: 60s
 
   redis:
     image: redis:8-alpine
-    container_name: accounting-redis
     restart: unless-stopped
+    # Append-only persistence for local development only. Redis stays
+    # non-authoritative: business truth lives in MySQL (TECH-007).
     command: ['redis-server', '--appendonly', 'yes']
     ports:
       - '${REDIS_PORT:-6379}:6379'
     volumes:
       - redis-data:/data
+    networks:
+      - accounting
     healthcheck:
       test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
@@ -51,6 +86,111 @@ services:
       retries: 12
       start_period: 10s
 
+  # A fresh named volume is owned by root, while the MinIO image runs as its
+  # non-root `minio` user (uid 100). This one-shot step hands the volume over
+  # before the server starts; a uid change in the image must be mirrored here.
+  minio-data-init:
+    image: alpine/minio:RELEASE.2025-10-15T17-29-55Z
+    user: '0:0'
+    entrypoint: ['sh', '-c']
+    command: ['chown -R 100:100 /data']
+    restart: 'no'
+    volumes:
+      - minio-data:/data
+    networks:
+      - accounting
+
+  minio:
+    # MinIO stopped publishing official images in October 2025 (minio/minio#21647),
+    # so the final community release is pinned from the Docker Hub Sponsored OSS
+    # publisher that builds it from the official release binary. See
+    # infrastructure/README.md for the decision that is still required.
+    image: alpine/minio:RELEASE.2025-10-15T17-29-55Z
+    restart: unless-stopped
+    command: ['server', '/data', '--console-address', ':9001']
+    depends_on:
+      minio-data-init:
+        condition: service_completed_successfully
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY is required; copy .env.example to .env}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY is required; copy .env.example to .env}
+    ports:
+      - '${MINIO_PORT:-9000}:9000'
+      - '${MINIO_CONSOLE_PORT:-9001}:9001'
+    volumes:
+      - minio-data:/data
+    networks:
+      - accounting
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O- http://127.0.0.1:9000/minio/health/live || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  # --- Applications (profile: app) -----------------------------------------
+  # Omitted from the default `docker compose up` so the host-based
+  # `pnpm dev` loop stays the fast path. Both containers run the same workspace
+  # development image; only the process differs.
+  backend:
+    profiles: ['app']
+    image: accounting-saas/app-dev
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.dev
+    command: ['pnpm', '--filter', '@accounting-saas/backend', 'dev']
+    environment: *backend-environment
+    ports:
+      - '${BACKEND_PORT:-3000}:3000'
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - accounting
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'node -e "fetch(''http://127.0.0.1:3000/api/health'').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"',
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
+
+  frontend:
+    profiles: ['app']
+    image: accounting-saas/app-dev
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.dev
+    command: ['pnpm', '--filter', '@accounting-saas/frontend', 'dev']
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      NEXT_TELEMETRY_DISABLED: '1'
+      # Browser-facing URL: the user's machine, not the Compose network.
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:3000/api}
+      # Server-side URL: this container reaching the backend container.
+      INTERNAL_API_BASE_URL: http://backend:3000/api
+    ports:
+      # Host port only; the container always listens on 3001.
+      - '${FRONTEND_PORT:-3001}:3001'
+    depends_on:
+      backend:
+        condition: service_started
+    networks:
+      - accounting
+
 volumes:
+  # Development data. `docker compose down` keeps these; `down -v` removes them.
   mysql-data:
   redis-data:
+  minio-data:
+
+networks:
+  accounting:
+    driver: bridge

@@ -23,7 +23,11 @@
     "format:check": "prettier --check .",
     "infra:up": "docker compose up -d",
     "infra:down": "docker compose down",
-    "infra:logs": "docker compose logs -f"
+    "infra:logs": "docker compose logs -f",
+    "stack:up": "docker compose --profile app up -d --build",
+    "stack:down": "docker compose --profile app down",
+    "stack:logs": "docker compose --profile app logs -f",
+    "dev:reset": "docker compose --profile app down -v"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

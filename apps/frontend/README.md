@@ -32,9 +32,15 @@ The dev server uses port `3001` so the backend can own `3000`.
 
 ## Configuration
 
-Public values are read from `NEXT_PUBLIC_*` variables and default to the local
-backend (`apps/frontend/lib/env.ts`). To override them for the frontend process only,
-create `apps/frontend/.env.local`:
+Two base URLs are read in `apps/frontend/lib/env.ts`:
+
+| Variable                   | Used by | Meaning                                                                         |
+| -------------------------- | ------- | ------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_API_BASE_URL` | browser | Host-reachable backend address (default `http://127.0.0.1:3000/api`)            |
+| `INTERNAL_API_BASE_URL`    | server  | Address the Next.js server itself calls (in Compose: `http://backend:3000/api`) |
+
+Both default to the local backend, so a fresh checkout runs without extra setup.
+To override them for the frontend process only, create `apps/frontend/.env.local`:
 
 ```bash
 NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:3000/api
@@ -42,6 +48,10 @@ NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:3000/api
 
 `apps/frontend/.env.local` is git-ignored. Never put a secret in a `NEXT_PUBLIC_*`
 value: everything with that prefix is shipped to the browser.
+
+The application shell renders the backend readiness report
+(`GET <base>/health/ready`) as a local infrastructure status panel. It reads
+operational endpoints only and contains no business data.
 
 ## Conventions
 

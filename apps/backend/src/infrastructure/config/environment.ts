@@ -23,10 +23,26 @@ export interface DatabaseEnvironment {
   readonly password: string;
 }
 
+export interface RedisEnvironment {
+  readonly host: string;
+  readonly port: number;
+}
+
+export interface StorageEnvironment {
+  readonly endpoint: string;
+  readonly port: number;
+  readonly useSsl: boolean;
+  readonly accessKey: string;
+  readonly secretKey: string;
+  readonly bucket: string;
+}
+
 export interface Environment {
   readonly nodeEnv: NodeEnvironment;
   readonly http: HttpEnvironment;
   readonly database: DatabaseEnvironment;
+  readonly redis: RedisEnvironment;
+  readonly storage: StorageEnvironment;
 }
 
 const SUPPORTED_NODE_ENVIRONMENTS: readonly NodeEnvironment[] = [
@@ -42,6 +58,11 @@ const DEFAULT_DATABASE_HOST = '127.0.0.1';
 const DEFAULT_DATABASE_PORT = 3306;
 const DEFAULT_DATABASE_NAME = 'accounting';
 const DEFAULT_DATABASE_USER = 'accounting';
+const DEFAULT_REDIS_HOST = '127.0.0.1';
+const DEFAULT_REDIS_PORT = 6379;
+const DEFAULT_STORAGE_ENDPOINT = '127.0.0.1';
+const DEFAULT_STORAGE_PORT = 9000;
+const DEFAULT_STORAGE_BUCKET = 'accounting-local';
 
 export class EnvironmentValidationError extends Error {
   public readonly problems: readonly string[];
@@ -86,12 +107,36 @@ function readPort(raw: RawEnvironment, key: string, fallback: number, problems: 
   return port;
 }
 
+function readBoolean(
+  raw: RawEnvironment,
+  key: string,
+  fallback: boolean,
+  problems: string[],
+): boolean {
+  const value = readText(raw, key);
+
+  if (value === undefined) {
+    return fallback;
+  }
+
+  if (value === 'true' || value === '1') {
+    return true;
+  }
+
+  if (value === 'false' || value === '0') {
+    return false;
+  }
+
+  problems.push(`${key} must be "true" or "false"`);
+  return fallback;
+}
+
 function readNodeEnvironment(raw: RawEnvironment, problems: string[]): NodeEnvironment {
   const value = readText(raw, 'NODE_ENV', 'development');
   const candidate = value ?? 'development';
 
-  // Jest sets NODE_ENV=test automatically; anything unknown is treated as invalid
-  // instead of being silently downgraded to a development configuration.
+  // Jest/Vitest set NODE_ENV=test automatically; anything unknown is treated as
+  // invalid instead of being silently downgraded to a development configuration.
   if (!SUPPORTED_NODE_ENVIRONMENTS.includes(candidate as NodeEnvironment)) {
     problems.push(`NODE_ENV must be one of: ${SUPPORTED_NODE_ENVIRONMENTS.join(', ')}`);
     return 'development';
@@ -117,15 +162,27 @@ function readApiPrefix(raw: RawEnvironment, problems: string[]): string {
  * Throws `EnvironmentValidationError` instead of falling back silently: a backend
  * that starts with an unknown configuration is worse than a backend that refuses
  * to start (Engineering Principles, rule 5).
+ *
+ * Credentials follow one rule: in `production` they are mandatory, in
+ * `development`/`test` their absence is reported by the dependency that needs them
+ * (readiness, connection errors) instead of by a process-wide failure. Secrets are
+ * never defaulted to a value in source code.
  */
 export function loadEnvironment(raw: RawEnvironment = process.env): Environment {
   const problems: string[] = [];
 
   const nodeEnv = readNodeEnvironment(raw, problems);
-  const password = readText(raw, 'MYSQL_PASSWORD');
+  const databasePassword = readText(raw, 'MYSQL_PASSWORD');
+  const storageAccessKey = readText(raw, 'MINIO_ACCESS_KEY');
+  const storageSecretKey = readText(raw, 'MINIO_SECRET_KEY');
 
-  if (nodeEnv === 'production' && !password) {
-    problems.push('MYSQL_PASSWORD is required when NODE_ENV=production');
+  if (nodeEnv === 'production') {
+    if (!databasePassword) {
+      problems.push('MYSQL_PASSWORD is required when NODE_ENV=production');
+    }
+    if (!storageAccessKey || !storageSecretKey) {
+      problems.push('MINIO_ACCESS_KEY and MINIO_SECRET_KEY are required when NODE_ENV=production');
+    }
   }
 
   const http: HttpEnvironment = {
@@ -139,12 +196,26 @@ export function loadEnvironment(raw: RawEnvironment = process.env): Environment 
     port: readPort(raw, 'MYSQL_PORT', DEFAULT_DATABASE_PORT, problems),
     name: readText(raw, 'MYSQL_DATABASE', DEFAULT_DATABASE_NAME) ?? DEFAULT_DATABASE_NAME,
     user: readText(raw, 'MYSQL_USER', DEFAULT_DATABASE_USER) ?? DEFAULT_DATABASE_USER,
-    password: password ?? '',
+    password: databasePassword ?? '',
+  };
+
+  const redis: RedisEnvironment = {
+    host: readText(raw, 'REDIS_HOST', DEFAULT_REDIS_HOST) ?? DEFAULT_REDIS_HOST,
+    port: readPort(raw, 'REDIS_PORT', DEFAULT_REDIS_PORT, problems),
+  };
+
+  const storage: StorageEnvironment = {
+    endpoint: readText(raw, 'MINIO_ENDPOINT', DEFAULT_STORAGE_ENDPOINT) ?? DEFAULT_STORAGE_ENDPOINT,
+    port: readPort(raw, 'MINIO_PORT', DEFAULT_STORAGE_PORT, problems),
+    useSsl: readBoolean(raw, 'MINIO_USE_SSL', false, problems),
+    accessKey: storageAccessKey ?? '',
+    secretKey: storageSecretKey ?? '',
+    bucket: readText(raw, 'MINIO_BUCKET', DEFAULT_STORAGE_BUCKET) ?? DEFAULT_STORAGE_BUCKET,
   };
 
   if (problems.length > 0) {
     throw new EnvironmentValidationError(problems);
   }
 
-  return { nodeEnv, http, database };
+  return { nodeEnv, http, database, redis, storage };
 }

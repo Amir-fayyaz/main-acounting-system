@@ -4,7 +4,7 @@ NestJS + TypeScript implementation of the modular monolith (ADR-001, TECH-001).
 This app is the `Web / REST API` process; Worker and Scheduler will reuse the same
 modules from this codebase in separate processes (ADR-001, section 10).
 
-No business domain is implemented yet — this is the FND-001 workspace baseline.
+No business domain is implemented yet — this is the FND-001/FND-002 workspace baseline.
 
 ## Layout
 
@@ -19,7 +19,10 @@ src/
 └── infrastructure/
     ├── config/                 Environment loading + validation
     ├── database/               MySQL pool + Drizzle instance
-    └── presentation/health/    Operational liveness endpoint
+    ├── redis/                  Redis connection (non-authoritative, TECH-007)
+    ├── storage/                Object storage port + MinIO adapter (TECH-008)
+    ├── readiness/              Dependency probes behind /api/health/ready
+    └── presentation/           Operational endpoints (health, readiness)
 test/                           HTTP-level (e2e) tests
 ```
 
@@ -58,18 +61,22 @@ the repository root, so `cp .env.example .env` at the root is enough for local
 development. Validation is fail-fast: an invalid value stops startup with an explicit
 error instead of silently falling back (`src/infrastructure/config/environment.ts`).
 
-`MYSQL_PASSWORD` is mandatory when `NODE_ENV=production`. No secret is ever committed
-or baked into an image (Engineering Principles, rule 10).
+`MYSQL_PASSWORD`, `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` are mandatory when
+`NODE_ENV=production`. No secret is ever committed or baked into an image
+(Engineering Principles, rule 10).
 
-The database pool is created without opening a connection, so the API process starts
-even when MySQL is not running. Start the local dependencies with
-`docker compose up -d` from the repository root.
+The database pool, the Redis connection and the MinIO client are all created
+without opening a connection, so the API process starts even when the
+infrastructure is not running yet; `GET /api/health/ready` reports the actual
+state of each dependency. Start the local dependencies with `pnpm infra:up` from
+the repository root.
 
 ## Endpoints
 
-| Method | Path          | Purpose                                                                           |
-| ------ | ------------- | --------------------------------------------------------------------------------- |
-| GET    | `/api/health` | Process liveness. Readiness checks are added with the infrastructure they verify. |
+| Method | Path                | Purpose                                                                       |
+| ------ | ------------------- | ----------------------------------------------------------------------------- |
+| GET    | `/api/health`       | Process liveness. Dependency-free: a slow MySQL never restarts a healthy API. |
+| GET    | `/api/health/ready` | Readiness. Probes MySQL, Redis and object storage; 503 names the down one.    |
 
 ## Rules for new code
 
