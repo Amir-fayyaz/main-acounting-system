@@ -1,57 +1,73 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { APP_ENVIRONMENT } from './app-config.tokens.js';
+import { APP_CONFIGURATION } from './app-config.tokens.js';
 import type {
-  DatabaseEnvironment,
-  Environment,
-  HttpEnvironment,
-  NodeEnvironment,
-  RedisEnvironment,
-  StorageEnvironment,
-} from './environment.js';
+  ApplicationRuntime,
+  Configuration,
+  DatabaseConfiguration,
+  EnvironmentIdentification,
+  HttpConfiguration,
+  JobsConfiguration,
+  LoggingConfiguration,
+  RedisConfiguration,
+  StorageConfiguration,
+} from './configuration.types.js';
 
 /**
- * Typed read access to the validated environment.
+ * Typed read access to the validated configuration (FND-003).
  *
- * Business modules may use this service for technical configuration only; domain
- * code must keep depending on abstractions instead.
+ * Application code consumes this service instead of reading `process.env`, and
+ * business modules use it for technical configuration only — Domain keeps
+ * depending on abstractions (ADR-002, section 21).
+ *
+ * Every process that runs NestJS (HTTP, and later the worker/scheduler hosts)
+ * receives the same service from the same module; nothing here is specific to
+ * the HTTP process.
  */
 @Injectable()
 export class AppConfigService {
-  constructor(@Inject(APP_ENVIRONMENT) private readonly environment: Environment) {}
+  constructor(@Inject(APP_CONFIGURATION) private readonly configuration: Configuration) {}
 
-  get nodeEnv(): NodeEnvironment {
-    return this.environment.nodeEnv;
+  get environment(): EnvironmentIdentification {
+    return this.configuration.environment;
   }
 
-  get isProduction(): boolean {
-    return this.environment.nodeEnv === 'production';
+  get runtime(): ApplicationRuntime {
+    return this.configuration.runtime;
   }
 
-  get http(): HttpEnvironment {
-    return this.environment.http;
+  get http(): HttpConfiguration {
+    return this.configuration.http;
   }
 
   get host(): string {
-    return this.environment.http.host;
+    return this.configuration.http.host;
   }
 
   get port(): number {
-    return this.environment.http.port;
+    return this.configuration.http.port;
   }
 
   get apiPrefix(): string {
-    return this.environment.http.apiPrefix;
+    return this.configuration.http.apiPrefix;
   }
 
-  get database(): DatabaseEnvironment {
-    return this.environment.database;
+  get database(): DatabaseConfiguration {
+    return this.configuration.database;
   }
 
-  get redis(): RedisEnvironment {
-    return this.environment.redis;
+  get redis(): RedisConfiguration {
+    return this.configuration.redis;
   }
 
-  get storage(): StorageEnvironment {
-    return this.environment.storage;
+  get storage(): StorageConfiguration {
+    return this.configuration.storage;
+  }
+
+  get logging(): LoggingConfiguration {
+    return this.configuration.logging;
+  }
+
+  get jobs(): JobsConfiguration {
+    return this.configuration.jobs;
   }
 }

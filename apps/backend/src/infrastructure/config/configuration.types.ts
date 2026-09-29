@@ -1,0 +1,97 @@
+/**
+ * Typed shape of the application configuration (FND-003).
+ *
+ * Configuration is grouped by responsibility instead of being an unstructured
+ * set of environment variables, so a consumer asks for the section it needs
+ * (`config.database`) and never for a raw variable (ADR-002, section 21 — Domain
+ * must not know about technical configuration).
+ *
+ * This file contains types only: parsing, validation and defaults live in
+ * `configuration.ts`, and no framework (NestJS included) may appear here, so the
+ * same object can be loaded by the HTTP process, the worker and the scheduler.
+ */
+
+/**
+ * Environments the engineering workflow distinguishes. `development` and `test`
+ * are the local/Docker workflow of TECH-009, `production` is the deployed
+ * installation; anything else is rejected instead of being silently treated as
+ * development.
+ */
+export type RuntimeEnvironment = 'development' | 'test' | 'production';
+
+/** Log verbosity (ADR-015, section 3 — structured logging). */
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+/** Which environment this process runs in. The flags are derived, never set. */
+export interface EnvironmentIdentification {
+  readonly name: RuntimeEnvironment;
+  readonly isDevelopment: boolean;
+  readonly isTest: boolean;
+  readonly isProduction: boolean;
+}
+
+/**
+ * Application runtime identity: who this process is when it talks about itself
+ * (logs, health). Worker and scheduler processes identify themselves through the
+ * same key instead of inventing their own.
+ */
+export interface ApplicationRuntime {
+  readonly serviceName: string;
+}
+
+export interface HttpConfiguration {
+  readonly host: string;
+  readonly port: number;
+  readonly apiPrefix: string;
+}
+
+export interface DatabaseConfiguration {
+  readonly host: string;
+  readonly port: number;
+  readonly name: string;
+  readonly user: string;
+  readonly password: string;
+}
+
+export interface RedisConfiguration {
+  readonly host: string;
+  readonly port: number;
+}
+
+export interface StorageConfiguration {
+  readonly endpoint: string;
+  readonly port: number;
+  readonly useSsl: boolean;
+  readonly accessKey: string;
+  readonly secretKey: string;
+  readonly bucket: string;
+}
+
+export interface LoggingConfiguration {
+  readonly level: LogLevel;
+}
+
+/**
+ * Worker / job execution settings (ADR-008, TECH-011).
+ *
+ * They are validated here so every process sees the same contract; the queue
+ * worker that consumes them does not exist yet and must not read the variables
+ * itself when it is added.
+ */
+export interface JobsConfiguration {
+  /** How many jobs one worker process executes at a time (ADR-008, section 10). */
+  readonly concurrency: number;
+  /** Upper bound of attempts for a failing job before it is parked (ADR-008, section 6). */
+  readonly maxAttempts: number;
+}
+
+export interface Configuration {
+  readonly environment: EnvironmentIdentification;
+  readonly runtime: ApplicationRuntime;
+  readonly http: HttpConfiguration;
+  readonly database: DatabaseConfiguration;
+  readonly redis: RedisConfiguration;
+  readonly storage: StorageConfiguration;
+  readonly logging: LoggingConfiguration;
+  readonly jobs: JobsConfiguration;
+}

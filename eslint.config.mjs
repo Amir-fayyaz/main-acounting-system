@@ -62,6 +62,32 @@ export default [
     },
   },
   {
+    name: 'workspace/configuration-boundary',
+    files: [...BACKEND_FILES, ...FRONTEND_FILES],
+    rules: {
+      // FND-003: the environment is read at exactly one place per application and
+      // consumed as typed configuration everywhere else. Violations are a lint
+      // error, so "no process.env outside the configuration layer" is enforced
+      // mechanically instead of by review.
+      'no-restricted-properties': [
+        'error',
+        {
+          object: 'process',
+          property: 'env',
+          message:
+            'Read configuration through the configuration layer: apps/backend/src/infrastructure/config or apps/frontend/lib/env.ts.',
+        },
+      ],
+    },
+  },
+  {
+    name: 'workspace/configuration-boundary-exceptions',
+    files: ['apps/backend/src/infrastructure/config/**/*.ts', 'apps/frontend/lib/env.ts'],
+    rules: {
+      'no-restricted-properties': 'off',
+    },
+  },
+  {
     name: 'workspace/prettier',
     rules: prettierConfig.rules,
   },

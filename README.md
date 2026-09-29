@@ -283,6 +283,16 @@ pnpm dev                 # Backend روی پورت 3000 و Frontend روی پو�
 
 <div dir="rtl" align="right">
 
+همهٔ متغیرهای محیطی موردنیاز در `.env.example` مستند شده‌اند. Backend پیش از ساختن
+برنامه، همهٔ مقادیر را اعتبارسنجی می‌کند: مقدار نامعتبر یا نبودِ `MYSQL_PASSWORD`،
+`MINIO_ACCESS_KEY` و `MINIO_SECRET_KEY` در `NODE_ENV=production` باعث خروج فوری با کد
+غیرصفر می‌شود و پیام خطا فقط نام متغیر را نشان می‌دهد، نه مقدارش. خواندن مستقیم
+`process.env` تنها در لایهٔ پیکربندی مجاز است و خطا در lint گزارش می‌شود.
+
+</div>
+
+<div dir="rtl" align="right">
+
 بررسی‌های کیفیت:
 
 </div>

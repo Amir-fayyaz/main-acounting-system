@@ -5,7 +5,7 @@ import type { ReadinessReport } from '../../readiness/readiness.types.js';
 
 export interface HealthResponse {
   readonly status: 'ok';
-  readonly service: 'backend';
+  readonly service: string;
   readonly environment: string;
   readonly timestamp: string;
 }
@@ -30,8 +30,8 @@ export class HealthController {
   check(): HealthResponse {
     return {
       status: 'ok',
-      service: 'backend',
-      environment: this.config.nodeEnv,
+      service: this.config.runtime.serviceName,
+      environment: this.config.environment.name,
       timestamp: new Date().toISOString(),
     };
   }

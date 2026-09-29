@@ -1,33 +1,39 @@
 import { Global, Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 import { AppConfigService } from './app-config.service.js';
-import { APP_ENVIRONMENT } from './app-config.tokens.js';
-import { loadEnvironment } from './environment.js';
+import { APP_CONFIGURATION, SECRET_REDACTOR } from './app-config.tokens.js';
+import { loadConfiguration } from './configuration.js';
+import { loadDotEnvFiles } from './dotenv.js';
+import { createSecretRedactor } from './secrets.js';
 
 /**
  * Configuration is shared infrastructure, which is the one case where a global
  * Nest module is allowed (TECH-001).
  *
- * `ConfigModule` is used only to discover and load `.env` files; validation and
- * typing are owned here so the process fails fast on an invalid configuration.
- * Paths are resolved from the process working directory, so both `pnpm dev` from
- * the app directory and a root-level invocation work.
+ * Loading and validation happen in `loadConfiguration`, a framework-free
+ * function that any process can call; this module only binds its result to the
+ * DI container for the HTTP process. There is no second mechanism: `ConfigService`
+ * from `@nestjs/config` is gone, `.env` discovery is owned by `dotenv.ts`, and
+ * the raw environment is read here and in `secrets.ts` only.
+ *
+ * A validation failure surfaces while the module is being created, so the
+ * process refuses to start with an invalid configuration (FND-003).
  */
 @Global()
 @Module({
-  imports: [
-    ConfigModule.forRoot({
-      cache: true,
-      envFilePath: ['.env', '../../.env'],
-    }),
-  ],
   providers: [
     {
-      provide: APP_ENVIRONMENT,
-      useFactory: () => loadEnvironment(process.env),
+      provide: APP_CONFIGURATION,
+      useFactory: () => {
+        loadDotEnvFiles();
+        return loadConfiguration();
+      },
     },
     AppConfigService,
+    {
+      provide: SECRET_REDACTOR,
+      useFactory: () => createSecretRedactor(process.env),
+    },
   ],
-  exports: [AppConfigService],
+  exports: [AppConfigService, SECRET_REDACTOR],
 })
 export class AppConfigModule {}

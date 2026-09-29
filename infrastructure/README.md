@@ -78,6 +78,11 @@ First-time setup is `cp .env.example .env` followed by `pnpm install`.
 - Development-safe defaults exist only for non-secret values (ports, database
   name, bucket name). Credentials have development placeholders in
   `.env.example` and are required in `.env`.
+- The backend validates the same values itself before it starts (FND-003): an
+  invalid value or a missing credential under `NODE_ENV=production` stops the
+  process with a non-zero exit code, naming the variable and never printing its
+  value. The Compose anchor above carries `NODE_ENV`, `SERVICE_NAME` and
+  `LOG_LEVEL` so containers and host processes read one configuration contract.
 - Redis is explicitly **non-authoritative**: application truth lives in MySQL
   (TECH-007). Its append-only file exists for local-development continuity only.
 
