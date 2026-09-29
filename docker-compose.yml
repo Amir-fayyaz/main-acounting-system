@@ -21,6 +21,8 @@ name: accounting-saas
 # never used here: containers find each other by Compose service name.
 x-backend-environment: &backend-environment
   NODE_ENV: ${NODE_ENV:-development}
+  SERVICE_NAME: ${SERVICE_NAME:-backend}
+  LOG_LEVEL: ${LOG_LEVEL:-info}
   BACKEND_HOST: 0.0.0.0
   BACKEND_PORT: '3000'
   BACKEND_API_PREFIX: ${BACKEND_API_PREFIX:-/api}

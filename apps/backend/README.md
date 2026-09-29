@@ -17,7 +17,7 @@ src/
 │   └── <module>/{domain,application,infrastructure,presentation}
 ├── shared/                     Shared kernel (see shared/README.md)
 └── infrastructure/
-    ├── config/                 Environment loading + validation
+    ├── config/                 Typed configuration (.env discovery, validation, redaction)
     ├── database/               MySQL pool + Drizzle instance
     ├── redis/                  Redis connection (non-authoritative, TECH-007)
     ├── storage/                Object storage port + MinIO adapter (TECH-008)
@@ -55,15 +55,41 @@ available for Nest's dependency injection.
 
 ## Configuration
 
-Configuration comes from environment variables (see the repository-root
-`.env.example`). The process loads `.env` from `apps/backend` first and falls back to
-the repository root, so `cp .env.example .env` at the root is enough for local
-development. Validation is fail-fast: an invalid value stops startup with an explicit
-error instead of silently falling back (`src/infrastructure/config/environment.ts`).
+The environment is read in exactly one place — `src/infrastructure/config/` — and is
+consumed everywhere else as a typed object. `process.env` outside that directory (and
+outside `apps/frontend/lib/env.ts`) is a lint error, so the boundary is enforced
+mechanically rather than by review.
 
-`MYSQL_PASSWORD`, `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` are mandatory when
-`NODE_ENV=production`. No secret is ever committed or baked into an image
-(Engineering Principles, rule 10).
+**Values.** Everything the process needs is declared in the repository-root
+`.env.example`, with `cp .env.example .env` enough for local development. Loading is
+owned by `dotenv.ts` and runs in this order: repository-root `.env`, then
+`apps/backend/.env`, then the real process environment — later sources win, and a
+value already present in the process is never overwritten by a file. There is no
+second mechanism: `@nestjs/config` was removed in favour of `dotenv` read directly.
+
+**Validation** (`configuration.ts`) is fail-fast and framework-free, so the HTTP, worker
+and scheduler processes call the same function:
+
+- every invalid value is collected and reported together, each message naming the
+  variable and never echoing its value;
+- `NODE_ENV` must be one of `development`, `test`, `production`; `LOG_LEVEL` one of
+  `debug`, `info`, `warn`, `error`;
+- `MYSQL_PASSWORD`, `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` are mandatory when
+  `NODE_ENV=production` and optional in development/test, so a fresh checkout boots
+  and `GET /api/health/ready` reports the missing dependency instead;
+- `main.ts` loads and validates before `NestFactory.create`, so an invalid value stops
+  the process before anything is half-started, with a non-zero exit code.
+
+**Secrets** never appear in logs, error output or health responses: `secrets.ts`
+exposes a redactor bound to the known secret environment keys, and it is applied to
+startup failures, dependency-probe errors and connection warnings. No secret is ever
+committed or baked into an image (Engineering Principles, rule 10).
+
+**Grouping.** `configuration.types.ts` groups the values into `environment`
+(identification plus the derived `isDevelopment`/`isTest`/`isProduction` flags),
+`runtime` (`SERVICE_NAME`), `http`, `database`, `redis`, `storage`, `logging`
+(`LOG_LEVEL`) and `jobs` (`WORKER_CONCURRENCY`, `WORKER_MAX_ATTEMPTS` — reserved for
+the worker process, ADR-008).
 
 The database pool, the Redis connection and the MinIO client are all created
 without opening a connection, so the API process starts even when the

@@ -1,4 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { SECRET_REDACTOR } from '../config/app-config.tokens.js';
+import type { SecretHolder } from '../config/secrets.js';
 import { READINESS_PROBES } from './readiness.tokens.js';
 import type { DependencyCheck, DependencyProbe, ReadinessReport } from './readiness.types.js';
 
@@ -27,7 +29,7 @@ function withTimeout(operation: Promise<void>, probeName: string): Promise<void>
   });
 }
 
-async function runProbe(probe: DependencyProbe): Promise<DependencyCheck> {
+async function runProbe(probe: DependencyProbe, secrets: SecretHolder): Promise<DependencyCheck> {
   const startedAt = Date.now();
 
   try {
@@ -35,12 +37,14 @@ async function runProbe(probe: DependencyProbe): Promise<DependencyCheck> {
     return { name: probe.name, status: 'up', latencyMs: Date.now() - startedAt };
   } catch (error) {
     // The failure is reported to the caller with its cause; it is never swallowed
-    // (Engineering Principles, rule 5).
+    // (Engineering Principles, rule 5). Driver errors can embed connection
+    // details, so the message is redacted before it leaves the process
+    // (06-security-engineering: no secret in error output).
     return {
       name: probe.name,
       status: 'down',
       latencyMs: Date.now() - startedAt,
-      error: toMessage(error),
+      error: secrets.redact(toMessage(error)),
     };
   }
 }
@@ -51,14 +55,18 @@ async function runProbe(probe: DependencyProbe): Promise<DependencyCheck> {
  *
  * Probes run in parallel and are bounded, so a hung dependency reports as `down`
  * instead of hanging the endpoint. Readiness is infrastructure state only: no
- * business rule and no tenant data is evaluated here.
+ * business rule and no tenant data is evaluated here, and no credential is part
+ * of the report.
  */
 @Injectable()
 export class ReadinessService {
-  constructor(@Inject(READINESS_PROBES) private readonly probes: readonly DependencyProbe[]) {}
+  constructor(
+    @Inject(READINESS_PROBES) private readonly probes: readonly DependencyProbe[],
+    @Inject(SECRET_REDACTOR) private readonly secrets: SecretHolder,
+  ) {}
 
   async check(): Promise<ReadinessReport> {
-    const checks = await Promise.all(this.probes.map((probe) => runProbe(probe)));
+    const checks = await Promise.all(this.probes.map((probe) => runProbe(probe, this.secrets)));
     const ready = checks.every((check) => check.status === 'up');
 
     return { status: ready ? 'ready' : 'not-ready', checks };
