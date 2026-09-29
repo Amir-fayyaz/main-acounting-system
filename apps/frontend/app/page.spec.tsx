@@ -12,11 +12,10 @@ const readinessReport = {
 
 describe('HomePage', () => {
   const originalFetch = globalThis.fetch;
+  const fetchMock = jest.fn();
 
   beforeEach(() => {
-    globalThis.fetch = jest
-      .fn()
-      .mockResolvedValue({ json: async () => readinessReport }) as unknown as typeof fetch;
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
   });
 
   afterEach(() => {
@@ -24,10 +23,30 @@ describe('HomePage', () => {
   });
 
   it('renders the shell heading and the infrastructure status', async () => {
+    fetchMock.mockResolvedValue({ json: async () => readinessReport });
+
     render(await HomePage());
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('سامانه حسابداری هوشمند');
     expect(screen.getByText('برقرار است')).toBeInTheDocument();
     expect(screen.getByText('object-storage')).toBeInTheDocument();
+  });
+
+  it('shows a dependency failure without exposing driver details', async () => {
+    fetchMock.mockResolvedValue({
+      json: async () => ({
+        status: 'not-ready',
+        checks: [
+          { name: 'database', status: 'up', latencyMs: 3 },
+          { name: 'redis', status: 'down', latencyMs: 3001, reason: 'timeout' },
+        ],
+      }),
+    });
+
+    render(await HomePage());
+
+    expect(screen.getByText('redis')).toBeInTheDocument();
+    expect(screen.getByText('پاسخ‌گو نیست')).toBeInTheDocument();
+    expect(screen.getByText('3001ms')).toBeInTheDocument();
   });
 });

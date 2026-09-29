@@ -69,6 +69,31 @@ First-time setup is `cp .env.example .env` followed by `pnpm install`.
   `http://backend:3000/api` inside the network) and `NEXT_PUBLIC_API_BASE_URL`
   (browser-side, a host-reachable address).
 
+## Health checks (FND-004)
+
+Three distinct signals, kept apart as required by ADR-015 section 9:
+
+| Signal            | Where                                      | Answers                                               |
+| ----------------- | ------------------------------------------ | ----------------------------------------------------- |
+| Liveness          | `GET /api/health` (backend)                | Is the process running? Never touches infra.          |
+| Readiness         | `GET /api/health/ready` (backend)          | Can it serve requests? 503 when a dependency is down. |
+| Dependency health | the `checks` array of the readiness report | Which of MySQL / Redis / object storage is up.        |
+
+- A dependency failure never crashes the backend: readiness answers 503 with a
+  stable machine-readable `reason` (`timeout` | `unavailable`); the driver detail
+  is logged server-side, redacted, and never returned (06-security-engineering).
+- Every probe runs in parallel with a 3s bound, so repeated polling by Compose
+  or the frontend panel stays cheap. Both endpoints send `Cache-Control: no-store`.
+- **Compose** gives a container one health state, so the `backend` service binds
+  it to _readiness_ (`/api/health/ready`): the container is running while MySQL is
+  down but must not start its dependants. The `frontend` service is health-checked
+  on `/` and only starts after the backend is `healthy`. Infrastructure containers
+  keep their own cheap checks (`mysqladmin ping`, `redis-cli ping`,
+  `/minio/health/live`).
+- Worker and scheduler health (ADR-011, section 6) arrives with their processes;
+  the probe list in `apps/backend/src/infrastructure/readiness/` is the single
+  place where a dependency is added.
+
 ## Configuration
 
 - All values are environment-driven and documented in `.env.example`; `.env` is
@@ -91,15 +116,21 @@ First-time setup is `cp .env.example .env` followed by `pnpm install`.
 Run from a clean state (`pnpm dev:reset`, then the startup flow above):
 
 1. `docker compose ps` — `mysql`, `redis` and `minio` report `healthy`
-   (with the `app` profile: `backend` too).
-2. `GET http://localhost:3000/api/health` — process liveness, always dependency-free.
+   (with the `app` profile: `backend` and `frontend` too; the backend state is
+   its `/api/health/ready` answer).
+2. `GET http://localhost:3000/api/health` — liveness, dependency-free: returns 200
+   even while MySQL or Redis is stopped.
 3. `GET http://localhost:3000/api/health/ready` — reports `database`, `redis` and
-   `object-storage` as `up`; a 503 body names the dependency that is down.
-4. `GET http://localhost:3001` — the shell shows the same readiness report, which
+   `object-storage` as `up`; a 503 body reports the dependency that is down with
+   a `reason`, and contains no credential or connection detail.
+4. `docker compose stop mysql` then repeat 2 and 3 — liveness stays 200, readiness
+   returns 503 naming `database`; `docker compose start mysql` returns both to
+   healthy (the same applies to `redis` and `minio`).
+5. `GET http://localhost:3001` — the shell shows the same readiness report, which
    proves frontend → backend connectivity.
-5. Restart (`pnpm infra:down && pnpm infra:up`) and repeat 3 — development data is
+6. Restart (`pnpm infra:down && pnpm infra:up`) and repeat 3 — development data is
    still present because the named volumes survive `down`.
-6. `git status --porcelain` / `git log` — no `.env` or secret value is tracked.
+7. `git status --porcelain` / `git log` — no `.env` or secret value is tracked.
 
 ## Open decision — MinIO container images
 

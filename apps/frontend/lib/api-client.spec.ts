@@ -15,7 +15,7 @@ describe('fetchBackendReadiness', () => {
   it('parses a not-ready report returned with a 503 status', async () => {
     const report = {
       status: 'not-ready',
-      checks: [{ name: 'redis', status: 'down', latencyMs: 3001, error: 'redis check timed out' }],
+      checks: [{ name: 'redis', status: 'down', latencyMs: 3001, reason: 'timeout' }],
     };
     fetchMock.mockResolvedValue({ json: async () => report });
 

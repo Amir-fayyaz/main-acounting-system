@@ -36,7 +36,11 @@ export default async function HomePage() {
                 </span>{' '}
                 <code>{check.name}</code>
                 <span className="status-panel__latency">{check.latencyMs}ms</span>
-                {check.error ? <span className="status-panel__error">{check.error}</span> : null}
+                {check.reason ? (
+                  <span className="status-panel__error">
+                    {check.reason === 'timeout' ? 'پاسخ‌گو نیست' : 'در دسترس نیست'}
+                  </span>
+                ) : null}
               </li>
             ))}
           </ul>

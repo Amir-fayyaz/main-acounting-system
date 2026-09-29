@@ -99,10 +99,43 @@ the repository root.
 
 ## Endpoints
 
-| Method | Path                | Purpose                                                                       |
-| ------ | ------------------- | ----------------------------------------------------------------------------- |
-| GET    | `/api/health`       | Process liveness. Dependency-free: a slow MySQL never restarts a healthy API. |
-| GET    | `/api/health/ready` | Readiness. Probes MySQL, Redis and object storage; 503 names the down one.    |
+Operational endpoints only — no business rule lives here (ADR-002, section 16),
+and they follow the same REST style as every other controller (ADR-013).
+
+| Method | Path                | Purpose                                                                                                     |
+| ------ | ------------------- | ----------------------------------------------------------------------------------------------------------- |
+| GET    | `/api/health`       | **Liveness.** The process is running. Dependency-free: a stopped MySQL never makes a healthy API look dead. |
+| GET    | `/api/health/ready` | **Readiness.** Probes MySQL, Redis and object storage in parallel; 200 when all are up, 503 otherwise.      |
+
+```jsonc
+// GET /api/health → 200
+{ "status": "ok", "service": "backend", "environment": "development", "timestamp": "2026-09-29T09:22:34.673Z" }
+
+// GET /api/health/ready → 200 (503 returns exactly the same shape when not ready)
+{
+  "status": "ready",
+  "checks": [
+    { "name": "database", "status": "up", "latencyMs": 24 },
+    { "name": "redis", "status": "up", "latencyMs": 20 },
+    { "name": "object-storage", "status": "up", "latencyMs": 18 }
+  ]
+}
+```
+
+Contract notes:
+
+- A down dependency reports `"status": "down"` plus a closed `"reason"` —
+  `timeout` or `unavailable`. Driver text, hostnames, connection strings and
+  credentials are **never** serialized: the redacted detail goes to the server
+  log instead (06-security-engineering — error output must not disclose
+  internals). A failed dependency is reported, never crashes the process
+  (ADR-015, section 9 — liveness and readiness stay separate).
+- Both endpoints answer with `Cache-Control: no-store` and only in-memory work
+  plus bounded parallel probes (3s timeout), so repeated polling from Compose
+  health checks or the frontend panel stays cheap.
+- Docker Compose binds the `backend` container's single health state to
+  **readiness** (`/api/health/ready`); use `/api/health` where only "the process
+  is alive" is meant.
 
 ## Rules for new code
 
