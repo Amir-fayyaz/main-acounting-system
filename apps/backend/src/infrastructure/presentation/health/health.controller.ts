@@ -1,4 +1,4 @@
-import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
+import { Controller, Get, Header, ServiceUnavailableException } from '@nestjs/common';
 import { AppConfigService } from '../../config/app-config.service.js';
 import { ReadinessService } from '../../readiness/readiness.service.js';
 import type { ReadinessReport } from '../../readiness/readiness.types.js';
@@ -11,13 +11,26 @@ export interface HealthResponse {
 }
 
 /**
- * Operational endpoints.
+ * Operational endpoints of the platform (ADR-002, section 16: no business rule
+ * lives here; ADR-013: same REST style as every other endpoint, under the global
+ * API prefix).
  *
- * `GET /health` answers "is the process alive?" and must stay dependency-free so
- * an orchestrator does not restart a healthy process because MySQL is slow.
- * `GET /health/ready` answers "can this process serve traffic?" by probing the
- * infrastructure it depends on. Neither endpoint carries a business rule
- * (ADR-002, section 16).
+ * The two checks are deliberately separate, as required by ADR-015 section 9
+ * and 10-observability:
+ *
+ * - `GET /health` — **Liveness**. Answers "is the process running?". It never
+ *   touches MySQL, Redis or object storage, so an orchestrator never restarts a
+ *   healthy process because a dependency is slow.
+ * - `GET /health/ready` — **Readiness** (with the per-dependency checks that make
+ *   up Dependency Health). Answers "can this process serve requests?". 200 with
+ *   every check up, 503 with the same report when a required dependency is down.
+ *   A dependency failure is reported, never crashes the process.
+ *
+ * Both responses are structured, machine-readable and stable: a dependency
+ * failure carries a closed `reason` vocabulary instead of driver text, so no
+ * secret, connection string or internal detail can reach the caller (the detail
+ * is logged server-side, redacted). `Cache-Control: no-store` keeps a polling
+ * client or proxy from ever seeing a cached answer.
  */
 @Controller('health')
 export class HealthController {
@@ -27,6 +40,7 @@ export class HealthController {
   ) {}
 
   @Get()
+  @Header('Cache-Control', 'no-store')
   check(): HealthResponse {
     return {
       status: 'ok',
@@ -37,11 +51,13 @@ export class HealthController {
   }
 
   @Get('ready')
+  @Header('Cache-Control', 'no-store')
   async ready(): Promise<ReadinessReport> {
     const report = await this.readiness.check();
 
     if (report.status !== 'ready') {
-      // 503 with the full report: the caller sees which dependency is down and why.
+      // 503 with the report as the body: the caller sees which dependency is
+      // down and why, in the same shape as the success response.
       throw new ServiceUnavailableException(report);
     }
 

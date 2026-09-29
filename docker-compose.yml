@@ -153,11 +153,14 @@ services:
         condition: service_healthy
     networks:
       - accounting
+    # Compose exposes a single health state, so it is bound to readiness: a
+    # backend whose MySQL/Redis/MinIO is down is running (liveness is served by
+    # GET /api/health) but must not receive traffic or start its dependants.
     healthcheck:
       test:
         [
           'CMD-SHELL',
-          'node -e "fetch(''http://127.0.0.1:3000/api/health'').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"',
+          'node -e "fetch(''http://127.0.0.1:3000/api/health/ready'').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"',
         ]
       interval: 15s
       timeout: 5s
@@ -182,10 +185,22 @@ services:
       # Host port only; the container always listens on 3001.
       - '${FRONTEND_PORT:-3001}:3001'
     depends_on:
+      # The shell renders the backend readiness report, so it starts once the
+      # backend is actually ready (not merely started).
       backend:
-        condition: service_started
+        condition: service_healthy
     networks:
       - accounting
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'node -e "fetch(''http://127.0.0.1:3001/'').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"',
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
 
 volumes:
   # Development data. `docker compose down` keeps these; `down -v` removes them.

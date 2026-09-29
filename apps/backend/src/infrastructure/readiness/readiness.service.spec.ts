@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { Logger } from '@nestjs/common';
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 import { NO_REDACTION, SecretRedactor } from '../config/secrets.js';
 import { ReadinessService } from './readiness.service.js';
 import type { DependencyProbe } from './readiness.types.js';
@@ -6,7 +7,16 @@ import type { DependencyProbe } from './readiness.types.js';
 const readyProbe: DependencyProbe = { name: 'redis', check: async () => undefined };
 
 describe('ReadinessService', () => {
+  let warn: MockInstance;
+
+  beforeEach(() => {
+    // Failing probes log a warning on purpose; capture it so the suite stays
+    // quiet and the log content can be asserted where it matters.
+    warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+  });
+
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.useRealTimers();
   });
 
@@ -29,9 +39,10 @@ describe('ReadinessService', () => {
       'object-storage',
     ]);
     expect(report.checks.every((check) => check.status === 'up')).toBe(true);
+    expect(report.checks.every((check) => check.reason === undefined)).toBe(true);
   });
 
-  it('reports the failing dependency together with its cause', async () => {
+  it('reports a failing dependency as down without rethrowing', async () => {
     const service = new ReadinessService(
       [
         readyProbe,
@@ -48,13 +59,13 @@ describe('ReadinessService', () => {
     const report = await service.check();
 
     expect(report.status).toBe('not-ready');
-    expect(report.checks).toContainEqual(
-      expect.objectContaining({
-        name: 'database',
-        status: 'down',
-        error: 'connect ECONNREFUSED 127.0.0.1:3306',
-      }),
-    );
+    expect(report.checks).toContainEqual({
+      name: 'database',
+      status: 'down',
+      latencyMs: expect.any(Number),
+      reason: 'unavailable',
+    });
+    expect(report.checks).not.toContainEqual(expect.objectContaining({ error: expect.anything() }));
   });
 
   it('reports a hanging dependency as down after the probe timeout', async () => {
@@ -69,25 +80,30 @@ describe('ReadinessService', () => {
     const report = await pending;
 
     expect(report.status).toBe('not-ready');
-    expect(report.checks[0]?.error).toContain('timed out');
+    expect(report.checks[0]).toMatchObject({ status: 'down', reason: 'timeout' });
   });
 
-  it('never returns a credential inside a probe error', async () => {
+  it('keeps driver detail out of the report but logs it redacted', async () => {
     const service = new ReadinessService(
       [
         {
           name: 'object-storage',
           check: async () => {
-            throw new Error('Access Key minio-local does not match secret top-secret-key');
+            throw new Error('Access denied for secret-key-do-not-leak');
           },
         },
       ],
-      new SecretRedactor(['top-secret-key']),
+      new SecretRedactor(['secret-key-do-not-leak']),
     );
 
     const report = await service.check();
 
-    expect(report.checks[0]?.error).not.toContain('top-secret-key');
-    expect(report.checks[0]?.error).toContain('[redacted]');
+    expect(JSON.stringify(report)).not.toContain('secret-key-do-not-leak');
+    expect(report.checks[0]).toMatchObject({ status: 'down', reason: 'unavailable' });
+
+    const logged = warn.mock.calls.map((call) => String(call[0])).join('\n');
+    expect(logged).toContain('object-storage');
+    expect(logged).toContain('[redacted]');
+    expect(logged).not.toContain('secret-key-do-not-leak');
   });
 });

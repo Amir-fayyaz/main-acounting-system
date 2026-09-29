@@ -11,7 +11,12 @@ export interface DependencyCheck {
   readonly name: string;
   readonly status: 'up' | 'down';
   readonly latencyMs: number;
-  readonly error?: string;
+  /**
+   * Why the dependency is down. The backend sends a closed vocabulary instead of
+   * driver text, so the panel can present it without ever exposing internal
+   * connection details.
+   */
+  readonly reason?: 'timeout' | 'unavailable';
 }
 
 export interface ReadinessReport {
