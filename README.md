@@ -276,8 +276,8 @@ Dockerized Deployment
 ```bash
 cp .env.example .env     # پیکربندی محیط توسعه
 pnpm install
-pnpm infra:up            # MySQL و Redis محلی
-docker compose ps
+pnpm infra:up            # MySQL و Redis و MinIO محلی
+docker compose ps        # همه سرویس‌ها باید healthy باشند
 pnpm dev                 # Backend روی پورت 3000 و Frontend روی پورت 3001
 ```
 
@@ -297,7 +297,28 @@ pnpm build
 
 <div dir="rtl" align="right">
 
-پس از اجرا، سلامت Backend از مسیر `GET /api/health` قابل بررسی است.
+پس از اجرا، سلامت فرایند Backend از مسیر `GET /api/health` و آمادگی زیرساخت (MySQL،
+Redis و MinIO) از مسیر `GET /api/health/ready` قابل بررسی است. صفحه اصلی Frontend
+همین گزارش را نمایش می‌دهد.
+
+</div>
+
+<div dir="rtl" align="right">
+
+برای اجرای کل محیط داخل Docker (به‌جای اجرای اپلیکیشن‌ها روی میزبان):
+
+</div>
+
+```bash
+pnpm stack:up            # زیرساخت + Backend + Frontend در کانتینر
+pnpm stack:logs
+pnpm stack:down          # توقف محیط؛ داده‌های توسعه در Volumeها می‌ماند
+pnpm dev:reset           # توقف و حذف کامل Volumeها (شروع از حالت پاک)
+```
+
+<div dir="rtl" align="right">
+
+گردش کامل راه‌اندازی و مراحل راستی‌آزمایی در `infrastructure/README.md` آمده است.
 
 </div>
 

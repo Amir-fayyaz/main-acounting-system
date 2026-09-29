@@ -1,0 +1,17 @@
+# Never ship the workspace state or local secrets into an image.
+.git
+.gitignore
+.freebuff
+.claude
+node_modules
+**/node_modules
+**/dist
+**/.next
+**/coverage
+**/*.tsbuildinfo
+docs
+.env
+.env.*
+!.env.example
+*.log
+.tmp

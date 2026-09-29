@@ -10,9 +10,13 @@
   color-scheme: light;
   --color-background: #f4f5f7;
   --color-surface: #ffffff;
+  --color-border: #dde1e7;
   --color-text: #16191d;
   --color-text-muted: #5a6472;
+  --color-positive: #1a7f37;
+  --color-negative: #b3261e;
   --font-family-base: system-ui, 'Segoe UI', Tahoma, Arial, sans-serif;
+  --font-family-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 * {
@@ -32,6 +36,11 @@ body {
   line-height: 1.7;
 }
 
+code {
+  font-family: var(--font-family-mono);
+  font-size: 0.85em;
+}
+
 .app-shell {
   max-width: 960px;
   margin: 0 auto;
@@ -48,10 +57,59 @@ body {
   color: var(--color-text-muted);
 }
 
-.app-shell__note {
-  margin: 0;
-  padding: 16px;
+.status-panel {
+  margin-top: 32px;
+  padding: 20px;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   background-color: var(--color-surface);
+}
+
+.status-panel__title {
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+}
+
+.status-panel__line {
+  margin: 0 0 12px;
+}
+
+.status-panel__checks {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.status-panel__check {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.status-panel__latency,
+.status-panel__hint {
   color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.status-panel__hint {
+  margin: 0;
+}
+
+.status-panel__error {
+  color: var(--color-negative);
+  font-size: 0.85rem;
+}
+
+.status-up {
+  color: var(--color-positive);
+  font-weight: 600;
+}
+
+.status-down {
+  color: var(--color-negative);
+  font-weight: 600;
 }

@@ -1,0 +1,40 @@
+# Development workspace image (FND-002).
+#
+# One image serves both application containers because the workspace has a single
+# lockfile and a single dependency installation; the process is selected by the
+# service `command` in docker-compose.yml.
+#
+# This is a development image and deliberately not a production artifact:
+# production images are built per process (Web, Worker, Scheduler) and are part of
+# the deployment task, where images are immutable and versioned (TECH-009,
+# 09-ci-cd-and-development-workflow.md).
+#
+# Build context is the repository root.
+
+FROM node:24-slim
+
+ENV PNPM_HOME=/pnpm \
+    PATH=/pnpm:$PATH \
+    NEXT_TELEMETRY_DISABLED=1 \
+    CI=1
+
+# pnpm is installed explicitly instead of relying on the bundled corepack shim, so
+# the version in `packageManager` is honoured deterministically.
+RUN npm install --global pnpm@10.29.3
+
+WORKDIR /workspace
+
+# Workspace manifests first: dependency installation is cached independently of
+# application source changes.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
+COPY apps/backend/package.json apps/backend/package.json
+COPY apps/frontend/package.json apps/frontend/package.json
+
+# The lockfile is the contract for reproducible installs.
+RUN pnpm install --frozen-lockfile
+
+COPY eslint.config.mjs ./
+COPY apps ./apps
+
+# Kept as a no-op command on purpose: each service provides its own process.
+CMD ["pnpm", "--version"]

@@ -5,6 +5,8 @@ import type {
   Environment,
   HttpEnvironment,
   NodeEnvironment,
+  RedisEnvironment,
+  StorageEnvironment,
 } from './environment.js';
 
 /**
@@ -43,5 +45,13 @@ export class AppConfigService {
 
   get database(): DatabaseEnvironment {
     return this.environment.database;
+  }
+
+  get redis(): RedisEnvironment {
+    return this.environment.redis;
+  }
+
+  get storage(): StorageEnvironment {
+    return this.environment.storage;
   }
 }
