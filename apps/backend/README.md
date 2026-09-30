@@ -22,7 +22,9 @@ src/
     ├── redis/                  Redis connection (non-authoritative, TECH-007)
     ├── storage/                Object storage port + MinIO adapter (TECH-008)
     ├── readiness/              Dependency probes behind /api/health/ready
-    └── presentation/           Operational endpoints (health, readiness)
+    ├── api/                    Cross-cutting REST baseline: versioning, error contract,
+    │                           validation, pagination, serialization, OpenAPI (FND-006)
+    └── presentation/           Operational + reference endpoints (health, example)
 test/                           HTTP-level (e2e) tests
 ```
 
@@ -137,6 +139,53 @@ Contract notes:
 - Docker Compose binds the `backend` container's single health state to
   **readiness** (`/api/health/ready`); use `/api/health` where only "the process
   is alive" is meant.
+
+## REST API and OpenAPI baseline (FND-006)
+
+The API conventions are installed once, in `bootstrap.ts`, so no module
+configures them per controller (full reference:
+`docs/product/v1/11-engineering/13-api-conventions.md`).
+
+- **Base route and versioning.** Global prefix `/api` plus URI versioning with
+  default version `1`. A business endpoint is `/api/v1/<resource>`; a controller
+  declares a plain `@Controller('<resource>')` and never a version segment.
+  Operational endpoints are `VERSION_NEUTRAL` and stay at `/api/health`.
+- **Validation.** One global validation pipe rejects unknown properties,
+  transforms the request into its DTO and returns per-field detail. It does not
+  replace a domain invariant.
+- **Errors.** Every failure leaves in the standard contract
+  `{ error: { code, category, message, correlationId, details? } }`, produced by
+  a global exception filter. A 5xx never contains a stack trace or the exception
+  message; the detail is logged server-side, redacted. A business failure is a
+  `DomainError` subclass from `src/shared/errors/` (thrown by domain/application)
+  and maps to `422` with category `domain`.
+- **Pagination.** List endpoints reuse `PaginationQueryDto` (`page`/`limit`) and
+  return `{ data, meta: { page, limit, total, totalPages } }`.
+- **Serialization.** UUID ids, ISO-8601 UTC date-times, `YYYY-MM-DD` calendar
+  dates, money as `{ amount: "<decimal string>", currency }`, enums as strings
+  and nullable fields present with `null` (helpers in
+  `infrastructure/api/serialization/`).
+- **OpenAPI.** The document is generated from the running app and served in
+  development and test only:
+
+| Resource     | URL                                   |
+| ------------ | ------------------------------------- |
+| Swagger UI   | `http://localhost:3000/api/docs`      |
+| OpenAPI JSON | `http://localhost:3000/api/docs-json` |
+| OpenAPI YAML | `http://localhost:3000/api/docs-yaml` |
+
+### Reference endpoints
+
+`ExampleController` is a non-business reference resource that demonstrates the
+conventions (validation, success, error, pagination). It is not a domain and is
+replaced by the first real module.
+
+| Method | Path                                  | Purpose                                                    |
+| ------ | ------------------------------------- | ---------------------------------------------------------- |
+| POST   | `/api/v1/examples`                    | Validate a body and create a reference item (`201`)        |
+| GET    | `/api/v1/examples`                    | List with the standard pagination envelope                 |
+| GET    | `/api/v1/examples/:id`                | Fetch one item, or the standard `404` error                |
+| GET    | `/api/v1/examples/probe/server-error` | Development/test only: raises a `500` to show the contract |
 
 ## Rules for new code
 

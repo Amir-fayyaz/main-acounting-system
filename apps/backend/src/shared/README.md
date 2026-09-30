@@ -21,5 +21,9 @@ our business domains, or does it merely look shared?_
 
 ## Status
 
-Empty by design; it is populated only when a real shared-kernel primitive is
-implemented.
+- `errors/domain-error.ts` — the base class for a business failure: an error
+  primitive (ADR-002, section 10) that the domain/application layers throw
+  without importing HTTP or NestJS, and that the API layer maps to the standard
+  error contract (FND-006).
+
+Populated only with a real shared-kernel primitive; nothing else is here yet.

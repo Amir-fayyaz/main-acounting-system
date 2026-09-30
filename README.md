@@ -322,6 +322,12 @@ pnpm build              # nest build + next build
 
 <div dir="rtl" align="right">
 
+API عمومی از `/api/v1` نسخه‌بندی می‌شود و قرارداد OpenAPI آن از خودِ کد تولید و در محیط توسعه در `http://localhost:3000/api/docs` ارائه می‌شود. پاسخ خطاها ساختار یکسان و `correlationId` دارد و هرگز Stack Trace یا جزئیات داخلی را افشا نمی‌کند. جزئیات قرارداد در `docs/product/v1/11-engineering/13-api-conventions.md` آمده است.
+
+</div>
+
+<div dir="rtl" align="right">
+
 پس از اجرا، «Liveness» فرایند Backend (زنده بودن پروسه، بدون وابستگی به زیرساخت) از
 مسیر `GET /api/health` و «Readiness» آن (آمادگی برای سرویس‌دهی با بررسی MySQL، Redis و
 MinIO) از مسیر `GET /api/health/ready` قابل بررسی است؛ خرابی یک وابستگی فقط همین دومی
