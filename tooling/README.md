@@ -15,6 +15,32 @@ future package resolve it without extra wiring:
 | `.prettierrc.json` / `.prettierignore` | Formatting rules                                                          |
 | `.editorconfig`                        | Editor-level consistency                                                  |
 
+## Quality gates (FND-005)
+
+The baseline checks required before review/merge are orchestrated by one script
+and executed by CI through the same command:
+
+| Asset                        | Purpose                                                                               |
+| ---------------------------- | ------------------------------------------------------------------------------------- |
+| root `package.json` `verify` | `pnpm verify` — the single local entry point for the baseline verification            |
+| `tooling/scripts/verify.mjs` | Runs the checks in order, stops at the first failure, reports check/scope/reproduce   |
+| `.github/workflows/ci.yml`   | Runs `pnpm verify` after `pnpm install --frozen-lockfile`; no check is re-implemented |
+
+Required checks, in order: **Typecheck → Lint → Format check → Tests → Build**.
+Every check also stays runnable on its own (`pnpm typecheck`, `pnpm lint`,
+`pnpm format:check`, `pnpm test`, `pnpm build`); the script only orchestrates those
+commands, so no quality rule is defined twice.
+
+Deliberate choices:
+
+- **No coverage threshold.** `05-testing-strategy.md` states that tests are not
+  written for a coverage number, so `test:cov` stays informational.
+- **No service containers are needed.** The HTTP tests override the readiness
+  probes and the frontend tests mock `fetch`, so the gates run without MySQL,
+  Redis or MinIO — locally and in CI alike.
+- **Still out of scope (FND-005):** deployment, dependency/security scanning and
+  release gates, per `09-ci-cd-and-development-workflow.md`.
+
 ## Direction
 
 `tooling/` hosts anything that must run across the workspace rather than inside one

@@ -293,16 +293,31 @@ pnpm dev                 # Backend روی پورت 3000 و Frontend روی پو�
 
 <div dir="rtl" align="right">
 
-بررسی‌های کیفیت:
+### بررسی‌های کیفیت (FND-005)
+
+همهٔ چک‌های پایه با **یک دستور** اجرا می‌شوند و در اولین خطا با Exit Code غیرصفر
+متوقف می‌شوند. گزارش شکست، نامِ چک، دامنهٔ اجرای آن و دستور بازتولید خطا را مشخص
+می‌کند. CI دقیقاً همین دستور را اجرا می‌کند (`.github/workflows/ci.yml`) تا چک‌های
+محلی و CI هرگز از هم فاصله نگیرند.
 
 </div>
 
 ```bash
-pnpm lint
-pnpm format:check
-pnpm typecheck
-pnpm test
-pnpm build
+pnpm verify      # typecheck → lint → format:check → test → build
+```
+
+<div dir="rtl" align="right">
+
+اجرای تک‌تک چک‌ها (به همان ترتیب):
+
+</div>
+
+```bash
+pnpm typecheck          # tsc --noEmit در همهٔ پکیج‌های workspace
+pnpm lint               # eslint .
+pnpm format:check       # prettier --check .
+pnpm test               # Vitest (بک‌اند) + Jest (فرانت)
+pnpm build              # nest build + next build
 ```
 
 <div dir="rtl" align="right">

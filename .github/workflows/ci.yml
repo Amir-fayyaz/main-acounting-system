@@ -1,0 +1,51 @@
+# Baseline development quality gates (FND-005).
+#
+# Single source of truth: this workflow deliberately contains no check of its
+# own. It installs the locked dependencies and runs `pnpm verify`, which is the
+# same command a developer runs locally, so local and CI can never drift apart.
+#
+# Out of scope for now (per 09-ci-cd-and-development-workflow): deployment,
+# dependency/security scanning and release gates — they are added when their own
+# tasks land.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality-gates:
+    name: pnpm verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      # The pnpm version comes from the `packageManager` field in package.json,
+      # so CI and local development use the same release.
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      # Node 24 matches infrastructure/docker/Dockerfile.dev and the local
+      # development environment (engines require >= 22).
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install the locked dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run the baseline quality gates
+        run: pnpm verify
