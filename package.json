@@ -19,6 +19,7 @@
     "lint:fix": "eslint . --fix",
     "test": "pnpm -r test",
     "test:backend:e2e": "pnpm --filter @accounting-saas/backend test:e2e",
+    "verify": "node tooling/scripts/verify.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "infra:up": "docker compose up -d",

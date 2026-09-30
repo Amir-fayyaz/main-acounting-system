@@ -458,6 +458,40 @@ docs/product/v1/
 
 ---
 
+# بررسی‌های کیفیت
+
+پیش از Review و Merge، چک‌های پایه باید موفق باشند. اجرای همهٔ آن‌ها با یک دستور:
+
+```bash
+pnpm verify
+```
+
+این دستور به ترتیب اجرا می‌کند و در اولین خطا با Exit Code غیرصفر متوقف می‌شود:
+
+```text
+1. Typecheck     pnpm typecheck
+2. Lint          pnpm lint
+3. Format Check  pnpm format:check
+4. Tests         pnpm test
+5. Build         pnpm build
+```
+
+نکات:
+
+- گزارش شکست شامل **نام چک**، **دامنهٔ اجرای آن** و **دستور بازتولید** همان خطا است؛
+  پکیج یا فایل دارای خطا در خروجیِ خود ابزار مشخص می‌شود (مثلاً
+  `apps/backend typecheck: …` یا مسیر فایل در خروجی ESLint/Prettier).
+- CI دقیقاً همین `pnpm verify` را اجرا می‌کند (`.github/workflows/ci.yml`)؛ چک‌ها
+  بین توسعه محلی و CI تکرار نمی‌شوند.
+- مرجع نهایی قالب‌دهی و Linter همان `Formatter و Linter رسمی پروژه` است؛ قانون جدید
+  به `eslint.config.mjs` یا `.prettierrc.json` اضافه می‌شود، نه به پیکربندی CI.
+- هیچ آستانهٔ درصد Coverage تعریف نشده است؛ Test صرفاً برای پوشش عددی نوشته نمی‌شود
+  (`05-testing-strategy.md`).
+- `Dependency/Security Checks` بخشی از حداقل CI
+  (`09-ci-cd-and-development-workflow.md`) است و هنوز پیاده‌سازی نشده است.
+
+---
+
 # Pull Request
 
 هر Pull Request باید:
@@ -479,6 +513,7 @@ docs/product/v1/
 - [ ] Tests اضافه/به‌روزرسانی شده‌اند
 - [ ] Type Check موفق است
 - [ ] Lint موفق است
+- [ ] pnpm verify موفق است (Format / Tests / Build)
 - [ ] Architecture Boundary نقض نشده است
 - [ ] Cross-Module Internal Access وجود ندارد
 - [ ] Secret یا داده واقعی وجود ندارد
@@ -487,7 +522,7 @@ docs/product/v1/
 - [ ] Documentation در صورت نیاز به‌روزرسانی شده است
 ```
 
-CI باید قبل از Merge موفق باشد.
+CI باید قبل از Merge موفق باشد؛ CI همان `pnpm verify` محلی را اجرا می‌کند.
 
 Review برای تغییرات حساس Domain، Security و Architecture باید دقیق‌تر از تغییرات عادی باشد.
 

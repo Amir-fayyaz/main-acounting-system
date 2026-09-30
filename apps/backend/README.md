@@ -40,7 +40,8 @@ pnpm --filter @accounting-saas/backend test:cov   # coverage
 ```
 
 From the repository root, `pnpm dev`, `pnpm typecheck`, `pnpm lint` and `pnpm test`
-run the whole workspace.
+run the whole workspace, and `pnpm verify` runs the complete baseline verification
+(Typecheck → Lint → Format check → Tests → Build) — the same command CI executes.
 
 ## Runtime and module system
 
