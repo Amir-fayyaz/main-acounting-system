@@ -19,5 +19,6 @@
 - `13-api-conventions.md`
 - `14-background-jobs.md`
 - `15-shared-kernel-primitives.md`
+- `16-result-and-error-model.md`
 
 Engineering نباید Business Rule یا Architecture Decision را دوباره تعریف کند؛ این پوشه نحوه اجرای آن تصمیم‌ها را مشخص می‌کند.

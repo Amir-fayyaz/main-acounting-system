@@ -41,6 +41,15 @@ is implemented, and update the structure document in the same change if they div
 7. Controllers validate input and delegate; they never hold business rules
    (ADR-002, section 16).
 8. Technical configuration is read in Infrastructure only (ADR-002, section 21).
+9. **Expected failures are returned, unexpected ones are thrown.** A use case
+   returns `Result<T, DomainError>` when not doing the work is a normal outcome the
+   business decided about (record missing, period closed, rule declined); it throws
+   — and does not catch — when something the business did not decide about breaks.
+   Domain errors come from `src/shared/errors/` (`ValidationError`,
+   `BusinessRuleError`, `ConflictError`, `NotFoundError`, `StateViolationError`, or
+   a module-owned subclass of `DomainError` with its own stable code). Domain code
+   never knows how those become a response, a log line or an alert. Contract:
+   `docs/product/v1/11-engineering/16-result-and-error-model.md`.
 
 ## Module boundary enforcement
 
