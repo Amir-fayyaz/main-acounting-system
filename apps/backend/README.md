@@ -330,6 +330,49 @@ return Result.ok(invoice);
 - No NestJS, HTTP, ORM, Redis or MySQL import is permitted here —
   `src/shared/framework-independence.spec.ts` fails the run if one appears.
 
+## Command / Query / Event contracts (SHR-003)
+
+`src/shared/messaging/` holds the framework-free contracts modules communicate through.
+Full contract: `docs/product/v1/11-engineering/17-command-query-event-contracts.md`.
+
+```ts
+import { Command } from '../shared/messaging/command.js';
+import { DomainEvent } from '../shared/messaging/domain-event.js';
+import { causedBy } from '../shared/messaging/message.js';
+
+class PostAccountingDocument extends Command<PostingPayload> {
+  constructor(payload: PostingPayload, options?: MessageOptions) {
+    super('PostAccountingDocument', payload, options);
+  }
+}
+
+class AccountingDocumentPosted extends DomainEvent<PostedData> {
+  constructor(data: PostedData, options?: MessageOptions) {
+    super('AccountingDocumentPosted', data, options);
+  }
+}
+
+const event = new AccountingDocumentPosted(data, causedBy(command));
+```
+
+- **Three readings, enforced at construction:** `Command` = intent (`PostAccountingDocument`),
+  `Query` = read (`GetSupplierBalance`), `DomainEvent` = past-tense fact
+  (`AccountingDocumentPosted`). A fact-shaped command name or an intent-shaped event
+  name throws `InvalidPrimitiveError` before an instance exists.
+- **Shared envelope:** `kind` + stable `name` + `metadata` (`messageId`, `messageType`,
+  `timestamp`, `version`, and optional `tenantId`, `correlationId`, `causationId`) plus
+  the body — `payload` / `params` / `data`. No HTTP, Redis, ORM or provider type is
+  referenced, and nothing business-specific lives in the kernel.
+- **Immutable value snapshots:** the message is frozen and its body deep-frozen, so
+  pass plain, self-contained data — never a live entity.
+- **`causedBy(source)`** links an effect to its cause: causation id, the flow's
+  correlation and the tenant are inherited; an explicit option always wins.
+- **Tenant context is resolved by the application** from the authenticated principal,
+  never taken from a client-supplied field; **event versions** are explicit (`1..9999`,
+  default `1`) so consumers can evolve (ADR-005, section 11).
+- Buses, outbox, persistence and delivery are deliberately not here — they are
+  Infrastructure work, out of scope for the shared kernel.
+
 ## Rules for new code
 
 See `src/modules/README.md` (module boundaries) and `src/shared/README.md` (shared
@@ -338,3 +381,6 @@ technology in `infrastructure/`, HTTP adapters in `presentation/`, and no module
 touches another module's internals. Amounts, quantities, identifiers and dates come
 from `src/shared/`, never from a hand-rolled type in a module. Expected failures
 are returned as `Result`, not thrown; unexpected ones are thrown, not returned.
+Modules talk to each other only through the command, query and domain-event
+contracts in `src/shared/messaging/` — never through another module's entity,
+repository or table.

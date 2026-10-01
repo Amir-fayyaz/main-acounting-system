@@ -5,12 +5,13 @@ Code that is genuinely domain-agnostic and reused across modules.
 Allowed here (ADR-002, section 10):
 
 - `Money`, `Currency`, identifier primitives, business-date primitives,
-  `Result`/error primitives, company (tenant) context primitives, the base domain
-  event contract.
+  `Result`/error primitives, company (tenant) context primitives, the base
+  command / query / domain-event contracts.
 
 That list is now implemented: `primitives/` + `id/` + `money/` + `quantity/` +
-`time/` are SHR-001, and `errors/` (the `Result` and `DomainError` model) is
-SHR-002.
+`time/` are SHR-001, `errors/` (the `Result` and `DomainError` model) is
+SHR-002, and `messaging/` (the Command, Query and Domain Event contracts) is
+SHR-003.
 
 Not allowed here:
 
@@ -43,6 +44,12 @@ our business domains, or does it merely look shared?_
 5. **Expected failures are returned, unexpected ones are thrown.** Use cases return
    `Result<T, DomainError>` for outcomes the business decided about, and let
    technical faults propagate. See `docs/product/v1/11-engineering/16-result-and-error-model.md`.
+6. **Message contracts state form, never delivery.** `messaging/` says what an
+   intent, a read and a fact look like — envelope, naming, metadata, immutability.
+   How a message is routed, persisted or delivered (bus, outbox, Redis) is
+   Infrastructure, and which commands and events exist is the owning module's
+   published contract. See
+   `docs/product/v1/11-engineering/17-command-query-event-contracts.md`.
 
 ## Layout
 
@@ -54,6 +61,14 @@ shared/
 │   ├── error-detail.ts        structured, serializable reasons
 │   ├── category-errors.ts     the five ready-made category failures
 │   └── result.ts              generic Result<T, E>
+├── messaging/
+│   ├── message-kind.ts        command | query | event
+│   ├── message-name.ts        imperative / read / past-tense naming rules
+│   ├── message-metadata.ts    id, type, timestamp, tenant, correlation, causation, version
+│   ├── message.ts             abstract Message + causedBy(...)
+│   ├── command.ts             intent contract, body under `payload`
+│   ├── query.ts               read contract, body under `params`
+│   └── domain-event.ts        fact contract, body under `data`
 ├── id/entity-id.ts            the one identifier every module uses
 ├── money/currency.ts          ISO 4217 code + minor unit, registry-extended
 ├── money/money.ts             exact amount + currency value object
@@ -80,6 +95,12 @@ whole tree.
 - `errors/category-errors.ts` — `ValidationError`, `BusinessRuleError`,
   `ConflictError`, `NotFoundError`, `StateViolationError`, plus
   `ValidationError.fromDetails(...)` for a multi-field rejection.
+- `messaging/` — the SHR-003 contracts: `Command<TPayload>`, `Query<TParams>` and
+  `DomainEvent<TData>` share one envelope (`kind` + `name` + `metadata` + body),
+  validate the imperative / read / past-tense reading of their name at
+  construction, carry the seven generic metadata fields (message id, type,
+  timestamp, version, tenant, correlation, causation) and freeze themselves and
+  their body. `causedBy(source)` derives an effect's metadata from its cause.
 - `primitives/` — exact decimal arithmetic on `bigint` (no floating point), the
   six `RoundingMode`s, UTC calendar helpers and the validation rules every
   primitive applies to raw input.
@@ -95,6 +116,7 @@ whole tree.
   Date, Created At, Posted At — from collapsing into one ambiguous type.
 
 See `docs/product/v1/11-engineering/15-shared-kernel-primitives.md` for the
-contract each primitive exposes and how a module is expected to use it, and
+contract each primitive exposes and how a module is expected to use it,
 `docs/product/v1/11-engineering/16-result-and-error-model.md` for the Result and
-error model.
+error model, and `docs/product/v1/11-engineering/17-command-query-event-contracts.md`
+for the command, query and domain-event contracts.
