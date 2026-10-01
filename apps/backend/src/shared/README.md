@@ -8,6 +8,10 @@ Allowed here (ADR-002, section 10):
   `Result`/error primitives, company (tenant) context primitives, the base domain
   event contract.
 
+That list is now implemented: `primitives/` + `id/` + `money/` + `quantity/` +
+`time/` are SHR-001, and `errors/` (the `Result` and `DomainError` model) is
+SHR-002.
+
 Not allowed here:
 
 - `Customer`, `Supplier`, `Product`, `Invoice`, `AccountingDocument`, `AgentPlan`,
@@ -32,14 +36,24 @@ our business domains, or does it merely look shared?_
 3. **Invalid states are rejected, never repaired.** Every constructor validates
    its input and throws `InvalidPrimitiveError` naming the primitive and the
    field, so a bad value fails loudly and identically everywhere.
-4. **`DomainError` stays for business failures.** A rejected primitive is a
-   programming error, not a client-facing one; see `errors/domain-error.ts`.
+4. **`DomainError` is for business failures only.** A rejected primitive is a
+   programming error, not a client-facing one — that stays
+   `InvalidPrimitiveError`. Throwing a `DomainError` means an _expected_ failure;
+   anything unexpected keeps being a plain exception.
+5. **Expected failures are returned, unexpected ones are thrown.** Use cases return
+   `Result<T, DomainError>` for outcomes the business decided about, and let
+   technical faults propagate. See `docs/product/v1/11-engineering/16-result-and-error-model.md`.
 
 ## Layout
 
 ```text
 shared/
-├── errors/domain-error.ts     business failure the API maps (FND-006)
+├── errors/
+│   ├── domain-error.ts        business failure the API maps (FND-006)
+│   ├── error-category.ts      VALIDATION | BUSINESS_RULE | CONFLICT | NOT_FOUND | STATE_VIOLATION
+│   ├── error-detail.ts        structured, serializable reasons
+│   ├── category-errors.ts     the five ready-made category failures
+│   └── result.ts              generic Result<T, E>
 ├── id/entity-id.ts            the one identifier every module uses
 ├── money/currency.ts          ISO 4217 code + minor unit, registry-extended
 ├── money/money.ts             exact amount + currency value object
@@ -57,7 +71,15 @@ whole tree.
 - `errors/domain-error.ts` — the base class for a business failure: an error
   primitive (ADR-002, section 10) that the domain/application layers throw
   without importing HTTP or NestJS, and that the API layer maps to the standard
-  error contract (FND-006).
+  error contract (FND-006). Carries a stable upper-snake `code`, a shared
+  `category`, structured `details` and a `toJSON()` snapshot; `cause` stays
+  internal by design. Frozen on construction.
+- `errors/result.ts` — `Result<T, E>`: `ok`/`fail`, safe `value()`/`error()`,
+  `match`, `map`, `mapError`, `andThen`, `orElse`, `getOrElse`, and `Result.all`
+  for composing many outcomes into one that reports every failure.
+- `errors/category-errors.ts` — `ValidationError`, `BusinessRuleError`,
+  `ConflictError`, `NotFoundError`, `StateViolationError`, plus
+  `ValidationError.fromDetails(...)` for a multi-field rejection.
 - `primitives/` — exact decimal arithmetic on `bigint` (no floating point), the
   six `RoundingMode`s, UTC calendar helpers and the validation rules every
   primitive applies to raw input.
@@ -73,4 +95,6 @@ whole tree.
   Date, Created At, Posted At — from collapsing into one ambiguous type.
 
 See `docs/product/v1/11-engineering/15-shared-kernel-primitives.md` for the
-contract each primitive exposes and how a module is expected to use it.
+contract each primitive exposes and how a module is expected to use it, and
+`docs/product/v1/11-engineering/16-result-and-error-model.md` for the Result and
+error model.

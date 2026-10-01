@@ -298,10 +298,43 @@ const id = EntityId.generate();
   folder and fails the test run if a file imports anything beyond `node:*` and
   sibling files inside `shared/`.
 
+## Result and error model (SHR-002)
+
+`src/shared/errors/` holds the framework-free model for _expected_ failures. Full
+contract: `docs/product/v1/11-engineering/16-result-and-error-model.md`.
+
+```ts
+import { Result } from '../shared/errors/result.js';
+import { NotFoundError, StateViolationError } from '../shared/errors/category-errors.js';
+
+if (period === undefined) {
+  return Result.fail(new NotFoundError('No open period for that date.'));
+}
+return Result.ok(invoice);
+```
+
+- **The boundary, stated in types:** expected domain failure → `Result` /
+  `DomainError`; unexpected technical failure → throw, and let the infrastructure
+  turn it into `INTERNAL_ERROR`. The domain never maps, logs or serializes.
+- **`DomainError`** carries a stable upper-snake `code`, a shared `category`
+  (`VALIDATION` | `BUSINESS_RULE` | `CONFLICT` | `NOT_FOUND` | `STATE_VIOLATION`),
+  optional structured `details`, and a `toJSON()` snapshot. `cause` is deliberately
+  excluded from that snapshot, because a cause is where a technical exception tends
+  to hide. Instances are frozen.
+- **`Result`** exposes safe `value()` / `error()` reads, `match`, `map`, `mapError`,
+  `andThen`, `orElse`, `getOrElse`, and `Result.all(...)` to compose many outcomes
+  into one that reports _every_ failure. Its combinators do not catch exceptions.
+- **Details are serializable by construction**: `code` + `message` + optional
+  `field` plus primitive extras only. Objects, arrays and non-finite numbers are
+  rejected, so a stack trace or a query cannot ride along.
+- No NestJS, HTTP, ORM, Redis or MySQL import is permitted here —
+  `src/shared/framework-independence.spec.ts` fails the run if one appears.
+
 ## Rules for new code
 
 See `src/modules/README.md` (module boundaries) and `src/shared/README.md` (shared
 kernel). In short: business rules live in `domain/`, use cases in `application/`,
 technology in `infrastructure/`, HTTP adapters in `presentation/`, and no module ever
 touches another module's internals. Amounts, quantities, identifiers and dates come
-from `src/shared/`, never from a hand-rolled type in a module.
+from `src/shared/`, never from a hand-rolled type in a module. Expected failures
+are returned as `Result`, not thrown; unexpected ones are thrown, not returned.
