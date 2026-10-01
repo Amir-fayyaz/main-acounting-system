@@ -30,7 +30,13 @@ describe('loadConfiguration', () => {
       bucket: 'accounting-local',
     });
     expect(configuration.logging).toEqual({ level: 'info' });
-    expect(configuration.jobs).toEqual({ concurrency: 4, maxAttempts: 3 });
+    expect(configuration.jobs).toEqual({
+      concurrency: 4,
+      maxAttempts: 3,
+      retryBaseDelayMs: 1000,
+      retryMaxDelayMs: 30000,
+    });
+    expect(configuration.scheduler).toEqual({ intervalMs: 1000 });
   });
 
   it('never invents a credential for a default value', () => {
@@ -61,6 +67,9 @@ describe('loadConfiguration', () => {
       LOG_LEVEL: 'debug',
       WORKER_CONCURRENCY: '8',
       WORKER_MAX_ATTEMPTS: '5',
+      WORKER_RETRY_BASE_DELAY_MS: '200',
+      WORKER_RETRY_MAX_DELAY_MS: '5000',
+      SCHEDULER_INTERVAL_MS: '250',
     });
 
     expect(configuration.environment).toMatchObject({ name: 'test', isTest: true });
@@ -85,7 +94,32 @@ describe('loadConfiguration', () => {
       secretKey: 'minio-secret',
     });
     expect(configuration.logging).toEqual({ level: 'debug' });
-    expect(configuration.jobs).toEqual({ concurrency: 8, maxAttempts: 5 });
+    expect(configuration.jobs).toEqual({
+      concurrency: 8,
+      maxAttempts: 5,
+      retryBaseDelayMs: 200,
+      retryMaxDelayMs: 5000,
+    });
+    expect(configuration.scheduler).toEqual({ intervalMs: 250 });
+  });
+
+  it('rejects a retry base delay above the ceiling', () => {
+    let caught: unknown;
+
+    try {
+      loadConfiguration({
+        NODE_ENV: 'development',
+        WORKER_RETRY_BASE_DELAY_MS: '10000',
+        WORKER_RETRY_MAX_DELAY_MS: '1000',
+      });
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(ConfigurationValidationError);
+    expect((caught as ConfigurationValidationError).problems).toEqual([
+      'WORKER_RETRY_BASE_DELAY_MS must not be greater than WORKER_RETRY_MAX_DELAY_MS',
+    ]);
   });
 
   it('accepts a fully configured production process', () => {

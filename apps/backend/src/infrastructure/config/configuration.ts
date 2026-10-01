@@ -52,6 +52,9 @@ const DEFAULT_STORAGE_BUCKET = 'accounting-local';
 const DEFAULT_LOG_LEVEL: LogLevel = 'info';
 const DEFAULT_JOBS_CONCURRENCY = 4;
 const DEFAULT_JOBS_MAX_ATTEMPTS = 3;
+const DEFAULT_RETRY_BASE_DELAY_MS = 1000;
+const DEFAULT_RETRY_MAX_DELAY_MS = 30000;
+const DEFAULT_SCHEDULER_INTERVAL_MS = 1000;
 
 /** Credentials. Required in production; reported by their consumer elsewhere. */
 const SECRET_KEYS = ['MYSQL_PASSWORD', 'MINIO_ACCESS_KEY', 'MINIO_SECRET_KEY'] as const;
@@ -247,8 +250,35 @@ export function loadConfiguration(raw: RawConfiguration = process.env): Configur
         DEFAULT_JOBS_MAX_ATTEMPTS,
         problems,
       ),
+      retryBaseDelayMs: readPositiveInteger(
+        raw,
+        'WORKER_RETRY_BASE_DELAY_MS',
+        DEFAULT_RETRY_BASE_DELAY_MS,
+        problems,
+      ),
+      retryMaxDelayMs: readPositiveInteger(
+        raw,
+        'WORKER_RETRY_MAX_DELAY_MS',
+        DEFAULT_RETRY_MAX_DELAY_MS,
+        problems,
+      ),
+    },
+    scheduler: {
+      intervalMs: readPositiveInteger(
+        raw,
+        'SCHEDULER_INTERVAL_MS',
+        DEFAULT_SCHEDULER_INTERVAL_MS,
+        problems,
+      ),
     },
   };
+
+  // Cross-field check: a base delay above the ceiling would make the bounded
+  // backoff climb past its own limit. Checked after the reads so every other
+  // problem is still reported in the same round.
+  if (configuration.jobs.retryBaseDelayMs > configuration.jobs.retryMaxDelayMs) {
+    problems.push('WORKER_RETRY_BASE_DELAY_MS must not be greater than WORKER_RETRY_MAX_DELAY_MS');
+  }
 
   if (problems.length > 0) {
     throw new ConfigurationValidationError(problems);

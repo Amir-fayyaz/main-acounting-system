@@ -283,6 +283,30 @@ pnpm dev                 # Backend روی پورت 3000 و Frontend روی پو�
 
 <div dir="rtl" align="right">
 
+برای اجرای کارهای پس‌زمینه، Worker و Scheduler به‌صورت جداگانه اجرا می‌شوند؛ کارها
+از طریق همان صف Redis اجرا می‌شوند و طولانی‌شدنِ عملیات درون درخواست HTTP انجام
+نمی‌شود:
+
+</div>
+
+```bash
+SERVICE_NAME=worker    pnpm --filter @accounting-saas/backend dev:worker
+SERVICE_NAME=scheduler pnpm --filter @accounting-saas/backend dev:scheduler
+```
+
+<div dir="rtl" align="right">
+
+کار نمونهٔ زیرساختی (بدون منطق کسب‌وکار) برای راستی‌آزمایی:
+
+</div>
+
+```bash
+pnpm --filter @accounting-saas/backend build
+pnpm --filter @accounting-saas/backend job:enqueue sample.echo '{"message":"hi"}'
+```
+
+<div dir="rtl" align="right">
+
 همهٔ متغیرهای محیطی موردنیاز در `.env.example` مستند شده‌اند. Backend پیش از ساختن
 برنامه، همهٔ مقادیر را اعتبارسنجی می‌کند: مقدار نامعتبر یا نبودِ `MYSQL_PASSWORD`،
 `MINIO_ACCESS_KEY` و `MINIO_SECRET_KEY` در `NODE_ENV=production` باعث خروج فوری با کد

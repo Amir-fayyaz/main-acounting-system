@@ -7,8 +7,13 @@
   "type": "module",
   "scripts": {
     "dev": "nest start --watch",
+    "dev:worker": "nest start --watch --entryFile worker",
+    "dev:scheduler": "nest start --watch --entryFile scheduler",
     "build": "nest build",
     "start": "node dist/main.js",
+    "start:worker": "node dist/worker.js",
+    "start:scheduler": "node dist/scheduler.js",
+    "job:enqueue": "node dist/cli/enqueue-sample-job.js",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
     "test": "vitest run",
