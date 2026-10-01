@@ -31,7 +31,11 @@ is implemented, and update the structure document in the same change if they div
 1. A module owns its data. No other module may read or write its internal entity,
    repository, table or ORM model (ADR-001, section 5; ADR-002, section 12).
 2. Cross-module communication happens only through published contracts: command,
-   query, application/domain service contract or domain event.
+   query, application/domain service contract or domain event. The base contracts a
+   module publishes from are `src/shared/messaging/`'s `Command`, `Query` and
+   `DomainEvent` (SHR-003) — a module imports those bases plus the _published_
+   contract types of another module, never its entities, repositories or tables.
+   Contract: `docs/product/v1/11-engineering/17-command-query-event-contracts.md`.
 3. Domain code must not import NestJS, Drizzle, mysql2, Redis, HTTP, a queue library
    or any provider SDK.
 4. Domain entity and persistence model are separate types, always (ADR-002, section 9).
