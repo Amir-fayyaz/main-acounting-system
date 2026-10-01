@@ -10,6 +10,9 @@
 # Complete containerised environment (infrastructure + backend + frontend):
 #   docker compose --profile app up -d --build
 #
+# This starts MySQL, Redis, MinIO, the backend, the worker, the scheduler and the
+# frontend; the worker and scheduler are the background-job processes (FND-007).
+#
 # Shutdown (development data is kept in named volumes):
 #   docker compose --profile app down
 #
@@ -166,6 +169,51 @@ services:
       timeout: 5s
       retries: 10
       start_period: 45s
+
+  # --- Background jobs (FND-007) -------------------------------------------
+  # The Worker consumes the queue and the Scheduler enqueues periodic work and
+  # promotes due retries; neither serves HTTP, so neither exposes a port or a
+  # Compose healthcheck. Process liveness is a deployment concern (ADR-008,
+  # section 9) — the real health signal is the job lifecycle in Redis.
+  worker:
+    profiles: ['app']
+    image: accounting-saas/app-dev
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.dev
+    command: ['pnpm', '--filter', '@accounting-saas/backend', 'dev:worker']
+    environment:
+      <<: *backend-environment
+      SERVICE_NAME: worker
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - accounting
+
+  scheduler:
+    profiles: ['app']
+    image: accounting-saas/app-dev
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.dev
+    command: ['pnpm', '--filter', '@accounting-saas/backend', 'dev:scheduler']
+    environment:
+      <<: *backend-environment
+      SERVICE_NAME: scheduler
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - accounting
 
   frontend:
     profiles: ['app']

@@ -17,5 +17,6 @@
 - `11-definition-of-done.md`
 - `12-development-conventions.md`
 - `13-api-conventions.md`
+- `14-background-jobs.md`
 
 Engineering نباید Business Rule یا Architecture Decision را دوباره تعریف کند؛ این پوشه نحوه اجرای آن تصمیم‌ها را مشخص می‌کند.

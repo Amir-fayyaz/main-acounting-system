@@ -74,15 +74,24 @@ export interface LoggingConfiguration {
 /**
  * Worker / job execution settings (ADR-008, TECH-011).
  *
- * They are validated here so every process sees the same contract; the queue
- * worker that consumes them does not exist yet and must not read the variables
- * itself when it is added.
+ * They are validated here so every process (HTTP, worker, scheduler) sees the
+ * same contract; no job process reads the raw variables itself.
  */
 export interface JobsConfiguration {
   /** How many jobs one worker process executes at a time (ADR-008, section 10). */
   readonly concurrency: number;
   /** Upper bound of attempts for a failing job before it is parked (ADR-008, section 6). */
   readonly maxAttempts: number;
+  /** First backoff delay for a retryable failure; each retry doubles it (ADR-008, section 6). */
+  readonly retryBaseDelayMs: number;
+  /** Ceiling of the exponential backoff, so a retry never waits unbounded. */
+  readonly retryMaxDelayMs: number;
+}
+
+/** Scheduler process settings (ADR-008, section 9). */
+export interface SchedulerConfiguration {
+  /** How often the scheduler promotes due work and periodic triggers, in milliseconds. */
+  readonly intervalMs: number;
 }
 
 export interface Configuration {
@@ -94,4 +103,5 @@ export interface Configuration {
   readonly storage: StorageConfiguration;
   readonly logging: LoggingConfiguration;
   readonly jobs: JobsConfiguration;
+  readonly scheduler: SchedulerConfiguration;
 }

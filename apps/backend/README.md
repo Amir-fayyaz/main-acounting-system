@@ -1,8 +1,14 @@
 # Backend — Web / REST API
 
 NestJS + TypeScript implementation of the modular monolith (ADR-001, TECH-001).
-This app is the `Web / REST API` process; Worker and Scheduler will reuse the same
-modules from this codebase in separate processes (ADR-001, section 10).
+This package hosts three processes that share one codebase and one configuration
+(ADR-001, section 10; ADR-008):
+
+| Process   | Entry               | Role                                         |
+| --------- | ------------------- | -------------------------------------------- |
+| Web/API   | `dist/main.js`      | REST API, serves HTTP requests               |
+| Worker    | `dist/worker.js`    | Consumes and executes queued background jobs |
+| Scheduler | `dist/scheduler.js` | Enqueues periodic work, promotes due retries |
 
 No business domain is implemented yet — this is the FND-001/FND-002 workspace baseline.
 
@@ -10,9 +16,17 @@ No business domain is implemented yet — this is the FND-001/FND-002 workspace 
 
 ```text
 src/
-├── main.ts                     Process entry point
-├── bootstrap.ts                Runtime configuration shared by the process and tests
+├── main.ts                     Web/API process entry point
+├── worker.ts                   Worker process entry point (FND-007)
+├── scheduler.ts                Scheduler process entry point (FND-007)
+├── worker.module.ts            Worker application context (no HTTP)
+├── scheduler.module.ts         Scheduler application context (no HTTP)
+├── worker-runner.service.ts    Worker consume/dispatch loop
+├── scheduler-runner.service.ts Scheduler promote/enqueue loop
+├── nest-log-levels.ts          Log-level mapping shared by all processes
+├── bootstrap.ts                Runtime configuration shared by the API and tests
 ├── app.module.ts               Root module (shared infrastructure + platform endpoints)
+├── cli/                        Standalone commands (enqueue a job for local runs)
 ├── modules/                    One directory per domain module (see modules/README.md)
 │   └── <module>/{domain,application,infrastructure,presentation}
 ├── shared/                     Shared kernel (see shared/README.md)
@@ -22,23 +36,34 @@ src/
     ├── redis/                  Redis connection (non-authoritative, TECH-007)
     ├── storage/                Object storage port + MinIO adapter (TECH-008)
     ├── readiness/              Dependency probes behind /api/health/ready
+    ├── jobs/                   Background-job infrastructure: queue port + Redis Streams
+    │                           adapter, dispatcher, retry policy, idempotency, scheduling,
+    │                           sample jobs (FND-007)
     ├── api/                    Cross-cutting REST baseline: versioning, error contract,
     │                           validation, pagination, serialization, OpenAPI (FND-006)
     └── presentation/           Operational + reference endpoints (health, example)
-test/                           HTTP-level (e2e) tests
+test/                           HTTP-level (e2e) tests, incl. job integration tests
 ```
 
 ## Commands
 
 ```bash
-pnpm --filter @accounting-saas/backend dev        # watch mode (nest start --watch)
+pnpm --filter @accounting-saas/backend dev        # API watch mode (nest start --watch)
+pnpm --filter @accounting-saas/backend dev:worker      # Worker watch mode
+pnpm --filter @accounting-saas/backend dev:scheduler   # Scheduler watch mode
 pnpm --filter @accounting-saas/backend build      # compile to dist/
-pnpm --filter @accounting-saas/backend start      # run the compiled build
+pnpm --filter @accounting-saas/backend start      # run the compiled API
+pnpm --filter @accounting-saas/backend start:worker      # run the compiled Worker
+pnpm --filter @accounting-saas/backend start:scheduler   # run the compiled Scheduler
 pnpm --filter @accounting-saas/backend typecheck  # tsc --noEmit
 pnpm --filter @accounting-saas/backend lint
 pnpm --filter @accounting-saas/backend test       # all tests (unit + HTTP)
 pnpm --filter @accounting-saas/backend test:e2e   # HTTP-level tests only
 pnpm --filter @accounting-saas/backend test:cov   # coverage
+
+# Background jobs (FND-007)
+pnpm --filter @accounting-saas/backend job:enqueue <type> [payload-json]
+REDIS_INTEGRATION=1 pnpm --filter @accounting-saas/backend test   # + Redis-backed job tests
 ```
 
 From the repository root, `pnpm dev`, `pnpm typecheck`, `pnpm lint` and `pnpm test`
@@ -186,6 +211,53 @@ replaced by the first real module.
 | GET    | `/api/v1/examples`                    | List with the standard pagination envelope                 |
 | GET    | `/api/v1/examples/:id`                | Fetch one item, or the standard `404` error                |
 | GET    | `/api/v1/examples/probe/server-error` | Development/test only: raises a `500` to show the contract |
+
+## Background jobs (FND-007)
+
+Async work runs outside the HTTP request lifecycle, in the Worker process; the
+Scheduler only produces work. Full conventions:
+`docs/product/v1/11-engineering/14-background-jobs.md`.
+
+- **Queue.** A `JobQueuePort` implemented with **Redis Streams** and a consumer
+  group, so each envelope reaches one Worker at a time and survives a crash.
+  Redis stays infrastructure only (TECH-007); a payload is never inspected by the
+  queue, so a new job type needs no queue change.
+- **Defining a job.** `defineJob<Payload>({ type, execute })` registered in
+  `JobsModule`. A duplicate type is rejected at startup; an unregistered type
+  reached by the Worker becomes a visible terminal failure, never a crash.
+- **Lifecycle.** `queued → running → completed | retrying | failed`. State is
+  written before the stream entry is acknowledged, so no outcome is hidden.
+- **Retry.** Only `RetryableJobError` is retried, with exponential jittered
+  backoff (`WORKER_RETRY_*`) capped by `WORKER_MAX_ATTEMPTS`. A `TerminalJobError`
+  or an unexpected error is never retried — an unknown outcome is not safe to
+  repeat. An exhausted budget parks the job as `failed` for review.
+- **Idempotency.** A definition may declare an `idempotencyKey`; a duplicate
+  delivery of a completed job is skipped instead of repeating its effect.
+- **Observability.** Every execution emits one structured JSON line with
+  `jobId`, `type`, `attempt`, `maxAttempts`, `correlationId`, `status`,
+  `durationMs` and the failure category (redacted), ready for a metrics layer.
+- **Crash recovery.** Entries whose consumer died before acknowledging are
+  reclaimed after a visibility timeout (`JOB_VISIBILITY_TIMEOUT_MS`).
+
+Local run (Redis must be up: `pnpm infra:up`):
+
+```bash
+# two terminals
+SERVICE_NAME=worker    pnpm --filter @accounting-saas/backend dev:worker
+SERVICE_NAME=scheduler pnpm --filter @accounting-saas/backend dev:scheduler
+
+# a third: enqueue a sample job (infrastructure-only, no business logic)
+pnpm --filter @accounting-saas/backend build
+pnpm --filter @accounting-saas/backend job:enqueue sample.echo '{"message":"hi"}'
+pnpm --filter @accounting-saas/backend job:enqueue sample.retry-then-succeed '{"succeedOnAttempt":3}'
+pnpm --filter @accounting-saas/backend job:enqueue sample.retry-exhausted
+pnpm --filter @accounting-saas/backend job:enqueue sample.terminal-failure
+```
+
+Sample job types live in `src/infrastructure/jobs/sample/`: `sample.echo`,
+`sample.retry-then-succeed`, `sample.retry-exhausted`, `sample.terminal-failure`,
+plus the `sample.periodic-echo` schedule that the Scheduler enqueues. They log,
+throw and complete — they perform no business operation.
 
 ## Rules for new code
 

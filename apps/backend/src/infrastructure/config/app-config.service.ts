@@ -9,6 +9,7 @@ import type {
   JobsConfiguration,
   LoggingConfiguration,
   RedisConfiguration,
+  SchedulerConfiguration,
   StorageConfiguration,
 } from './configuration.types.js';
 
@@ -69,5 +70,9 @@ export class AppConfigService {
 
   get jobs(): JobsConfiguration {
     return this.configuration.jobs;
+  }
+
+  get scheduler(): SchedulerConfiguration {
+    return this.configuration.scheduler;
   }
 }

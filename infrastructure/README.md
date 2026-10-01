@@ -30,6 +30,10 @@ Start application           pnpm dev               (host)
                             — or —
                             pnpm stack:up          (containers, profile `app`)
         ↓
+Start background jobs       SERVICE_NAME=worker    pnpm --filter @accounting-saas/backend dev:worker
+                            SERVICE_NAME=scheduler pnpm --filter @accounting-saas/backend dev:scheduler
+                            — or — included in pnpm stack:up (worker + scheduler services)
+        ↓
 Verify service health       pnpm docker compose ps         (all `healthy`)
                             GET http://localhost:3000/api/health/ready
                             GET http://localhost:3001       (frontend shell)
@@ -42,16 +46,18 @@ Stop environment            pnpm infra:down / pnpm stack:down
 
 ### Commands
 
-| Command           | Effect                                                           |
-| ----------------- | ---------------------------------------------------------------- |
-| `pnpm infra:up`   | Start MySQL, Redis, MinIO (healthchecks gate readiness)          |
-| `pnpm infra:down` | Stop them; **keeps** the named volumes                           |
-| `pnpm infra:logs` | Follow infrastructure logs                                       |
-| `pnpm dev`        | Backend (:3000) + Frontend (:3001) on the host, watching source  |
-| `pnpm stack:up`   | Build the dev image and start infrastructure + both applications |
-| `pnpm stack:down` | Stop the containerised environment; **keeps** the named volumes  |
-| `pnpm stack:logs` | Follow all container logs                                        |
-| `pnpm dev:reset`  | Stop everything **and delete** the volumes (clean local state)   |
+| Command           | Effect                                                          |
+| ----------------- | --------------------------------------------------------------- |
+| `pnpm infra:up`   | Start MySQL, Redis, MinIO (healthchecks gate readiness)         |
+| `pnpm infra:down` | Stop them; **keeps** the named volumes                          |
+| `pnpm infra:logs` | Follow infrastructure logs                                      |
+| `pnpm dev`        | Backend (:3000) + Frontend (:3001) on the host, watching source |
+| `dev:worker`      | Worker process on the host (consumes the job queue, FND-007)    |
+| `dev:scheduler`   | Scheduler process on the host (promotes retries, enqueues work) |
+| `pnpm stack:up`   | Build the dev image and start infrastructure + all processes    |
+| `pnpm stack:down` | Stop the containerised environment; **keeps** the named volumes |
+| `pnpm stack:logs` | Follow all container logs                                       |
+| `pnpm dev:reset`  | Stop everything **and delete** the volumes (clean local state)  |
 
 First-time setup is `cp .env.example .env` followed by `pnpm install`.
 
@@ -93,6 +99,10 @@ Three distinct signals, kept apart as required by ADR-015 section 9:
 - Worker and scheduler health (ADR-011, section 6) arrives with their processes;
   the probe list in `apps/backend/src/infrastructure/readiness/` is the single
   place where a dependency is added.
+- The `worker` and `scheduler` services expose no port, so Compose cannot health-check
+  them the way it health-checks the API (ADR-008, section 9): their signal is the job
+  lifecycle in Redis (a `queued → running → completed/failed` record) rather than an
+  HTTP probe, which is why neither service declares a Compose `healthcheck`.
 
 ## Configuration
 
@@ -131,6 +141,12 @@ Run from a clean state (`pnpm dev:reset`, then the startup flow above):
 6. Restart (`pnpm infra:down && pnpm infra:up`) and repeat 3 — development data is
    still present because the named volumes survive `down`.
 7. `git status --porcelain` / `git log` — no `.env` or secret value is tracked.
+8. Background jobs (FND-007): with `dev:worker` running, enqueue
+   `pnpm --filter @accounting-saas/backend job:enqueue sample.echo '{"message":"hi"}'`
+   and watch the worker log reach `Job completed` with `jobId`, `attempt` and
+   `durationMs`. Then enqueue `sample.retry-exhausted`: the log shows bounded
+   retries with a growing `retryDelayMs`, then `exhausted its attempts and was
+parked` with `status: failed` — while the worker stays up and keeps consuming.
 
 ## Open decision — MinIO container images
 

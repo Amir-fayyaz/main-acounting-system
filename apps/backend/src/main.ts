@@ -1,31 +1,12 @@
 import 'reflect-metadata';
-import { Logger, type LogLevel as NestLogLevel } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
 import { configureApplication } from './bootstrap.js';
-import type { LogLevel } from './infrastructure/config/configuration.types.js';
 import { loadConfiguration } from './infrastructure/config/configuration.js';
 import { loadDotEnvFiles } from './infrastructure/config/dotenv.js';
 import { redactProcessSecrets } from './infrastructure/config/secrets.js';
-
-/**
- * Maps the configured log level to the levels NestJS knows about.
- *
- * The mapping lives at the process boundary: the configuration layer states
- * *what* the level is, and the HTTP process decides how its framework applies it.
- */
-function toNestLogLevels(level: LogLevel): NestLogLevel[] {
-  switch (level) {
-    case 'debug':
-      return ['error', 'warn', 'log', 'debug', 'verbose'];
-    case 'info':
-      return ['error', 'warn', 'log'];
-    case 'warn':
-      return ['error', 'warn'];
-    case 'error':
-      return ['error'];
-  }
-}
+import { toNestLogLevels } from './nest-log-levels.js';
 
 async function bootstrap(): Promise<void> {
   // Configuration is loaded (and validated) before anything else is created, so
