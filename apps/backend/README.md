@@ -29,7 +29,12 @@ src/
 ├── cli/                        Standalone commands (enqueue a job for local runs)
 ├── modules/                    One directory per domain module (see modules/README.md)
 │   └── <module>/{domain,application,infrastructure,presentation}
-├── shared/                     Shared kernel (see shared/README.md)
+├── shared/                     Shared kernel, framework-free (see shared/README.md)
+│   ├── primitives/             Exact decimal (bigint), rounding modes, calendar, validation
+│   ├── id/                     EntityId
+│   ├── money/                  Currency + Money
+│   ├── quantity/               Quantity
+│   └── time/                   BusinessDate + DateTime
 └── infrastructure/
     ├── config/                 Typed configuration (.env discovery, validation, redaction)
     ├── database/               MySQL pool + Drizzle instance
@@ -259,9 +264,44 @@ Sample job types live in `src/infrastructure/jobs/sample/`: `sample.echo`,
 plus the `sample.periodic-echo` schedule that the Scheduler enqueues. They log,
 throw and complete — they perform no business operation.
 
+## Shared kernel primitives (SHR-001)
+
+`src/shared/` holds the framework-independent value objects every module uses for
+identifiers, money, quantities and dates. Full contract:
+`docs/product/v1/11-engineering/15-shared-kernel-primitives.md`.
+
+```ts
+import { RoundingMode } from '../shared/primitives/rounding-mode.js';
+import { Currency } from '../shared/money/currency.js';
+import { Money } from '../shared/money/money.js';
+import { BusinessDate } from '../shared/time/business-date.js';
+import { EntityId } from '../shared/id/entity-id.js';
+
+const total = price.multiply(quantity, RoundingMode.HALF_UP); // rounding is mandatory
+const vat = total.multiply('0.10', RoundingMode.HALF_UP);
+const issuedOn = BusinessDate.parse(payload.issuedOn); // YYYY-MM-DD, no timezone
+const id = EntityId.generate();
+```
+
+- **No floating point.** `Money` and `Quantity` store an exact decimal on `bigint`;
+  `0.1 + 0.2` is `0.3`, never `0.30000000000000004`.
+- **Amount and currency stay together.** Mixing currencies or units is rejected, not
+  coerced. `Currency.register(...)` adds a currency without touching any domain code;
+  the MVP registers `IRR` only.
+- **Invalid states are rejected** with `InvalidPrimitiveError`, naming the primitive
+  and the field — distinct from `DomainError`, which stays for client-safe business
+  failures.
+- **Four temporal roles stay distinct**: Business Date and Accounting Date are
+  `BusinessDate` (`YYYY-MM-DD`); Created At and Posted At are `DateTime` (UTC
+  instant). Name the field for the role.
+- **No framework dependency.** `src/shared/framework-independence.spec.ts` walks the
+  folder and fails the test run if a file imports anything beyond `node:*` and
+  sibling files inside `shared/`.
+
 ## Rules for new code
 
 See `src/modules/README.md` (module boundaries) and `src/shared/README.md` (shared
 kernel). In short: business rules live in `domain/`, use cases in `application/`,
 technology in `infrastructure/`, HTTP adapters in `presentation/`, and no module ever
-touches another module's internals.
+touches another module's internals. Amounts, quantities, identifiers and dates come
+from `src/shared/`, never from a hand-rolled type in a module.
