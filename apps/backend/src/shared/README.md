@@ -6,12 +6,15 @@ Allowed here (ADR-002, section 10):
 
 - `Money`, `Currency`, identifier primitives, business-date primitives,
   `Result`/error primitives, company (tenant) context primitives, the base
-  command / query / domain-event contracts.
+  command / query / domain-event contracts, and the persistence port
+  conventions (repository capabilities, revision, read port, persistence
+  failure).
 
 That list is now implemented: `primitives/` + `id/` + `money/` + `quantity/` +
 `time/` are SHR-001, `errors/` (the `Result` and `DomainError` model) is
-SHR-002, and `messaging/` (the Command, Query and Domain Event contracts) is
-SHR-003.
+SHR-002, `messaging/` (the Command, Query and Domain Event contracts) is
+SHR-003, and `persistence/` (the repository, read-port and persistence-failure
+contracts) is SHR-004.
 
 Not allowed here:
 
@@ -50,6 +53,14 @@ our business domains, or does it merely look shared?_
    Infrastructure, and which commands and events exist is the owning module's
    published contract. See
    `docs/product/v1/11-engineering/17-command-query-event-contracts.md`.
+7. **Persistence ports state access, never storage.** `persistence/` says what a
+   module may ask of its own data — load, add, update against an expected
+   revision, find by a closed criterion, read a plain model — and how an adapter
+   reports a technical failure. It ships no repository, no criteria builder, no
+   delete and no implementation type; where the repository lives, which criteria
+   exist and whether a record may ever be removed are the owning module's
+   decisions. See
+   `docs/product/v1/11-engineering/18-repository-and-persistence-ports.md`.
 
 ## Layout
 
@@ -69,6 +80,11 @@ shared/
 │   ├── command.ts             intent contract, body under `payload`
 │   ├── query.ts               read contract, body under `params`
 │   └── domain-event.ts        fact contract, body under `data`
+├── persistence/
+│   ├── persistence-error.ts   the five storage-failure kinds + translation boundary
+│   ├── revision.ts            optimistic-concurrency token of a stored record
+│   ├── repository-ports.ts    load / add / update / exists / find capabilities
+│   └── read-port.ts           read-only port returning plain read models
 ├── id/entity-id.ts            the one identifier every module uses
 ├── money/currency.ts          ISO 4217 code + minor unit, registry-extended
 ├── money/money.ts             exact amount + currency value object
@@ -101,6 +117,13 @@ whole tree.
   construction, carry the seven generic metadata fields (message id, type,
   timestamp, version, tenant, correlation, causation) and freeze themselves and
   their body. `causedBy(source)` derives an effect's metadata from its cause.
+- `persistence/` — the SHR-004 ports: repository capabilities (`get`, `add`,
+  `update` against a required expected revision, `exists`, `find` by a closed
+  criterion), the `Revision` token that makes a stale write a conflict instead
+  of an overwrite, a read-only `ReadPort` that returns plain read models, and
+  `PersistenceError`, the five-kind failure vocabulary an adapter translates
+  driver problems into (with retry/known-outcome policy per ADR-004, section
+  12). No repository, no criteria builder, no delete, no implementation type.
 - `primitives/` — exact decimal arithmetic on `bigint` (no floating point), the
   six `RoundingMode`s, UTC calendar helpers and the validation rules every
   primitive applies to raw input.
@@ -118,5 +141,7 @@ whole tree.
 See `docs/product/v1/11-engineering/15-shared-kernel-primitives.md` for the
 contract each primitive exposes and how a module is expected to use it,
 `docs/product/v1/11-engineering/16-result-and-error-model.md` for the Result and
-error model, and `docs/product/v1/11-engineering/17-command-query-event-contracts.md`
-for the command, query and domain-event contracts.
+error model, `docs/product/v1/11-engineering/17-command-query-event-contracts.md`
+for the command, query and domain-event contracts, and
+`docs/product/v1/11-engineering/18-repository-and-persistence-ports.md` for the
+repository, read-port and persistence-failure contracts.
