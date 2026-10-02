@@ -5,16 +5,17 @@ Code that is genuinely domain-agnostic and reused across modules.
 Allowed here (ADR-002, section 10):
 
 - `Money`, `Currency`, identifier primitives, business-date primitives,
-  `Result`/error primitives, company (tenant) context primitives, the base
-  command / query / domain-event contracts, and the persistence port
-  conventions (repository capabilities, revision, read port, persistence
-  failure).
+  `Result`/`error` primitives, company (tenant) context primitives, the base
+  command / query / domain-event contracts, the persistence port conventions
+  (repository capabilities, revision, read port, persistence failure) and the
+  application-owned transaction boundary contract.
 
 That list is now implemented: `primitives/` + `id/` + `money/` + `quantity/` +
 `time/` are SHR-001, `errors/` (the `Result` and `DomainError` model) is
 SHR-002, `messaging/` (the Command, Query and Domain Event contracts) is
-SHR-003, and `persistence/` (the repository, read-port and persistence-failure
-contracts) is SHR-004.
+SHR-003, `persistence/` (the repository, read-port and persistence-failure
+contracts) is SHR-004, and `transaction/` (the transaction-boundary contract)
+is SHR-005.
 
 Not allowed here:
 
@@ -61,6 +62,16 @@ our business domains, or does it merely look shared?_
    exist and whether a record may ever be removed are the owning module's
    decisions. See
    `docs/product/v1/11-engineering/18-repository-and-persistence-ports.md`.
+8. **The transaction boundary is Application-owned.** `transaction/` defines how
+   a use case makes several persistence operations commit or roll back as one
+   unit: one `TransactionBoundary.execute(...)` per boundary, nested calls join
+   the open boundary instead of opening a new one, and any failure inside —
+   thrown or reported as a failed `Result` — makes the whole boundary roll back.
+   Domain code may not open, observe or control a transaction (enforced by
+   `src/modules/module-boundaries.spec.ts`); repositories join the open
+   boundary through `scopedDatabase(...)` and never start one. A rollback covers
+   database effects only — an external call inside the boundary is not undone.
+   Contract: `docs/product/v1/11-engineering/19-transaction-boundary.md`.
 
 ## Layout
 
@@ -85,6 +96,11 @@ shared/
 │   ├── revision.ts            optimistic-concurrency token of a stored record
 │   ├── repository-ports.ts    load / add / update / exists / find capabilities
 │   └── read-port.ts           read-only port returning plain read models
+├── transaction/
+│   ├── transaction-context.ts    the ambient scope that propagates an open boundary
+│   ├── transaction-boundary.ts   the port, the runner delegate, the factory, the error
+│   ├── transaction-boundary.spec.ts   commit / rollback / nesting contract tests
+│   └── transaction-context.spec.ts    propagation contract tests
 ├── id/entity-id.ts            the one identifier every module uses
 ├── money/currency.ts          ISO 4217 code + minor unit, registry-extended
 ├── money/money.ts             exact amount + currency value object
@@ -124,6 +140,16 @@ whole tree.
   `PersistenceError`, the five-kind failure vocabulary an adapter translates
   driver problems into (with retry/known-outcome policy per ADR-004, section
   12). No repository, no criteria builder, no delete, no implementation type.
+- `transaction/` — the SHR-005 contract: `TransactionBoundary.execute(work)` is
+  the single way a use case opens a transaction (commit when the work resolves
+  with no failure reported, rollback when it throws or a failed `Result`
+  surfaces, `TransactionBoundaryError` when a failure inside was swallowed);
+  nested calls join the open boundary instead of opening a new one;
+  `TransactionContext` propagates the open boundary through the async chain on
+  `node:async_hooks` only; `scopedDatabase(db)` lets a repository join it — or
+  run standalone outside one. The port knows nothing of Drizzle, MySQL or
+  NestJS; the mechanics live in `src/infrastructure/database/`. External
+  effects inside the boundary are explicitly not rolled back.
 - `primitives/` — exact decimal arithmetic on `bigint` (no floating point), the
   six `RoundingMode`s, UTC calendar helpers and the validation rules every
   primitive applies to raw input.
@@ -144,4 +170,6 @@ contract each primitive exposes and how a module is expected to use it,
 error model, `docs/product/v1/11-engineering/17-command-query-event-contracts.md`
 for the command, query and domain-event contracts, and
 `docs/product/v1/11-engineering/18-repository-and-persistence-ports.md` for the
-repository, read-port and persistence-failure contracts.
+repository, read-port and persistence-failure contracts, and
+`docs/product/v1/11-engineering/19-transaction-boundary.md` for the
+application-owned transaction-boundary contract.

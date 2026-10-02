@@ -20,6 +20,10 @@ import { describe, expect, it } from 'vitest';
  *   shared kernel (plus `node:*` and the test runner). No framework, no ORM, no
  *   driver, no shared infrastructure — the ports are the Domain's whole view of
  *   persistence.
+ * - **Domain never touches a transaction.** A `domain/` file does not import
+ *   `src/shared/transaction/` at all: beginning, committing, rolling back or
+ *   even observing a transaction belongs to the Application layer, which owns
+ *   the boundary (SHR-005; ADR-004, section 6).
  * - **No cross-module persistence.** No module imports another module's
  *   `infrastructure/`, `persistence/` or `repositor(y|ies)` — where its
  *   adapters, ORM models and repository interfaces live. Published contracts
@@ -94,6 +98,14 @@ export function analyseModuleSource(file: string, source: string): string[] {
       violations.push(
         `${file}: domain imports "${specifier}"; Domain reaches only its own module and ` +
           'src/shared/.',
+      );
+      continue;
+    }
+
+    if (isDomainFile && /^shared\/transaction(\/|$)/.test(relativeToSrc)) {
+      violations.push(
+        `${file}: domain imports "${specifier}"; Domain never opens, joins or observes a ` +
+          'transaction — that boundary belongs to Application (SHR-005, ADR-004 section 6).',
       );
       continue;
     }
@@ -221,6 +233,30 @@ describe('module ownership — the checker itself', () => {
         "import { Party } from '../../party/domain/party.js';",
       ),
     ).toContainEqual(expect.stringContaining('Domain reaches only its own module'));
+  });
+
+  it('rejects Domain reaching for the transaction boundary', () => {
+    expect(
+      analyseModuleSource(
+        'sales/domain/invoice.ts',
+        "import type { TransactionBoundary } from '../../../shared/transaction/transaction-boundary.js';",
+      ),
+    ).toContainEqual(expect.stringContaining('Domain never opens, joins or observes'));
+  });
+
+  it('allows Application, but not Domain, to use the transaction boundary', () => {
+    expect(
+      analyseModuleSource(
+        'sales/application/commands/post.ts',
+        "import type { TransactionBoundary } from '../../../shared/transaction/transaction-boundary.js';",
+      ),
+    ).toEqual([]);
+    expect(
+      analyseModuleSource(
+        'sales/domain/invoice.ts',
+        "import { TransactionContext } from '../../../shared/transaction/transaction-context.js';",
+      ),
+    ).toContainEqual(expect.stringContaining('Domain never opens, joins or observes'));
   });
 
   it('ignores prose that merely looks like an import', () => {
