@@ -2,6 +2,9 @@ import { Inject, Injectable } from '@nestjs/common';
 import { SECRET_REDACTOR } from '../config/app-config.tokens.js';
 import { AppConfigService } from '../config/app-config.service.js';
 import type { SecretHolder } from '../config/secrets.js';
+import { createTenantContext } from '../../shared/tenant/tenant-context.js';
+import { TenantScope } from '../../shared/tenant/tenant-scope.js';
+import { TenantContextMissingError } from '../../shared/tenant/tenant.errors.js';
 import { classifyJobError } from './job.errors.js';
 import type { RegisteredJob } from './job.definition.js';
 import { IDEMPOTENCY_TTL_SECONDS, JOB_STATE_TTL_SECONDS } from './job-keys.js';
@@ -37,6 +40,11 @@ import type { ClaimedJob, JobQueuePort } from './queue/job-queue.port.js';
  * - A definition that declares an idempotency key is skipped when a completed
  *   execution already claimed it, so duplicate delivery does not repeat an
  *   effect (ADR-004, section 11).
+ * - The envelope's `companyId` is restored as the ambient tenant scope for the
+ *   execution (SHR-007): a tenant-scoped job runs under its own company's
+ *   context, a job without one runs under an explicit system scope, and a job
+ *   that declares `tenantScoped` but carries no company never runs at all
+ *   (ADR-008, sections 12 and 14).
  */
 @Injectable()
 export class JobDispatcher {
@@ -144,6 +152,14 @@ export class JobDispatcher {
     envelope: JobEnvelope,
     fields: JobLogFields,
   ): Promise<JobExecutionResult | void> {
+    if (definition.tenantScoped === true && envelope.companyId === undefined) {
+      // Fail closed before anything is claimed or run: a tenant-scoped job
+      // without owner context must not execute under someone else's — or no
+      // one's — tenant (ADR-008, section 14). The failure is not retryable: no
+      // attempt can succeed until the producer enqueues the context with it.
+      throw new TenantContextMissingError('missing');
+    }
+
     const idempotencyKey = definition.idempotencyKey?.(envelope.payload, envelope);
 
     if (idempotencyKey !== undefined) {
@@ -175,7 +191,7 @@ export class JobDispatcher {
     };
 
     try {
-      return await definition.execute(context);
+      return await this.runInTenantScope(definition, envelope, context);
     } catch (error) {
       // The attempt did not complete, so release the claim and let the retry (or
       // a later re-run) claim it again. A successful execution keeps the claim.
@@ -185,6 +201,26 @@ export class JobDispatcher {
 
       throw error;
     }
+  }
+
+  /**
+   * Executes the definition under the tenant scope its envelope carries (SHR-007):
+   * the company the job belongs to, restored from the immutable envelope — never
+   * from mutable external state — or an explicit system scope when it has none.
+   */
+  private runInTenantScope(
+    definition: RegisteredJob,
+    envelope: JobEnvelope,
+    context: JobExecutionContext,
+  ): Promise<JobExecutionResult | void> {
+    const work = (): Promise<JobExecutionResult | void> => definition.execute(context);
+
+    return envelope.companyId !== undefined
+      ? TenantScope.run(
+          createTenantContext(envelope.companyId, { correlationId: envelope.correlationId }),
+          work,
+        )
+      : TenantScope.runAsSystem(work);
   }
 
   private async failTerminally(

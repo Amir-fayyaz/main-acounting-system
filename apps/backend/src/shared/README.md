@@ -14,8 +14,8 @@ That list is now implemented: `primitives/` + `id/` + `money/` + `quantity/` +
 `time/` are SHR-001, `errors/` (the `Result` and `DomainError` model) is
 SHR-002, `messaging/` (the Command, Query and Domain Event contracts) is
 SHR-003, `persistence/` (the repository, read-port and persistence-failure
-contracts) is SHR-004, and `transaction/` (the transaction-boundary contract)
-is SHR-005.
+contracts) is SHR-004, `transaction/` (the transaction-boundary contract) is
+SHR-005, and `tenant/` (the tenant-context contract) is SHR-007.
 
 Not allowed here:
 
@@ -72,6 +72,18 @@ our business domains, or does it merely look shared?_
    boundary through `scopedDatabase(...)` and never start one. A rollback covers
    database effects only — an external call inside the boundary is not undone.
    Contract: `docs/product/v1/11-engineering/19-transaction-boundary.md`.
+9. **The tenant context is established only from a trusted boundary.**
+   `tenant/` defines the company boundary an operation runs under: three states
+   (`available`, `system`, `missing`), ambient propagation on
+   `node:async_hooks` through `TenantScope`, and the message-stamping helper
+   `tenantScopedMessageOptions(...)`. Fail closed — a tenant-scoped operation
+   without an available scope throws `TenantContextMissingError`; no client
+   input (header, body, query) is ever read as tenant identity; no business
+   data (names, memberships, permissions) enters the context. Domain may not
+   read the ambient scope at all (enforced by
+   `src/modules/module-boundaries.spec.ts`); it receives the scope as an
+   explicit operation input from Application.
+   Contract: `docs/product/v1/11-engineering/21-tenant-context.md`.
 
 ## Layout
 
@@ -101,6 +113,12 @@ shared/
 │   ├── transaction-boundary.ts   the port, the runner delegate, the factory, the error
 │   ├── transaction-boundary.spec.ts   commit / rollback / nesting contract tests
 │   └── transaction-context.spec.ts    propagation contract tests
+├── tenant/
+│   ├── tenant-context.ts         the context value: available / system / missing + factory
+│   ├── tenant-scope.ts           the ambient scope: current / require / run / runAsSystem
+│   ├── tenant.errors.ts          TenantContextMissingError (fail-closed refusal)
+│   ├── tenant-message-options.ts stamps the scope onto a message being raised
+│   └── *.spec.ts                 creation / propagation / isolation / stamping tests
 ├── id/entity-id.ts            the one identifier every module uses
 ├── money/currency.ts          ISO 4217 code + minor unit, registry-extended
 ├── money/money.ts             exact amount + currency value object
@@ -150,6 +168,17 @@ whole tree.
   run standalone outside one. The port knows nothing of Drizzle, MySQL or
   NestJS; the mechanics live in `src/infrastructure/database/`. External
   effects inside the boundary are explicitly not rolled back.
+- `tenant/` — the SHR-007 contract: `TenantContext` is the company boundary of
+  one operation in three states (`available` with `tenantId` + optional
+  `correlationId`, explicit `system`, `missing`); `TenantScope` publishes it
+  down the async chain (`current()` / `require()` / `run(...)` /
+  `runAsSystem(...)`), refuses a tenant-scoped operation without a scope via
+  `TenantContextMissingError`, and never reads a client input;
+  `tenantScopedMessageOptions(...)` stamps the scope onto a Command, Query or
+  Domain Event with explicit values always winning. Domain never touches the
+  ambient scope (enforced by `src/modules/module-boundaries.spec.ts`). The
+  mechanics live at the trusted entry points: the Worker (from the job
+  envelope) and, later, the authenticated request path.
 - `primitives/` — exact decimal arithmetic on `bigint` (no floating point), the
   six `RoundingMode`s, UTC calendar helpers and the validation rules every
   primitive applies to raw input.
@@ -172,4 +201,6 @@ for the command, query and domain-event contracts, and
 `docs/product/v1/11-engineering/18-repository-and-persistence-ports.md` for the
 repository, read-port and persistence-failure contracts, and
 `docs/product/v1/11-engineering/19-transaction-boundary.md` for the
-application-owned transaction-boundary contract.
+application-owned transaction-boundary contract, and
+`docs/product/v1/11-engineering/21-tenant-context.md` for the tenant-context
+contract.

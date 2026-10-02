@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { AppConfigService } from '../config/app-config.service.js';
 import { loadConfiguration } from '../config/configuration.js';
 import { createSecretRedactor, NO_REDACTION } from '../config/secrets.js';
+import type { TenantContext } from '../../shared/tenant/tenant-context.js';
+import { TenantScope } from '../../shared/tenant/tenant-scope.js';
 import type { RegisteredJob } from './job.definition.js';
 import { JobDispatcher } from './job-dispatcher.js';
 import { RetryableJobError, TerminalJobError } from './job.errors.js';
@@ -299,5 +301,92 @@ describe('JobDispatcher', () => {
 
     await dispatcher.dispatch(claimed(envelope('test.flaky', {}, 2, 3)));
     expect(executions).toBe(2);
+  });
+});
+
+describe('JobDispatcher � tenant scope (SHR-007)', () => {
+  it('restores the envelope company as the ambient tenant context', async () => {
+    let observed: TenantContext | undefined;
+    const probe: RegisteredJob = {
+      type: 'test.tenant-probe',
+      async execute() {
+        await Promise.resolve();
+        observed = TenantScope.current();
+
+        return { outcome: 'completed' };
+      },
+    };
+    const { dispatcher } = setup([probe]);
+    const job = { ...envelope('test.tenant-probe'), companyId: 'tenant-42' };
+
+    await expect(dispatcher.dispatch(claimed(job))).resolves.toBe('completed');
+
+    expect(observed).toEqual({
+      state: 'available',
+      tenantId: 'tenant-42',
+      correlationId: 'correlation-1',
+    });
+    expect(TenantScope.current().state).toBe('missing');
+  });
+
+  it('runs a job without a company under an explicit system scope', async () => {
+    let observed: TenantContext | undefined;
+    const probe: RegisteredJob = {
+      type: 'test.system-probe',
+      async execute() {
+        observed = TenantScope.current();
+
+        return { outcome: 'completed' };
+      },
+    };
+    const { dispatcher } = setup([probe]);
+
+    await expect(dispatcher.dispatch(claimed(envelope('test.system-probe')))).resolves.toBe(
+      'completed',
+    );
+
+    expect(observed).toEqual({ state: 'system' });
+    expect(TenantScope.current().state).toBe('missing');
+  });
+
+  it('refuses to run a tenant-scoped job that carries no company context', async () => {
+    let executions = 0;
+    const tenantJob: RegisteredJob = {
+      type: 'test.tenant-scoped',
+      tenantScoped: true,
+      async execute() {
+        executions += 1;
+
+        return { outcome: 'completed' };
+      },
+    };
+    const { dispatcher, queue } = setup([tenantJob]);
+    const job = envelope('test.tenant-scoped');
+
+    await expect(dispatcher.dispatch(claimed(job))).resolves.toBe('failed');
+
+    expect(executions).toBe(0);
+    expect(queue.retries).toHaveLength(0);
+    expect(queue.states.get(job.jobId)?.lastError?.name).toBe('TenantContextMissingError');
+    expect(queue.states.get(job.jobId)?.lastError?.category).toBe('unknown');
+  });
+
+  it('runs a tenant-scoped job when the envelope carries its company', async () => {
+    let observed: TenantContext | undefined;
+    const tenantJob: RegisteredJob = {
+      type: 'test.tenant-scoped-ok',
+      tenantScoped: true,
+      async execute() {
+        observed = TenantScope.current();
+
+        return { outcome: 'completed' };
+      },
+    };
+    const { dispatcher } = setup([tenantJob]);
+    const job = { ...envelope('test.tenant-scoped-ok'), companyId: 'tenant-42' };
+
+    await expect(dispatcher.dispatch(claimed(job))).resolves.toBe('completed');
+
+    expect(observed).toMatchObject({ state: 'available', tenantId: 'tenant-42' });
   });
 });

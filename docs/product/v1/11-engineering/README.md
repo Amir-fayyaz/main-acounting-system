@@ -24,5 +24,6 @@
 - `18-repository-and-persistence-ports.md`
 - `19-transaction-boundary.md`
 - `20-transactional-outbox.md`
+- `21-tenant-context.md`
 
 Engineering نباید Business Rule یا Architecture Decision را دوباره تعریف کند؛ این پوشه نحوه اجرای آن تصمیم‌ها را مشخص می‌کند.

@@ -38,7 +38,8 @@ src/
 │   ├── errors/                 Result, DomainError, the five categories (SHR-002)
 │   ├── messaging/              Command / Query / Domain Event contracts (SHR-003)
 │   ├── persistence/            Repository, read-port and failure contracts (SHR-004)
-│   └── transaction/            Transaction boundary contract (SHR-005)
+│   ├── transaction/            Transaction boundary contract (SHR-005)
+│   └── tenant/                 Tenant context scope + message stamping (SHR-007)
 └── infrastructure/
     ├── config/                 Typed configuration (.env discovery, validation, redaction)
     ├── database/               MySQL pool + Drizzle instance + transaction runner (SHR-005)
@@ -543,6 +544,56 @@ async execute(command: PostInvoice): Promise<Result<Invoice, DomainError>> {
   server behavior — invisible until commit, rollback leaves nothing to publish,
   backoff gating, permanent → failed → requeue, exhausted budget, crashed-run
   recovery, and two concurrent publishers never claiming the same row.
+
+## Tenant context (SHR-007)
+
+`src/shared/tenant/` holds the framework-free abstraction for the company
+boundary an operation runs under: a `TenantContext` with three states
+(`available`, explicit `system`, `missing`) and the ambient `TenantScope` that
+propagates it down the async call chain on `node:async_hooks` — the same
+mechanism as the transaction boundary, with no HTTP, NestJS, Redis or database
+type underneath. Full contract:
+`docs/product/v1/11-engineering/21-tenant-context.md`.
+
+```ts
+import { TenantScope } from '../shared/tenant/tenant-scope.js';
+import { tenantScopedMessageOptions } from '../shared/tenant/tenant-message-options.js';
+
+// A trusted entry point (today: the Worker / a test; later: the auth guard)
+// establishes the scope; everything below reads it without a parameter.
+await TenantScope.run(createTenantContext(companyId, { correlationId }), async () => {
+  const tenant = TenantScope.require(); // throws TenantContextMissingError when absent
+  return new PostInvoice(payload, tenantScopedMessageOptions());
+});
+```
+
+- **Three states, fail closed.** `TenantScope.current()` is always one of
+  `available` (tenant + optional correlation), `system` (explicitly no tenant —
+  infrastructure jobs), or `missing`. `require()` and
+  `tenantScopedMessageOptions()` throw `TenantContextMissingError` unless the
+  scope is available, so a tenant-scoped operation refuses to run rather than
+  degrading to a wider one.
+- **Never from the client.** No header, body or query is ever read as tenant
+  identity (doc 17, §8): the context is established only from a trusted
+  boundary — an authenticated principal (later), a job envelope (now), a test.
+  The e2e proves a spoofed `x-tenant-id` header stays `missing`.
+- **Messages stamp themselves.** `tenantScopedMessageOptions()` fills
+  `metadata.tenantId`/`correlationId` from the ambient scope, with an explicit
+  value (e.g. `causedBy(command)` inheriting its cause's tenant) always winning.
+- **Jobs restore their context.** `JobEnqueuer` defaults `companyId` and
+  `correlationId` from the ambient scope; `JobDispatcher` restores
+  `envelope.companyId` around the execution (`run` / `runAsSystem`). A job
+  declaring `tenantScoped: true` without a `companyId` never runs — it is
+  parked as terminal (ADR-008, §12/§14).
+- **Domain stays explicit.** `module-boundaries.spec.ts` fails the run if
+  `domain/` imports `src/shared/tenant/`: Domain receives the tenant scope as
+  an operation input, never through ambient state.
+- **Tests.** `src/shared/tenant/*.spec.ts` cover creation, validation,
+  propagation, concurrent isolation and nesting;
+  `src/infrastructure/jobs/*.spec.ts` cover envelope restore and the
+  tenant-scoped refusal; `test/tenant-context.e2e-spec.ts` proves spoofed
+  headers, concurrent-request isolation and no cross-request leakage over real
+  HTTP.
 
 ## Rules for new code
 
