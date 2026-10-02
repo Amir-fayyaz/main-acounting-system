@@ -117,6 +117,11 @@ export interface UpdatesAggregate<TAggregate> {
    * @throws PersistenceError — `CONFLICT` on a stale revision or an unknown
    * id, `REJECTED` when the store refuses the shape. On failure the stored
    * record is untouched.
+   *
+   * Adapters report a lost race with `staleRevisionConflict(...)` from
+   * `optimistic-concurrency.ts` (SHR-008), so the conflict carries the revision
+   * that was expected and the application can tell a stale write apart from a
+   * generic refusal.
    */
   update(aggregate: TAggregate, expectedRevision: Revision): Promise<WriteReceipt>;
 }

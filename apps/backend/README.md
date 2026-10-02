@@ -595,6 +595,66 @@ await TenantScope.run(createTenantContext(companyId, { correlationId }), async (
   headers, concurrent-request isolation and no cross-request leakage over real
   HTTP.
 
+## Optimistic concurrency (SHR-008)
+
+`src/shared/persistence/optimistic-concurrency.ts` and `stale-revision.ts` hold
+the shared mechanism that keeps a protected record from being silently
+overwritten by a rival write. Full contract:
+`docs/product/v1/11-engineering/22-optimistic-concurrency.md`.
+
+```ts
+import { staleRevisionConflict, toConflict } from '../shared/persistence/optimistic-concurrency.js';
+
+// infrastructure/persistence/ — one statement, so the check and the write are
+// the same step: nothing can land between them (ADR-004, section 27).
+const [header] = scopedDatabase(db)
+  .update(schema)
+  .set({ name, revision: expectedRevision.value + 1 })
+  .where(and(eq(schema.id, id), eq(schema.revision, expectedRevision.value)));
+
+if (header.affectedRows === 0) {
+  throw staleRevisionConflict('AccountingDocuments.update', expectedRevision);
+}
+
+// application/ — a lost race is the one storage failure a caller can act on
+try {
+  await repository.update(changed, loaded.revision);
+} catch (error) {
+  const conflict = toConflict(error);
+  if (conflict !== undefined) {
+    return Result.fail(conflict); // ConflictError + STALE_REVISION detail
+  }
+  throw error; // unreachable store, refused write — technical, stays thrown
+}
+```
+
+- **A revision is a token, not a business value.** `Revision` is a deterministic
+  `1..2147483647` integer that moves by exactly one per _successful_ write and
+  carries no period, status or ownership meaning. It is read with the record
+  (`Loaded<T>`), required back on write, and Domain never has to store it.
+- **A stale write fails and the record does not move.** `update(aggregate,
+expectedRevision)` has no path that omits the expectation, so a silent
+  last-write-wins write is unrepresentable; the losing write leaves the winner
+  untouched and advances nothing.
+- **The failure is distinguishable.** A lost race is a `PersistenceError(CONFLICT)`
+  (`retryable: false`, `outcomeKnown: true`) whose cause is the plain-data
+  `StaleRevision { expected, actual? }`; `isConcurrencyConflict` and
+  `staleRevisionOf` read it back, `toConflict` translates it into the shared
+  `ConflictError` with an `STALE_REVISION` detail — a category no validation
+  failure can claim.
+- **Check and mutation share the boundary.** Adapters write through
+  `scopedDatabase(...)`, so the compare-and-swap runs on the use case's own
+  transaction: a conflict rolls the whole boundary back instead of committing
+  half a use case (SHR-005).
+- **No hidden retry.** The infrastructure never replays a failed business
+  mutation — reloading, rebuilding, asking for review or returning the conflict
+  to the caller is the application's or the owning Domain's decision.
+- **Tests.** `src/shared/persistence/optimistic-concurrency.spec.ts` and
+  `stale-revision.spec.ts` cover load, stale refusal, revision progression,
+  several concurrent writers, distinguishability, no-retry and the boundary;
+  `test/optimistic-concurrency.e2e-spec.ts` (opt-in, `MYSQL_INTEGRATION=1`)
+  proves the same contract on real MySQL transactions racing on one row.
+
 ## Rules for new code
 
 See `src/modules/README.md` (module boundaries) and `src/shared/README.md` (shared

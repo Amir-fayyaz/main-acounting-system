@@ -2,6 +2,7 @@ import { ConflictError } from '../errors/category-errors.js';
 import type { DomainError } from '../errors/domain-error.js';
 import { describeValue, validateMatches, validateNonBlank } from '../primitives/assert.js';
 import { InvalidPrimitiveError } from '../primitives/invalid-primitive-error.js';
+import { isStaleRevision, staleRevisionDetail } from './stale-revision.js';
 
 /**
  * The failure boundary between a storage adapter and the code that asked for
@@ -165,10 +166,20 @@ export class PersistenceError extends Error {
    * outcome) carries no client decision, so it is left alone for the boundary
    * to retry, park for review, or surface as `INTERNAL_ERROR`. A module that
    * recognises its own situation maps it with its own `DomainError` code.
+   *
+   * When the adapter reported *why* the write lost — the stale revision built
+   * by `staleRevisionConflict(...)` (SHR-008) — the translated conflict carries
+   * it as an `ErrorDetail`, so the caller learns the revision it worked against
+   * instead of a bare apology. A cause that is driver text stays out: only the
+   * recognised stale-revision shape is ever surfaced.
    */
   public toDomainError(): DomainError | undefined {
     if (this.kind === PersistenceFailureKind.CONFLICT) {
-      return new ConflictError('The record was changed by someone else. Reload it and try again.');
+      const stale = isStaleRevision(this.cause) ? this.cause : undefined;
+      return new ConflictError(
+        'The record was changed by someone else. Reload it and try again.',
+        stale === undefined ? undefined : [staleRevisionDetail(stale)],
+      );
     }
     return undefined;
   }

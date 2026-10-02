@@ -7,14 +7,16 @@ Allowed here (ADR-002, section 10):
 - `Money`, `Currency`, identifier primitives, business-date primitives,
   `Result`/`error` primitives, company (tenant) context primitives, the base
   command / query / domain-event contracts, the persistence port conventions
-  (repository capabilities, revision, read port, persistence failure) and the
-  application-owned transaction boundary contract.
+  (repository capabilities, revision, read port, persistence failure, the shared
+  stale-revision conflict) and the application-owned transaction boundary
+  contract.
 
 That list is now implemented: `primitives/` + `id/` + `money/` + `quantity/` +
 `time/` are SHR-001, `errors/` (the `Result` and `DomainError` model) is
 SHR-002, `messaging/` (the Command, Query and Domain Event contracts) is
 SHR-003, `persistence/` (the repository, read-port and persistence-failure
-contracts) is SHR-004, `transaction/` (the transaction-boundary contract) is
+contracts, plus the shared optimistic-concurrency mechanism) is SHR-004 and
+SHR-008, `transaction/` (the transaction-boundary contract) is
 SHR-005, and `tenant/` (the tenant-context contract) is SHR-007.
 
 Not allowed here:
@@ -84,6 +86,20 @@ our business domains, or does it merely look shared?_
    `src/modules/module-boundaries.spec.ts`); it receives the scope as an
    explicit operation input from Application.
    Contract: `docs/product/v1/11-engineering/21-tenant-context.md`.
+10. **Optimistic concurrency is the only concurrency mechanism here.**
+    `persistence/` supplies the shared shape of a lost race: a `Revision` read
+    with the record, an `expectedRevision` that is required on every write, a
+    stale update refused through `staleRevisionConflict(...)` with its
+    `{ expected, actual }` cause behind it, and the guards the application uses
+    to recognise one (`isConcurrencyConflict`, `staleRevisionOf`, `toConflict`).
+    There is no write that does not name the revision it expects, no silent
+    last-write-wins, no automatic retry of a failed business mutation — reload,
+    rebuild, re-ask or return the conflict are decisions for the application or
+    the owning Domain — and no locking API of any store, pessimistic or
+    database-specific, anywhere a Domain or Application can see. Which records
+    are protected, and what a conflict means to the business, stays the owning
+    module's policy.
+    Contract: `docs/product/v1/11-engineering/22-optimistic-concurrency.md`.
 
 ## Layout
 
@@ -107,6 +123,8 @@ shared/
 │   ├── persistence-error.ts   the five storage-failure kinds + translation boundary
 │   ├── revision.ts            optimistic-concurrency token of a stored record
 │   ├── repository-ports.ts    load / add / update / exists / find capabilities
+│   ├── stale-revision.ts      the stale-update cause as plain data + its detail
+│   ├── optimistic-concurrency.ts  the shared conflict: build it, detect it, translate it
 │   └── read-port.ts           read-only port returning plain read models
 ├── transaction/
 │   ├── transaction-context.ts    the ambient scope that propagates an open boundary
@@ -158,6 +176,15 @@ whole tree.
   `PersistenceError`, the five-kind failure vocabulary an adapter translates
   driver problems into (with retry/known-outcome policy per ADR-004, section
   12). No repository, no criteria builder, no delete, no implementation type.
+- `persistence/stale-revision.ts` + `persistence/optimistic-concurrency.ts` — the
+  SHR-008 mechanism built on those ports: `staleRevisionConflict(operation,
+expected, actual?)` is the one way an adapter reports a lost race (a
+  `PersistenceError(CONFLICT)` whose cause is the plain-data
+  `StaleRevision { expected, actual }`), and `staleRevisionOf`,
+  `isConcurrencyConflict` and `toConflict` are how the application reads one
+  back and turns it into the shared `ConflictError` — carrying the revision it
+  worked against as an `ErrorDetail`. Nothing here retries a failed mutation,
+  and nothing here knows what a record means.
 - `transaction/` — the SHR-005 contract: `TransactionBoundary.execute(work)` is
   the single way a use case opens a transaction (commit when the work resolves
   with no failure reported, rollback when it throws or a failed `Result`
@@ -203,4 +230,5 @@ repository, read-port and persistence-failure contracts, and
 `docs/product/v1/11-engineering/19-transaction-boundary.md` for the
 application-owned transaction-boundary contract, and
 `docs/product/v1/11-engineering/21-tenant-context.md` for the tenant-context
-contract.
+contract, and `docs/product/v1/11-engineering/22-optimistic-concurrency.md` for
+the shared optimistic-concurrency mechanism.
