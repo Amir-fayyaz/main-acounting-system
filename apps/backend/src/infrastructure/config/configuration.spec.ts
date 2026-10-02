@@ -37,6 +37,13 @@ describe('loadConfiguration', () => {
       retryMaxDelayMs: 30000,
     });
     expect(configuration.scheduler).toEqual({ intervalMs: 1000 });
+    expect(configuration.outbox).toEqual({
+      batchSize: 25,
+      maxAttempts: 5,
+      retryBaseDelayMs: 1000,
+      retryMaxDelayMs: 60000,
+      publishIntervalMs: 1000,
+    });
   });
 
   it('never invents a credential for a default value', () => {
@@ -70,6 +77,11 @@ describe('loadConfiguration', () => {
       WORKER_RETRY_BASE_DELAY_MS: '200',
       WORKER_RETRY_MAX_DELAY_MS: '5000',
       SCHEDULER_INTERVAL_MS: '250',
+      OUTBOX_BATCH_SIZE: '10',
+      OUTBOX_MAX_ATTEMPTS: '7',
+      OUTBOX_RETRY_BASE_DELAY_MS: '400',
+      OUTBOX_RETRY_MAX_DELAY_MS: '12000',
+      OUTBOX_PUBLISH_INTERVAL_MS: '500',
     });
 
     expect(configuration.environment).toMatchObject({ name: 'test', isTest: true });
@@ -101,6 +113,13 @@ describe('loadConfiguration', () => {
       retryMaxDelayMs: 5000,
     });
     expect(configuration.scheduler).toEqual({ intervalMs: 250 });
+    expect(configuration.outbox).toEqual({
+      batchSize: 10,
+      maxAttempts: 7,
+      retryBaseDelayMs: 400,
+      retryMaxDelayMs: 12000,
+      publishIntervalMs: 500,
+    });
   });
 
   it('rejects a retry base delay above the ceiling', () => {
@@ -119,6 +138,25 @@ describe('loadConfiguration', () => {
     expect(caught).toBeInstanceOf(ConfigurationValidationError);
     expect((caught as ConfigurationValidationError).problems).toEqual([
       'WORKER_RETRY_BASE_DELAY_MS must not be greater than WORKER_RETRY_MAX_DELAY_MS',
+    ]);
+  });
+
+  it('rejects an outbox retry base delay above the ceiling', () => {
+    let caught: unknown;
+
+    try {
+      loadConfiguration({
+        NODE_ENV: 'development',
+        OUTBOX_RETRY_BASE_DELAY_MS: '60000',
+        OUTBOX_RETRY_MAX_DELAY_MS: '5000',
+      });
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(ConfigurationValidationError);
+    expect((caught as ConfigurationValidationError).problems).toEqual([
+      'OUTBOX_RETRY_BASE_DELAY_MS must not be greater than OUTBOX_RETRY_MAX_DELAY_MS',
     ]);
   });
 

@@ -8,6 +8,7 @@ import type {
   HttpConfiguration,
   JobsConfiguration,
   LoggingConfiguration,
+  OutboxConfiguration,
   RedisConfiguration,
   SchedulerConfiguration,
   StorageConfiguration,
@@ -74,5 +75,9 @@ export class AppConfigService {
 
   get scheduler(): SchedulerConfiguration {
     return this.configuration.scheduler;
+  }
+
+  get outbox(): OutboxConfiguration {
+    return this.configuration.outbox;
   }
 }

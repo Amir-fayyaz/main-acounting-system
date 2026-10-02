@@ -48,6 +48,8 @@ src/
     ├── jobs/                   Background-job infrastructure: queue port + Redis Streams
     │                           adapter, dispatcher, retry policy, idempotency, scheduling,
     │                           sample jobs (FND-007)
+    ├── outbox/                 Transactional outbox: recorder, store, publisher, Redis
+    │                           event bus adapter, outbox job/schedule (SHR-006)
     ├── api/                    Cross-cutting REST baseline: versioning, error contract,
     │                           validation, pagination, serialization, OpenAPI (FND-006)
     └── presentation/           Operational + reference endpoints (health, example)
@@ -74,8 +76,8 @@ pnpm --filter @accounting-saas/backend test:cov   # coverage
 pnpm --filter @accounting-saas/backend job:enqueue <type> [payload-json]
 REDIS_INTEGRATION=1 pnpm --filter @accounting-saas/backend test   # + Redis-backed job tests
 
-# Transaction boundary against a real MySQL server (SHR-005)
-MYSQL_INTEGRATION=1 pnpm --filter @accounting-saas/backend test   # + MySQL-backed transaction tests
+# Transaction boundary and transactional outbox against a real MySQL server (SHR-005, SHR-006)
+MYSQL_INTEGRATION=1 pnpm --filter @accounting-saas/backend test   # + MySQL-backed transaction & outbox tests
 ```
 
 From the repository root, `pnpm dev`, `pnpm typecheck`, `pnpm lint` and `pnpm test`
@@ -128,8 +130,10 @@ committed or baked into an image (Engineering Principles, rule 10).
 **Grouping.** `configuration.types.ts` groups the values into `environment`
 (identification plus the derived `isDevelopment`/`isTest`/`isProduction` flags),
 `runtime` (`SERVICE_NAME`), `http`, `database`, `redis`, `storage`, `logging`
-(`LOG_LEVEL`) and `jobs` (`WORKER_CONCURRENCY`, `WORKER_MAX_ATTEMPTS` — reserved for
-the worker process, ADR-008).
+(`LOG_LEVEL`), `jobs` (`WORKER_CONCURRENCY`, `WORKER_MAX_ATTEMPTS` — reserved for
+the worker process, ADR-008), `scheduler` (`SCHEDULER_INTERVAL_MS`) and `outbox`
+(`OUTBOX_BATCH_SIZE`, `OUTBOX_MAX_ATTEMPTS`, `OUTBOX_RETRY_*`,
+`OUTBOX_PUBLISH_INTERVAL_MS` — the publication contract of SHR-006).
 
 The database pool, the Redis connection and the MinIO client are all created
 without opening a connection, so the API process starts even when the
@@ -486,6 +490,59 @@ async execute(command: PostInvoice): Promise<Result<Invoice, DomainError>> {
   `MYSQL_INTEGRATION=1`) proves them on a real MySQL server — commit, rollback,
   invisibility until commit, concurrent conflict, and the database/external
   effect line.
+
+## Transactional outbox (SHR-006)
+
+`src/infrastructure/outbox/` records a domain event inside the same transaction
+as the state change it reports, then publishes it to the Redis event stream from
+a background loop — so no code ever writes the database and Redis at the same
+time. Full contract:
+`docs/product/v1/11-engineering/20-transactional-outbox.md`.
+
+```ts
+import { Inject } from '@nestjs/common';
+import { OUTBOX_RECORDER } from '../infrastructure/outbox/outbox.tokens.js';
+import type { OutboxRecorder } from '../infrastructure/outbox/outbox-recorder.js';
+
+constructor(@Inject(OUTBOX_RECORDER) private readonly outbox: OutboxRecorder) {}
+
+async execute(command: PostInvoice): Promise<Result<Invoice, DomainError>> {
+  return this.transactions.execute(async () => {
+    await this.invoices.add(invoice);
+    // Same transaction as the write above: commit together, roll back together.
+    await this.outbox.record(new InvoicePosted(data, causedBy(command)));
+    return Result.ok(invoice);
+  });
+}
+```
+
+- **Recording requires an open boundary.** `record` throws
+  `OutboxTransactionRequiredError` with no transaction on the stack — the row
+  must ride the use case's connection or the atomicity promise is void.
+- **Identity is fixed at record time.** The row stores the envelope once
+  (`event_id` = `metadata.messageId`, unique) and every attempt republishes the
+  same bytes; consumers deduplicate on that id. Exactly-once is not claimed —
+  at-least-once plus idempotent consumers is (ADR-004, section 15).
+- **State machine:** `pending → publishing → published`, with `retrying`
+  (bounded, jittered backoff) and `failed` (permanent failure or exhausted
+  attempts, kept forever and recoverable via `requeue`). The claim is an atomic
+  `UPDATE … ORDER BY … LIMIT` under a fresh `claim_id`, so concurrent publishers
+  split a batch instead of double-publishing it.
+- **The Worker publishes it.** The Scheduler enqueues `outbox.publish` every
+  `OUTBOX_PUBLISH_INTERVAL_MS`; the job runs one `publishBatch` and logs the full
+  account (`released/claimed/published/retrying/failed`). A crashed run's rows
+  are released after a 60s visibility timeout and retried — a duplicate delivery
+  with the same `event_id`, never a silent loss.
+- **Configuration** (`OUTBOX_BATCH_SIZE`, `OUTBOX_MAX_ATTEMPTS`,
+  `OUTBOX_RETRY_BASE_DELAY_MS`, `OUTBOX_RETRY_MAX_DELAY_MS`,
+  `OUTBOX_PUBLISH_INTERVAL_MS`) is validated once with every other contract and
+  read through `config.outbox`.
+- **Tests.** `src/infrastructure/outbox/*.spec.ts` prove the recorder, the state
+  machine, the job tick and the Redis adapter against ports;
+  `test/outbox.e2e-spec.ts` (opt-in, `MYSQL_INTEGRATION=1`) proves the real
+  server behavior — invisible until commit, rollback leaves nothing to publish,
+  backoff gating, permanent → failed → requeue, exhausted budget, crashed-run
+  recovery, and two concurrent publishers never claiming the same row.
 
 ## Rules for new code
 

@@ -94,6 +94,25 @@ export interface SchedulerConfiguration {
   readonly intervalMs: number;
 }
 
+/**
+ * Transactional-outbox publication settings (SHR-006; ADR-004 section 12).
+ *
+ * They live here with every other contract so all three processes validate the
+ * same values; no publisher reads a raw variable itself.
+ */
+export interface OutboxConfiguration {
+  /** How many due records one publisher run claims at most. */
+  readonly batchSize: number;
+  /** Attempt budget per record; at zero the record parks as `failed`, kept for recovery. */
+  readonly maxAttempts: number;
+  /** First backoff delay for a transient publication failure; each attempt doubles it. */
+  readonly retryBaseDelayMs: number;
+  /** Ceiling of that backoff, so a failing event never pins a schedule of its own. */
+  readonly retryMaxDelayMs: number;
+  /** How often the Scheduler enqueues an `outbox.publish` tick (FND-007). */
+  readonly publishIntervalMs: number;
+}
+
 export interface Configuration {
   readonly environment: EnvironmentIdentification;
   readonly runtime: ApplicationRuntime;
@@ -104,4 +123,5 @@ export interface Configuration {
   readonly logging: LoggingConfiguration;
   readonly jobs: JobsConfiguration;
   readonly scheduler: SchedulerConfiguration;
+  readonly outbox: OutboxConfiguration;
 }

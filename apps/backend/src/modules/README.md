@@ -82,6 +82,16 @@ is implemented, and update the structure document in the same change if they div
     Conflict inside a boundary (`PersistenceError(CONFLICT)` → `ConflictError`)
     rolls the boundary back instead of overwriting the winner. Contract:
     `docs/product/v1/11-engineering/19-transaction-boundary.md`.
+12. **Domain events are recorded in the same transaction, through the outbox.**
+    After a valid state change, the use case calls
+    `this.outbox.record(new SomethingHappened(...))` (token `OUTBOX_RECORDER`)
+    inside the same `TransactionBoundary.execute`, so the event and the change
+    commit or roll back together — recording outside a boundary throws
+    (`OutboxTransactionRequiredError`), and publishing to Redis directly from
+    a use case is the dual write the outbox exists to prevent. The event's
+    identity (`metadata.messageId`) is fixed at record time and every attempt
+    republishes the same bytes; consumers deduplicate on that id. Contract:
+    `docs/product/v1/11-engineering/20-transactional-outbox.md`.
 
 ## Module boundary enforcement
 
