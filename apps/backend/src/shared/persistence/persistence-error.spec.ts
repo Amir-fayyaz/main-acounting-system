@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
+import { ConflictError } from '../errors/category-errors.js';
 import { ErrorCategory } from '../errors/error-category.js';
 import { InvalidPrimitiveError } from '../primitives/invalid-primitive-error.js';
+import { staleRevisionConflict } from './optimistic-concurrency.js';
 import {
   isPersistenceFailureKind,
   PersistenceError,
   PersistenceFailureKind,
 } from './persistence-error.js';
+import { Revision } from './revision.js';
 
 /** What a driver failure looked like before an adapter translated it. */
 const DRIVER_TEXT =
@@ -134,6 +137,32 @@ describe('PersistenceError.toDomainError', () => {
     // The client-safe failure carries no operation name, no driver text and no cause.
     expect(JSON.stringify(domainError?.toJSON())).not.toContain('SalesInvoices');
     expect(domainError?.toJSON()).not.toHaveProperty('cause');
+  });
+
+  it('carries the stale revision the adapter reported into the shared conflict (SHR-008)', () => {
+    const error = staleRevisionConflict('SalesDocuments.update', Revision.of(10), Revision.of(11));
+    const domainError = error.toDomainError();
+
+    expect(domainError).toBeInstanceOf(ConflictError);
+    expect(domainError?.details).toEqual([
+      {
+        code: 'STALE_REVISION',
+        message: 'The record is now at revision 11; this update was prepared against revision 10.',
+        field: 'revision',
+        expected: 10,
+        actual: 11,
+      },
+    ]);
+    // Still client-safe: the operation name and the cause stay behind.
+    expect(JSON.stringify(domainError?.toJSON())).not.toContain('SalesDocuments');
+  });
+
+  it('leaves a conflict with no stale revision — a duplicate identity — bare', () => {
+    const error = new PersistenceError(PersistenceFailureKind.CONFLICT, 'Ledger.add', {
+      cause: new Error(DRIVER_TEXT),
+    });
+
+    expect(error.toDomainError()?.details).toEqual([]);
   });
 
   it.each([

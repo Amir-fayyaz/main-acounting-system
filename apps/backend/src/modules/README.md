@@ -104,6 +104,20 @@ is implemented, and update the structure document in the same change if they div
     operation input. No module defines its own context type or resolves
     identity from transport-specific authentication data. Contract:
     `docs/product/v1/11-engineering/21-tenant-context.md`.
+14. **A protected write names the revision it expects, and a lost race is a
+    conflict — never an overwrite, never a hidden retry.** The mechanism is
+    shared (`src/shared/persistence/`'s SHR-008 pair): an adapter that no longer
+    holds the revision it was given refuses the write in the same statement and
+    reports it with `staleRevisionConflict(operation, expectedRevision,
+actual?)`; the use case reads it back with `isConcurrencyConflict`,
+    `staleRevisionOf` or `toConflict` and decides what happens next — reload,
+    recompute, ask for review, or hand the conflict to the caller. Domain never
+    constructs that failure and never replays a mutation, no repository
+    exposes a locking call, and nothing writes a protected record without its
+    expected `Revision` (`update(aggregate, expectedRevision)` has no path that
+    omits it). Which records are protected, and what a conflict means to the
+    business, is this module's policy. Contract:
+    `docs/product/v1/11-engineering/22-optimistic-concurrency.md`.
 
 ## Module boundary enforcement
 
