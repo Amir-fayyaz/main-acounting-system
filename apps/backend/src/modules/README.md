@@ -68,15 +68,30 @@ is implemented, and update the structure document in the same change if they div
     scope the application resolved from the authenticated principal — and returns
     plain, serializable read models: never an aggregate, never a write, never a
     path around the owning Domain (ADR-003, sections 6, 14 and 24).
+11. **Transactions are opened by the application, never by a repository.** A use
+    case wraps the operations that must commit together in exactly one
+    `TransactionBoundary.execute(...)` (token `TRANSACTION_BOUNDARY`); a nested
+    call joins the open boundary instead of opening a second one, and any
+    failure inside — thrown or reported as a failed `Result` — rolls the whole
+    boundary back (a swallowed failure becomes `TransactionBoundaryError`).
+    Repository adapters join that boundary through `scopedDatabase(...)`,
+    which falls back to a plain connection outside one; they never start a
+    transaction of their own, and Domain code never sees the contract at all.
+    A rollback undoes database work only: an external call made inside the
+    boundary keeps its effect and needs retry / compensation outside it.
+    Conflict inside a boundary (`PersistenceError(CONFLICT)` → `ConflictError`)
+    rolls the boundary back instead of overwriting the winner. Contract:
+    `docs/product/v1/11-engineering/19-transaction-boundary.md`.
 
 ## Module boundary enforcement
 
 Two structural guards run with the test suite:
 
 - `src/modules/module-boundaries.spec.ts` — Domain imports only its own module,
-  `src/shared/`, `node:*` and the test runner; no module imports another
-  module's `infrastructure/`, `persistence/` or `repositor(y|ies)` (published
-  contracts under `application/` and domain events stay importable).
+  `src/shared/`, `node:*` and the test runner (never `src/shared/transaction/`,
+  so Domain cannot open, observe or control a transaction); no module imports
+  another module's `infrastructure/`, `persistence/` or `repositor(y|ies)`
+  (published contracts under `application/` and domain events stay importable).
 - `src/shared/persistence/persistence-conventions.spec.ts` — the persistence
   ports offer only the operation vocabulary, with no delete, no generic
   repository and no implementation token.

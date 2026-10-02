@@ -37,10 +37,11 @@ src/
 │   ├── time/                   BusinessDate + DateTime
 │   ├── errors/                 Result, DomainError, the five categories (SHR-002)
 │   ├── messaging/              Command / Query / Domain Event contracts (SHR-003)
-│   └── persistence/            Repository, read-port and failure contracts (SHR-004)
+│   ├── persistence/            Repository, read-port and failure contracts (SHR-004)
+│   └── transaction/            Transaction boundary contract (SHR-005)
 └── infrastructure/
     ├── config/                 Typed configuration (.env discovery, validation, redaction)
-    ├── database/               MySQL pool + Drizzle instance
+    ├── database/               MySQL pool + Drizzle instance + transaction runner (SHR-005)
     ├── redis/                  Redis connection (non-authoritative, TECH-007)
     ├── storage/                Object storage port + MinIO adapter (TECH-008)
     ├── readiness/              Dependency probes behind /api/health/ready
@@ -72,6 +73,9 @@ pnpm --filter @accounting-saas/backend test:cov   # coverage
 # Background jobs (FND-007)
 pnpm --filter @accounting-saas/backend job:enqueue <type> [payload-json]
 REDIS_INTEGRATION=1 pnpm --filter @accounting-saas/backend test   # + Redis-backed job tests
+
+# Transaction boundary against a real MySQL server (SHR-005)
+MYSQL_INTEGRATION=1 pnpm --filter @accounting-saas/backend test   # + MySQL-backed transaction tests
 ```
 
 From the repository root, `pnpm dev`, `pnpm typecheck`, `pnpm lint` and `pnpm test`
@@ -421,6 +425,68 @@ await repository.update(changed, loaded.revision); // stale → PersistenceError
   repository, an implementation token, an impure Domain import or a cross-module
   reach into another module's persistence.
 
+## Transaction boundary (SHR-005)
+
+`src/shared/transaction/` holds the framework-free contract that makes several
+persistence operations commit or roll back as one unit; the mechanics live in
+`src/infrastructure/database/` (`DrizzleTransactionRunner`, `scopedDatabase`).
+Full contract: `docs/product/v1/11-engineering/19-transaction-boundary.md`.
+
+```ts
+import { Inject } from '@nestjs/common';
+import { TRANSACTION_BOUNDARY } from '../infrastructure/database/database.tokens.js';
+import type { TransactionBoundary } from '../shared/transaction/transaction-boundary.js';
+
+constructor(
+  @Inject(TRANSACTION_BOUNDARY) private readonly transactions: TransactionBoundary,
+) {}
+
+async execute(command: PostInvoice): Promise<Result<Invoice, DomainError>> {
+  try {
+    return await this.transactions.execute(async () => {
+      const customer = await this.customers.get(command.customerId); // joins the boundary
+      if (customer === undefined) return Result.fail(new NotFoundError('No such customer.'));
+      await this.invoices.add(invoice); // same connection, same boundary
+      await this.ledger.post(posting);   // commits with it — or rolls back with it
+      return Result.ok(invoice);
+    });
+  } catch (error) {
+    if (error instanceof PersistenceError) {
+      const domainError = error.toDomainError();
+      if (domainError !== undefined) return Result.fail(domainError); // CONFLICT
+    }
+    throw error;
+  }
+}
+```
+
+- **Application owns the boundary.** One `execute(...)` per unit of work: it
+  commits when the work resolves with no failure reported and rolls everything
+  back when it throws, when a failed `Result` surfaces, or when a failure inside
+  was swallowed (`TransactionBoundaryError`, cause = the original failure).
+- **Nesting joins, never forks.** A second `execute` inside an open boundary
+  participates in it — no second commit, no savepoint — so an inner operation
+  can never commit half a use case.
+- **Repositories participate, never open.** Adapters call `scopedDatabase(db)`:
+  inside a boundary they get its transaction handle, outside one a plain
+  connection. Domain never sees any of this — `module-boundaries.spec.ts`
+  fails the run if `domain/` imports `src/shared/transaction/`.
+- **Propagation is a `node:async_hooks` store** (`TransactionContext`), visible
+  through the async chain of the running `execute` only; no HTTP middleware,
+  no Redis, no provider API.
+- **Rollback covers database effects only.** An external call made inside the
+  boundary (provider API, object storage, notification) keeps its effect and
+  needs retry / compensation outside it (ADR-004, sections 9 and 12–13).
+- **Concurrency is unchanged.** Writes still name their `expectedRevision`; a
+  conflict inside a boundary (`PersistenceError(CONFLICT)` → `ConflictError`)
+  rolls the boundary back instead of overwriting the winner's row.
+- **Tests.** `src/shared/transaction/*.spec.ts` and
+  `src/infrastructure/database/scoped-database.spec.ts` prove the semantics in
+  unit runs; `test/transaction-boundary.e2e-spec.ts` (opt-in,
+  `MYSQL_INTEGRATION=1`) proves them on a real MySQL server — commit, rollback,
+  invisibility until commit, concurrent conflict, and the database/external
+  effect line.
+
 ## Rules for new code
 
 See `src/modules/README.md` (module boundaries) and `src/shared/README.md` (shared
@@ -433,4 +499,7 @@ Modules talk to each other only through the command, query and domain-event
 contracts in `src/shared/messaging/` — never through another module's entity,
 repository or table. Data access goes through each module's own repository ports
 built from `src/shared/persistence/`; no shared connection ever becomes a free
-query surface.
+query surface. Operations that must commit together run inside one
+`TransactionBoundary.execute(...)` from `src/shared/transaction/`, and
+repositories join it through `scopedDatabase(...)` — a repository never opens a
+transaction of its own, and Domain code never touches the contract.

@@ -22,5 +22,6 @@
 - `16-result-and-error-model.md`
 - `17-command-query-event-contracts.md`
 - `18-repository-and-persistence-ports.md`
+- `19-transaction-boundary.md`
 
 Engineering نباید Business Rule یا Architecture Decision را دوباره تعریف کند؛ این پوشه نحوه اجرای آن تصمیم‌ها را مشخص می‌کند.
