@@ -24,6 +24,11 @@ import { describe, expect, it } from 'vitest';
  *   `src/shared/transaction/` at all: beginning, committing, rolling back or
  *   even observing a transaction belongs to the Application layer, which owns
  *   the boundary (SHR-005; ADR-004, section 6).
+ * - **Domain never reads the ambient tenant context.** A `domain/` file does
+ *   not import `src/shared/tenant/` at all: the Application resolves the
+ *   company boundary from a trusted source and passes it to Domain as an
+ *   explicit operation input — Domain must stay callable without any ambient
+ *   state (SHR-007; ADR-001, section 13).
  * - **No cross-module persistence.** No module imports another module's
  *   `infrastructure/`, `persistence/` or `repositor(y|ies)` — where its
  *   adapters, ORM models and repository interfaces live. Published contracts
@@ -106,6 +111,15 @@ export function analyseModuleSource(file: string, source: string): string[] {
       violations.push(
         `${file}: domain imports "${specifier}"; Domain never opens, joins or observes a ` +
           'transaction — that boundary belongs to Application (SHR-005, ADR-004 section 6).',
+      );
+      continue;
+    }
+
+    if (isDomainFile && /^shared\/tenant(\/|$)/.test(relativeToSrc)) {
+      violations.push(
+        `${file}: domain imports "${specifier}"; Domain receives the tenant scope as an ` +
+          'explicit operation input — the ambient context belongs to Application ' +
+          '(SHR-007, ADR-001 section 13).',
       );
       continue;
     }
@@ -242,6 +256,30 @@ describe('module ownership — the checker itself', () => {
         "import type { TransactionBoundary } from '../../../shared/transaction/transaction-boundary.js';",
       ),
     ).toContainEqual(expect.stringContaining('Domain never opens, joins or observes'));
+  });
+
+  it('rejects Domain reading the ambient tenant context', () => {
+    expect(
+      analyseModuleSource(
+        'sales/domain/invoice.ts',
+        "import { TenantScope } from '../../../shared/tenant/tenant-scope.js';",
+      ),
+    ).toContainEqual(expect.stringContaining('Domain receives the tenant scope'));
+  });
+
+  it('allows Application, but not Domain, to read the ambient tenant context', () => {
+    expect(
+      analyseModuleSource(
+        'sales/application/commands/post.ts',
+        "import { TenantScope } from '../../../shared/tenant/tenant-scope.js';",
+      ),
+    ).toEqual([]);
+    expect(
+      analyseModuleSource(
+        'sales/domain/invoice.ts',
+        "import { tenantScopedMessageOptions } from '../../../shared/tenant/tenant-message-options.js';",
+      ),
+    ).toContainEqual(expect.stringContaining('Domain receives the tenant scope'));
   });
 
   it('allows Application, but not Domain, to use the transaction boundary', () => {

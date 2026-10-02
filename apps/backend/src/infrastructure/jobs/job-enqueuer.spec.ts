@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { AppConfigService } from '../config/app-config.service.js';
 import { loadConfiguration } from '../config/configuration.js';
+import { createTenantContext } from '../../shared/tenant/tenant-context.js';
+import { TenantScope } from '../../shared/tenant/tenant-scope.js';
 import type { RegisteredJob } from './job.definition.js';
 import { JobEnqueuer } from './job-enqueuer.js';
 import { JobRegistry } from './job.registry.js';
@@ -97,5 +99,45 @@ describe('JobEnqueuer', () => {
     expect(envelope.correlationId).toBe('correlation-9');
     expect(envelope.companyId).toBe('company-1');
     expect(envelope.enqueuedBy).toBe('scheduler');
+  });
+});
+
+describe('JobEnqueuer � ambient tenant context (SHR-007)', () => {
+  it('labels the envelope with the ambient tenant and flow', async () => {
+    const { enqueuer, queue } = setup();
+
+    const envelope = await TenantScope.run(
+      createTenantContext('tenant-42', { correlationId: 'flow-3' }),
+      () => enqueuer.enqueue({ type: 'test.versioned', payload: {} }),
+    );
+
+    expect(envelope.companyId).toBe('tenant-42');
+    expect(envelope.correlationId).toBe('flow-3');
+    expect(queue.pushed).toEqual([envelope]);
+  });
+
+  it('lets an explicit owner and trace win over the ambient scope', async () => {
+    const { enqueuer } = setup();
+
+    const envelope = await TenantScope.run(createTenantContext('tenant-42'), () =>
+      enqueuer.enqueue({
+        type: 'test.versioned',
+        payload: {},
+        correlationId: 'correlation-9',
+        companyId: 'company-1',
+      }),
+    );
+
+    expect(envelope.companyId).toBe('company-1');
+    expect(envelope.correlationId).toBe('correlation-9');
+  });
+
+  it('enqueues without an owner outside any scope � the Worker fails that job closed', async () => {
+    const { enqueuer } = setup();
+
+    const envelope = await enqueuer.enqueue({ type: 'test.versioned', payload: {} });
+
+    expect(envelope.companyId).toBeUndefined();
+    expect(envelope.correlationId).toEqual(expect.any(String));
   });
 });

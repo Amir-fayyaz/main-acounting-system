@@ -92,6 +92,18 @@ is implemented, and update the structure document in the same change if they div
     identity (`metadata.messageId`) is fixed at record time and every attempt
     republishes the same bytes; consumers deduplicate on that id. Contract:
     `docs/product/v1/11-engineering/20-transactional-outbox.md`.
+13. **Tenant context comes from the shared abstraction, never from a client.**
+    A use case reads the current company scope through `TenantScope.require()`
+    (token-free, ambient) and stamps raised messages with
+    `tenantScopedMessageOptions(...)`; infrastructure entry points establish it
+    — the Worker from `envelope.companyId`, later the auth guard from the
+    principal — and nothing reads a header, body or query as tenant identity.
+    A tenant-scoped operation without a scope fails closed
+    (`TenantContextMissingError`), and `domain/` does not import
+    `src/shared/tenant/` at all: Domain receives the scope as an explicit
+    operation input. No module defines its own context type or resolves
+    identity from transport-specific authentication data. Contract:
+    `docs/product/v1/11-engineering/21-tenant-context.md`.
 
 ## Module boundary enforcement
 
@@ -99,9 +111,11 @@ Two structural guards run with the test suite:
 
 - `src/modules/module-boundaries.spec.ts` — Domain imports only its own module,
   `src/shared/`, `node:*` and the test runner (never `src/shared/transaction/`,
-  so Domain cannot open, observe or control a transaction); no module imports
-  another module's `infrastructure/`, `persistence/` or `repositor(y|ies)`
-  (published contracts under `application/` and domain events stay importable).
+  so Domain cannot open, observe or control a transaction, and never
+  `src/shared/tenant/`, so Domain cannot read ambient tenant state); no module
+  imports another module's `infrastructure/`, `persistence/` or
+  `repositor(y|ies)` (published contracts under `application/` and domain events
+  stay importable).
 - `src/shared/persistence/persistence-conventions.spec.ts` — the persistence
   ports offer only the operation vocabulary, with no delete, no generic
   repository and no implementation token.
