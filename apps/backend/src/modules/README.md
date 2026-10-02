@@ -7,12 +7,14 @@ One directory per domain module, organized by layer and then by feature
 <module>/
 ├── domain/           Business rules: entities, value objects, aggregates,
 │                     domain services/policies, domain events, invariants,
-│                     repository interfaces (ports). No framework or I/O imports.
+│                     repository interfaces (ports, composed from
+│                     src/shared/persistence/). No framework or I/O imports.
 ├── application/
 │   ├── commands/     One command + handler per use case.
 │   ├── queries/      One query + handler per use case.
 │   └── event-handlers/
-├── infrastructure/   Persistence, messaging, external adapters, mapping.
+├── infrastructure/   Persistence adapter (implements the ports), messaging,
+│                     external adapters, mapping.
 └── presentation/     REST controllers, request/response DTOs, input validation.
 ```
 
@@ -40,7 +42,14 @@ is implemented, and update the structure document in the same change if they div
    or any provider SDK.
 4. Domain entity and persistence model are separate types, always (ADR-002, section 9).
 5. Repository interfaces live in `domain/`; implementations live in
-   `infrastructure/persistence/` (ADR-002, section 8).
+   `infrastructure/persistence/` (ADR-002, section 8). A repository is declared
+   from the shared capabilities in `src/shared/persistence/` — `LoadsById`,
+   `AddsAggregate`, `UpdatesAggregate`, `ChecksExistence`, `FindsByCriteria` —
+   plus the module's own methods over closed criteria types. It exposes no
+   `delete`, no upsert and no generic query: writes state the expected
+   `Revision`, technical failures are a thrown `PersistenceError`, and absence
+   is `undefined`, which the use case turns into whatever the business decided.
+   Contract: `docs/product/v1/11-engineering/18-repository-and-persistence-ports.md`.
 6. No cross-module foreign keys, and no circular module dependencies.
 7. Controllers validate input and delegate; they never hold business rules
    (ADR-002, section 16).
@@ -54,10 +63,26 @@ is implemented, and update the structure document in the same change if they div
    a module-owned subclass of `DomainError` with its own stable code). Domain code
    never knows how those become a response, a log line or an alert. Contract:
    `docs/product/v1/11-engineering/16-result-and-error-model.md`.
+10. **Read ports are separate and read-only.** A `ReadPort` from
+    `src/shared/persistence/` takes module-owned criteria — carrying the company
+    scope the application resolved from the authenticated principal — and returns
+    plain, serializable read models: never an aggregate, never a write, never a
+    path around the owning Domain (ADR-003, sections 6, 14 and 24).
 
 ## Module boundary enforcement
 
-Boundary violations are currently controlled by review. `tooling/` is the place for
-the automated dependency check (for example a dependency-cruiser or
-`import/no-restricted-paths` rule) that the architecture acceptance criteria require
-before the first module lands.
+Two structural guards run with the test suite:
+
+- `src/modules/module-boundaries.spec.ts` — Domain imports only its own module,
+  `src/shared/`, `node:*` and the test runner; no module imports another
+  module's `infrastructure/`, `persistence/` or `repositor(y|ies)` (published
+  contracts under `application/` and domain events stay importable).
+- `src/shared/persistence/persistence-conventions.spec.ts` — the persistence
+  ports offer only the operation vocabulary, with no delete, no generic
+  repository and no implementation token.
+
+Review still covers what a static check cannot (a query that reaches the wrong
+table through a shared connection, a contract that leaks internals). `tooling/`
+remains the place for the broader automated dependency check (for example a
+dependency-cruiser or `import/no-restricted-paths` rule) that the architecture
+acceptance criteria require before the first module lands.

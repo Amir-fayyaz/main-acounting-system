@@ -34,7 +34,10 @@ src/
 │   ├── id/                     EntityId
 │   ├── money/                  Currency + Money
 │   ├── quantity/               Quantity
-│   └── time/                   BusinessDate + DateTime
+│   ├── time/                   BusinessDate + DateTime
+│   ├── errors/                 Result, DomainError, the five categories (SHR-002)
+│   ├── messaging/              Command / Query / Domain Event contracts (SHR-003)
+│   └── persistence/            Repository, read-port and failure contracts (SHR-004)
 └── infrastructure/
     ├── config/                 Typed configuration (.env discovery, validation, redaction)
     ├── database/               MySQL pool + Drizzle instance
@@ -373,6 +376,51 @@ const event = new AccountingDocumentPosted(data, causedBy(command));
 - Buses, outbox, persistence and delivery are deliberately not here — they are
   Infrastructure work, out of scope for the shared kernel.
 
+## Repository and persistence ports (SHR-004)
+
+`src/shared/persistence/` holds the framework-free contracts a module declares its
+repository from. Full contract:
+`docs/product/v1/11-engineering/18-repository-and-persistence-ports.md`.
+
+```ts
+import { LoadsById, UpdatesAggregate } from '../shared/persistence/repository-ports.js';
+import { Revision } from '../shared/persistence/revision.js';
+import { PersistenceError } from '../shared/persistence/persistence-error.js';
+
+// domain/ — the module's own repository, assembled from the shared capabilities
+export interface AccountingDocumentsRepository
+  extends LoadsById<EntityId, AccountingDocument>, UpdatesAggregate<AccountingDocument> {}
+
+// application/ — load, change in Domain, write against the revision read
+const loaded = await repository.get(id); // absent → undefined, not an error
+if (loaded === undefined) return Result.fail(new NotFoundError('No open document.'));
+await repository.update(changed, loaded.revision); // stale → PersistenceError(CONFLICT)
+```
+
+- **Ownership first.** The repository belongs to the module that owns the data:
+  interface in that module's `domain/`, adapter in its
+  `infrastructure/persistence/`. Another module imports neither (ADR-003).
+- **No generic repository.** The kernel ships capabilities — `get`, `add`,
+  `update`, `exists`, `find` — plus `ReadPort`; no `GenericRepository`, no
+  criteria builder, no `query()`, no `delete`. A module adds its own methods over
+  closed criteria types only.
+- **Optimistic concurrency by construction.** Every write names the
+  `expectedRevision` it believes is current, so a stale write is a `CONFLICT`
+  instead of a silent overwrite (ADR-004, section 27) — which is also what keeps
+  historical records from being rewritten.
+- **One failure boundary.** Adapters translate driver problems into
+  `PersistenceError` (`UNAVAILABLE` retryable, `TIMEOUT`/`UNKNOWN` with an
+  unknown outcome that must be verified before any retry); the use case catches
+  it at the boundary, maps a conflict through `toDomainError()` into the shared
+  `ConflictError`, and lets everything else stay a thrown technical failure.
+- **Read ports are separate** (`ReadPort`): read-only, module-owned criteria with
+  the company scope the application resolved, plain serializable read models out —
+  never an aggregate.
+- **Enforced, not promised.** `src/shared/persistence/persistence-conventions.spec.ts`
+  and `src/modules/module-boundaries.spec.ts` fail the run on a delete, a generic
+  repository, an implementation token, an impure Domain import or a cross-module
+  reach into another module's persistence.
+
 ## Rules for new code
 
 See `src/modules/README.md` (module boundaries) and `src/shared/README.md` (shared
@@ -383,4 +431,6 @@ from `src/shared/`, never from a hand-rolled type in a module. Expected failures
 are returned as `Result`, not thrown; unexpected ones are thrown, not returned.
 Modules talk to each other only through the command, query and domain-event
 contracts in `src/shared/messaging/` — never through another module's entity,
-repository or table.
+repository or table. Data access goes through each module's own repository ports
+built from `src/shared/persistence/`; no shared connection ever becomes a free
+query surface.
