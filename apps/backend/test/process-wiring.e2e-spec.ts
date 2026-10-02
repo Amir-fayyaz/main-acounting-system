@@ -32,6 +32,9 @@ describe('process module wiring (e2e)', () => {
         expect(moduleRef.get(AppConfigService).environment.name).toBe('test');
         expect(moduleRef.get(RedisConnectionService)).toBeDefined();
         expect(moduleRef.get(JobRegistry).types()).toContain('sample.echo');
+        // The outbox tick is registered by feature, not by the queue: if the
+        // composition in JobsModule breaks, committed records would strand.
+        expect(moduleRef.get(JobRegistry).types()).toContain('outbox.publish');
       } finally {
         await moduleRef.close();
       }
