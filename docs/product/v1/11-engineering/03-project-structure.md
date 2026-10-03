@@ -9,7 +9,7 @@
 ```text
 apps/backend/src/
 ├── modules/
-│   ├── company-access/
+│   ├── tenant/
 │   ├── party/
 │   ├── accounting/
 │   ├── inventory/
