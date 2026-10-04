@@ -6,15 +6,16 @@ import { ExampleModule } from './infrastructure/presentation/example/example.mod
 import { HealthModule } from './infrastructure/presentation/health/health.module.js';
 import { RedisModule } from './infrastructure/redis/redis.module.js';
 import { StorageModule } from './infrastructure/storage/storage.module.js';
+import { TenantModule } from './modules/tenant/infrastructure/tenant.module.js';
 
 /**
  * Root module of the modular monolith.
  *
  * Domain modules (`src/modules/<module>`) are added here as they are implemented.
- * Only shared infrastructure and platform endpoints are wired at bootstrap time;
- * no business module exists yet on purpose (FND-001, FND-002). `ExampleModule` is
- * the non-business reference endpoint that exercises the REST/OpenAPI baseline
- * (FND-006) and is replaced by the first real module.
+ * `TenantModule` is the first business module (IAM-001): it owns tenant
+ * persistence and exposes the tenant REST resource. `ExampleModule` remains the
+ * non-business reference endpoint that exercises the REST/OpenAPI baseline
+ * (FND-006) and is a working template a new module can copy.
  *
  * `JobsModule` gives the HTTP process the same queue abstraction the Worker and
  * Scheduler use, so a use case can enqueue long-running work instead of keeping
@@ -29,6 +30,7 @@ import { StorageModule } from './infrastructure/storage/storage.module.js';
     JobsModule,
     HealthModule,
     ExampleModule,
+    TenantModule,
   ],
 })
 export class AppModule {}

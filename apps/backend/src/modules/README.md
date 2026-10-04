@@ -64,7 +64,7 @@ is implemented, and update the structure document in the same change if they div
    never knows how those become a response, a log line or an alert. Contract:
    `docs/product/v1/11-engineering/16-result-and-error-model.md`.
 10. **Read ports are separate and read-only.** A `ReadPort` from
-    `src/shared/persistence/` takes module-owned criteria — carrying the company
+    `src/shared/persistence/` takes module-owned criteria — carrying the tenant
     scope the application resolved from the authenticated principal — and returns
     plain, serializable read models: never an aggregate, never a write, never a
     path around the owning Domain (ADR-003, sections 6, 14 and 24).
@@ -93,10 +93,10 @@ is implemented, and update the structure document in the same change if they div
     republishes the same bytes; consumers deduplicate on that id. Contract:
     `docs/product/v1/11-engineering/20-transactional-outbox.md`.
 13. **Tenant context comes from the shared abstraction, never from a client.**
-    A use case reads the current company scope through `TenantScope.require()`
+    A use case reads the current tenant scope through `TenantScope.require()`
     (token-free, ambient) and stamps raised messages with
     `tenantScopedMessageOptions(...)`; infrastructure entry points establish it
-    — the Worker from `envelope.companyId`, later the auth guard from the
+    — the Worker from `envelope.tenantId`, later the auth guard from the
     principal — and nothing reads a header, body or query as tenant identity.
     A tenant-scoped operation without a scope fails closed
     (`TenantContextMissingError`), and `domain/` does not import
