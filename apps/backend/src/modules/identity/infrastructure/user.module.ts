@@ -80,5 +80,10 @@ import { DrizzleUserRepository } from './persistence/drizzle-user.repository.js'
       inject: [USER_REPOSITORY, USER_EVENT_RECORDER, TRANSACTION_BOUNDARY],
     },
   ],
+  // The user repository is exported to this module's own membership feature
+  // (IAM-003) so it can confirm a membership references an existing user. It is
+  // not an invitation to other modules: the boundary guard still forbids them
+  // from importing this file.
+  exports: [USER_REPOSITORY],
 })
 export class UserModule {}

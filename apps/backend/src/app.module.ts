@@ -8,6 +8,7 @@ import { RedisModule } from './infrastructure/redis/redis.module.js';
 import { StorageModule } from './infrastructure/storage/storage.module.js';
 import { TenantModule } from './modules/tenant/infrastructure/tenant.module.js';
 import { UserModule } from './modules/identity/infrastructure/user.module.js';
+import { MembershipModule } from './modules/identity/infrastructure/membership.module.js';
 
 /**
  * Root module of the modular monolith.
@@ -16,7 +17,9 @@ import { UserModule } from './modules/identity/infrastructure/user.module.js';
  * `TenantModule` is the first business module (IAM-001): it owns tenant
  * persistence and exposes the tenant REST resource. `UserModule` is the second
  * business module (IAM-002): it owns user persistence and exposes the user REST
- * resource. `ExampleModule` remains the non-business reference endpoint that
+ * resource. `MembershipModule` is the third slice (IAM-003): it owns the user–tenant
+ * membership relationship and consumes the tenant module's published contract.
+ * `ExampleModule` remains the non-business reference endpoint that
  * exercises the REST/OpenAPI baseline (FND-006) and is a working template a new
  * module can copy.
  *
@@ -35,6 +38,7 @@ import { UserModule } from './modules/identity/infrastructure/user.module.js';
     ExampleModule,
     TenantModule,
     UserModule,
+    MembershipModule,
   ],
 })
 export class AppModule {}
