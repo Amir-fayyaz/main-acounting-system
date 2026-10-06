@@ -12,3 +12,9 @@ export const TENANT_REPOSITORY = Symbol('TENANT_REPOSITORY');
 
 /** The outbox boundary (`TenantEventRecorder`). */
 export const TENANT_EVENT_RECORDER = Symbol('TENANT_EVENT_RECORDER');
+
+/**
+ * The published tenant-existence contract (`TenantDirectory`) other modules
+ * depend on instead of reaching into tenant storage (IAM-003; ADR-002 §12).
+ */
+export const TENANT_DIRECTORY = Symbol('TENANT_DIRECTORY');
