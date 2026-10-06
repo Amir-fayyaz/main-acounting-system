@@ -146,9 +146,8 @@ describe.skipIf(!integrationEnabled)('tenant persistence (integration)', () => {
     );
 
     expect(updated.valueOrThrow()).toMatchObject({ name: 'After', revision: 2 });
-    expect(
-      repository.get(tenantIdFrom(created.id)).then((loaded) => loaded?.revision.value),
-    ).resolves.toBe(2);
+    const stored = await repository.get(tenantIdFrom(created.id));
+    expect(stored?.revision.value).toBe(2);
   });
 
   it('refuses the second of two writes that read the same revision, keeping the winner', async () => {
