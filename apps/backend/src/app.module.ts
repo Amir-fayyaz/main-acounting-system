@@ -9,6 +9,7 @@ import { StorageModule } from './infrastructure/storage/storage.module.js';
 import { TenantModule } from './modules/tenant/infrastructure/tenant.module.js';
 import { UserModule } from './modules/identity/infrastructure/user.module.js';
 import { MembershipModule } from './modules/identity/infrastructure/membership.module.js';
+import { RoleModule } from './modules/identity/infrastructure/role.module.js';
 
 /**
  * Root module of the modular monolith.
@@ -19,6 +20,9 @@ import { MembershipModule } from './modules/identity/infrastructure/membership.m
  * business module (IAM-002): it owns user persistence and exposes the user REST
  * resource. `MembershipModule` is the third slice (IAM-003): it owns the user–tenant
  * membership relationship and consumes the tenant module's published contract.
+ * `RoleModule` is the fourth slice (IAM-004): it owns roles, the code-defined
+ * permission catalog and the membership-role assignments, and consumes both the
+ * tenant module's published contract and the membership feature's port.
  * `ExampleModule` remains the non-business reference endpoint that
  * exercises the REST/OpenAPI baseline (FND-006) and is a working template a new
  * module can copy.
@@ -39,6 +43,7 @@ import { MembershipModule } from './modules/identity/infrastructure/membership.m
     TenantModule,
     UserModule,
     MembershipModule,
+    RoleModule,
   ],
 })
 export class AppModule {}
