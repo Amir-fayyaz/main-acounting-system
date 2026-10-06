@@ -108,5 +108,10 @@ import { UserModule } from './user.module.js';
       inject: [MEMBERSHIP_REPOSITORY, MEMBERSHIP_EVENT_RECORDER, TRANSACTION_BOUNDARY],
     },
   ],
+  // Exported to this module's own role feature (IAM-004), which must confirm a
+  // membership exists and belongs to the tenant before assigning a role. It is
+  // not an invitation to other modules: the boundary guard still forbids them
+  // from importing this file.
+  exports: [MEMBERSHIP_REPOSITORY],
 })
 export class MembershipModule {}
