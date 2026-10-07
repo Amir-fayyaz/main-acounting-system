@@ -40,6 +40,13 @@ export class AuthenticationGuard implements CanActivate {
   public async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
 
+    // The authorization boundary (IAM-006) resolves the same state first when
+    // both guards are applied: re-resolving it would validate one credential
+    // twice per request and record a rejection twice.
+    if (request.authentication !== undefined) {
+      return true;
+    }
+
     const outcome = await this.getAuthenticatedSession.execute(
       new GetAuthenticatedSession({ token: readBearerToken(request.headers['authorization']) }),
     );

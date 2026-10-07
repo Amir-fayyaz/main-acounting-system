@@ -1,14 +1,18 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
+  ApiUnauthorizedResponse,
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
+import { Authorize } from '../../../../infrastructure/api/authorization/authorization-policy.js';
 import { API_ERROR_CODES } from '../../../../infrastructure/api/errors/api-error.registry.js';
 import { ApiErrorResponseDto } from '../../../../infrastructure/api/errors/api-error.dto.js';
 import { ApiErrorException } from '../../../../infrastructure/api/errors/api-error.exception.js';
@@ -59,13 +63,20 @@ import { TenantMemberResponseDto } from '../dto/tenant-member-response.dto.js';
  * tenant-scoped — a person's relationships span tenants — and no client-supplied
  * header, body or query field is ever read as tenant identity (SHR-007).
  *
- * **No authentication or authorization is implemented here, by design.** These
- * endpoints provide no access control and must not be read as providing one:
- * IAM-003 is explicitly out of scope for authentication, roles and permissions.
- * Membership *existence* is what a later flow will use to establish whether a
- * user may enter a tenant context; this issue records the relationship, it does
- * not enforce it.
+ * **Authorization is declared here and decided elsewhere** (IAM-006). The
+ * tenant-scoped operations name their target tenant and the capability they
+ * need — `user.read` to read a member or a membership, `user.manage` to link a
+ * user or move the relationship's lifecycle — and the authorization boundary
+ * verifies the caller's active membership in that tenant *before* the handler
+ * runs. A membership that exists is therefore no longer only a record: it is
+ * what the boundary proves access with, and a caller authenticated in the
+ * system but lacking a membership here is refused (403).
+ *
+ * The user's own memberships (`/users/:userId/memberships`) declare no target
+ * tenant: the relationship spans tenants, so the capability is resolved across
+ * the caller's active memberships.
  */
+@ApiBearerAuth()
 @ApiTags('memberships')
 @Controller()
 export class MembershipsController {
@@ -78,13 +89,19 @@ export class MembershipsController {
   ) {}
 
   @Post('tenants/:tenantId/memberships')
+  @Authorize({ permission: 'user.manage', tenantParam: 'tenantId' })
   @ApiOperation({
     summary: 'Create a membership linking a user to a tenant',
     description:
-      'Links an existing user to an existing tenant. No authentication is required or provided at this stage.',
+      'Links an existing user to an existing tenant. Requires an active membership in the tenant with "user.manage".',
   })
   @ApiCreatedResponse({ type: MembershipResponseDto })
   @ApiBadRequestResponse({ type: ApiErrorResponseDto, description: 'Request validation failed.' })
+  @ApiUnauthorizedResponse({
+    type: ApiErrorResponseDto,
+    description: 'Authentication is required.',
+  })
+  @ApiForbiddenResponse({ type: ApiErrorResponseDto })
   @ApiNotFoundResponse({
     type: ApiErrorResponseDto,
     description: 'The user or tenant was not found.',
@@ -105,10 +122,19 @@ export class MembershipsController {
   }
 
   @Get('tenants/:tenantId/memberships')
-  @ApiOperation({ summary: "List a tenant's members using the standard pagination envelope" })
+  @Authorize({ permission: 'user.read', tenantParam: 'tenantId' })
+  @ApiOperation({
+    summary: "List a tenant's members using the standard pagination envelope",
+    description: 'Requires an active membership in the tenant with "user.read".',
+  })
   @ApiOkResponse({ type: PaginatedTenantMembersDto })
   @ApiBadRequestResponse({ type: ApiErrorResponseDto, description: 'Invalid pagination query.' })
   @ApiNotFoundResponse({ type: ApiErrorResponseDto })
+  @ApiUnauthorizedResponse({
+    type: ApiErrorResponseDto,
+    description: 'Authentication is required.',
+  })
+  @ApiForbiddenResponse({ type: ApiErrorResponseDto })
   async listMembers(
     @Param('tenantId') tenantId: string,
     @Query() query: PaginationQueryDto,
@@ -124,9 +150,18 @@ export class MembershipsController {
   }
 
   @Get('tenants/:tenantId/memberships/:membershipId')
-  @ApiOperation({ summary: 'Get one membership by id within a tenant' })
+  @Authorize({ permission: 'user.read', tenantParam: 'tenantId' })
+  @ApiOperation({
+    summary: 'Get one membership by id within a tenant',
+    description: 'Requires an active membership in the tenant with "user.read".',
+  })
   @ApiOkResponse({ type: MembershipResponseDto })
   @ApiNotFoundResponse({ type: ApiErrorResponseDto })
+  @ApiUnauthorizedResponse({
+    type: ApiErrorResponseDto,
+    description: 'Authentication is required.',
+  })
+  @ApiForbiddenResponse({ type: ApiErrorResponseDto })
   async findOne(
     @Param('tenantId') tenantId: string,
     @Param('membershipId') membershipId: string,
@@ -139,13 +174,19 @@ export class MembershipsController {
   }
 
   @Post('tenants/:tenantId/memberships/:membershipId/status')
+  @Authorize({ permission: 'user.manage', tenantParam: 'tenantId' })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Change a membership lifecycle state',
     description:
-      'Moves the membership between active and inactive; an illegal move is refused (422).',
+      'Requires an active membership in the tenant with "user.manage". Moves the membership between active and inactive; an illegal move is refused (422).',
   })
   @ApiOkResponse({ type: MembershipResponseDto })
+  @ApiUnauthorizedResponse({
+    type: ApiErrorResponseDto,
+    description: 'Authentication is required.',
+  })
+  @ApiForbiddenResponse({ type: ApiErrorResponseDto })
   @ApiBadRequestResponse({ type: ApiErrorResponseDto, description: 'Request validation failed.' })
   @ApiNotFoundResponse({ type: ApiErrorResponseDto })
   @ApiConflictResponse({
@@ -176,12 +217,21 @@ export class MembershipsController {
   }
 
   @Get('users/:userId/memberships')
+  @Authorize({ permission: 'user.read' })
   @ApiOperation({
     summary: "List a user's memberships",
     description:
-      'Reads every membership a user holds, across tenants. Not tenant-scoped: it is the person that is being read.',
+      'Reads every membership a user holds, across tenants. Requires an authenticated caller holding "user.read"; not tenant-scoped, because it is the person that is being read.',
   })
   @ApiOkResponse({ type: PaginatedMembershipsDto })
+  @ApiUnauthorizedResponse({
+    type: ApiErrorResponseDto,
+    description: 'Authentication is required.',
+  })
+  @ApiForbiddenResponse({
+    type: ApiErrorResponseDto,
+    description: 'The caller does not hold "user.read".',
+  })
   @ApiBadRequestResponse({ type: ApiErrorResponseDto, description: 'Invalid pagination query.' })
   @ApiNotFoundResponse({ type: ApiErrorResponseDto })
   async listUserMemberships(

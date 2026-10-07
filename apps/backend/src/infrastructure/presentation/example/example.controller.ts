@@ -8,6 +8,7 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
+import { Public } from '../../api/authorization/authorization-policy.js';
 import { ApiErrorException } from '../../api/errors/api-error.exception.js';
 import { ApiErrorResponseDto } from '../../api/errors/api-error.dto.js';
 import type { Paginated } from '../../api/pagination/pagination.js';
@@ -30,7 +31,13 @@ import { ExampleService } from './example.service.js';
  * The path carries no version segment: the default API version is applied
  * globally in `bootstrap.ts`, so every module is versioned identically
  * (ADR-013, section 4).
+ *
+ * The resource is `@Public()` because it is a reference template rather than a
+ * business capability: it owns no tenant data and no user data, so there is
+ * nothing to authorize. A real module copies this controller's *structure* and
+ * replaces this declaration with the capability it requires (IAM-006).
  */
+@Public()
 @ApiTags('examples')
 @Controller('examples')
 export class ExampleController {

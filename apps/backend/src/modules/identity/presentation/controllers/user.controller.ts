@@ -1,14 +1,18 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
+  ApiUnauthorizedResponse,
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
+import { Authorize } from '../../../../infrastructure/api/authorization/authorization-policy.js';
 import type { DomainError } from '../../../../shared/errors/domain-error.js';
 import { ErrorCategory } from '../../../../shared/errors/error-category.js';
 import type { ErrorDetail } from '../../../../shared/errors/error-detail.js';
@@ -40,17 +44,22 @@ import { UpdateUserUseCase } from '../../application/use-cases/update-user.use-c
  * global validation pipe validates input, and the controller maps the outcome
  * to a DTO or the standard error contract, and nothing else.
  *
- * **No authentication or authorization is implemented here, by design.** These
- * endpoints provide no access control and must not be read as providing one:
- * IAM-002 is explicitly out of scope for authentication, roles and permissions,
- * and this resource claims none. Password management, session management, token
- * management, MFA and SSO/OIDC/LDAP are equally absent.
+ * **Authorization is declared here and decided elsewhere** (IAM-006). Every
+ * operation states the capability IAM-004 defines — `user.read` to read an
+ * identity, `user.manage` to create one, change its profile or move its
+ * lifecycle — and the authorization boundary enforces it against the caller's
+ * effective permissions *before* the handler runs. An unauthenticated or
+ * unauthorized request therefore never reaches a use case here.
  *
- * A User is tenant-independent, so this resource reads **no** tenant identity
- * from any header, body or query parameter, and applies no tenant scope: the
- * records here are identity records, not tenant-owned data. Tenant membership
- * arrives with its own relationship in a later issue.
+ * A User is tenant-independent, so no operation declares a target tenant: the
+ * capability is resolved across the caller's active memberships rather than
+ * within one of them. The records here are identity records, not tenant-owned
+ * data, which is exactly what makes that resolution correct — tenant-scoped
+ * data always names its tenant and is checked against a membership in it.
+ * Password management, session management, token management, MFA and
+ * SSO/OIDC/LDAP remain absent.
  */
+@ApiBearerAuth()
 @ApiTags('users')
 @Controller('users')
 export class UsersController {
@@ -62,13 +71,22 @@ export class UsersController {
   ) {}
 
   @Post()
+  @Authorize({ permission: 'user.manage' })
   @ApiOperation({
     summary: 'Create a user',
     description:
-      'Creates a system identity independent of any tenant. No authentication is required or provided at this stage.',
+      'Creates a system identity independent of any tenant. Requires an authenticated caller holding "user.manage".',
   })
   @ApiCreatedResponse({ type: UserResponseDto })
   @ApiBadRequestResponse({ type: ApiErrorResponseDto, description: 'Request validation failed.' })
+  @ApiUnauthorizedResponse({
+    type: ApiErrorResponseDto,
+    description: 'Authentication is required.',
+  })
+  @ApiForbiddenResponse({
+    type: ApiErrorResponseDto,
+    description: 'The caller does not hold "user.manage".',
+  })
   @ApiConflictResponse({
     type: ApiErrorResponseDto,
     description: 'A user with the given email already exists.',
@@ -82,9 +100,21 @@ export class UsersController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a user by id' })
+  @Authorize({ permission: 'user.read' })
+  @ApiOperation({
+    summary: 'Get a user by id',
+    description: 'Requires an authenticated caller holding "user.read".',
+  })
   @ApiOkResponse({ type: UserResponseDto })
   @ApiNotFoundResponse({ type: ApiErrorResponseDto })
+  @ApiUnauthorizedResponse({
+    type: ApiErrorResponseDto,
+    description: 'Authentication is required.',
+  })
+  @ApiForbiddenResponse({
+    type: ApiErrorResponseDto,
+    description: 'The caller does not hold "user.read".',
+  })
   async findOne(@Param('id') id: string): Promise<UserResponseDto> {
     const outcome = await this.getUser.execute(new GetUser({ userId: id }));
 
@@ -92,12 +122,21 @@ export class UsersController {
   }
 
   @Patch(':id')
+  @Authorize({ permission: 'user.manage' })
   @ApiOperation({
     summary: "Update a user's profile",
     description:
-      'Refuses the write when expectedRevision is stale (409), or when the user is inactive (422).',
+      'Requires an authenticated caller holding "user.manage". Refuses the write when expectedRevision is stale (409), or when the user is inactive (422).',
   })
   @ApiOkResponse({ type: UserResponseDto })
+  @ApiUnauthorizedResponse({
+    type: ApiErrorResponseDto,
+    description: 'Authentication is required.',
+  })
+  @ApiForbiddenResponse({
+    type: ApiErrorResponseDto,
+    description: 'The caller does not hold "user.manage".',
+  })
   @ApiBadRequestResponse({ type: ApiErrorResponseDto, description: 'Request validation failed.' })
   @ApiNotFoundResponse({ type: ApiErrorResponseDto })
   @ApiConflictResponse({
@@ -122,12 +161,22 @@ export class UsersController {
   }
 
   @Post(':id/status')
+  @Authorize({ permission: 'user.manage' })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Change a user lifecycle state',
-    description: 'Moves the user between active and inactive; an illegal move is refused (422).',
+    description:
+      'Requires an authenticated caller holding "user.manage". Moves the user between active and inactive; an illegal move is refused (422).',
   })
   @ApiOkResponse({ type: UserResponseDto })
+  @ApiUnauthorizedResponse({
+    type: ApiErrorResponseDto,
+    description: 'Authentication is required.',
+  })
+  @ApiForbiddenResponse({
+    type: ApiErrorResponseDto,
+    description: 'The caller does not hold "user.manage".',
+  })
   @ApiBadRequestResponse({ type: ApiErrorResponseDto, description: 'Request validation failed.' })
   @ApiNotFoundResponse({ type: ApiErrorResponseDto })
   @ApiConflictResponse({

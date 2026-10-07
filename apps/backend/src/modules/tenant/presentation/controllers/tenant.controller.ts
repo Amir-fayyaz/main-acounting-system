@@ -1,12 +1,15 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
+  ApiUnauthorizedResponse,
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
 import type { ErrorDetail } from '../../../../shared/errors/error-detail.js';
@@ -15,6 +18,7 @@ import type { DomainError } from '../../../../shared/errors/domain-error.js';
 import type { Result } from '../../../../shared/errors/result.js';
 import { createTenantContext } from '../../../../shared/tenant/tenant-context.js';
 import { TenantScope } from '../../../../shared/tenant/tenant-scope.js';
+import { Authorize } from '../../../../infrastructure/api/authorization/authorization-policy.js';
 import { API_ERROR_CODES } from '../../../../infrastructure/api/errors/api-error.registry.js';
 import { ApiErrorResponseDto } from '../../../../infrastructure/api/errors/api-error.dto.js';
 import { ApiErrorException } from '../../../../infrastructure/api/errors/api-error.exception.js';
@@ -43,19 +47,24 @@ import { UpdateTenantDto } from '../dto/update-tenant.dto.js';
  * (through the global pipe), maps the outcome to a DTO or the standard error
  * contract, and nothing else.
  *
- * **No authentication or authorization is implemented here, by design.** These
- * endpoints provide no access control and must not be read as providing one:
- * IAM-001 is explicitly out of scope for authentication, roles and permissions,
- * and this resource claims none. What it *does* do is route every operation
- * through the shared tenant context: the target tenant is the tenant boundary
- * of the operation, so when authentication and authorization land, the scope
- * will be resolved from the authenticated principal instead of from the
- * resource path, and the path id will merely be checked against it.
+ * **Authorization is declared here and decided elsewhere** (IAM-006). Every
+ * operation states the capability IAM-004 defines — `company.read` to read a
+ * tenant, `company.update` to change one or create one — and the tenant-scoped
+ * ones name the route parameter that identifies the target tenant. The
+ * authorization boundary verifies both against the caller's active membership
+ * *before* this controller runs, so the path identifier is a checked claim
+ * rather than a grant, and an unauthenticated or unauthorized request never
+ * reaches a use case here.
  *
- * No request header, body or query field is ever read as tenant identity — the
- * only thing that establishes a scope is the application resolving the tenant
- * being administered, through `createTenantContext` + `TenantScope` (SHR-007).
+ * The scope the controller establishes is therefore always backed by a proven
+ * membership: the same claim the boundary verified is the tenant the operation
+ * runs under, through `createTenantContext` + `TenantScope` (SHR-007).
+ *
+ * No request header, body or query field is ever read as tenant identity — even
+ * a header that names a tenant the caller genuinely belongs to is ignored, and
+ * a path identifier for a tenant the caller does not belong to is refused.
  */
+@ApiBearerAuth()
 @ApiTags('tenants')
 @Controller('tenants')
 export class TenantController {
@@ -67,13 +76,22 @@ export class TenantController {
   ) {}
 
   @Post()
+  @Authorize({ permission: 'company.update' })
   @ApiOperation({
     summary: 'Create a tenant',
     description:
-      'Creates the root business boundary. No authentication is required or provided at this stage.',
+      'Creates the root business boundary. Requires an authenticated caller holding "company.update".',
   })
   @ApiCreatedResponse({ type: TenantResponseDto })
   @ApiBadRequestResponse({ type: ApiErrorResponseDto, description: 'Request validation failed.' })
+  @ApiUnauthorizedResponse({
+    type: ApiErrorResponseDto,
+    description: 'Authentication is required.',
+  })
+  @ApiForbiddenResponse({
+    type: ApiErrorResponseDto,
+    description: 'The caller does not hold "company.update".',
+  })
   async create(@Body() body: CreateTenantDto): Promise<TenantResponseDto> {
     // A tenant does not exist yet, so creation is the one system-level
     // operation here: it establishes the boundary rather than running in one.
@@ -85,9 +103,19 @@ export class TenantController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a tenant by id' })
+  @Authorize({ permission: 'company.read', tenantParam: 'id' })
+  @ApiOperation({
+    summary: 'Get a tenant by id',
+    description:
+      'Requires an active membership in the tenant with "company.read". A tenant the caller does not belong to is refused (403).',
+  })
   @ApiOkResponse({ type: TenantResponseDto })
   @ApiNotFoundResponse({ type: ApiErrorResponseDto })
+  @ApiForbiddenResponse({ type: ApiErrorResponseDto })
+  @ApiUnauthorizedResponse({
+    type: ApiErrorResponseDto,
+    description: 'Authentication is required.',
+  })
   async findOne(@Param('id') id: string): Promise<TenantResponseDto> {
     const outcome = await this.inTenantScope(id, () =>
       this.getTenant.execute(new GetTenant({ tenantId: id })),
@@ -97,10 +125,11 @@ export class TenantController {
   }
 
   @Patch(':id')
+  @Authorize({ permission: 'company.update', tenantParam: 'id' })
   @ApiOperation({
     summary: 'Update a tenant name',
     description:
-      'Refuses the write when expectedRevision is stale (409), or when the tenant is inactive (422).',
+      'Requires an active membership in the tenant with "company.update". Refuses the write when expectedRevision is stale (409), or when the tenant is inactive (422).',
   })
   @ApiOkResponse({ type: TenantResponseDto })
   @ApiBadRequestResponse({ type: ApiErrorResponseDto, description: 'Request validation failed.' })
@@ -128,10 +157,12 @@ export class TenantController {
   }
 
   @Post(':id/status')
+  @Authorize({ permission: 'company.update', tenantParam: 'id' })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Change a tenant lifecycle state',
-    description: 'Moves the tenant between active and inactive; an illegal move is refused (422).',
+    description:
+      'Requires an active membership in the tenant with "company.update". Moves the tenant between active and inactive; an illegal move is refused (422).',
   })
   @ApiOkResponse({ type: TenantResponseDto })
   @ApiBadRequestResponse({ type: ApiErrorResponseDto, description: 'Request validation failed.' })

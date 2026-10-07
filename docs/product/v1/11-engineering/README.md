@@ -26,5 +26,6 @@
 - `20-transactional-outbox.md`
 - `21-tenant-context.md`
 - `22-optimistic-concurrency.md`
+- `23-authorization.md`
 
 Engineering نباید Business Rule یا Architecture Decision را دوباره تعریف کند؛ این پوشه نحوه اجرای آن تصمیم‌ها را مشخص می‌کند.
