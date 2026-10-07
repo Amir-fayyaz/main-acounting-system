@@ -123,7 +123,11 @@ describe.skipIf(!integrationEnabled)('authentication persistence (integration)',
   }
 
   async function createUser(): Promise<User> {
-    const user = User.create({ displayName: 'Ali Rezaei', email: uniqueEmail(), now: DateTime.now() });
+    const user = User.create({
+      displayName: 'Ali Rezaei',
+      email: uniqueEmail(),
+      now: DateTime.now(),
+    });
     await users.add(user);
     return user;
   }
@@ -406,9 +410,7 @@ describe.skipIf(!integrationEnabled)('authentication persistence (integration)',
     const session = await sessions.findByTokenHash(tokens.hash(token));
     expect(session).toBeDefined();
 
-    const ended = await signOut.execute(
-      new SignOut({ sessionId: session!.aggregate.sessionId() }),
-    );
+    const ended = await signOut.execute(new SignOut({ sessionId: session!.aggregate.sessionId() }));
     expect(ended.isOk()).toBe(true);
 
     const [rows] = await pool.query<RowDataPacket[]>(
@@ -417,9 +419,7 @@ describe.skipIf(!integrationEnabled)('authentication persistence (integration)',
     );
     expect((rows[0] as RowDataPacket).revoked_at).not.toBeNull();
 
-    const rejected = await getAuthenticatedSession.execute(
-      new GetAuthenticatedSession({ token }),
-    );
+    const rejected = await getAuthenticatedSession.execute(new GetAuthenticatedSession({ token }));
     expect(rejected.errorOrThrow().code).toBe('SESSION_REVOKED');
     expect((await auditRows()).map((row) => row.event_type)).toEqual([
       'UserCredentialEstablished',

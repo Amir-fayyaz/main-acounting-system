@@ -4,10 +4,7 @@ import { InvalidPrimitiveError } from '../../../shared/primitives/invalid-primit
 import { DateTime } from '../../../shared/time/date-time.js';
 import { Credential } from './aggregates/credential.js';
 import { PasswordHash } from './value-objects/password-hash.js';
-import {
-  PLAIN_PASSWORD_MIN_LENGTH,
-  PlainPassword,
-} from './value-objects/plain-password.js';
+import { PLAIN_PASSWORD_MIN_LENGTH, PlainPassword } from './value-objects/plain-password.js';
 import { generateUserId, userIdFrom } from './value-objects/user-id.js';
 
 /**
@@ -112,7 +109,9 @@ describe('PasswordHash', () => {
     expect(() => PasswordHash.from('scrypt$onlysalt')).toThrow(InvalidPrimitiveError);
     expect(() => PasswordHash.from('SCrypt(n=1)$c2FsdA$ZGVyaXZlZA')).toThrow(InvalidPrimitiveError);
     expect(() =>
-      PasswordHash.from('scrypt(n=131072,x=abc)$c2FsdHNhbHRzYWx0c2FsdA$ZGVyaXZlZGtleWRlcml2ZWRrZXk'),
+      PasswordHash.from(
+        'scrypt(n=131072,x=abc)$c2FsdHNhbHRzYWx0c2FsdA$ZGVyaXZlZGtleWRlcml2ZWRrZXk',
+      ),
     ).toThrow(/cost parameters/);
     expect(() => PasswordHash.from(`scrypt$c2FsdA$${'a'.repeat(300)}`)).toThrow(
       InvalidPrimitiveError,
@@ -159,10 +158,7 @@ describe('Credential', () => {
       now: NOW,
     });
 
-    credential.replacePasswordHash(
-      PasswordHash.from(encodedHash('bmV3c2FsdG5ld3NhbHQ')),
-      LATER,
-    );
+    credential.replacePasswordHash(PasswordHash.from(encodedHash('bmV3c2FsdG5ld3NhbHQ')), LATER);
 
     expect(credential.snapshot().passwordHash).toBe(encodedHash('bmV3c2FsdG5ld3NhbHQ'));
     expect(credential.createdAt.equals(NOW)).toBe(true);

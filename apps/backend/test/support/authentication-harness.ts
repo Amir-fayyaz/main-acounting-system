@@ -16,11 +16,7 @@ import {
   InMemoryCredentialRepository,
   RecordingAuthenticationAudit,
 } from './authentication-doubles.js';
-import {
-  InMemoryUserRepository,
-  PassthroughTransactionBoundary,
-  aUser,
-} from './user-doubles.js';
+import { InMemoryUserRepository, PassthroughTransactionBoundary, aUser } from './user-doubles.js';
 
 /**
  * The shared harness for the authentication use-case specs (IAM-005).
@@ -145,7 +141,9 @@ export function seedSession(
   const created = AuthSession.create({
     userId: user.id,
     tokenHash: app.tokens.hash(token),
-    expiresAt: expiresAt.isAfter(now) ? expiresAt : DateTime.fromEpochMillis(now.epochMillis + 1_000),
+    expiresAt: expiresAt.isAfter(now)
+      ? expiresAt
+      : DateTime.fromEpochMillis(now.epochMillis + 1_000),
     now,
   });
   const session = expiresAt.isAfter(now)

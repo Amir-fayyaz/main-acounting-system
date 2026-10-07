@@ -106,17 +106,7 @@ async function createHarness(): Promise<Harness> {
           a: AuthenticationAuditRecorder,
           b: TransactionBoundary,
           config: AppConfigService,
-        ) =>
-          new SignInUseCase(
-            u,
-            c,
-            s,
-            h,
-            t,
-            a,
-            b,
-            config.authentication.sessionTtlMinutes,
-          ),
+        ) => new SignInUseCase(u, c, s, h, t, a, b, config.authentication.sessionTtlMinutes),
         inject: [
           USER_REPOSITORY,
           CREDENTIAL_REPOSITORY,
@@ -247,9 +237,7 @@ describe('authentication resource (e2e)', () => {
         tokenType: 'Bearer',
         principal: { userId: user.id, email: user.email, displayName: 'Ali Rezaei' },
       });
-      expect(response.body.token).toMatch(
-        /^[A-Za-z0-9_-]{40,}$/,
-      );
+      expect(response.body.token).toMatch(/^[A-Za-z0-9_-]{40,}$/);
 
       // The token expires according to the configured lifetime, not a literal.
       const expiresAt = Date.parse(String(response.body.expiresAt));

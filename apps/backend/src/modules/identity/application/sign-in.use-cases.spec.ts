@@ -114,7 +114,9 @@ describe('sign-in', () => {
     expect(app.sessions.addCalls).toBe(0);
     expect(app.audit.names()).toEqual(['SignInFailed', 'SignInFailed']);
     expect(app.audit.recorded[0]?.toJSON()).toMatchObject({ data: { reason: 'INVALID_SECRET' } });
-    expect(app.audit.recorded[1]?.toJSON()).toMatchObject({ data: { reason: 'UNKNOWN_CREDENTIAL' } });
+    expect(app.audit.recorded[1]?.toJSON()).toMatchObject({
+      data: { reason: 'UNKNOWN_CREDENTIAL' },
+    });
     expect(auditText()).not.toContain(TEST_PASSWORD);
   });
 
@@ -156,7 +158,9 @@ describe('sign-in', () => {
     await seedCredential(app, user);
 
     const hashCallsAfterSeeding = app.hasher.hashCalls;
-    const outcome = await app.signIn.execute(new SignIn({ email: user.email.value, password: 'x' }));
+    const outcome = await app.signIn.execute(
+      new SignIn({ email: user.email.value, password: 'x' }),
+    );
 
     expect(outcome.errorOrThrow().code).toBe('PASSWORD_POLICY_VIOLATION');
     expect(app.hasher.verifyCalls).toBe(0);

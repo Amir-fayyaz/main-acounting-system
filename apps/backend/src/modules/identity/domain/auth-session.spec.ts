@@ -103,12 +103,12 @@ describe('AuthSession', () => {
     const session = aSession();
     const snapshot = session.snapshot();
 
-    expect(() =>
-      AuthSession.rehydrate({ ...snapshot, id: 'not-a-uuid' }),
-    ).toThrow(InvalidPrimitiveError);
-    expect(() =>
-      AuthSession.rehydrate({ ...snapshot, tokenHash: 'not-a-digest' }),
-    ).toThrow(InvalidPrimitiveError);
+    expect(() => AuthSession.rehydrate({ ...snapshot, id: 'not-a-uuid' })).toThrow(
+      InvalidPrimitiveError,
+    );
+    expect(() => AuthSession.rehydrate({ ...snapshot, tokenHash: 'not-a-digest' })).toThrow(
+      InvalidPrimitiveError,
+    );
   });
 
   it('never renders the token digest in its description', () => {

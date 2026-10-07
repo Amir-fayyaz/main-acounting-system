@@ -48,9 +48,14 @@ describe('OutboxAuthenticationAuditRecorder', () => {
   it('records the fact and opens its own transaction when the caller has none', async () => {
     const outbox = new RecordingOutbox();
     const { runner, runs } = countingRunner();
-    const recorder = new OutboxAuthenticationAuditRecorder(outbox, createTransactionBoundary(runner));
+    const recorder = new OutboxAuthenticationAuditRecorder(
+      outbox,
+      createTransactionBoundary(runner),
+    );
 
-    await recorder.record(new SignInFailed({ email: 'nobody@example.com', reason: 'UNKNOWN_CREDENTIAL' }));
+    await recorder.record(
+      new SignInFailed({ email: 'nobody@example.com', reason: 'UNKNOWN_CREDENTIAL' }),
+    );
 
     expect(outbox.written.map((event) => event.name)).toEqual(['SignInFailed']);
     expect(runs()).toBe(1);
@@ -85,10 +90,15 @@ describe('OutboxAuthenticationAuditRecorder', () => {
       },
     };
     const { runner } = countingRunner();
-    const recorder = new OutboxAuthenticationAuditRecorder(failing, createTransactionBoundary(runner));
+    const recorder = new OutboxAuthenticationAuditRecorder(
+      failing,
+      createTransactionBoundary(runner),
+    );
 
     await expect(
-      recorder.record(new SignInFailed({ email: 'nobody@example.com', reason: 'UNKNOWN_CREDENTIAL' })),
+      recorder.record(
+        new SignInFailed({ email: 'nobody@example.com', reason: 'UNKNOWN_CREDENTIAL' }),
+      ),
     ).rejects.toThrow('the outbox is unavailable');
   });
 });

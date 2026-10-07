@@ -176,7 +176,10 @@ describe('sign-out', () => {
     expect(revokedOutcome.errorOrThrow().code).toBe('SESSION_REVOKED');
     expect(expiredOutcome.errorOrThrow().code).toBe('SESSION_EXPIRED');
     expect(app.sessions.updateCalls).toBe(0);
-    expect(app.audit.names()).toEqual(['AuthenticationStateRejected', 'AuthenticationStateRejected']);
+    expect(app.audit.names()).toEqual([
+      'AuthenticationStateRejected',
+      'AuthenticationStateRejected',
+    ]);
   });
 
   it('refuses an unknown or malformed session identity', async () => {

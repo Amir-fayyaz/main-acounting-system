@@ -26,7 +26,9 @@ describe('ScryptPasswordHasher', () => {
 
     expect(hash.algorithm).toBe('scrypt');
     expect(hash.parameters).toEqual({ n: 131072, r: 8, p: 1 });
-    expect(hash.encoded).toMatch(/^scrypt\(n=131072,r=8,p=1\)\$[A-Za-z0-9_-]{22}\$[A-Za-z0-9_-]{86}$/);
+    expect(hash.encoded).toMatch(
+      /^scrypt\(n=131072,r=8,p=1\)\$[A-Za-z0-9_-]{22}\$[A-Za-z0-9_-]{86}$/,
+    );
     await expect(hasher.verify(PlainPassword.from(SECRET), hash)).resolves.toBe(true);
   });
 
@@ -61,18 +63,16 @@ describe('ScryptPasswordHasher', () => {
   it('is case- and whitespace-sensitive: the stored secret is the exact secret', async () => {
     const hash = await hasher.hash(PlainPassword.from(SECRET));
 
-    await expect(
-      hasher.verify(PlainPassword.from(SECRET.toUpperCase()), hash),
-    ).resolves.toBe(false);
+    await expect(hasher.verify(PlainPassword.from(SECRET.toUpperCase()), hash)).resolves.toBe(
+      false,
+    );
     await expect(hasher.verify(PlainPassword.from(`${SECRET} `), hash)).resolves.toBe(false);
   });
 
   it('refuses to verify an algorithm or parameter set it does not support', async () => {
     const hash = await hasher.hash(PlainPassword.from(SECRET));
 
-    const foreignAlgorithm = PasswordHash.from(
-      hash.encoded.replace('scrypt', 'bcrypt'),
-    );
+    const foreignAlgorithm = PasswordHash.from(hash.encoded.replace('scrypt', 'bcrypt'));
     const absurdCost = PasswordHash.from(hash.encoded.replace('n=131072', 'n=1073741824'));
     const notAPowerOfTwo = PasswordHash.from(hash.encoded.replace('n=131072', 'n=100000'));
     const hugeBlockSize = PasswordHash.from(hash.encoded.replace('r=8', 'r=4096'));
