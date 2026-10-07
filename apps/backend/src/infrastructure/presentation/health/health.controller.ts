@@ -1,4 +1,5 @@
 import { Controller, Get, Header, HttpStatus, Res, VERSION_NEUTRAL } from '@nestjs/common';
+import { Public } from '../../api/authorization/authorization-policy.js';
 import { AppConfigService } from '../../config/app-config.service.js';
 import { ReadinessService } from '../../readiness/readiness.service.js';
 import type { ReadinessReport } from '../../readiness/readiness.types.js';
@@ -46,7 +47,14 @@ interface StatusCapableResponse {
  * Readiness sets its status through the response and returns the report instead
  * of throwing, so the report body is returned as-is and is not reshaped into the
  * standard error contract by the global exception filter (FND-006).
+ *
+ * Both probes are `@Public()`: they are reachable by the orchestrator, a load
+ * balancer and a monitoring system that hold no user identity, and they disclose
+ * no business data. That is the only reason they are exempt from the global
+ * deny-by-default authorization boundary (IAM-006) — nothing else about them is
+ * unauthenticated *by accident*.
  */
+@Public()
 @Controller({ path: 'health', version: VERSION_NEUTRAL })
 export class HealthController {
   constructor(

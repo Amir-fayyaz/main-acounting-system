@@ -1,5 +1,14 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { ApiBadRequestResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiForbiddenResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
+import { Authorize } from '../../../../infrastructure/api/authorization/authorization-policy.js';
 import { API_ERROR_CODES } from '../../../../infrastructure/api/errors/api-error.registry.js';
 import { ApiErrorResponseDto } from '../../../../infrastructure/api/errors/api-error.dto.js';
 import { ApiErrorException } from '../../../../infrastructure/api/errors/api-error.exception.js';
@@ -25,23 +34,34 @@ import { PermissionResponseDto } from '../dto/permission-response.dto.js';
  * tenant, which they must not. A tenant's choices are expressed by which keys its
  * roles hold, not by which permissions exist.
  *
- * **No authentication or authorization is implemented here, by design.** Listing
- * the catalog grants nothing and checks nothing: IAM-004 defines capabilities, it
- * does not enforce them (IAM-006 does).
+ * **Authorization is declared here and decided elsewhere** (IAM-006). Reading
+ * the catalog requires `role.read`: the vocabulary itself is public knowledge
+ * inside the platform, but it names every capability the system defines, so it
+ * is not handed out to an anonymous caller.
  */
+@ApiBearerAuth()
 @ApiTags('permissions')
 @Controller('permissions')
 export class PermissionsController {
   public constructor(private readonly listPermissions: ListPermissionsUseCase) {}
 
   @Get()
+  @Authorize({ permission: 'role.read' })
   @ApiOperation({
     summary: 'List the permission catalog using the standard pagination envelope',
     description:
-      'The platform-wide capability vocabulary. Not tenant-scoped: every tenant sees the same capabilities.',
+      'Requires an authenticated caller holding "role.read". The platform-wide capability vocabulary: not tenant-scoped, because every tenant sees the same capabilities.',
   })
   @ApiOkResponse({ type: PaginatedPermissionsDto })
   @ApiBadRequestResponse({ type: ApiErrorResponseDto, description: 'Invalid pagination query.' })
+  @ApiUnauthorizedResponse({
+    type: ApiErrorResponseDto,
+    description: 'Authentication is required.',
+  })
+  @ApiForbiddenResponse({
+    type: ApiErrorResponseDto,
+    description: 'The caller does not hold "role.read".',
+  })
   async list(@Query() query: PaginationQueryDto): Promise<Paginated<PermissionResponseDto>> {
     const outcome = await this.listPermissions.execute();
 

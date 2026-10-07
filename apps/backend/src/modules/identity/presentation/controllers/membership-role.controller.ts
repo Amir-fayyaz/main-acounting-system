@@ -1,14 +1,18 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
+  ApiUnauthorizedResponse,
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
+import { Authorize } from '../../../../infrastructure/api/authorization/authorization-policy.js';
 import { API_ERROR_CODES } from '../../../../infrastructure/api/errors/api-error.registry.js';
 import { ApiErrorResponseDto } from '../../../../infrastructure/api/errors/api-error.dto.js';
 import { ApiErrorException } from '../../../../infrastructure/api/errors/api-error.exception.js';
@@ -57,13 +61,15 @@ import { RemoveRoleDto } from '../dto/remove-role.dto.js';
  * The membership and the role must both belong to that tenant, so a cross-tenant
  * assignment is refused without revealing that the role exists elsewhere.
  *
- * **No authentication or authorization is implemented here, by design.** These
- * endpoints enforce nothing: effective-permission resolution reports which
- * capabilities a membership holds, it does not gate a request. Checking whether a
- * caller may perform an action is IAM-006, and the whole dependency chain the
- * product defines — User → Membership → Role → Permissions — is recorded here,
- * not applied.
+ * **Authorization is declared here and decided elsewhere** (IAM-006). Every
+ * operation names its target tenant and needs `role.read` to read the
+ * assignments or the resolved effective permissions of a membership, and
+ * `role.manage` to assign or remove one; the authorization boundary verifies the
+ * caller's active membership in that tenant before the handler runs. Reading
+ * which capabilities a membership holds still gates nothing by itself — the
+ * boundary is what decides whether the caller may look.
  */
+@ApiBearerAuth()
 @ApiTags('membership-roles')
 @Controller()
 export class MembershipRolesController {
@@ -75,11 +81,18 @@ export class MembershipRolesController {
   ) {}
 
   @Get('tenants/:tenantId/memberships/:membershipId/roles')
+  @Authorize({ permission: 'role.read', tenantParam: 'tenantId' })
   @ApiOperation({
     summary: "List a membership's role assignments using the standard pagination envelope",
-    description: 'Returns every assignment, active or removed, so the access history is visible.',
+    description:
+      'Requires an active membership in the tenant with "role.read". Returns every assignment, active or removed, so the access history is visible.',
   })
   @ApiOkResponse({ type: PaginatedMembershipRolesDto })
+  @ApiUnauthorizedResponse({
+    type: ApiErrorResponseDto,
+    description: 'Authentication is required.',
+  })
+  @ApiForbiddenResponse({ type: ApiErrorResponseDto })
   @ApiBadRequestResponse({ type: ApiErrorResponseDto, description: 'Invalid pagination query.' })
   @ApiNotFoundResponse({ type: ApiErrorResponseDto })
   async list(
@@ -98,12 +111,18 @@ export class MembershipRolesController {
   }
 
   @Post('tenants/:tenantId/memberships/:membershipId/roles')
+  @Authorize({ permission: 'role.manage', tenantParam: 'tenantId' })
   @ApiOperation({
     summary: 'Assign a role of the same tenant to a membership',
     description:
-      'Refuses a role of another tenant as not-found (404), an inactive role (422), and a role the membership already holds (409).',
+      'Requires an active membership in the tenant with "role.manage". Refuses a role of another tenant as not-found (404), an inactive role (422), and a role the membership already holds (409).',
   })
   @ApiCreatedResponse({ type: MembershipRoleResponseDto, description: 'The created assignment.' })
+  @ApiUnauthorizedResponse({
+    type: ApiErrorResponseDto,
+    description: 'Authentication is required.',
+  })
+  @ApiForbiddenResponse({ type: ApiErrorResponseDto })
   @ApiBadRequestResponse({ type: ApiErrorResponseDto, description: 'Request validation failed.' })
   @ApiNotFoundResponse({
     type: ApiErrorResponseDto,
@@ -132,13 +151,19 @@ export class MembershipRolesController {
   }
 
   @Post('tenants/:tenantId/memberships/:membershipId/roles/:assignmentId/remove')
+  @Authorize({ permission: 'role.manage', tenantParam: 'tenantId' })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Remove a role from a membership',
     description:
-      'Deactivates the assignment and retains it as access history. Refuses a stale revision (409).',
+      'Requires an active membership in the tenant with "role.manage". Deactivates the assignment and retains it as access history. Refuses a stale revision (409).',
   })
   @ApiOkResponse({ type: MembershipRoleResponseDto, description: 'The ended assignment.' })
+  @ApiUnauthorizedResponse({
+    type: ApiErrorResponseDto,
+    description: 'Authentication is required.',
+  })
+  @ApiForbiddenResponse({ type: ApiErrorResponseDto })
   @ApiBadRequestResponse({ type: ApiErrorResponseDto, description: 'Request validation failed.' })
   @ApiNotFoundResponse({ type: ApiErrorResponseDto })
   @ApiConflictResponse({
@@ -170,12 +195,18 @@ export class MembershipRolesController {
   }
 
   @Get('tenants/:tenantId/memberships/:membershipId/effective-permissions')
+  @Authorize({ permission: 'role.read', tenantParam: 'tenantId' })
   @ApiOperation({
     summary: "Resolve a membership's effective permissions",
     description:
-      'The union of the capabilities of the roles the membership currently holds through active assignments; deactivated roles and removed assignments contribute nothing. This resolves the set and enforces nothing (IAM-006).',
+      'Requires an active membership in the tenant with "role.read". The union of the capabilities of the roles the membership currently holds through active assignments; deactivated roles and removed assignments contribute nothing.',
   })
   @ApiOkResponse({ type: PaginatedPermissionsDto })
+  @ApiUnauthorizedResponse({
+    type: ApiErrorResponseDto,
+    description: 'Authentication is required.',
+  })
+  @ApiForbiddenResponse({ type: ApiErrorResponseDto })
   @ApiBadRequestResponse({ type: ApiErrorResponseDto, description: 'Invalid pagination query.' })
   @ApiNotFoundResponse({
     type: ApiErrorResponseDto,

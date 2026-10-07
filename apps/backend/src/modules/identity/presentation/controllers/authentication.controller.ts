@@ -9,6 +9,10 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import {
+  Public,
+  RequiresAuthentication,
+} from '../../../../infrastructure/api/authorization/authorization-policy.js';
 import { ApiErrorResponseDto } from '../../../../infrastructure/api/errors/api-error.dto.js';
 import { SignIn } from '../../application/commands/sign-in.command.js';
 import { SignOut } from '../../application/commands/sign-out.command.js';
@@ -46,6 +50,13 @@ import { raiseAuthenticationFailure } from '../http/authentication-error.mapper.
  * Authentication establishes who the user is; the tenant comes from the
  * membership relationship and later authorization rules, never from this
  * resource.
+ *
+ * **The global authorization boundary classifies these three operations**
+ * (IAM-006). Signing in is `@Public()` — it is how an identity is established,
+ * so it cannot require one. The two operations that act on the *current*
+ * session are `@RequiresAuthentication()`: they need a validated caller but no
+ * capability, which is exactly the distinction the product draws between
+ * authentication and authorization.
  */
 @ApiTags('auth')
 @Controller('auth')
@@ -56,6 +67,7 @@ export class AuthenticationController {
   ) {}
 
   @Post('sign-in')
+  @Public()
   @ApiOperation({
     summary: 'Sign in',
     description:
@@ -81,6 +93,7 @@ export class AuthenticationController {
   }
 
   @Get('session')
+  @RequiresAuthentication()
   @UseGuards(AuthenticationGuard)
   @ApiBearerAuth()
   @ApiOperation({
@@ -101,6 +114,7 @@ export class AuthenticationController {
   }
 
   @Post('sign-out')
+  @RequiresAuthentication()
   @UseGuards(AuthenticationGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiBearerAuth()

@@ -1,3 +1,4 @@
+import type { AuthorizationContextView } from '../../application/authorization/authorization-context.view.js';
 import type { AuthenticatedSessionView } from '../../application/views/authenticated-session.view.js';
 import type { AuthenticatedPrincipalView } from '../../application/views/principal.view.js';
 
@@ -18,8 +19,17 @@ import type { AuthenticatedPrincipalView } from '../../application/views/princip
  */
 export interface AuthenticatedRequest {
   readonly headers: Record<string, string | string[] | undefined>;
+  /** The route parameters, populated by routing before any guard runs. */
+  readonly params?: Record<string, string | undefined>;
   authentication?: AuthenticatedSessionView;
   principal?: AuthenticatedPrincipalView;
+  /**
+   * The authorization context the boundary resolved (IAM-006). Present exactly
+   * when the endpoint declared a capability policy and the caller satisfied it,
+   * so a handler may rely on it — and a handler that finds it missing is an
+   * endpoint whose declared policy was not enforced.
+   */
+  authorization?: AuthorizationContextView;
 }
 
 /** The `Authorization` scheme this mechanism uses. */

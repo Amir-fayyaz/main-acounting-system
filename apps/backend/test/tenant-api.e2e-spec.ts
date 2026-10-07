@@ -33,9 +33,12 @@ import {
  * mapping and OpenAPI document without requiring a database. Persistence
  * against MySQL is covered separately by `tenant-persistence.e2e-spec.ts`.
  *
- * They also pin the security posture IAM-001 requires: the resource claims no
- * authentication, reads no client-supplied tenant identity, and no request
- * header can influence which tenant an operation touches.
+ * They also pin the posture IAM-001 requires of the resource itself: it reads no
+ * client-supplied tenant identity, and no request header can influence which
+ * tenant an operation touches. The **enforcement** of authentication and
+ * authorization on these operations (IAM-006) is verified separately by
+ * `authorization-api.e2e-spec.ts`, which composes the same controllers with the
+ * real authorization boundary.
  */
 
 interface Harness {
@@ -278,13 +281,15 @@ describe('tenant resource (e2e)', () => {
   });
 
   describe('security posture', () => {
-    it('claims no authentication or authorization in the contract', async () => {
+    it('declares the bearer requirement on every protected operation (IAM-006)', async () => {
       const response = await request(app.getHttpServer()).get('/api/docs-json').expect(200);
 
       const paths = response.body.paths;
       expect(paths['/api/v1/tenants']).toBeDefined();
-      expect(paths['/api/v1/tenants'].post.security).toBeUndefined();
-      expect(paths['/api/v1/tenants/{id}'].get.security).toBeUndefined();
+      expect(paths['/api/v1/tenants'].post.security).toEqual([{ bearer: [] }]);
+      expect(paths['/api/v1/tenants/{id}'].get.security).toEqual([{ bearer: [] }]);
+      // The requirement is stated per operation rather than globally, so a
+      // future public endpoint cannot inherit it by accident.
       expect(response.body.security).toBeUndefined();
     });
   });

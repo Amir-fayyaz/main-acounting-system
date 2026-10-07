@@ -510,13 +510,19 @@ describe('membership resource (e2e)', () => {
   });
 
   describe('security posture', () => {
-    it('claims no authentication or authorization in the contract', async () => {
+    it('declares the bearer requirement on every protected operation (IAM-006)', async () => {
       const response = await request(app.getHttpServer()).get('/api/docs-json').expect(200);
 
       const paths = response.body.paths;
-      expect(paths['/api/v1/tenants/{tenantId}/memberships'].post.security).toBeUndefined();
-      expect(paths['/api/v1/tenants/{tenantId}/memberships'].get.security).toBeUndefined();
-      expect(paths['/api/v1/users/{userId}/memberships'].get.security).toBeUndefined();
+      expect(paths['/api/v1/tenants/{tenantId}/memberships'].post.security).toEqual([
+        { bearer: [] },
+      ]);
+      expect(paths['/api/v1/tenants/{tenantId}/memberships'].get.security).toEqual([
+        { bearer: [] },
+      ]);
+      expect(paths['/api/v1/users/{userId}/memberships'].get.security).toEqual([{ bearer: [] }]);
+      // The requirement is stated per operation rather than globally, so a
+      // future public endpoint cannot inherit it by accident.
       expect(response.body.security).toBeUndefined();
     });
 

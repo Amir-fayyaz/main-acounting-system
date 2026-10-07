@@ -1,3 +1,5 @@
+import { env } from 'node:process';
+
 import swc from 'unplugin-swc';
 import { defineConfig } from 'vitest/config';
 
@@ -23,6 +25,11 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/*.spec.ts', 'test/**/*.e2e-spec.ts'],
+    // The MySQL integration specs share one database and drop their tables in
+    // `afterAll`, so a spec can destroy another spec's tables mid-run when
+    // files execute in parallel. With `MYSQL_INTEGRATION=1` the files are
+    // therefore run one at a time; the default gate is unaffected.
+    fileParallelism: env.MYSQL_INTEGRATION !== '1',
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],

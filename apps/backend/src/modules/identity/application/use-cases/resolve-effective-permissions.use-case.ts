@@ -8,6 +8,7 @@ import type { RoleRepository } from '../../domain/repositories/role.repository.j
 import { isMembershipId, membershipIdFrom } from '../../domain/value-objects/membership-id.js';
 import { PermissionKey } from '../../domain/value-objects/permission-key.js';
 import type { GetEffectivePermissions } from '../queries/effective-permissions.query.js';
+import { resolveEffectivePermissionKeys } from '../services/effective-permissions.js';
 import { resolveScopedTenant } from '../services/tenant-scope.js';
 import { toPermissionView } from '../views/role.mapper.js';
 import type { PermissionView } from '../views/permission.view.js';
@@ -62,23 +63,13 @@ export class ResolveEffectivePermissionsUseCase {
       return Result.fail(new MembershipNotFoundError());
     }
 
-    const loaded = await this.assignments.findByMembershipId(membershipId);
-    const granted = new Set<string>();
-
-    for (const assignment of loaded) {
-      if (!assignment.aggregate.isActive()) {
-        continue;
-      }
-
-      const role = await this.roles.get(assignment.aggregate.roleId);
-      if (role === undefined || !role.aggregate.isActive()) {
-        continue;
-      }
-
-      for (const permission of role.aggregate.permissions()) {
-        granted.add(permission);
-      }
-    }
+    // The resolution is shared with the authorization layer, so "effective"
+    // means exactly the same set in both (IAM-006): one definition of access.
+    const granted = await resolveEffectivePermissionKeys(
+      [membershipId],
+      this.assignments,
+      this.roles,
+    );
 
     // Granting validates a key against the catalog, so every collected key is a
     // known capability; the guard is defensive, and skipping an unknown key is

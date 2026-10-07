@@ -11,14 +11,18 @@ import {
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
+  ApiUnauthorizedResponse,
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
+import { Authorize } from '../../../../infrastructure/api/authorization/authorization-policy.js';
 import { API_ERROR_CODES } from '../../../../infrastructure/api/errors/api-error.registry.js';
 import { ApiErrorResponseDto } from '../../../../infrastructure/api/errors/api-error.dto.js';
 import { ApiErrorException } from '../../../../infrastructure/api/errors/api-error.exception.js';
@@ -74,13 +78,14 @@ import { UpdateRoleDto } from '../dto/update-role.dto.js';
  * without that scope, and no client-supplied header, body or query field is ever
  * read as tenant identity (SHR-007).
  *
- * **No authentication or authorization is implemented here, by design.** These
- * endpoints provide no access control and must not be read as providing one:
- * IAM-004 defines roles and permissions, it does not enforce them. Checking
- * whether a caller may perform an action is the authorization issue (IAM-006), so
- * the permission keys a role holds are data this API records and returns, never a
- * gate it applies.
+ * **Authorization is declared here and decided elsewhere** (IAM-006). Every
+ * operation names its target tenant and needs `role.read` to read a role or
+ * `role.manage` to create, rename, re-role or re-permission one, and the
+ * authorization boundary verifies the caller's active membership in that tenant
+ * before the handler runs. The permission keys a role *holds* are data this API
+ * records; whether the caller may *change* them is a decision the boundary makes.
  */
+@ApiBearerAuth()
 @ApiTags('roles')
 @Controller()
 export class RolesController {
@@ -95,13 +100,19 @@ export class RolesController {
   ) {}
 
   @Post('tenants/:tenantId/roles')
+  @Authorize({ permission: 'role.manage', tenantParam: 'tenantId' })
   @ApiOperation({
     summary: 'Create a role within a tenant',
     description:
-      'Creates an active role with no permissions. No authentication is required or provided at this stage.',
+      'Creates an active role with no permissions. Requires an active membership in the tenant with "role.manage".',
   })
   @ApiCreatedResponse({ type: RoleResponseDto, description: 'The created role.' })
   @ApiBadRequestResponse({ type: ApiErrorResponseDto, description: 'Request validation failed.' })
+  @ApiUnauthorizedResponse({
+    type: ApiErrorResponseDto,
+    description: 'Authentication is required.',
+  })
+  @ApiForbiddenResponse({ type: ApiErrorResponseDto })
   @ApiNotFoundResponse({
     type: ApiErrorResponseDto,
     description: 'The tenant was not found.',
@@ -118,10 +129,19 @@ export class RolesController {
   }
 
   @Get('tenants/:tenantId/roles')
-  @ApiOperation({ summary: "List a tenant's roles using the standard pagination envelope" })
+  @Authorize({ permission: 'role.read', tenantParam: 'tenantId' })
+  @ApiOperation({
+    summary: "List a tenant's roles using the standard pagination envelope",
+    description: 'Requires an active membership in the tenant with "role.read".',
+  })
   @ApiOkResponse({ type: PaginatedRolesDto })
   @ApiBadRequestResponse({ type: ApiErrorResponseDto, description: 'Invalid pagination query.' })
   @ApiNotFoundResponse({ type: ApiErrorResponseDto })
+  @ApiUnauthorizedResponse({
+    type: ApiErrorResponseDto,
+    description: 'Authentication is required.',
+  })
+  @ApiForbiddenResponse({ type: ApiErrorResponseDto })
   async list(
     @Param('tenantId') tenantId: string,
     @Query() query: PaginationQueryDto,
@@ -137,9 +157,18 @@ export class RolesController {
   }
 
   @Get('tenants/:tenantId/roles/:roleId')
-  @ApiOperation({ summary: 'Get one role by id within a tenant' })
+  @Authorize({ permission: 'role.read', tenantParam: 'tenantId' })
+  @ApiOperation({
+    summary: 'Get one role by id within a tenant',
+    description: 'Requires an active membership in the tenant with "role.read".',
+  })
   @ApiOkResponse({ type: RoleResponseDto })
   @ApiNotFoundResponse({ type: ApiErrorResponseDto })
+  @ApiUnauthorizedResponse({
+    type: ApiErrorResponseDto,
+    description: 'Authentication is required.',
+  })
+  @ApiForbiddenResponse({ type: ApiErrorResponseDto })
   async findOne(
     @Param('tenantId') tenantId: string,
     @Param('roleId') roleId: string,
@@ -152,12 +181,18 @@ export class RolesController {
   }
 
   @Patch('tenants/:tenantId/roles/:roleId')
+  @Authorize({ permission: 'role.manage', tenantParam: 'tenantId' })
   @ApiOperation({
     summary: 'Rename a role',
     description:
-      'Refuses the write when expectedRevision is stale (409), or when the role is inactive (422).',
+      'Requires an active membership in the tenant with "role.manage". Refuses the write when expectedRevision is stale (409), or when the role is inactive (422).',
   })
   @ApiOkResponse({ type: RoleResponseDto })
+  @ApiUnauthorizedResponse({
+    type: ApiErrorResponseDto,
+    description: 'Authentication is required.',
+  })
+  @ApiForbiddenResponse({ type: ApiErrorResponseDto })
   @ApiBadRequestResponse({ type: ApiErrorResponseDto, description: 'Request validation failed.' })
   @ApiNotFoundResponse({ type: ApiErrorResponseDto })
   @ApiConflictResponse({
@@ -188,13 +223,19 @@ export class RolesController {
   }
 
   @Post('tenants/:tenantId/roles/:roleId/status')
+  @Authorize({ permission: 'role.manage', tenantParam: 'tenantId' })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Change a role lifecycle state',
     description:
-      'Moves the role between active and inactive; an illegal move is refused (422). Deactivation retains every assignment that points at the role.',
+      'Requires an active membership in the tenant with "role.manage". Moves the role between active and inactive; an illegal move is refused (422). Deactivation retains every assignment that points at the role.',
   })
   @ApiOkResponse({ type: RoleResponseDto })
+  @ApiUnauthorizedResponse({
+    type: ApiErrorResponseDto,
+    description: 'Authentication is required.',
+  })
+  @ApiForbiddenResponse({ type: ApiErrorResponseDto })
   @ApiBadRequestResponse({ type: ApiErrorResponseDto, description: 'Request validation failed.' })
   @ApiNotFoundResponse({ type: ApiErrorResponseDto })
   @ApiConflictResponse({
@@ -225,13 +266,19 @@ export class RolesController {
   }
 
   @Post('tenants/:tenantId/roles/:roleId/permissions')
+  @Authorize({ permission: 'role.manage', tenantParam: 'tenantId' })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Grant a capability to a role',
     description:
-      'The key must name a catalog capability. A duplicate grant is a conflict (409); an unknown capability is refused (400).',
+      'Requires an active membership in the tenant with "role.manage". The key must name a catalog capability. A duplicate grant is a conflict (409); an unknown capability is refused (400).',
   })
   @ApiOkResponse({ type: RoleResponseDto, description: 'The role with its updated permissions.' })
+  @ApiUnauthorizedResponse({
+    type: ApiErrorResponseDto,
+    description: 'Authentication is required.',
+  })
+  @ApiForbiddenResponse({ type: ApiErrorResponseDto })
   @ApiBadRequestResponse({ type: ApiErrorResponseDto, description: 'Request validation failed.' })
   @ApiNotFoundResponse({ type: ApiErrorResponseDto })
   @ApiConflictResponse({
@@ -262,13 +309,19 @@ export class RolesController {
   }
 
   @Post('tenants/:tenantId/roles/:roleId/permissions/remove')
+  @Authorize({ permission: 'role.manage', tenantParam: 'tenantId' })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Remove a capability from a role',
     description:
-      'Refuses a key the role does not grant (404), a stale revision (409), or an inactive role (422). Effective permissions update immediately.',
+      'Requires an active membership in the tenant with "role.manage". Refuses a key the role does not grant (404), a stale revision (409), or an inactive role (422). Effective permissions update immediately.',
   })
   @ApiOkResponse({ type: RoleResponseDto, description: 'The role with its updated permissions.' })
+  @ApiUnauthorizedResponse({
+    type: ApiErrorResponseDto,
+    description: 'Authentication is required.',
+  })
+  @ApiForbiddenResponse({ type: ApiErrorResponseDto })
   @ApiBadRequestResponse({ type: ApiErrorResponseDto, description: 'Request validation failed.' })
   @ApiNotFoundResponse({ type: ApiErrorResponseDto })
   @ApiConflictResponse({

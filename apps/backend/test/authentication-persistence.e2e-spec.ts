@@ -421,10 +421,14 @@ describe.skipIf(!integrationEnabled)('authentication persistence (integration)',
 
     const rejected = await getAuthenticatedSession.execute(new GetAuthenticatedSession({ token }));
     expect(rejected.errorOrThrow().code).toBe('SESSION_REVOKED');
+    // The fresh read above presents a revoked token, and a refused
+    // authentication is exactly the record the security model requires
+    // (ADR-010 section 9) — the same event the expired-session test asserts.
     expect((await auditRows()).map((row) => row.event_type)).toEqual([
       'UserCredentialEstablished',
       'UserAuthenticated',
       'AuthenticationEnded',
+      'AuthenticationStateRejected',
     ]);
   });
 });

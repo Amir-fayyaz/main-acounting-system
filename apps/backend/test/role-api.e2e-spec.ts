@@ -717,20 +717,22 @@ describe('role and permission resources (e2e)', () => {
   });
 
   describe('security posture', () => {
-    it('claims no authentication or authorization in the contract', async () => {
+    it('declares the bearer requirement on every protected operation (IAM-006)', async () => {
       const response = await request(app.getHttpServer()).get('/api/docs-json').expect(200);
       const paths = response.body.paths;
 
-      expect(paths['/api/v1/tenants/{tenantId}/roles'].post.security).toBeUndefined();
-      expect(paths['/api/v1/tenants/{tenantId}/roles'].get.security).toBeUndefined();
-      expect(paths['/api/v1/permissions'].get.security).toBeUndefined();
+      expect(paths['/api/v1/tenants/{tenantId}/roles'].post.security).toEqual([{ bearer: [] }]);
+      expect(paths['/api/v1/tenants/{tenantId}/roles'].get.security).toEqual([{ bearer: [] }]);
+      expect(paths['/api/v1/permissions'].get.security).toEqual([{ bearer: [] }]);
       expect(
         paths['/api/v1/tenants/{tenantId}/memberships/{membershipId}/roles'].post.security,
-      ).toBeUndefined();
+      ).toEqual([{ bearer: [] }]);
       expect(
         paths['/api/v1/tenants/{tenantId}/memberships/{membershipId}/effective-permissions'].get
           .security,
-      ).toBeUndefined();
+      ).toEqual([{ bearer: [] }]);
+      // The requirement is stated per operation rather than globally, so a
+      // future public endpoint cannot inherit it by accident.
       expect(response.body.security).toBeUndefined();
     });
 
