@@ -88,6 +88,20 @@ export interface JobsConfiguration {
   readonly retryMaxDelayMs: number;
 }
 
+/**
+ * Authentication settings (IAM-005; TECH-006; ADR-010 section 11).
+ *
+ * The session lifetime is configuration, not a literal in the code, so an
+ * installation can tighten it without a release and a test can state the exact
+ * expiry window it exercises. It lives here with every other contract so all
+ * processes validate the same value; no authentication code reads a raw
+ * variable itself.
+ */
+export interface AuthenticationConfiguration {
+  /** How long an authenticated session stays valid after it is established, in minutes. */
+  readonly sessionTtlMinutes: number;
+}
+
 /** Scheduler process settings (ADR-008, section 9). */
 export interface SchedulerConfiguration {
   /** How often the scheduler promotes due work and periodic triggers, in milliseconds. */
@@ -121,6 +135,7 @@ export interface Configuration {
   readonly redis: RedisConfiguration;
   readonly storage: StorageConfiguration;
   readonly logging: LoggingConfiguration;
+  readonly authentication: AuthenticationConfiguration;
   readonly jobs: JobsConfiguration;
   readonly scheduler: SchedulerConfiguration;
   readonly outbox: OutboxConfiguration;
