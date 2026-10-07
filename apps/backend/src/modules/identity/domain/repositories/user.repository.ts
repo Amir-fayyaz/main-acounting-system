@@ -1,5 +1,6 @@
 import type {
   AddsAggregate,
+  Loaded,
   LoadsById,
   UpdatesAggregate,
 } from '../../../../shared/persistence/repository-ports.js';
@@ -23,6 +24,20 @@ export interface UserRepository
   extends LoadsById<UserId, User>, AddsAggregate<User>, UpdatesAggregate<User> {
   /** Whether a user with the given primary contact email already exists. */
   existsByEmail(email: string): Promise<boolean>;
+
+  /**
+   * The user with the given primary contact email, or `undefined` when none has it.
+   *
+   * Added by IAM-005 as the one criterion authentication needs: sign-in starts
+   * from the identifier a user presents, so this is the closed lookup that turns
+   * an email into a user — and it is deliberately in *this* port rather than in
+   * the credential repository, so the credential store never becomes a second
+   * index of identities. Like every read here it applies no tenant criterion: a
+   * user is tenant-independent. The email is normalized by the caller (the
+   * `UserEmail` value object) and by the adapter, so case never decides whether
+   * an account is found.
+   */
+  findByEmail(email: string): Promise<Loaded<User> | undefined>;
 
   /** Whether a user with the given id already exists. */
   existsById(id: UserId): Promise<boolean>;

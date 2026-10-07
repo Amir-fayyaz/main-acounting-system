@@ -7,6 +7,7 @@ import { HealthModule } from './infrastructure/presentation/health/health.module
 import { RedisModule } from './infrastructure/redis/redis.module.js';
 import { StorageModule } from './infrastructure/storage/storage.module.js';
 import { TenantModule } from './modules/tenant/infrastructure/tenant.module.js';
+import { AuthenticationModule } from './modules/identity/infrastructure/authentication.module.js';
 import { UserModule } from './modules/identity/infrastructure/user.module.js';
 import { MembershipModule } from './modules/identity/infrastructure/membership.module.js';
 import { RoleModule } from './modules/identity/infrastructure/role.module.js';
@@ -23,6 +24,11 @@ import { RoleModule } from './modules/identity/infrastructure/role.module.js';
  * `RoleModule` is the fourth slice (IAM-004): it owns roles, the code-defined
  * permission catalog and the membership-role assignments, and consumes both the
  * tenant module's published contract and the membership feature's port.
+ * `AuthenticationModule` is the fifth slice (IAM-005): it owns credentials and
+ * authentication sessions, exposes the sign-in/sign-out/session endpoints and
+ * the HTTP authentication boundary, and deliberately depends on no membership,
+ * role or tenant contract — authentication establishes identity and grants no
+ * tenant access.
  * `ExampleModule` remains the non-business reference endpoint that
  * exercises the REST/OpenAPI baseline (FND-006) and is a working template a new
  * module can copy.
@@ -44,6 +50,7 @@ import { RoleModule } from './modules/identity/infrastructure/role.module.js';
     UserModule,
     MembershipModule,
     RoleModule,
+    AuthenticationModule,
   ],
 })
 export class AppModule {}

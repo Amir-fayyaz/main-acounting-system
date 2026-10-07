@@ -31,6 +31,9 @@ export class InMemoryUserRepository implements UserRepository {
   public addCalls = 0;
   public updateCalls = 0;
 
+  /** Counts the email lookups, so a test can prove how an identity was resolved. */
+  public findByEmailCalls = 0;
+
   /** Seeds a user without going through `add` (for read/update tests). */
   public seed(user: User, revision: Revision = Revision.initial()): void {
     this.records.set(user.id.value, { snapshot: user.snapshot(), revision });
@@ -39,6 +42,17 @@ export class InMemoryUserRepository implements UserRepository {
   /** The stored revision, to assert what actually landed. */
   public revisionOf(id: UserId): Revision | undefined {
     return this.records.get(id.value)?.revision;
+  }
+
+  /**
+   * Drops a record, which the production port deliberately cannot do.
+   *
+   * A test needs it to model the corrupt/legacy case — a session that names an
+   * identity which no longer resolves — where a real installation would have an
+   * inconsistent record rather than a delete operation.
+   */
+  public remove(id: UserId): void {
+    this.records.delete(id.value);
   }
 
   /** The stored state, or `undefined`. */
@@ -81,6 +95,18 @@ export class InMemoryUserRepository implements UserRepository {
     const next = expectedRevision.next();
     this.records.set(user.id.value, { snapshot: user.snapshot(), revision: next });
     return { revision: next };
+  }
+
+  public async findByEmail(email: string): Promise<Loaded<User> | undefined> {
+    this.findByEmailCalls += 1;
+    const lower = email.trim().toLowerCase();
+    const record = Array.from(this.records.values()).find(
+      (candidate) => candidate.snapshot.email === lower,
+    );
+
+    return record === undefined
+      ? undefined
+      : { aggregate: User.rehydrate(record.snapshot), revision: record.revision };
   }
 
   public async existsByEmail(email: string): Promise<boolean> {

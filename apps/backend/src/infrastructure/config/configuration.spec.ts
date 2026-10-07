@@ -36,6 +36,7 @@ describe('loadConfiguration', () => {
       retryBaseDelayMs: 1000,
       retryMaxDelayMs: 30000,
     });
+    expect(configuration.authentication).toEqual({ sessionTtlMinutes: 60 });
     expect(configuration.scheduler).toEqual({ intervalMs: 1000 });
     expect(configuration.outbox).toEqual({
       batchSize: 25,
@@ -77,6 +78,7 @@ describe('loadConfiguration', () => {
       WORKER_RETRY_BASE_DELAY_MS: '200',
       WORKER_RETRY_MAX_DELAY_MS: '5000',
       SCHEDULER_INTERVAL_MS: '250',
+      AUTH_SESSION_TTL_MINUTES: '15',
       OUTBOX_BATCH_SIZE: '10',
       OUTBOX_MAX_ATTEMPTS: '7',
       OUTBOX_RETRY_BASE_DELAY_MS: '400',
@@ -112,6 +114,7 @@ describe('loadConfiguration', () => {
       retryBaseDelayMs: 200,
       retryMaxDelayMs: 5000,
     });
+    expect(configuration.authentication).toEqual({ sessionTtlMinutes: 15 });
     expect(configuration.scheduler).toEqual({ intervalMs: 250 });
     expect(configuration.outbox).toEqual({
       batchSize: 10,

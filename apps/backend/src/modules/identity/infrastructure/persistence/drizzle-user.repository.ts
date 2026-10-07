@@ -99,6 +99,19 @@ export class DrizzleUserRepository implements UserRepository {
     return { revision: expectedRevision.next() };
   }
 
+  public async findByEmail(email: string): Promise<Loaded<User> | undefined> {
+    const rows = await scopedDatabase(this.database)
+      .select()
+      .from(users)
+      .where(eq(users.email, email.toLowerCase()))
+      .limit(1);
+
+    const row = rows[0];
+    return row === undefined
+      ? undefined
+      : { aggregate: toUser(row), revision: Revision.of(row.revision) };
+  }
+
   public async existsByEmail(email: string): Promise<boolean> {
     const rows = await scopedDatabase(this.database)
       .select({ id: users.id })

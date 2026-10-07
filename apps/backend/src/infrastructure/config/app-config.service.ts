@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { APP_CONFIGURATION } from './app-config.tokens.js';
 import type {
   ApplicationRuntime,
+  AuthenticationConfiguration,
   Configuration,
   DatabaseConfiguration,
   EnvironmentIdentification,
@@ -67,6 +68,10 @@ export class AppConfigService {
 
   get logging(): LoggingConfiguration {
     return this.configuration.logging;
+  }
+
+  get authentication(): AuthenticationConfiguration {
+    return this.configuration.authentication;
   }
 
   get jobs(): JobsConfiguration {

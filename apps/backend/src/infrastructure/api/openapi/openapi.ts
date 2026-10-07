@@ -30,6 +30,16 @@ export function setupOpenApi(app: INestApplication, config: AppConfigService): v
       )
       .setVersion(API_VERSION)
       .addServer(config.apiPrefix)
+      // The authentication scheme of the API (IAM-005): an opaque bearer session
+      // token. Registering the scheme makes it selectable in the generated UI;
+      // it is *not* applied as a document-wide requirement, so an endpoint only
+      // declares it through `@ApiBearerAuth()` when it actually requires it.
+      .addBearerAuth({
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'opaque session token',
+        description: 'A session token issued by POST /auth/sign-in.',
+      })
       .build(),
   );
 
