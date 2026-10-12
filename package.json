@@ -4,7 +4,7 @@
   "private": true,
   "description": "Intelligent financial and accounting system — V1 monorepo root workspace",
   "license": "MIT",
-  "packageManager": "pnpm@10.29.3",
+  "packageManager": "pnpm@12.10.1",
   "engines": {
     "node": ">=22.0.0",
     "pnpm": ">=10.0.0"
