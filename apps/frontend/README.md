@@ -1,64 +1,36 @@
-# Frontend — Desktop-first Web UI
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-Next.js (App Router) + TypeScript client for the accountant and finance manager
-desktop experience (TECH-004). The backend REST API is the only source of business
-truth; no accounting rule or business logic is implemented here.
+## Getting Started
 
-No feature screen exists yet — this is the FND-001 workspace baseline.
-
-## Layout
-
-```text
-app/          App Router routes, layout and the application shell
-features/     Feature-oriented UI + client-side use cases (added with real stories)
-components/   Shared UI building blocks on top of the internal design system
-shared/       Frontend-agnostic primitives and helpers
-lib/          Configuration, transport and framework adapters
-styles/       Global styles and design tokens
-```
-
-## Commands
+First, run the development server:
 
 ```bash
-pnpm --filter @accounting-saas/frontend dev        # http://localhost:3001
-pnpm --filter @accounting-saas/frontend build
-pnpm --filter @accounting-saas/frontend start
-pnpm --filter @accounting-saas/frontend typecheck
-pnpm --filter @accounting-saas/frontend lint
-pnpm --filter @accounting-saas/frontend test
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-The dev server uses port `3001` so the backend can own `3000`.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Configuration
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-Two base URLs are read in `apps/frontend/lib/env.ts`:
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-| Variable                   | Used by | Meaning                                                                         |
-| -------------------------- | ------- | ------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_API_BASE_URL` | browser | Host-reachable backend address (default `http://127.0.0.1:3000/api`)            |
-| `INTERNAL_API_BASE_URL`    | server  | Address the Next.js server itself calls (in Compose: `http://backend:3000/api`) |
+## Learn More
 
-Both default to the local backend, so a fresh checkout runs without extra setup.
-To override them for the frontend process only, create `apps/frontend/.env.local`:
+To learn more about Next.js, take a look at the following resources:
 
-```bash
-NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:3000/api
-```
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-`apps/frontend/.env.local` is git-ignored. Never put a secret in a `NEXT_PUBLIC_*`
-value: everything with that prefix is shipped to the browser.
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-The application shell renders the backend readiness report
-(`GET <base>/health/ready`) as a local infrastructure status panel. It reads
-operational endpoints only and contains no business data.
+## Deploy on Vercel
 
-## Conventions
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-- UI language is Persian with `dir="rtl"` at the root layout (MVP scope).
-- Process state (approvals, plans, periods) is read from the backend, never kept as
-  local source of truth.
-- Screens are built on the internal design system (TECH-005); don't couple product
-  components directly to a third-party UI library API.
-- Replace the placeholder strings in `app/page.tsx` once the localization approach is
-  decided; the application shell is intentionally content-free.
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

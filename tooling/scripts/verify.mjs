@@ -131,11 +131,14 @@ for (const [index, step] of STEPS.entries()) {
 
 const totalMs = Date.now() - startedAt;
 const line = '-'.repeat(72);
+
 console.log(`\n${line}`);
 console.log(` All ${TOTAL} quality gates passed in ${formatDuration(totalMs)}`);
+
 for (const { step, durationMs } of results) {
   console.log(
     `   ${step.id.padEnd(10)} ${formatDuration(durationMs).padStart(8)}  (${step.command})`,
   );
 }
+
 console.log(line);
