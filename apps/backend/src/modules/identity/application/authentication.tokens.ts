@@ -18,5 +18,5 @@ export const PASSWORD_HASHER = 'PASSWORD_HASHER';
 /** The bearer-token adapter (`SessionTokenService`). */
 export const SESSION_TOKEN_SERVICE = 'SESSION_TOKEN_SERVICE';
 
-/** The approved audit boundary, as the authentication flow uses it (SHR-006). */
+/** The authentication audit boundary, as the authentication flow uses it (AUD-001). */
 export const AUTHENTICATION_AUDIT_RECORDER = 'AUTHENTICATION_AUDIT_RECORDER';

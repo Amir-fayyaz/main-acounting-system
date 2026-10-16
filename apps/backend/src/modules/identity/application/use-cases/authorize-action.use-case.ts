@@ -1,5 +1,6 @@
 import type { DomainError } from '../../../../shared/errors/domain-error.js';
 import { Result } from '../../../../shared/errors/result.js';
+import type { AuditRecorder } from '../../../audit/application/ports/audit-recorder.port.js';
 import { AccountNotAuthenticatableError } from '../../domain/errors/authentication.errors.js';
 import type { Membership } from '../../domain/aggregates/membership.js';
 import type { AuthorizationEvidence } from '../../domain/authorization/authorization-evidence.js';
@@ -57,10 +58,13 @@ import { resolveEffectivePermissionKeys } from '../services/effective-permission
  *   the membership's tenant. A caller can therefore not grant itself a tenant by
  *   naming one, and a tenant it does not belong to is indistinguishable from one
  *   that does not exist.
- * - **Nothing is written.** A decision changes no state, raises no event and
- *   touches no credential; refusing an operation must not itself have side
- *   effects (the access-denial audit record, when the Audit capability arrives,
- *   is the boundary's concern, not a mutation this use case performs).
+ * - **Nothing business-related is written.** A decision changes no business
+ *   state, raises no business event and touches no credential. The one thing a
+ *   refusal does write is its own audit record (AUD-001): the denial is stated
+ *   through the published audit contract, so "who was refused what, and why"
+ *   survives as durable evidence — while the decision itself stays free of
+ *   side effects and the audit module learns no authorization rule
+ *   (ADR-002 section 12).
  */
 export class AuthorizeActionUseCase implements Authorization {
   public constructor(
@@ -68,6 +72,7 @@ export class AuthorizeActionUseCase implements Authorization {
     private readonly memberships: MembershipRepository,
     private readonly assignments: MembershipRoleRepository,
     private readonly roles: RoleRepository,
+    private readonly audit: AuditRecorder,
   ) {}
 
   public async authorize(
@@ -99,7 +104,7 @@ export class AuthorizeActionUseCase implements Authorization {
         : await this.resolveTenantEvidence(loaded, target);
 
     if (resolved.isFail()) {
-      return Result.fail(resolved.errorOrThrow());
+      return this.deny(request, userId.value, resolved.errorOrThrow());
     }
 
     const evidence = resolved.valueOrThrow();
@@ -111,7 +116,11 @@ export class AuthorizeActionUseCase implements Authorization {
     );
 
     if (!decision.allowed) {
-      return Result.fail(authorizationErrorFor(decision.reason, request.requiredPermission.value));
+      return this.deny(
+        request,
+        userId.value,
+        authorizationErrorFor(decision.reason, request.requiredPermission.value),
+      );
     }
 
     return Result.ok(this.toContext(userId.value, evidence, target !== undefined));
@@ -119,6 +128,63 @@ export class AuthorizeActionUseCase implements Authorization {
 
   public permits(context: AuthorizationContextView, permission: PermissionKey): boolean {
     return permits(context.permissions, permission);
+  }
+
+  /**
+   * Records a refusal and answers with it (AUD-001; ADR-010 section 9).
+   *
+   * A refusal is a security event in its own right — the acceptance criteria
+   * name denial explicitly, and ADR-010 section 9 lists "access denials" among
+   * the auditable events — so it is stated through the published audit contract
+   * before the caller is told "no". Three properties make that record worth
+   * having:
+   *
+   * - **The actor is the resolved subject**, taken from the identity this use
+   *   case just validated, never from the request that was refused. A caller
+   *   therefore cannot choose whose name a denial is filed under.
+   * - **The tenant is the ambient scope's, not the claim's.** A refusal is
+   *   evaluated *before* a tenant scope is established (the boundary verifies
+   *   the claim, it does not adopt it), so the record is platform-level and the
+   *   claimed tenant travels as explicitly-labelled *context*, present only when
+   *   it is a well-formed identifier. An unverified claim never becomes the
+   *   tenant of a record (SHR-007 section 8). When a denial happens inside an
+   *   established tenant scope — a use case calling this contract for a real
+   *   operation — the recorder sees that scope and the record is tenant-scoped
+   *   automatically.
+   * - **The reason is a stable code plus the capability**, so an operator can
+   *   tell "no membership" from "no permission" without reading a sentence, and
+   *   a client learns nothing about whether the other tenant or the record
+   *   exists.
+   *
+   * The failure is returned unchanged, and an unwritable record propagates as a
+   * technical failure rather than being swallowed: access stays denied either
+   * way (fail closed), and the trail never pretends a refusal was not recorded
+   * (ADR-010 section 13).
+   */
+  private async deny(
+    request: AuthorizationRequest,
+    actorUserId: string,
+    error: DomainError,
+  ): Promise<Result<AuthorizationContextView, DomainError>> {
+    const claimed = request.targetTenantId;
+
+    await this.audit.record({
+      action: 'authorization.denied',
+      outcome: 'denied',
+      actorUserId,
+      metadata: {
+        permission: request.requiredPermission.value,
+        reason: error.code,
+        tenantScoped: claimed !== undefined,
+        // The claim, kept as context and never as identity: it is recorded only
+        // when it is well formed, and a malformed one stays out entirely.
+        ...(claimed !== undefined && isTenantReference(claimed)
+          ? { claimedTenantId: claimed }
+          : {}),
+      },
+    });
+
+    return Result.fail(error);
   }
 
   /**

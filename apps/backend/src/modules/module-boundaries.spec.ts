@@ -49,7 +49,14 @@ function isAllowedDomainBareSpecifier(specifier: string): boolean {
   return specifier.startsWith('node:') || specifier === 'vitest';
 }
 
-/** Import specifiers of a source, anchored so prose never counts as an import. */
+/**
+ * Import specifiers of a source, anchored so prose never counts as an import.
+ *
+ * A module path never contains whitespace, so a match with a space in it is
+ * prose that happens to look like an import — an error message mentioning the
+ * word "from" followed by a quoted phrase, for instance — and is not reported as
+ * a violation. Anything that *could* be a path is still checked.
+ */
 function importSpecifiers(source: string): string[] {
   const patterns = [
     /^\s*(?:import|export)\b[^;]*?\bfrom\s*['"]([^'"]+)['"]/gm,
@@ -61,7 +68,9 @@ function importSpecifiers(source: string): string[] {
   for (const pattern of patterns) {
     pattern.lastIndex = 0;
     for (const match of source.matchAll(pattern)) {
-      specifiers.add(match[1]);
+      if (!/\s/.test(match[1])) {
+        specifiers.add(match[1]);
+      }
     }
   }
   return [...specifiers];
@@ -304,5 +313,19 @@ describe('module ownership — the checker itself', () => {
         '// for example: import { x } from "../../party/domain/party.js"',
       ),
     ).toEqual([]);
+  });
+
+  it('ignores a message whose wording resembles an import, but still reads real ones', () => {
+    const withProse =
+      'export class InvalidRange extends DomainError {\n' +
+      '  public constructor() {\n' +
+      '    super(\'X\', \'the range is invalid: "from" must not be after "to".\');\n' +
+      '  }\n' +
+      '}\n' +
+      'import { TenantScope } from "../../../shared/tenant/tenant-scope.js";\n';
+
+    expect(analyseModuleSource('sales/domain/invoice.ts', withProse)).toContainEqual(
+      expect.stringContaining('Domain receives the tenant scope'),
+    );
   });
 });

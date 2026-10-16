@@ -7,6 +7,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { AppModule } from '../src/app.module.js';
+import { AUDIT_RECORDER } from '../src/modules/audit/application/audit.tokens.js';
 import { configureApplication } from '../src/bootstrap.js';
 import { AppConfigModule } from '../src/infrastructure/config/app-config.module.js';
 import { TRANSACTION_BOUNDARY } from '../src/infrastructure/database/database.tokens.js';
@@ -71,6 +72,7 @@ import {
   InMemoryAuthSessionRepository,
   RecordingAuthenticationAudit,
 } from './support/authentication-doubles.js';
+import { RecordingAuditTrail } from './support/audit-doubles.js';
 
 /**
  * Authorization over the real HTTP boundary (IAM-006; FND-006).
@@ -138,6 +140,7 @@ async function createHarness(): Promise<Harness> {
   const tokens = new CryptoSessionTokenService();
   const sessions = new InMemoryAuthSessionRepository();
   const audit = new RecordingAuthenticationAudit();
+  const auditTrail = new RecordingAuditTrail();
 
   const moduleRef = await Test.createTestingModule({
     imports: [AppConfigModule],
@@ -159,6 +162,7 @@ async function createHarness(): Promise<Harness> {
       { provide: AUTH_SESSION_REPOSITORY, useValue: sessions },
       { provide: SESSION_TOKEN_SERVICE, useValue: tokens },
       { provide: AUTHENTICATION_AUDIT_RECORDER, useValue: audit },
+      { provide: AUDIT_RECORDER, useValue: auditTrail },
       {
         provide: AUTHORIZATION,
         useFactory: (
@@ -166,12 +170,14 @@ async function createHarness(): Promise<Harness> {
           m: InMemoryMembershipRepository,
           a: InMemoryMembershipRoleRepository,
           r: InMemoryRoleRepository,
-        ): Authorization => new AuthorizeActionUseCase(u, m, a, r),
+          au: RecordingAuditTrail,
+        ): Authorization => new AuthorizeActionUseCase(u, m, a, r, au),
         inject: [
           USER_REPOSITORY,
           MEMBERSHIP_REPOSITORY,
           MEMBERSHIP_ROLE_REPOSITORY,
           ROLE_REPOSITORY,
+          AUDIT_RECORDER,
         ],
       },
       {

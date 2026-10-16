@@ -15,8 +15,9 @@ import { PermissionKey } from './value-objects/permission-key.js';
  * capability, not by tenants: "business-specific permission sets should only be
  * introduced when required by the relevant Domain" (the issue's own rule).
  * Accounting, purchase and other business capabilities arrive with their modules;
- * this issue defines only the access-management capabilities the identity/session
- * domain itself needs.
+ * this catalog holds the access-management capabilities the identity/session
+ * domain needs and the one read capability the Audit capability declares
+ * (`audit.read`), because a key must be registered here to be grantable at all.
  *
  * The identifier of a permission is its key. A key is the stable, human-readable
  * name a policy and a configuration file both use, and a second surrogate id
@@ -51,10 +52,15 @@ export class Permission {
 }
 
 /**
- * The base access-management capabilities this issue introduces.
+ * The base access-management capabilities this issue introduces, plus the read
+ * capability the audit trail is protected by.
  *
  * `company.*` and `user.*` follow the issue's examples; `role.*` covers the new
- * role/permission administration itself. Nothing business-specific
+ * role/permission administration itself; `audit.read` is the capability the Audit
+ * capability (AUD-001) declares on its retrieval resource, and it lives in this
+ * one catalog for the same reason every other key does — a capability that is
+ * not registered here cannot be granted to a role, so the trail would be
+ * unreachable rather than protected *by* the model. Nothing business-specific
  * (`purchase.create`, …) is added here: those permissions belong to the modules
  * that own the domain rules and are introduced with them.
  */
@@ -65,6 +71,10 @@ export const PERMISSION_CATALOG: readonly Permission[] = Object.freeze([
   new Permission(PermissionKey.from('user.manage'), 'Create and update the users of a company.'),
   new Permission(PermissionKey.from('role.read'), 'Read roles and their permissions.'),
   new Permission(PermissionKey.from('role.manage'), 'Create roles and change their permissions.'),
+  new Permission(
+    PermissionKey.from('audit.read'),
+    "Read a company's audit trail (who did what, when and with what outcome).",
+  ),
 ]);
 
 /** The catalog indexed by key, built once so lookups are constant time. */
