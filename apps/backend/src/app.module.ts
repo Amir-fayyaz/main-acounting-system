@@ -7,7 +7,10 @@ import { ExampleModule } from './infrastructure/presentation/example/example.mod
 import { HealthModule } from './infrastructure/presentation/health/health.module.js';
 import { RedisModule } from './infrastructure/redis/redis.module.js';
 import { StorageModule } from './infrastructure/storage/storage.module.js';
+<<<<<<< HEAD
 import { AuditModule } from './modules/audit/infrastructure/audit.module.js';
+=======
+>>>>>>> 8b93ab9 (git init)
 import { TenantModule } from './modules/tenant/infrastructure/tenant.module.js';
 import { AuthenticationModule } from './modules/identity/infrastructure/authentication.module.js';
 import { AuthorizationGuard } from './modules/identity/presentation/guards/authorization.guard.js';
@@ -39,11 +42,14 @@ import { RoleModule } from './modules/identity/infrastructure/role.module.js';
  * target tenant plus the capability IAM-004 grants. It is registered as a
  * **global guard** below, so every endpoint is denied unless it declares
  * `@Public()`, `@RequiresAuthentication()` or `@Authorize(...)`.
+<<<<<<< HEAD
  * `AuditModule` is the cross-cutting Audit capability (AUD-001): it owns the
  * durable audit trail, publishes the application contract every module records
  * facts through and exposes the authorization-protected retrieval resource. It
  * is imported after the identity slices because those slices record their
  * security events through the contract it publishes.
+=======
+>>>>>>> 8b93ab9 (git init)
  * `ExampleModule` remains the non-business reference endpoint that
  * exercises the REST/OpenAPI baseline (FND-006) and is a working template a new
  * module can copy.
@@ -67,7 +73,10 @@ import { RoleModule } from './modules/identity/infrastructure/role.module.js';
     RoleModule,
     AuthenticationModule,
     AuthorizationModule,
+<<<<<<< HEAD
     AuditModule,
+=======
+>>>>>>> 8b93ab9 (git init)
   ],
   providers: [
     {

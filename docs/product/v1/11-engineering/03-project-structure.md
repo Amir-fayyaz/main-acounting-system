@@ -8,6 +8,7 @@
 
 ```text
 apps/backend/src/
+<<<<<<< HEAD
 ├── main.ts
 ├── bootstrap.ts
 ├── app.module.ts
@@ -15,6 +16,8 @@ apps/backend/src/
 │   ├── worker/
 │   ├── scheduler/
 │   └── cli/
+=======
+>>>>>>> 8b93ab9 (git init)
 ├── modules/
 │   ├── tenant/
 │   ├── party/

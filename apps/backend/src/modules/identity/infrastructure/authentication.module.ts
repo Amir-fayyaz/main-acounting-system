@@ -6,9 +6,15 @@ import {
   DATABASE,
   TRANSACTION_BOUNDARY,
 } from '../../../infrastructure/database/database.tokens.js';
+<<<<<<< HEAD
 import type { TransactionBoundary } from '../../../shared/transaction/transaction-boundary.js';
 import { AUDIT_RECORDER } from '../../audit/application/audit.tokens.js';
 import type { AuditRecorder } from '../../audit/application/ports/audit-recorder.port.js';
+=======
+import { OutboxModule } from '../../../infrastructure/outbox/outbox.module.js';
+import { OUTBOX_RECORDER } from '../../../infrastructure/outbox/outbox.tokens.js';
+import type { TransactionBoundary } from '../../../shared/transaction/transaction-boundary.js';
+>>>>>>> 8b93ab9 (git init)
 import {
   AUTHENTICATION_AUDIT_RECORDER,
   AUTH_SESSION_REPOSITORY,
@@ -23,8 +29,11 @@ import { GetAuthenticatedSessionUseCase } from '../application/use-cases/get-aut
 import { SetUserCredentialUseCase } from '../application/use-cases/set-user-credential.use-case.js';
 import { SignInUseCase } from '../application/use-cases/sign-in.use-case.js';
 import { SignOutUseCase } from '../application/use-cases/sign-out.use-case.js';
+<<<<<<< HEAD
 import { SignUpUseCase } from '../application/use-cases/sign-up.use-case.js';
 import { CreateUserUseCase } from '../application/use-cases/create-user.use-case.js';
+=======
+>>>>>>> 8b93ab9 (git init)
 import { USER_REPOSITORY } from '../application/user.tokens.js';
 import type { AuthSessionRepository } from '../domain/repositories/auth-session.repository.js';
 import type { CredentialRepository } from '../domain/repositories/credential.repository.js';
@@ -32,7 +41,14 @@ import type { UserRepository } from '../domain/repositories/user.repository.js';
 import { AuthenticationController } from '../presentation/controllers/authentication.controller.js';
 import { CredentialsController } from '../presentation/controllers/credential.controller.js';
 import { AuthenticationGuard } from '../presentation/guards/authentication.guard.js';
+<<<<<<< HEAD
 import { AuditTrailAuthenticationAuditRecorder } from './audit/audit-trail-authentication-audit-recorder.js';
+=======
+import {
+  OutboxAuthenticationAuditRecorder,
+  type DomainEventRecorder,
+} from './audit/outbox-authentication-audit-recorder.js';
+>>>>>>> 8b93ab9 (git init)
 import { DrizzleAuthSessionRepository } from './persistence/drizzle-auth-session.repository.js';
 import { DrizzleCredentialRepository } from './persistence/drizzle-credential.repository.js';
 import { CryptoSessionTokenService } from './security/crypto-session-token-service.js';
@@ -52,6 +68,7 @@ import { UserModule } from './user.module.js';
  * - `PASSWORD_HASHER` → `ScryptPasswordHasher`, the approved hashing mechanism;
  * - `SESSION_TOKEN_SERVICE` → `CryptoSessionTokenService`, the bearer-token
  *   adapter;
+<<<<<<< HEAD
  * - `AUTHENTICATION_AUDIT_RECORDER` → the central **audit contract** (AUD-001),
  *   through the adapter that translates each authentication fact into an audit
  *   entry. Authentication keeps no audit mechanism of its own: it states the
@@ -59,6 +76,12 @@ import { UserModule } from './user.module.js';
  *   recorder it delegates to joins the caller's transaction when one is open
  *   and opens its own when it is not, so failed attempts are audited as well as
  *   successful ones;
+=======
+ * - `AUTHENTICATION_AUDIT_RECORDER` → the shared **outbox** (SHR-006), through
+ *   the adapter that opens its own boundary when the caller has none, so failed
+ *   attempts are audited as well as successful ones. This is the approved audit
+ *   boundary, not a private one;
+>>>>>>> 8b93ab9 (git init)
  * - `USER_REPOSITORY` → the user feature's adapter (same module), so sign-in
  *   resolves an existing identity and creating a user is never a side effect of
  *   authenticating;
@@ -74,10 +97,14 @@ import { UserModule } from './user.module.js';
  * the principal it established instead of resolving a token itself.
  */
 @Module({
+<<<<<<< HEAD
   // `AUDIT_RECORDER` arrives from the global Audit module (AUD-001): this
   // feature records its security facts through that published contract and
   // never touches the audit table, its repository or its read port.
   imports: [DatabaseModule, UserModule],
+=======
+  imports: [DatabaseModule, OutboxModule, UserModule],
+>>>>>>> 8b93ab9 (git init)
   controllers: [AuthenticationController, CredentialsController],
   providers: [
     {
@@ -101,6 +128,7 @@ import { UserModule } from './user.module.js';
       useFactory: (): SessionTokenService => new CryptoSessionTokenService(),
     },
     {
+<<<<<<< HEAD
       // The central audit boundary: each authentication fact is translated into
       // an audit entry and recorded through the published contract, which joins
       // the caller's transaction when one is open and opens its own when the
@@ -109,6 +137,17 @@ import { UserModule } from './user.module.js';
       useFactory: (audit: AuditRecorder): AuthenticationAuditRecorder =>
         new AuditTrailAuthenticationAuditRecorder(audit),
       inject: [AUDIT_RECORDER],
+=======
+      // The approved audit boundary: the shared outbox, joined when the caller
+      // already has a transaction open and opened by the adapter when the
+      // operation changed nothing (a failed sign-in, a rejected token).
+      provide: AUTHENTICATION_AUDIT_RECORDER,
+      useFactory: (
+        recorder: DomainEventRecorder,
+        boundary: TransactionBoundary,
+      ): AuthenticationAuditRecorder => new OutboxAuthenticationAuditRecorder(recorder, boundary),
+      inject: [OUTBOX_RECORDER, TRANSACTION_BOUNDARY],
+>>>>>>> 8b93ab9 (git init)
     },
     {
       provide: SignInUseCase,
@@ -186,6 +225,7 @@ import { UserModule } from './user.module.js';
         TRANSACTION_BOUNDARY,
       ],
     },
+<<<<<<< HEAD
     {
       // Registration (IAM-008) composes the two existing boundaries: user
       // creation through the user feature's own use case (exported by
@@ -201,6 +241,8 @@ import { UserModule } from './user.module.js';
       ) => new SignUpUseCase(createUser, setCredential, boundary),
       inject: [CreateUserUseCase, SetUserCredentialUseCase, TRANSACTION_BOUNDARY],
     },
+=======
+>>>>>>> 8b93ab9 (git init)
     AuthenticationGuard,
   ],
   // The authentication boundary is the published contract of this feature: a

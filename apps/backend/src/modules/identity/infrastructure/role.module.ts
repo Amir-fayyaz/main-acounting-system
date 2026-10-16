@@ -8,8 +8,11 @@ import {
 import { OutboxModule } from '../../../infrastructure/outbox/outbox.module.js';
 import { OUTBOX_RECORDER } from '../../../infrastructure/outbox/outbox.tokens.js';
 import type { TransactionBoundary } from '../../../shared/transaction/transaction-boundary.js';
+<<<<<<< HEAD
 import { AUDIT_RECORDER } from '../../audit/application/audit.tokens.js';
 import type { AuditRecorder } from '../../audit/application/ports/audit-recorder.port.js';
+=======
+>>>>>>> 8b93ab9 (git init)
 import { TENANT_DIRECTORY } from '../../tenant/application/tenant.tokens.js';
 import type { TenantDirectory } from '../../tenant/application/ports/tenant-directory.port.js';
 import { MEMBERSHIP_REPOSITORY } from '../application/membership.tokens.js';
@@ -37,7 +40,10 @@ import type { RoleRepository } from '../domain/repositories/role.repository.js';
 import { MembershipRolesController } from '../presentation/controllers/membership-role.controller.js';
 import { PermissionsController } from '../presentation/controllers/permission.controller.js';
 import { RolesController } from '../presentation/controllers/role.controller.js';
+<<<<<<< HEAD
 import { ActorEventRecorder } from './audit/audit-trail-access-control-event-recorder.js';
+=======
+>>>>>>> 8b93ab9 (git init)
 import { DrizzleMembershipRoleRepository } from './persistence/drizzle-membership-role.repository.js';
 import { DrizzleRoleRepository } from './persistence/drizzle-role.repository.js';
 import { MembershipModule } from './membership.module.js';
@@ -81,6 +87,7 @@ import { MembershipModule } from './membership.module.js';
       inject: [DATABASE],
     },
     {
+<<<<<<< HEAD
       // Role and assignment facts reach two homes: the outbox (SHR-006) and —
       // for the sensitive access-control changes — the central audit trail
       // through the published contract (AUD-001).
@@ -88,6 +95,11 @@ import { MembershipModule } from './membership.module.js';
       useFactory: (outbox: RoleEventRecorder, audit: AuditRecorder) =>
         new ActorEventRecorder(outbox, audit),
       inject: [OUTBOX_RECORDER, AUDIT_RECORDER],
+=======
+      // The outbox recorder already satisfies the application port structurally.
+      provide: ROLE_EVENT_RECORDER,
+      useExisting: OUTBOX_RECORDER,
+>>>>>>> 8b93ab9 (git init)
     },
     {
       provide: CreateRoleUseCase,

@@ -7,7 +7,10 @@ import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { AppModule } from '../src/app.module.js';
+<<<<<<< HEAD
 import { AUDIT_RECORDER } from '../src/modules/audit/application/audit.tokens.js';
+=======
+>>>>>>> 8b93ab9 (git init)
 import { configureApplication } from '../src/bootstrap.js';
 import { AppConfigModule } from '../src/infrastructure/config/app-config.module.js';
 import { TRANSACTION_BOUNDARY } from '../src/infrastructure/database/database.tokens.js';
@@ -72,7 +75,10 @@ import {
   InMemoryAuthSessionRepository,
   RecordingAuthenticationAudit,
 } from './support/authentication-doubles.js';
+<<<<<<< HEAD
 import { RecordingAuditTrail } from './support/audit-doubles.js';
+=======
+>>>>>>> 8b93ab9 (git init)
 
 /**
  * Authorization over the real HTTP boundary (IAM-006; FND-006).
@@ -140,7 +146,10 @@ async function createHarness(): Promise<Harness> {
   const tokens = new CryptoSessionTokenService();
   const sessions = new InMemoryAuthSessionRepository();
   const audit = new RecordingAuthenticationAudit();
+<<<<<<< HEAD
   const auditTrail = new RecordingAuditTrail();
+=======
+>>>>>>> 8b93ab9 (git init)
 
   const moduleRef = await Test.createTestingModule({
     imports: [AppConfigModule],
@@ -162,7 +171,10 @@ async function createHarness(): Promise<Harness> {
       { provide: AUTH_SESSION_REPOSITORY, useValue: sessions },
       { provide: SESSION_TOKEN_SERVICE, useValue: tokens },
       { provide: AUTHENTICATION_AUDIT_RECORDER, useValue: audit },
+<<<<<<< HEAD
       { provide: AUDIT_RECORDER, useValue: auditTrail },
+=======
+>>>>>>> 8b93ab9 (git init)
       {
         provide: AUTHORIZATION,
         useFactory: (
@@ -170,14 +182,21 @@ async function createHarness(): Promise<Harness> {
           m: InMemoryMembershipRepository,
           a: InMemoryMembershipRoleRepository,
           r: InMemoryRoleRepository,
+<<<<<<< HEAD
           au: RecordingAuditTrail,
         ): Authorization => new AuthorizeActionUseCase(u, m, a, r, au),
+=======
+        ): Authorization => new AuthorizeActionUseCase(u, m, a, r),
+>>>>>>> 8b93ab9 (git init)
         inject: [
           USER_REPOSITORY,
           MEMBERSHIP_REPOSITORY,
           MEMBERSHIP_ROLE_REPOSITORY,
           ROLE_REPOSITORY,
+<<<<<<< HEAD
           AUDIT_RECORDER,
+=======
+>>>>>>> 8b93ab9 (git init)
         ],
       },
       {
