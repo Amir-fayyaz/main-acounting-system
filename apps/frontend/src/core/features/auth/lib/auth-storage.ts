@@ -8,7 +8,8 @@ import type {
 import { getSessionApi, signOutApi } from "./auth-api";
 
 const REMEMBER_MAX_AGE = 30 * 24 * 60 * 60; // ۳۰ روز
-const FALLBACK_MAX_AGE = 15 * 60; // ۱۵ دقیقه
+const FALLBACK_MAX_AGE = (Number(process.env.AUTH_SESSION_TTL_MINUTES) || 60) * 60;
+
 
 /** Server Action — cookie `Token` (httpOnly). remember فقط روی maxAge اثر دارد. */
 export async function setAuthToken(

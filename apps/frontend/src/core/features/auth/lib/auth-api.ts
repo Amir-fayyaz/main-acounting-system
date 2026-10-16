@@ -5,7 +5,7 @@ import type {
   SignInResponse,
 } from "../assets/@types/auth.types";
 
-const AUTH_PREFIX = `${BASE_URL}/api/v1/auth`;
+const AUTH_PREFIX = `${BASE_URL}/v1/auth`;
 
 async function failure(res: Response) {
   const data = await res.json().catch(() => null);
@@ -40,5 +40,5 @@ export async function signOutApi(token: string): Promise<void> {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok && res.status !== 204) throw await failure(res);
+ if (!res.ok) throw await failure(res);
 }
