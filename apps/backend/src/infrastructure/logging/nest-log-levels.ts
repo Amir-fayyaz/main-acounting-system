@@ -1,5 +1,5 @@
 import type { LogLevel as NestLogLevel } from '@nestjs/common';
-import type { LogLevel } from './infrastructure/config/configuration.types.js';
+import type { LogLevel } from '../config/configuration.types.js';
 
 /**
  * Maps the configured log level to the levels NestJS knows about.

@@ -8,6 +8,13 @@
 
 ```text
 apps/backend/src/
+├── main.ts
+├── bootstrap.ts
+├── app.module.ts
+├── processes/
+│   ├── worker/
+│   ├── scheduler/
+│   └── cli/
 ├── modules/
 │   ├── tenant/
 │   ├── party/
