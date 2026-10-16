@@ -6,7 +6,7 @@ import { configureApplication } from './bootstrap.js';
 import { loadConfiguration } from './infrastructure/config/configuration.js';
 import { loadDotEnvFiles } from './infrastructure/config/dotenv.js';
 import { redactProcessSecrets } from './infrastructure/config/secrets.js';
-import { toNestLogLevels } from './nest-log-levels.js';
+import { toNestLogLevels } from './infrastructure/logging/nest-log-levels.js';
 
 async function bootstrap(): Promise<void> {
   // Configuration is loaded (and validated) before anything else is created, so

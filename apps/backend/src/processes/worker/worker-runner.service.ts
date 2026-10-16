@@ -5,12 +5,12 @@ import {
   type OnApplicationBootstrap,
   type OnApplicationShutdown,
 } from '@nestjs/common';
-import { AppConfigService } from './infrastructure/config/app-config.service.js';
-import { JOB_VISIBILITY_TIMEOUT_MS } from './infrastructure/jobs/job-keys.js';
-import { JobDispatcher } from './infrastructure/jobs/job-dispatcher.js';
-import { JOB_QUEUE } from './infrastructure/jobs/job.tokens.js';
-import type { ClaimedJob, JobQueuePort } from './infrastructure/jobs/queue/job-queue.port.js';
-import { DelayedJobPromoter } from './infrastructure/jobs/scheduling/delayed-job-promoter.js';
+import { AppConfigService } from '../../infrastructure/config/app-config.service.js';
+import { JOB_VISIBILITY_TIMEOUT_MS } from '../../infrastructure/jobs/job-keys.js';
+import { JobDispatcher } from '../../infrastructure/jobs/job-dispatcher.js';
+import { JOB_QUEUE } from '../../infrastructure/jobs/job.tokens.js';
+import type { ClaimedJob, JobQueuePort } from '../../infrastructure/jobs/queue/job-queue.port.js';
+import { DelayedJobPromoter } from '../../infrastructure/jobs/scheduling/delayed-job-promoter.js';
 
 /** How long a claim blocks when the queue is empty, before the loop re-checks. */
 const EMPTY_QUEUE_BLOCK_MS = 2000;

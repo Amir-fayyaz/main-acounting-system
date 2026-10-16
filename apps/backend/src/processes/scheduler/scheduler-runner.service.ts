@@ -4,9 +4,9 @@ import {
   type OnApplicationBootstrap,
   type OnApplicationShutdown,
 } from '@nestjs/common';
-import { AppConfigService } from './infrastructure/config/app-config.service.js';
-import { DelayedJobPromoter } from './infrastructure/jobs/scheduling/delayed-job-promoter.js';
-import { ScheduledJobService } from './infrastructure/jobs/scheduling/scheduled-job.service.js';
+import { AppConfigService } from '../../infrastructure/config/app-config.service.js';
+import { DelayedJobPromoter } from '../../infrastructure/jobs/scheduling/delayed-job-promoter.js';
+import { ScheduledJobService } from '../../infrastructure/jobs/scheduling/scheduled-job.service.js';
 
 /** Pause after a loop-level error, so the scheduler cannot spin on a failure. */
 const LOOP_ERROR_BACKOFF_MS = 1000;

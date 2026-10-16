@@ -1,10 +1,10 @@
 import 'reflect-metadata';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { loadConfiguration } from './infrastructure/config/configuration.js';
-import { loadDotEnvFiles } from './infrastructure/config/dotenv.js';
-import { redactProcessSecrets } from './infrastructure/config/secrets.js';
-import { toNestLogLevels } from './nest-log-levels.js';
+import { loadConfiguration } from '../../infrastructure/config/configuration.js';
+import { loadDotEnvFiles } from '../../infrastructure/config/dotenv.js';
+import { redactProcessSecrets } from '../../infrastructure/config/secrets.js';
+import { toNestLogLevels } from '../../infrastructure/logging/nest-log-levels.js';
 import { WorkerModule } from './worker.module.js';
 
 /**

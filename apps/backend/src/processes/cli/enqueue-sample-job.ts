@@ -1,14 +1,14 @@
 import 'reflect-metadata';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { loadConfiguration } from '../infrastructure/config/configuration.js';
-import { loadDotEnvFiles } from '../infrastructure/config/dotenv.js';
-import { JobEnqueuer } from '../infrastructure/jobs/job-enqueuer.js';
-import { redactProcessSecrets } from '../infrastructure/config/secrets.js';
-import { toNestLogLevels } from '../nest-log-levels.js';
+import { loadConfiguration } from '../../infrastructure/config/configuration.js';
+import { loadDotEnvFiles } from '../../infrastructure/config/dotenv.js';
+import { JobEnqueuer } from '../../infrastructure/jobs/job-enqueuer.js';
+import { redactProcessSecrets } from '../../infrastructure/config/secrets.js';
+import { toNestLogLevels } from '../../infrastructure/logging/nest-log-levels.js';
 import { CliModule } from './cli.module.js';
 
-const USAGE = 'Usage: node dist/cli/enqueue-sample-job.js <job-type> [payload-json]';
+const USAGE = 'Usage: node dist/processes/cli/enqueue-sample-job.js <job-type> [payload-json]';
 
 /**
  * Enqueues a job for local verification (FND-007).
@@ -16,10 +16,10 @@ const USAGE = 'Usage: node dist/cli/enqueue-sample-job.js <job-type> [payload-js
  * Example:
  *
  * ```bash
- * node dist/cli/enqueue-sample-job.js sample.echo '{"message":"hi"}'
- * node dist/cli/enqueue-sample-job.js sample.retry-then-succeed '{"succeedOnAttempt":3}'
- * node dist/cli/enqueue-sample-job.js sample.retry-exhausted
- * node dist/cli/enqueue-sample-job.js sample.terminal-failure
+ * node dist/processes/cli/enqueue-sample-job.js sample.echo '{"message":"hi"}'
+ * node dist/processes/cli/enqueue-sample-job.js sample.retry-then-succeed '{"succeedOnAttempt":3}'
+ * node dist/processes/cli/enqueue-sample-job.js sample.retry-exhausted
+ * node dist/processes/cli/enqueue-sample-job.js sample.terminal-failure
  * ```
  */
 async function main(): Promise<void> {

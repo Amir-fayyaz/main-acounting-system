@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { AppConfigModule } from '../infrastructure/config/app-config.module.js';
-import { JobsModule } from '../infrastructure/jobs/jobs.module.js';
+import { AppConfigModule } from '../../infrastructure/config/app-config.module.js';
+import { JobsModule } from '../../infrastructure/jobs/jobs.module.js';
 
 /**
  * Standalone application context for job CLI commands (FND-007).
