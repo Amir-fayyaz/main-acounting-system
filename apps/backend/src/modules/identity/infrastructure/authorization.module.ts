@@ -1,5 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 
+import { AUDIT_RECORDER } from '../../audit/application/audit.tokens.js';
+import type { AuditRecorder } from '../../audit/application/ports/audit-recorder.port.js';
 import { AUTHORIZATION } from '../application/authorization/authorization.tokens.js';
 import type { Authorization } from '../application/ports/authorization.port.js';
 import { AuthorizeActionUseCase } from '../application/use-cases/authorize-action.use-case.js';
@@ -32,6 +34,10 @@ import { UserModule } from './user.module.js';
  *   (public / authenticated / authorized) and denies an unclassified one. The
  *   application registers it globally, so deny-by-default is a property of the
  *   process rather than of each controller.
+ * - `AUDIT_RECORDER` → the central audit contract (AUD-001), used by the
+ *   decision itself to record a refusal. Recording a denial is a consequence of
+ *   the decision, not a second implementation of it: the audit module receives
+ *   an action name, an actor and a reason and decides nothing about access.
  *
  * Note what is **not** imported as a contract: no role catalog, no membership
  * entity, no user aggregate. The module depends on the identity features'
@@ -54,8 +60,15 @@ import { UserModule } from './user.module.js';
         memberships: MembershipRepository,
         assignments: MembershipRoleRepository,
         roles: RoleRepository,
-      ): Authorization => new AuthorizeActionUseCase(users, memberships, assignments, roles),
-      inject: [USER_REPOSITORY, MEMBERSHIP_REPOSITORY, MEMBERSHIP_ROLE_REPOSITORY, ROLE_REPOSITORY],
+        audit: AuditRecorder,
+      ): Authorization => new AuthorizeActionUseCase(users, memberships, assignments, roles, audit),
+      inject: [
+        USER_REPOSITORY,
+        MEMBERSHIP_REPOSITORY,
+        MEMBERSHIP_ROLE_REPOSITORY,
+        ROLE_REPOSITORY,
+        AUDIT_RECORDER,
+      ],
     },
     AuthorizationGuard,
   ],

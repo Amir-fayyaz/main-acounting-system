@@ -8,6 +8,8 @@ import {
 import { OutboxModule } from '../../../infrastructure/outbox/outbox.module.js';
 import { OUTBOX_RECORDER } from '../../../infrastructure/outbox/outbox.tokens.js';
 import type { TransactionBoundary } from '../../../shared/transaction/transaction-boundary.js';
+import { AUDIT_RECORDER } from '../../audit/application/audit.tokens.js';
+import type { AuditRecorder } from '../../audit/application/ports/audit-recorder.port.js';
 import { TENANT_DIRECTORY } from '../../tenant/application/tenant.tokens.js';
 import type { TenantDirectory } from '../../tenant/application/ports/tenant-directory.port.js';
 import { ChangeMembershipStatusUseCase } from '../application/use-cases/change-membership-status.use-case.js';
@@ -24,6 +26,7 @@ import { USER_REPOSITORY } from '../application/user.tokens.js';
 import type { MembershipRepository } from '../domain/repositories/membership.repository.js';
 import type { UserRepository } from '../domain/repositories/user.repository.js';
 import { MembershipsController } from '../presentation/controllers/membership.controller.js';
+import { ActorEventRecorder } from './audit/audit-trail-access-control-event-recorder.js';
 import { DrizzleMembershipRepository } from './persistence/drizzle-membership.repository.js';
 import { UserModule } from './user.module.js';
 
@@ -60,9 +63,13 @@ import { UserModule } from './user.module.js';
       inject: [DATABASE],
     },
     {
-      // The outbox recorder already satisfies the application port structurally.
+      // Membership facts reach two homes: the outbox, so the rest of the system
+      // learns them (SHR-006), and — for the sensitive access-control changes —
+      // the central audit trail through the published contract (AUD-001).
       provide: MEMBERSHIP_EVENT_RECORDER,
-      useExisting: OUTBOX_RECORDER,
+      useFactory: (outbox: MembershipEventRecorder, audit: AuditRecorder) =>
+        new ActorEventRecorder(outbox, audit),
+      inject: [OUTBOX_RECORDER, AUDIT_RECORDER],
     },
     {
       provide: CreateMembershipUseCase,

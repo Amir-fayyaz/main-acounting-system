@@ -1,9 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { RecordingAuditTrail } from '../../../../test/support/audit-doubles.js';
 import {
   FIXED_NOW,
   InMemoryMembershipRepository,
 } from '../../../../test/support/membership-doubles.js';
+import { createTenantContext } from '../../../shared/tenant/tenant-context.js';
+import { TenantScope } from '../../../shared/tenant/tenant-scope.js';
 import {
   InMemoryMembershipRoleRepository,
   InMemoryRoleRepository,
@@ -40,6 +43,7 @@ interface Harness {
   readonly memberships: InMemoryMembershipRepository;
   readonly assignments: InMemoryMembershipRoleRepository;
   readonly roles: InMemoryRoleRepository;
+  readonly audit: RecordingAuditTrail;
   readonly authorize: AuthorizeActionUseCase;
 }
 
@@ -48,13 +52,15 @@ function harness(): Harness {
   const memberships = new InMemoryMembershipRepository();
   const assignments = new InMemoryMembershipRoleRepository();
   const roles = new InMemoryRoleRepository();
+  const audit = new RecordingAuditTrail();
 
   return {
     users,
     memberships,
     assignments,
     roles,
-    authorize: new AuthorizeActionUseCase(users, memberships, assignments, roles),
+    audit,
+    authorize: new AuthorizeActionUseCase(users, memberships, assignments, roles, audit),
   };
 }
 
@@ -398,6 +404,100 @@ describe('authorize — the protected action does not run on denial', () => {
 
     expect(outcome.isFail()).toBe(true);
     expect(action).not.toHaveBeenCalled();
+  });
+});
+
+describe('authorize — a refusal is recorded through the audit contract', () => {
+  it('records the denial with the resolved actor and the claimed tenant as context', async () => {
+    const app = harness();
+    const user = seedUser(app);
+    seedMembership(app, user, { tenantId: TENANT_A, permissions: ['role.read'] });
+
+    await app.authorize.authorize({
+      principal: principalOf(user),
+      requiredPermission: PermissionKey.from('role.manage'),
+      targetTenantId: TENANT_B,
+    });
+
+    expect(app.audit.actions()).toEqual(['authorization.denied']);
+    const recorded = app.audit.find('authorization.denied')!;
+    expect(recorded.outcome).toBe('denied');
+    // The actor is the identity the decision itself resolved, not an input.
+    expect(recorded.actorUserId).toBe(user.id.value);
+    expect(recorded.metadata).toMatchObject({
+      permission: 'role.manage',
+      reason: 'MEMBERSHIP_REQUIRED',
+      tenantScoped: true,
+      // The claim is context, never the tenant of a record: nothing here ran
+      // under a tenant scope, so the record itself is platform-level.
+      claimedTenantId: TENANT_B,
+    });
+  });
+
+  it('records a platform-scope denial without inventing a claimed tenant', async () => {
+    const app = harness();
+    const user = seedUser(app);
+    seedMembership(app, user, { permissions: ['user.read'] });
+
+    await app.authorize.authorize({
+      principal: principalOf(user),
+      requiredPermission: PermissionKey.from('user.manage'),
+    });
+
+    const recorded = app.audit.find('authorization.denied')!;
+    expect(recorded.metadata).toMatchObject({
+      tenantScoped: false,
+      reason: 'AUTHORIZATION_DENIED',
+    });
+    expect(recorded.metadata).not.toHaveProperty('claimedTenantId');
+  });
+
+  it('records nothing when the capability is held (audit is not a log of every check)', async () => {
+    const app = harness();
+    const user = seedUser(app);
+    seedMembership(app, user, { tenantId: TENANT_A, permissions: ['role.manage'] });
+
+    const outcome = await app.authorize.authorize({
+      principal: principalOf(user),
+      requiredPermission: PermissionKey.from('role.manage'),
+      targetTenantId: TENANT_A,
+    });
+
+    expect(outcome.isOk()).toBe(true);
+    expect(app.audit.recorded).toEqual([]);
+  });
+
+  it('does not file an authentication failure as an authorization denial', async () => {
+    const app = harness();
+    const user = seedUser(app, { active: false });
+
+    const outcome = await app.authorize.authorize({
+      principal: principalOf(user),
+      requiredPermission: PermissionKey.from('role.manage'),
+      targetTenantId: TENANT_A,
+    });
+
+    expect(outcome.errorOrThrow().code).toBe('ACCOUNT_NOT_AUTHENTICATABLE');
+    expect(app.audit.recorded).toEqual([]);
+  });
+
+  it('leaves the record tenant-scoped when the denial happens inside a tenant scope', async () => {
+    const app = harness();
+    const user = seedUser(app);
+    seedMembership(app, user, { tenantId: TENANT_A, permissions: ['role.read'] });
+
+    await TenantScope.run(createTenantContext(TENANT_A), () =>
+      app.authorize.authorize({
+        principal: principalOf(user),
+        requiredPermission: PermissionKey.from('role.manage'),
+        targetTenantId: TENANT_A,
+      }),
+    );
+
+    // The tenant of the record comes from the scope the operation ran under,
+    // which is why the audit recorder does not need — and does not accept — a
+    // tenant parameter.
+    expect(app.audit.find('authorization.denied')).toBeDefined();
   });
 });
 
