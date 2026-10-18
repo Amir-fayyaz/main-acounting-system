@@ -87,9 +87,11 @@ import { DrizzleUserRepository } from './persistence/drizzle-user.repository.js'
     },
   ],
   // The user repository is exported to this module's own membership feature
-  // (IAM-003) so it can confirm a membership references an existing user. It is
-  // not an invitation to other modules: the boundary guard still forbids them
-  // from importing this file.
-  exports: [USER_REPOSITORY],
+  // (IAM-003) so it can confirm a membership references an existing user, and
+  // to this module's sign-up feature (IAM-008), which composes
+  // `CreateUserUseCase` with credential establishment in one transaction. The
+  // user feature is not an invitation to other modules: the boundary guard
+  // still forbids them from importing this file.
+  exports: [USER_REPOSITORY, CreateUserUseCase],
 })
 export class UserModule {}
