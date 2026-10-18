@@ -213,6 +213,41 @@ configures them per controller (full reference:
 | OpenAPI JSON | `http://localhost:3000/api/docs-json` |
 | OpenAPI YAML | `http://localhost:3000/api/docs-yaml` |
 
+### Identity authentication endpoints (IAM-005, IAM-008)
+
+The `auth` resource is public: sign-in is how an identity is established, and
+sign-up is how an identity **and** its credential come to exist.
+
+| Method | Path                    | Purpose                                                                                                           |
+| ------ | ----------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| POST   | `/api/v1/auth/sign-in`  | Verify the credentials and establish a bearer session (`201`; `401` on any credential failure)                    |
+| GET    | `/api/v1/auth/session`  | Validate the presented bearer token and return the principal (`200`)                                              |
+| POST   | `/api/v1/auth/sign-out` | Invalidate the presented session (`204`)                                                                          |
+| POST   | `/api/v1/auth/sign-up`  | Register a user identity **and** its sign-in credential, atomically (`201`; `409` duplicate email, `400` invalid) |
+
+Contract notes for sign-up (IAM-008):
+
+- The request is `{ displayName, email, password }` and nothing else — no
+  tenant, membership, role or permission is accepted, because a successful
+  sign-up creates a user identity plus the ability to sign in and grants
+  nothing else.
+- The response is the public user shape (`id`, `displayName`, `email`,
+  `status`, `revision`, `createdAt`, `updatedAt`) — never a password, a
+  password hash or any credential record.
+- The password is validated against the domain policy and stored **only** as a
+  salted scrypt hash through the approved hashing port; it is never logged,
+  echoed or serialized (06-security-engineering).
+- Registration is atomic (SHR-005): the user is created through the existing
+  User Management boundary (IAM-002) and the credential through the existing
+  Authentication boundary (IAM-005), inside one transaction, so a claimed
+  email or a refused credential leaves no user behind. Duplicate emails get
+  the same `409` conflict contract the user resource uses; the uniqueness is
+  also enforced by the database unique key, not only by the pre-check.
+- The registration facts are recorded through the existing homes — `UserCreated`
+  in the transactional outbox (SHR-006) and `user.credential_changed` in the
+  central audit trail (AUD-001). Sign-up invents no third audit or logging
+  mechanism, and no audit record carries a secret.
+
 ### Reference endpoints
 
 `ExampleController` is a non-business reference resource that demonstrates the

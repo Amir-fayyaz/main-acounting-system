@@ -23,6 +23,8 @@ import { GetAuthenticatedSessionUseCase } from '../application/use-cases/get-aut
 import { SetUserCredentialUseCase } from '../application/use-cases/set-user-credential.use-case.js';
 import { SignInUseCase } from '../application/use-cases/sign-in.use-case.js';
 import { SignOutUseCase } from '../application/use-cases/sign-out.use-case.js';
+import { SignUpUseCase } from '../application/use-cases/sign-up.use-case.js';
+import { CreateUserUseCase } from '../application/use-cases/create-user.use-case.js';
 import { USER_REPOSITORY } from '../application/user.tokens.js';
 import type { AuthSessionRepository } from '../domain/repositories/auth-session.repository.js';
 import type { CredentialRepository } from '../domain/repositories/credential.repository.js';
@@ -183,6 +185,21 @@ import { UserModule } from './user.module.js';
         AUTHENTICATION_AUDIT_RECORDER,
         TRANSACTION_BOUNDARY,
       ],
+    },
+    {
+      // Registration (IAM-008) composes the two existing boundaries: user
+      // creation through the user feature's own use case (exported by
+      // UserModule above) and credential establishment through this module's
+      // SetUserCredentialUseCase. The three run inside one transaction
+      // boundary, so a refused credential or a claimed email leaves no user
+      // behind and a registration commits as one consistent fact.
+      provide: SignUpUseCase,
+      useFactory: (
+        createUser: CreateUserUseCase,
+        setCredential: SetUserCredentialUseCase,
+        boundary: TransactionBoundary,
+      ) => new SignUpUseCase(createUser, setCredential, boundary),
+      inject: [CreateUserUseCase, SetUserCredentialUseCase, TRANSACTION_BOUNDARY],
     },
     AuthenticationGuard,
   ],

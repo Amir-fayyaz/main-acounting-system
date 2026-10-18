@@ -23,7 +23,11 @@ import { GetAuthenticatedSessionUseCase } from '../src/modules/identity/applicat
 import { SetUserCredentialUseCase } from '../src/modules/identity/application/use-cases/set-user-credential.use-case.js';
 import { SignInUseCase } from '../src/modules/identity/application/use-cases/sign-in.use-case.js';
 import { SignOutUseCase } from '../src/modules/identity/application/use-cases/sign-out.use-case.js';
+import { SignUpUseCase } from '../src/modules/identity/application/use-cases/sign-up.use-case.js';
+import { CreateUserUseCase } from '../src/modules/identity/application/use-cases/create-user.use-case.js';
 import { USER_REPOSITORY } from '../src/modules/identity/application/user.tokens.js';
+import type { UserEventRecorder } from '../src/modules/identity/application/ports/user-event-recorder.port.js';
+import { RecordingUserEvents } from './support/user-doubles.js';
 import { AuthSession } from '../src/modules/identity/domain/aggregates/auth-session.js';
 import { Credential } from '../src/modules/identity/domain/aggregates/credential.js';
 import type { AuthSessionRepository } from '../src/modules/identity/domain/repositories/auth-session.repository.js';
@@ -160,6 +164,17 @@ async function createHarness(): Promise<Harness> {
           AUTHENTICATION_AUDIT_RECORDER,
           TRANSACTION_BOUNDARY,
         ],
+      },
+      {
+        // Registration (IAM-008) is part of the same resource; the endpoints
+        // under test here are authentication's own, so the sign-up use case
+        // simply shares the harness doubles.
+        provide: SignUpUseCase,
+        useValue: new SignUpUseCase(
+          new CreateUserUseCase(users, new RecordingUserEvents() as UserEventRecorder, boundary),
+          new SetUserCredentialUseCase(users, credentials, sessions, hasher, audit, boundary),
+          boundary,
+        ),
       },
       AuthenticationGuard,
     ],
