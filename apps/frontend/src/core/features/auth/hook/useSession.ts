@@ -27,6 +27,7 @@ export function useSession() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- دریافت session هنگام mount
     void refresh();
   }, [refresh]);
 

@@ -1,4 +1,22 @@
-export function getErrorMessage(error: any): string {
+type GqlErrorItem = {
+  message?: string;
+  extensions?: {
+    response?: {
+      body?: {
+        message?: string;
+        errors?: string[];
+      };
+    };
+  };
+};
+
+type ErrorLike = {
+  errors?: GqlErrorItem[];
+  graphQLErrors?: GqlErrorItem[];
+  message?: string;
+};
+
+export function getErrorMessage(error: ErrorLike | null | undefined): string {
   if (!error) return "خطای ناشناخته";
 
   try {
