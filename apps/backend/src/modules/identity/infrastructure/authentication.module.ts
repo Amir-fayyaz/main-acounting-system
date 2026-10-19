@@ -6,9 +6,6 @@ import {
   DATABASE,
   TRANSACTION_BOUNDARY,
 } from '../../../infrastructure/database/database.tokens.js';
-import type { TransactionBoundary } from '../../../shared/transaction/transaction-boundary.js';
-import { AUDIT_RECORDER } from '../../audit/application/audit.tokens.js';
-import type { AuditRecorder } from '../../audit/application/ports/audit-recorder.port.js';
 import { OutboxModule } from '../../../infrastructure/outbox/outbox.module.js';
 import { OUTBOX_RECORDER } from '../../../infrastructure/outbox/outbox.tokens.js';
 import type { TransactionBoundary } from '../../../shared/transaction/transaction-boundary.js';
@@ -35,7 +32,6 @@ import type { UserRepository } from '../domain/repositories/user.repository.js';
 import { AuthenticationController } from '../presentation/controllers/authentication.controller.js';
 import { CredentialsController } from '../presentation/controllers/credential.controller.js';
 import { AuthenticationGuard } from '../presentation/guards/authentication.guard.js';
-import { AuditTrailAuthenticationAuditRecorder } from './audit/audit-trail-authentication-audit-recorder.js';
 import {
   OutboxAuthenticationAuditRecorder,
   type DomainEventRecorder,
@@ -59,13 +55,6 @@ import { UserModule } from './user.module.js';
  * - `PASSWORD_HASHER` → `ScryptPasswordHasher`, the approved hashing mechanism;
  * - `SESSION_TOKEN_SERVICE` → `CryptoSessionTokenService`, the bearer-token
  *   adapter;
- * - `AUTHENTICATION_AUDIT_RECORDER` → the central **audit contract** (AUD-001),
- *   through the adapter that translates each authentication fact into an audit
- *   entry. Authentication keeps no audit mechanism of its own: it states the
- *   fact, and the Audit capability stores it durably (ADR-003 section 21). The
- *   recorder it delegates to joins the caller's transaction when one is open
- *   and opens its own when it is not, so failed attempts are audited as well as
- *   successful ones;
  * - `AUTHENTICATION_AUDIT_RECORDER` → the shared **outbox** (SHR-006), through
  *   the adapter that opens its own boundary when the caller has none, so failed
  *   attempts are audited as well as successful ones. This is the approved audit
@@ -85,10 +74,6 @@ import { UserModule } from './user.module.js';
  * the principal it established instead of resolving a token itself.
  */
 @Module({
-  // `AUDIT_RECORDER` arrives from the global Audit module (AUD-001): this
-  // feature records its security facts through that published contract and
-  // never touches the audit table, its repository or its read port.
-  imports: [DatabaseModule, UserModule],
   imports: [DatabaseModule, OutboxModule, UserModule],
   controllers: [AuthenticationController, CredentialsController],
   providers: [
@@ -113,14 +98,6 @@ import { UserModule } from './user.module.js';
       useFactory: (): SessionTokenService => new CryptoSessionTokenService(),
     },
     {
-      // The central audit boundary: each authentication fact is translated into
-      // an audit entry and recorded through the published contract, which joins
-      // the caller's transaction when one is open and opens its own when the
-      // operation changed nothing (a failed sign-in, a rejected token).
-      provide: AUTHENTICATION_AUDIT_RECORDER,
-      useFactory: (audit: AuditRecorder): AuthenticationAuditRecorder =>
-        new AuditTrailAuthenticationAuditRecorder(audit),
-      inject: [AUDIT_RECORDER],
       // The approved audit boundary: the shared outbox, joined when the caller
       // already has a transaction open and opened by the adapter when the
       // operation changed nothing (a failed sign-in, a rejected token).

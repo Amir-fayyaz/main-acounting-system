@@ -61,7 +61,6 @@ function harness(): Harness {
     roles,
     audit,
     authorize: new AuthorizeActionUseCase(users, memberships, assignments, roles, audit),
-    authorize: new AuthorizeActionUseCase(users, memberships, assignments, roles),
   };
 }
 

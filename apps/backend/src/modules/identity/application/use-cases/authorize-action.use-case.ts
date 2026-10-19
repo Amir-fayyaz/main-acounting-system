@@ -109,7 +109,6 @@ export class AuthorizeActionUseCase implements Authorization {
 
     if (resolved.isFail()) {
       return this.deny(request, userId.value, resolved.errorOrThrow());
-      return Result.fail(resolved.errorOrThrow());
     }
 
     const evidence = resolved.valueOrThrow();
@@ -126,7 +125,6 @@ export class AuthorizeActionUseCase implements Authorization {
         userId.value,
         authorizationErrorFor(decision.reason, request.requiredPermission.value),
       );
-      return Result.fail(authorizationErrorFor(decision.reason, request.requiredPermission.value));
     }
 
     return Result.ok(this.toContext(userId.value, evidence, target !== undefined));

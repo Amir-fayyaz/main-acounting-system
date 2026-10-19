@@ -165,7 +165,6 @@
 
 .pages-container {
   @apply mx-auto w-full max-w-350 space-y-4 px-5 sm:space-y-10 sm:px-15;
-  @apply mx-auto w-full max-w-340 space-y-4 px-5 sm:space-y-10 sm:px-15;
 }
 
 .section-layout {

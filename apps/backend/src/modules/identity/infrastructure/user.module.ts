@@ -53,7 +53,6 @@ import { DrizzleUserRepository } from './persistence/drizzle-user.repository.js'
         new ActorEventRecorder(outbox, audit),
       inject: [OUTBOX_RECORDER, AUDIT_RECORDER],
       // The outbox recorder already satisfies the application port structurally.
-      provide: USER_EVENT_RECORDER,
       useExisting: OUTBOX_RECORDER,
     },
     {
@@ -99,6 +98,5 @@ import { DrizzleUserRepository } from './persistence/drizzle-user.repository.js'
   // (IAM-003) so it can confirm a membership references an existing user. It is
   // not an invitation to other modules: the boundary guard still forbids them
   // from importing this file.
-  exports: [USER_REPOSITORY],
 })
 export class UserModule {}

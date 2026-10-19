@@ -69,8 +69,6 @@ import { UserModule } from './user.module.js';
         ROLE_REPOSITORY,
         AUDIT_RECORDER,
       ],
-      ): Authorization => new AuthorizeActionUseCase(users, memberships, assignments, roles),
-      inject: [USER_REPOSITORY, MEMBERSHIP_REPOSITORY, MEMBERSHIP_ROLE_REPOSITORY, ROLE_REPOSITORY],
     },
     AuthorizationGuard,
   ],

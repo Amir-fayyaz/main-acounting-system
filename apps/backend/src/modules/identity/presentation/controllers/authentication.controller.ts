@@ -25,10 +25,6 @@ import type { SignedUpView } from '../../application/views/signed-up.view.js';
 import { SignInUseCase } from '../../application/use-cases/sign-in.use-case.js';
 import { SignOutUseCase } from '../../application/use-cases/sign-out.use-case.js';
 import { SignUpUseCase } from '../../application/use-cases/sign-up.use-case.js';
-import type { AuthenticatedSessionView } from '../../application/views/authenticated-session.view.js';
-import type { SignedInView } from '../../application/views/signed-in.view.js';
-import { SignInUseCase } from '../../application/use-cases/sign-in.use-case.js';
-import { SignOutUseCase } from '../../application/use-cases/sign-out.use-case.js';
 import { CurrentAuthentication } from '../decorators/current-principal.decorator.js';
 import { AuthenticatedSessionResponseDto } from '../dto/authenticated-session-response.dto.js';
 import { SignInDto } from '../dto/sign-in.dto.js';
@@ -42,9 +38,6 @@ import { raiseAuthenticationFailure } from '../http/authentication-error.mapper.
  * The authentication REST resource (IAM-005; IAM-008; FND-006; ADR-013).
  *
  * Four operations, and no more, because four is what the authentication
- * The authentication REST resource (IAM-005; FND-006; ADR-013).
- *
- * Three operations, and no more, because three is what the authentication
  * contract needs:
  *
  * | Operation | Meaning                                                        |
@@ -72,18 +65,6 @@ import { raiseAuthenticationFailure } from '../http/authentication-error.mapper.
  * *current* session are `@RequiresAuthentication()`: they need a validated
  * caller but no capability, which is exactly the distinction the product draws
  * between authentication and authorization.
- * **What is deliberately not here:** no registration, no password reset or
- * recovery, no MFA, no SSO/OIDC/LDAP, no refresh token, and no tenant selection.
- * Authentication establishes who the user is; the tenant comes from the
- * membership relationship and later authorization rules, never from this
- * resource.
- *
- * **The global authorization boundary classifies these three operations**
- * (IAM-006). Signing in is `@Public()` — it is how an identity is established,
- * so it cannot require one. The two operations that act on the *current*
- * session are `@RequiresAuthentication()`: they need a validated caller but no
- * capability, which is exactly the distinction the product draws between
- * authentication and authorization.
  */
 @ApiTags('auth')
 @Controller('auth')

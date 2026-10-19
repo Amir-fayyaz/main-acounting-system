@@ -4,14 +4,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm   transition-all duration-300 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none  shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2',
-import { cn } from "@/core/utils/shadcn/utils";
-import { Slot } from "@radix-ui/react-slot";
-import { cva, type VariantProps } from "class-variance-authority";
-import * as React from "react";
-
-const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm   transition-all duration-300 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none  shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2",
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm transition-all duration-300 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2',
   {
     variants: {
       variant: {
@@ -44,7 +37,7 @@ const buttonVariants = cva(
           'text-primary underline-offset-4 hover:underline ' +
           'hover:scale-[1.01] ' +
           'active:scale-95 ' +
-          '  p-0',
+          'p-0',
       },
       size: {
         default: 'h-10 px-6 py-2 text-base',
@@ -58,57 +51,12 @@ const buttonVariants = cva(
     defaultVariants: {
       variant: 'default',
       size: 'default',
-          "bg-primary text-primary-foreground shadow-sm " +
-          "hover:bg-primary-dark hover:shadow-sm hover:scale-[1.01] " +
-          "active:scale-95 active:shadow-sm ",
-
-        secondary:
-          "bg-secondary text-black shadow-sm " +
-          "hover:bg-secondary-foreground/90 hover:shadow-sm hover:scale-[1.01] " +
-          "active:scale-95 active:shadow-sm ",
-
-        outline:
-          "border-1 border-primary text-primary bg-transparent " +
-          "hover:bg-primary/10 hover:scale-[1.01] hover:shadow-sm " +
-          "active:scale-95 ",
-
-        destructive:
-          "bg-destructive text-destructive-foreground shadow-sm " +
-          "hover:bg-destructive/90 hover:scale-[1.01] hover:shadow-sm " +
-          "active:scale-95 ",
-
-        ghost:
-          "bg-white/10 backdrop-blur-sm text-foreground " +
-          "hover:bg-white/20 hover:scale-[1.01] " +
-          "active:scale-95 ",
-
-        link:
-          "text-primary underline-offset-4 hover:underline " +
-          "hover:scale-[1.01] " +
-          "active:scale-95 " +
-          "  p-0",
-      },
-      size: {
-        default: "h-10 px-6 py-2 text-base",
-        sm: "h-8 px-4 text-sm",
-        lg: "h-14 px-8 text-lg font-bold",
-        icon: "h-10 w-10",
-        "icon-sm": "h-8 w-8",
-        "icon-lg": "h-12 w-12",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
     },
   },
 );
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
-  extends
-    React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
 
@@ -121,16 +69,5 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   },
 );
 Button.displayName = 'Button';
-    const Comp = asChild ? Slot : "button";
-    return (
-      <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        {...props}
-      />
-    );
-  },
-);
-Button.displayName = "Button";
 
 export { Button, buttonVariants };

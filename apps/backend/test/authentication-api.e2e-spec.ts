@@ -28,7 +28,6 @@ import { CreateUserUseCase } from '../src/modules/identity/application/use-cases
 import { USER_REPOSITORY } from '../src/modules/identity/application/user.tokens.js';
 import type { UserEventRecorder } from '../src/modules/identity/application/ports/user-event-recorder.port.js';
 import { RecordingUserEvents } from './support/user-doubles.js';
-import { USER_REPOSITORY } from '../src/modules/identity/application/user.tokens.js';
 import { AuthSession } from '../src/modules/identity/domain/aggregates/auth-session.js';
 import { Credential } from '../src/modules/identity/domain/aggregates/credential.js';
 import type { AuthSessionRepository } from '../src/modules/identity/domain/repositories/auth-session.repository.js';

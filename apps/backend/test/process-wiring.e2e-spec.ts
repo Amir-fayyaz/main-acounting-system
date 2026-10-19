@@ -1,14 +1,12 @@
 import { Test } from '@nestjs/testing';
 import { describe, expect, it } from 'vitest';
+
 import { AppConfigService } from '../src/infrastructure/config/app-config.service.js';
 import { JobRegistry } from '../src/infrastructure/jobs/job.registry.js';
 import { RedisConnectionService } from '../src/infrastructure/redis/redis-connection.service.js';
 import { CliModule } from '../src/processes/cli/cli.module.js';
 import { SchedulerModule } from '../src/processes/scheduler/scheduler.module.js';
 import { WorkerModule } from '../src/processes/worker/worker.module.js';
-import { CliModule } from '../src/cli/cli.module.js';
-import { SchedulerModule } from '../src/scheduler.module.js';
-import { WorkerModule } from '../src/worker.module.js';
 
 /**
  * Regression guard for the process wiring (FND-007).
@@ -17,7 +15,6 @@ import { WorkerModule } from '../src/worker.module.js';
  * the configuration module themselves. Compiling each of their DI graphs catches
  * a missing provider before it becomes a runtime startup failure — the exact bug
  * that made `node dist/processes/worker/worker.js` exit at boot.
- * that made `node dist/worker.js` exit at boot.
  */
 const processes: readonly [string, unknown][] = [
   ['worker', WorkerModule],

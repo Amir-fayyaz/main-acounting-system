@@ -18,8 +18,6 @@ import { PermissionKey } from './value-objects/permission-key.js';
  * this catalog holds the access-management capabilities the identity/session
  * domain needs and the one read capability the Audit capability declares
  * (`audit.read`), because a key must be registered here to be grantable at all.
- * this issue defines only the access-management capabilities the identity/session
- * domain itself needs.
  *
  * The identifier of a permission is its key. A key is the stable, human-readable
  * name a policy and a configuration file both use, and a second surrogate id
@@ -63,10 +61,6 @@ export class Permission {
  * one catalog for the same reason every other key does — a capability that is
  * not registered here cannot be granted to a role, so the trail would be
  * unreachable rather than protected *by* the model. Nothing business-specific
- * The base access-management capabilities this issue introduces.
- *
- * `company.*` and `user.*` follow the issue's examples; `role.*` covers the new
- * role/permission administration itself. Nothing business-specific
  * (`purchase.create`, …) is added here: those permissions belong to the modules
  * that own the domain rules and are introduced with them.
  */

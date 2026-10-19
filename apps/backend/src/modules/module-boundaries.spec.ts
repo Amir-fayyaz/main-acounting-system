@@ -57,7 +57,6 @@ function isAllowedDomainBareSpecifier(specifier: string): boolean {
  * word "from" followed by a quoted phrase, for instance — and is not reported as
  * a violation. Anything that *could* be a path is still checked.
  */
-/** Import specifiers of a source, anchored so prose never counts as an import. */
 function importSpecifiers(source: string): string[] {
   const patterns = [
     /^\s*(?:import|export)\b[^;]*?\bfrom\s*['"]([^'"]+)['"]/gm,
@@ -72,7 +71,6 @@ function importSpecifiers(source: string): string[] {
       if (!/\s/.test(match[1])) {
         specifiers.add(match[1]);
       }
-      specifiers.add(match[1]);
     }
   }
   return [...specifiers];

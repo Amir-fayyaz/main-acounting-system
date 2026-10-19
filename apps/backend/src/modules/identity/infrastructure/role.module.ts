@@ -89,7 +89,6 @@ import { MembershipModule } from './membership.module.js';
         new ActorEventRecorder(outbox, audit),
       inject: [OUTBOX_RECORDER, AUDIT_RECORDER],
       // The outbox recorder already satisfies the application port structurally.
-      provide: ROLE_EVENT_RECORDER,
       useExisting: OUTBOX_RECORDER,
     },
     {

@@ -172,7 +172,6 @@ async function createHarness(): Promise<Harness> {
           r: InMemoryRoleRepository,
           au: RecordingAuditTrail,
         ): Authorization => new AuthorizeActionUseCase(u, m, a, r, au),
-        ): Authorization => new AuthorizeActionUseCase(u, m, a, r),
         inject: [
           USER_REPOSITORY,
           MEMBERSHIP_REPOSITORY,

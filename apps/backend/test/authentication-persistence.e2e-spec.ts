@@ -10,9 +10,6 @@ import { loadConfiguration } from '../src/infrastructure/config/configuration.js
 import { loadDotEnvFiles } from '../src/infrastructure/config/dotenv.js';
 import type { Database } from '../src/infrastructure/database/database.module.js';
 import { DrizzleTransactionRunner } from '../src/infrastructure/database/drizzle-transaction-runner.js';
-import { RecordAuditEntryUseCase } from '../src/modules/audit/application/use-cases/record-audit-entry.use-case.js';
-import { DrizzleAuditRecordRepository } from '../src/modules/audit/infrastructure/persistence/drizzle-audit-record.repository.js';
-import { ensureAuditRecordSchema } from '../src/modules/audit/infrastructure/persistence/audit-record.schema.js';
 import { OutboxRecorder } from '../src/infrastructure/outbox/outbox-recorder.js';
 import { DrizzleOutboxStore } from '../src/infrastructure/outbox/persistence/drizzle-outbox-store.js';
 import { ensureOutboxSchema } from '../src/infrastructure/outbox/persistence/outbox.schema.js';
@@ -27,7 +24,6 @@ import { SignOutUseCase } from '../src/modules/identity/application/use-cases/si
 import { AuthSession } from '../src/modules/identity/domain/aggregates/auth-session.js';
 import { User } from '../src/modules/identity/domain/aggregates/user.js';
 import { PlainPassword } from '../src/modules/identity/domain/value-objects/plain-password.js';
-import { AuditTrailAuthenticationAuditRecorder } from '../src/modules/identity/infrastructure/audit/audit-trail-authentication-audit-recorder.js';
 import { OutboxAuthenticationAuditRecorder } from '../src/modules/identity/infrastructure/audit/outbox-authentication-audit-recorder.js';
 import { DrizzleAuthSessionRepository } from '../src/modules/identity/infrastructure/persistence/drizzle-auth-session.repository.js';
 import { ensureAuthSessionSchema } from '../src/modules/identity/infrastructure/persistence/drizzle-auth-session.schema.js';
@@ -57,11 +53,8 @@ import { createTransactionBoundary } from '../src/shared/transaction/transaction
  * the domain validates, the session row holds a token *digest* that matches an
  * independently computed SHA-256, the unique key refuses two sessions answering
  * to one credential, a rotation's compare-and-swap refuses the loser, a bulk
- * invalidation leaves every row invalidated, and the authentication facts land
- * in the central **audit** table — including a failed attempt that wrote no
- * state at all (AUD-001), and with no credential material in any of them.
- * invalidation leaves every row invalidated, and the audit records land in the
- * shared outbox — including for a failed attempt that wrote no state at all.
+ * invalidation leaves every row invalidated, and the authentication events land
+ * in the shared outbox — including for a failed attempt that wrote no state at all.
  *
  * Opt-in, so the required quality gate still runs without infrastructure:
  *
@@ -71,8 +64,6 @@ import { createTransactionBoundary } from '../src/shared/transaction/transaction
  * ```
  *
  * Only this feature's tables are created and dropped. Rows this spec inserts into
- * the shared `users` and `audit_records` tables are removed by identity, so an
- * integration spec that owns the audit table is not disturbed.
  * the shared `users` and `outbox_events` tables are removed by identity, so a
  * concurrent integration spec that owns those tables is not disturbed.
  */
@@ -81,17 +72,6 @@ const integrationEnabled = env.MYSQL_INTEGRATION === '1';
 const USERS_TABLE = 'users';
 const CREDENTIAL_TABLE = 'user_credentials';
 const SESSION_TABLE = 'auth_sessions';
-const AUDIT_TABLE = 'audit_records';
-
-const PASSWORD = 'correct horse battery staple';
-
-/** The audit actions this spec owns, so shared-table assertions stay scoped. */
-const AUDIT_ACTIONS = [
-  'user.credential_changed',
-  'user.signed_in',
-  'user.sign_in_failed',
-  'user.signed_out',
-  'authentication.denied',
 const OUTBOX_TABLE = 'outbox_events';
 
 const PASSWORD = 'correct horse battery staple';
@@ -121,11 +101,6 @@ describe.skipIf(!integrationEnabled)('authentication persistence (integration)',
 
   /** The audit rows this spec produced, in order. */
   async function auditRows(): Promise<RowDataPacket[]> {
-    const placeholders = AUDIT_ACTIONS.map(() => '?').join(', ');
-    const [rows] = await pool.query(
-      `SELECT action, outcome, actor_type, actor_user_id, tenant_id, correlation_id, metadata ` +
-        `FROM ${AUDIT_TABLE} WHERE action IN (${placeholders}) ORDER BY occurred_at, id`,
-      [...AUDIT_ACTIONS],
     const placeholders = AUDIT_EVENT_TYPES.map(() => '?').join(', ');
     const [rows] = await pool.query(
       `SELECT event_type, payload FROM ${OUTBOX_TABLE} WHERE event_type IN (${placeholders}) ` +
@@ -136,9 +111,6 @@ describe.skipIf(!integrationEnabled)('authentication persistence (integration)',
   }
 
   async function deleteOwnAuditRows(): Promise<void> {
-    const placeholders = AUDIT_ACTIONS.map(() => '?').join(', ');
-    await pool.query(`DELETE FROM ${AUDIT_TABLE} WHERE action IN (${placeholders})`, [
-      ...AUDIT_ACTIONS,
     const placeholders = AUDIT_EVENT_TYPES.map(() => '?').join(', ');
     await pool.query(`DELETE FROM ${OUTBOX_TABLE} WHERE event_type IN (${placeholders})`, [
       ...AUDIT_EVENT_TYPES,
@@ -190,7 +162,6 @@ describe.skipIf(!integrationEnabled)('authentication persistence (integration)',
     await ensureUserSchema(database);
     await ensureCredentialSchema(database);
     await ensureAuthSessionSchema(database);
-    await ensureAuditRecordSchema(database);
     await ensureOutboxSchema(database);
 
     boundary = createTransactionBoundary(new DrizzleTransactionRunner(database));
@@ -199,11 +170,8 @@ describe.skipIf(!integrationEnabled)('authentication persistence (integration)',
     sessions = new DrizzleAuthSessionRepository(database);
     hasher = new ScryptPasswordHasher();
     tokens = new CryptoSessionTokenService();
-    // The production audit path: the identity adapter translates each
-    // authentication fact into the audit vocabulary, and the central audit
-    // recorder stores it in the audit table (AUD-001).
-    const audit = new AuditTrailAuthenticationAuditRecorder(
-      new RecordAuditEntryUseCase(new DrizzleAuditRecordRepository(database), boundary),
+    
+    // The approved audit boundary: the shared outbox.
     const audit = new OutboxAuthenticationAuditRecorder(
       new OutboxRecorder(new DrizzleOutboxStore(database)),
       boundary,
@@ -282,20 +250,6 @@ describe.skipIf(!integrationEnabled)('authentication persistence (integration)',
     expect(stored.token_hash).toBe(createHash('sha256').update(token, 'utf8').digest('hex'));
     expect(stored.revoked_at).toBeNull();
 
-    // The successful authentication reached the central audit trail, named the
-    // user as the actor, and carries no credential material.
-    const rows = await auditRows();
-    expect(rows.map((row) => row.action)).toEqual(['user.credential_changed', 'user.signed_in']);
-    const signInRecord = rows[1] as RowDataPacket;
-    expect(signInRecord.outcome).toBe('success');
-    expect(signInRecord.actor_type).toBe('user');
-    expect(signInRecord.actor_user_id).toBe(user.id.value);
-    // A sign-in is tenant-independent, so no tenant is recorded for it.
-    expect(signInRecord.tenant_id).toBeNull();
-    const recorded = JSON.stringify(signInRecord.metadata);
-    expect(recorded).not.toContain(token);
-    expect(recorded).not.toContain(PASSWORD);
-    expect(recorded).not.toContain(storedHash);
     // The successful authentication reached the approved audit boundary, and the
     // record carries no credential.
     const rows = await auditRows();
@@ -327,12 +281,6 @@ describe.skipIf(!integrationEnabled)('authentication persistence (integration)',
 
     // The failure was recorded in its own transaction: a rejected attempt must
     // not be rolled back with a boundary it never opened.
-    const failure = (await auditRows()).find((row) => row.action === 'user.sign_in_failed');
-    expect(failure).toBeDefined();
-    expect(failure?.outcome).toBe('failure');
-    expect(failure?.actor_user_id).toBe(user.id.value);
-    expect(JSON.stringify(failure?.metadata)).toContain('INVALID_SECRET');
-    expect(JSON.stringify(failure?.metadata)).not.toContain('an incorrect secret value');
     const failure = (await auditRows()).find((row) => row.event_type === 'SignInFailed');
     expect(failure).toBeDefined();
     expect(JSON.stringify(failure?.payload)).toContain('INVALID_SECRET');
@@ -448,12 +396,11 @@ describe.skipIf(!integrationEnabled)('authentication persistence (integration)',
     expect(outcome.errorOrThrow().code).toBe('SESSION_EXPIRED');
     const [rows] = await pool.query<RowDataPacket[]>(`SELECT id FROM ${SESSION_TABLE}`);
     expect(rows).toHaveLength(1);
-    const rejected = (await auditRows()).find((row) => row.action === 'authentication.denied');
-    expect(rejected?.outcome).toBe('denied');
-    expect(JSON.stringify(rejected?.metadata)).toContain('EXPIRED');
-    expect((await auditRows()).map((row) => row.event_type)).toContain(
-      'AuthenticationStateRejected',
-    );
+    
+    // Check the outbox for the rejected event.
+    const rejected = (await auditRows()).find((row) => row.event_type === 'AuthenticationStateRejected');
+    expect(rejected).toBeDefined();
+    expect(JSON.stringify(rejected?.payload)).toContain('EXPIRED');
   });
 
   it('invalidates a session durably, so a sign-out survives a fresh read', async () => {
@@ -478,14 +425,9 @@ describe.skipIf(!integrationEnabled)('authentication persistence (integration)',
 
     const rejected = await getAuthenticatedSession.execute(new GetAuthenticatedSession({ token }));
     expect(rejected.errorOrThrow().code).toBe('SESSION_REVOKED');
+    
     // The fresh read above presents a revoked token, and a refused
-    // authentication is exactly the record the security model requires
-    // (ADR-010 section 9) — the same event the expired-session test asserts.
-    expect((await auditRows()).map((row) => row.action)).toEqual([
-      'user.credential_changed',
-      'user.signed_in',
-      'user.signed_out',
-      'authentication.denied',
+    // authentication is exactly the record the security model requires.
     expect((await auditRows()).map((row) => row.event_type)).toEqual([
       'UserCredentialEstablished',
       'UserAuthenticated',
