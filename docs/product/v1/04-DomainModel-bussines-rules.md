@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Phase 4 — Domain Model & Business Rules
 
 ## 1. هدف
@@ -1143,7 +1142,6 @@ Autonomous Agent Execution
 ```
 
 این موارد در معماری قابل افزودن باقی می‌مانند.
-=======
 # Phase 4 — Domain Model & Business Rules
 
 ## 1. هدف
@@ -2288,4 +2286,3 @@ Autonomous Agent Execution
 ```
 
 این موارد در معماری قابل افزودن باقی می‌مانند.
->>>>>>> 8b93ab9 (git init)

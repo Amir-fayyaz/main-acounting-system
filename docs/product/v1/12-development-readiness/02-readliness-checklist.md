@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Readiness Checklist
 
 ## Product
@@ -67,7 +66,6 @@
 - [x] Tenant Isolation Test is required before Pilot
 - [x] Authorization Test is required before Pilot
 - [x] Real Company Validation is required before Commercial Release
-=======
 # Readiness Checklist
 
 ## Product
@@ -136,4 +134,3 @@
 - [x] Tenant Isolation Test is required before Pilot
 - [x] Authorization Test is required before Pilot
 - [x] Real Company Validation is required before Commercial Release
->>>>>>> 8b93ab9 (git init)

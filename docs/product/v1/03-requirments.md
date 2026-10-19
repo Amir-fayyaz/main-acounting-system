@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Phase 3 — Requirements Engineering
 
 ## 1. MVP Scope
@@ -799,7 +798,6 @@ Human Control
 +
 Complete Audit Trail
 ```
-=======
 # Phase 3 — Requirements Engineering
 
 ## 1. MVP Scope
@@ -1600,4 +1598,3 @@ Human Control
 +
 Complete Audit Trail
 ```
->>>>>>> 8b93ab9 (git init)

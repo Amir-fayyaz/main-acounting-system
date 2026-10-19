@@ -1,18 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
-<<<<<<< HEAD
 import { RecordingAuditTrail } from '../../../../test/support/audit-doubles.js';
-=======
->>>>>>> 8b93ab9 (git init)
 import {
   FIXED_NOW,
   InMemoryMembershipRepository,
 } from '../../../../test/support/membership-doubles.js';
-<<<<<<< HEAD
 import { createTenantContext } from '../../../shared/tenant/tenant-context.js';
 import { TenantScope } from '../../../shared/tenant/tenant-scope.js';
-=======
->>>>>>> 8b93ab9 (git init)
 import {
   InMemoryMembershipRoleRepository,
   InMemoryRoleRepository,
@@ -49,10 +43,7 @@ interface Harness {
   readonly memberships: InMemoryMembershipRepository;
   readonly assignments: InMemoryMembershipRoleRepository;
   readonly roles: InMemoryRoleRepository;
-<<<<<<< HEAD
   readonly audit: RecordingAuditTrail;
-=======
->>>>>>> 8b93ab9 (git init)
   readonly authorize: AuthorizeActionUseCase;
 }
 
@@ -61,22 +52,16 @@ function harness(): Harness {
   const memberships = new InMemoryMembershipRepository();
   const assignments = new InMemoryMembershipRoleRepository();
   const roles = new InMemoryRoleRepository();
-<<<<<<< HEAD
   const audit = new RecordingAuditTrail();
-=======
->>>>>>> 8b93ab9 (git init)
 
   return {
     users,
     memberships,
     assignments,
     roles,
-<<<<<<< HEAD
     audit,
     authorize: new AuthorizeActionUseCase(users, memberships, assignments, roles, audit),
-=======
     authorize: new AuthorizeActionUseCase(users, memberships, assignments, roles),
->>>>>>> 8b93ab9 (git init)
   };
 }
 
@@ -423,7 +408,6 @@ describe('authorize — the protected action does not run on denial', () => {
   });
 });
 
-<<<<<<< HEAD
 describe('authorize — a refusal is recorded through the audit contract', () => {
   it('records the denial with the resolved actor and the claimed tenant as context', async () => {
     const app = harness();
@@ -518,8 +502,6 @@ describe('authorize — a refusal is recorded through the audit contract', () =>
   });
 });
 
-=======
->>>>>>> 8b93ab9 (git init)
 describe('permits', () => {
   it('answers from a resolved context without another read', async () => {
     const app = harness();

@@ -3,10 +3,7 @@
 import { ArrowLeft, Check, Heart, Search, ShoppingCart, Star } from 'lucide-react';
 import { useState } from 'react';
 
-<<<<<<< HEAD
 import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
-=======
->>>>>>> 8b93ab9 (git init)
 import { Textarea } from '@/shadcn/Textarea/textarea';
 import { Badge } from '@/shadcn/badge/badge';
 import { Button } from '@/shadcn/button/button';
@@ -35,17 +32,14 @@ export default function UIShowcasePage() {
   const [favorite, setFavorite] = useState(false);
 
   return (
-<<<<<<< HEAD
     <SectionLayout>
       <div>
         {/* Header */}
         <header className="flex flex-wrap items-center justify-between gap-4  ">
-=======
     <main className={`min-h-screen ${dark ? 'dark' : ''} bg-background text-foreground`}>
       <div className="mx-auto max-w-7xl space-y-12 px-5 py-10 sm:px-8">
         {/* Header */}
         <header className="flex flex-wrap items-center justify-between gap-4">
->>>>>>> 8b93ab9 (git init)
           <div className="space-y-2">
             <Badge className="bg-brand-soft text-ink hover:bg-brand-soft">UI Playground</Badge>
 
@@ -390,11 +384,8 @@ export default function UIShowcasePage() {
           UI Playground · Brand colors #ffa00a and #ef8f00
         </footer>
       </div>
-<<<<<<< HEAD
     </SectionLayout>
-=======
     </main>
->>>>>>> 8b93ab9 (git init)
   );
 }
 

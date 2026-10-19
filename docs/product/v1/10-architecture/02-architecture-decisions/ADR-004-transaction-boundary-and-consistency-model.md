@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # ADR-004 — Transaction Boundary و Consistency Model
 
 - شناسه: ADR-004
@@ -791,7 +790,6 @@ Precondition Check در Execute دوباره اجرا می‌شود؛ اتکا �
 - Optimistic Concurrency برای داده‌های حساس وجود داشته باشد.
 - Plan قبل از Execute دوباره Validate شود.
 - هیچ Silent Partial Execution وجود نداشته باشد.
-=======
 # ADR-004 — Transaction Boundary و Consistency Model
 
 - شناسه: ADR-004
@@ -1584,4 +1582,3 @@ Precondition Check در Execute دوباره اجرا می‌شود؛ اتکا �
 - Optimistic Concurrency برای داده‌های حساس وجود داشته باشد.
 - Plan قبل از Execute دوباره Validate شود.
 - هیچ Silent Partial Execution وجود نداشته باشد.
->>>>>>> 8b93ab9 (git init)

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # ADR-013 — معماری API
 
 - شناسه: ADR-013
@@ -109,7 +108,6 @@ ORM/Domain Model مستقیماً به JSON API تبدیل نمی‌شود.
 - No Direct DB Query API
 - Idempotency برای عملیات حساس
 - Standard Error Contract
-=======
 # ADR-013 — معماری API
 
 - شناسه: ADR-013
@@ -220,4 +218,3 @@ ORM/Domain Model مستقیماً به JSON API تبدیل نمی‌شود.
 - No Direct DB Query API
 - Idempotency برای عملیات حساس
 - Standard Error Contract
->>>>>>> 8b93ab9 (git init)

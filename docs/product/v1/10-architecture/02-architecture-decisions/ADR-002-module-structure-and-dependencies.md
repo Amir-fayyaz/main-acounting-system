@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # ADR-002 — ساختار داخلی Moduleها و قوانین Dependency
 
 - شناسه: ADR-002
@@ -723,7 +722,6 @@ No Domain Dependency on Infrastructure
 No ORM Entity = Domain Entity
 Contracts Only Across Module Boundaries
 ```
-=======
 # ADR-002 — ساختار داخلی Moduleها و قوانین Dependency
 
 - شناسه: ADR-002
@@ -1448,4 +1446,3 @@ No Domain Dependency on Infrastructure
 No ORM Entity = Domain Entity
 Contracts Only Across Module Boundaries
 ```
->>>>>>> 8b93ab9 (git init)

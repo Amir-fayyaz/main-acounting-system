@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # ADR-009 — معماری Reporting و Read Model
 
 - شناسه: ADR-009
@@ -77,7 +76,6 @@ Export گزارش می‌تواند Job Async باشد و فایل خروجی ب
 - Reporting داده عملیاتی را تغییر نمی‌دهد.
 - Read Model قابل Rebuild است.
 - BI پیشرفته فعلاً خارج از MVP است.
-=======
 # ADR-009 — معماری Reporting و Read Model
 
 - شناسه: ADR-009
@@ -156,4 +154,3 @@ Export گزارش می‌تواند Job Async باشد و فایل خروجی ب
 - Reporting داده عملیاتی را تغییر نمی‌دهد.
 - Read Model قابل Rebuild است.
 - BI پیشرفته فعلاً خارج از MVP است.
->>>>>>> 8b93ab9 (git init)

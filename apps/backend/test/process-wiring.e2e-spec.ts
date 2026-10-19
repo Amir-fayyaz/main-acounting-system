@@ -3,15 +3,12 @@ import { describe, expect, it } from 'vitest';
 import { AppConfigService } from '../src/infrastructure/config/app-config.service.js';
 import { JobRegistry } from '../src/infrastructure/jobs/job.registry.js';
 import { RedisConnectionService } from '../src/infrastructure/redis/redis-connection.service.js';
-<<<<<<< HEAD
 import { CliModule } from '../src/processes/cli/cli.module.js';
 import { SchedulerModule } from '../src/processes/scheduler/scheduler.module.js';
 import { WorkerModule } from '../src/processes/worker/worker.module.js';
-=======
 import { CliModule } from '../src/cli/cli.module.js';
 import { SchedulerModule } from '../src/scheduler.module.js';
 import { WorkerModule } from '../src/worker.module.js';
->>>>>>> 8b93ab9 (git init)
 
 /**
  * Regression guard for the process wiring (FND-007).
@@ -19,11 +16,8 @@ import { WorkerModule } from '../src/worker.module.js';
  * The Worker, Scheduler and CLI run without the HTTP app, so they must import
  * the configuration module themselves. Compiling each of their DI graphs catches
  * a missing provider before it becomes a runtime startup failure — the exact bug
-<<<<<<< HEAD
  * that made `node dist/processes/worker/worker.js` exit at boot.
-=======
  * that made `node dist/worker.js` exit at boot.
->>>>>>> 8b93ab9 (git init)
  */
 const processes: readonly [string, unknown][] = [
   ['worker', WorkerModule],

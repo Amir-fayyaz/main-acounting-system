@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # ADR-011 — Deployment و Offline Architecture
 
 - شناسه: ADR-011
@@ -135,7 +134,6 @@ Configuration محیطی:
 - External Failure isolated
 - Backup + Restore tested
 - No Native Mobile/Desktop requirement for MVP
-=======
 # ADR-011 — Deployment و Offline Architecture
 
 - شناسه: ADR-011
@@ -272,4 +270,3 @@ Configuration محیطی:
 - External Failure isolated
 - Backup + Restore tested
 - No Native Mobile/Desktop requirement for MVP
->>>>>>> 8b93ab9 (git init)

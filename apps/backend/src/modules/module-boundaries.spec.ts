@@ -49,7 +49,6 @@ function isAllowedDomainBareSpecifier(specifier: string): boolean {
   return specifier.startsWith('node:') || specifier === 'vitest';
 }
 
-<<<<<<< HEAD
 /**
  * Import specifiers of a source, anchored so prose never counts as an import.
  *
@@ -58,9 +57,7 @@ function isAllowedDomainBareSpecifier(specifier: string): boolean {
  * word "from" followed by a quoted phrase, for instance — and is not reported as
  * a violation. Anything that *could* be a path is still checked.
  */
-=======
 /** Import specifiers of a source, anchored so prose never counts as an import. */
->>>>>>> 8b93ab9 (git init)
 function importSpecifiers(source: string): string[] {
   const patterns = [
     /^\s*(?:import|export)\b[^;]*?\bfrom\s*['"]([^'"]+)['"]/gm,
@@ -72,13 +69,10 @@ function importSpecifiers(source: string): string[] {
   for (const pattern of patterns) {
     pattern.lastIndex = 0;
     for (const match of source.matchAll(pattern)) {
-<<<<<<< HEAD
       if (!/\s/.test(match[1])) {
         specifiers.add(match[1]);
       }
-=======
       specifiers.add(match[1]);
->>>>>>> 8b93ab9 (git init)
     }
   }
   return [...specifiers];
@@ -322,7 +316,6 @@ describe('module ownership — the checker itself', () => {
       ),
     ).toEqual([]);
   });
-<<<<<<< HEAD
 
   it('ignores a message whose wording resembles an import, but still reads real ones', () => {
     const withProse =
@@ -337,6 +330,4 @@ describe('module ownership — the checker itself', () => {
       expect.stringContaining('Domain receives the tenant scope'),
     );
   });
-=======
->>>>>>> 8b93ab9 (git init)
 });

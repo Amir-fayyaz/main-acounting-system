@@ -4,19 +4,16 @@ NestJS + TypeScript implementation of the modular monolith (ADR-001, TECH-001).
 This package hosts three processes that share one codebase and one configuration
 (ADR-001, section 10; ADR-008):
 
-<<<<<<< HEAD
 | Process   | Entry                                   | Role                                         |
 | --------- | --------------------------------------- | -------------------------------------------- |
 | Web/API   | `dist/main.js`                          | REST API, serves HTTP requests               |
 | Worker    | `dist/processes/worker/worker.js`       | Consumes and executes queued background jobs |
 | Scheduler | `dist/processes/scheduler/scheduler.js` | Enqueues periodic work, promotes due retries |
-=======
 | Process   | Entry               | Role                                         |
 | --------- | ------------------- | -------------------------------------------- |
 | Web/API   | `dist/main.js`      | REST API, serves HTTP requests               |
 | Worker    | `dist/worker.js`    | Consumes and executes queued background jobs |
 | Scheduler | `dist/scheduler.js` | Enqueues periodic work, promotes due retries |
->>>>>>> 8b93ab9 (git init)
 
 No business domain is implemented yet — this is the FND-001/FND-002 workspace baseline.
 
@@ -25,14 +22,12 @@ No business domain is implemented yet — this is the FND-001/FND-002 workspace 
 ```text
 src/
 ├── main.ts                     Web/API process entry point
-<<<<<<< HEAD
 ├── bootstrap.ts                Runtime configuration shared by the API and tests
 ├── app.module.ts               Root module (shared infrastructure + platform endpoints)
 ├── processes/                  Non-HTTP process entry points (FND-009)
 │   ├── worker/                 worker.ts, worker.module.ts, worker-runner.service.ts (FND-007)
 │   ├── scheduler/              scheduler.ts, scheduler.module.ts, scheduler-runner.service.ts
 │   └── cli/                    cli.module.ts, enqueue-sample-job.ts (local job runs)
-=======
 ├── worker.ts                   Worker process entry point (FND-007)
 ├── scheduler.ts                Scheduler process entry point (FND-007)
 ├── worker.module.ts            Worker application context (no HTTP)
@@ -43,7 +38,6 @@ src/
 ├── bootstrap.ts                Runtime configuration shared by the API and tests
 ├── app.module.ts               Root module (shared infrastructure + platform endpoints)
 ├── cli/                        Standalone commands (enqueue a job for local runs)
->>>>>>> 8b93ab9 (git init)
 ├── modules/                    One directory per domain module (see modules/README.md)
 │   └── <module>/{domain,application,infrastructure,presentation}
 ├── shared/                     Shared kernel, framework-free (see shared/README.md)
@@ -59,10 +53,7 @@ src/
 │   └── tenant/                 Tenant context scope + message stamping (SHR-007)
 └── infrastructure/
     ├── config/                 Typed configuration (.env discovery, validation, redaction)
-<<<<<<< HEAD
     ├── logging/                Log-level mapping shared by all processes (nest-log-levels.ts)
-=======
->>>>>>> 8b93ab9 (git init)
     ├── database/               MySQL pool + Drizzle instance + transaction runner (SHR-005)
     ├── redis/                  Redis connection (non-authoritative, TECH-007)
     ├── storage/                Object storage port + MinIO adapter (TECH-008)
@@ -237,7 +228,6 @@ configures them per controller (full reference:
 | OpenAPI JSON | `http://localhost:3000/api/docs-json` |
 | OpenAPI YAML | `http://localhost:3000/api/docs-yaml` |
 
-<<<<<<< HEAD
 ### Identity authentication endpoints (IAM-005, IAM-008)
 
 The `auth` resource is public: sign-in is how an identity is established, and
@@ -273,8 +263,6 @@ Contract notes for sign-up (IAM-008):
   central audit trail (AUD-001). Sign-up invents no third audit or logging
   mechanism, and no audit record carries a secret.
 
-=======
->>>>>>> 8b93ab9 (git init)
 ### Reference endpoints
 
 `ExampleController` is a non-business reference resource that demonstrates the

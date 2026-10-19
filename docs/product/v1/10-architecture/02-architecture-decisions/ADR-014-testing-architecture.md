@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # ADR-014 — معماری تست
 
 - شناسه: ADR-014
@@ -131,7 +130,6 @@ Test Data باید Company/Tenant Context واقعی داشته باشد و دا
 - Flow مالی فقط با UI Test معتبر تلقی نمی‌شود.
 - Agent بدون Evaluation Dataset کامل محسوب نمی‌شود.
 - Failure Scenario جزو Test Scope است.
-=======
 # ADR-014 — معماری تست
 
 - شناسه: ADR-014
@@ -264,4 +262,3 @@ Test Data باید Company/Tenant Context واقعی داشته باشد و دا
 - Flow مالی فقط با UI Test معتبر تلقی نمی‌شود.
 - Agent بدون Evaluation Dataset کامل محسوب نمی‌شود.
 - Failure Scenario جزو Test Scope است.
->>>>>>> 8b93ab9 (git init)

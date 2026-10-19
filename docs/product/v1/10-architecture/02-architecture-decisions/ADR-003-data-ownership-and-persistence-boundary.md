@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # ADR-003 — مالکیت داده و مرز Persistence
 
 - شناسه: ADR-003
@@ -619,7 +618,6 @@ Cross-Module Access
 و قانون اصلی:
 
 > **Module owns the data, controls its mutations, and exposes contracts—not persistence internals.**
-=======
 # ADR-003 — مالکیت داده و مرز Persistence
 
 - شناسه: ADR-003
@@ -1240,4 +1238,3 @@ Cross-Module Access
 و قانون اصلی:
 
 > **Module owns the data, controls its mutations, and exposes contracts—not persistence internals.**
->>>>>>> 8b93ab9 (git init)

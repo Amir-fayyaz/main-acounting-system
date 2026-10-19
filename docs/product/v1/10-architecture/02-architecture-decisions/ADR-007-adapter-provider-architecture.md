@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # ADR-007 — معماری Adapter / Provider
 
 - شناسه: ADR-007
@@ -131,7 +130,6 @@ Raw External Response اگر برای Audit/Trace لازم باشد می‌تو�
 - External Contract به Core نشت نمی‌کند.
 - Unknown Outcome نباید حدس زده شود.
 - Integration قابل تعویض است.
-=======
 # ADR-007 — معماری Adapter / Provider
 
 - شناسه: ADR-007
@@ -264,4 +262,3 @@ Raw External Response اگر برای Audit/Trace لازم باشد می‌تو�
 - External Contract به Core نشت نمی‌کند.
 - Unknown Outcome نباید حدس زده شود.
 - Integration قابل تعویض است.
->>>>>>> 8b93ab9 (git init)

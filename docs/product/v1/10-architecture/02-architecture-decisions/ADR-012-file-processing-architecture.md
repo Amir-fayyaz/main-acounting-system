@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # ADR-012 — معماری فایل و پردازش اسناد
 
 - شناسه: ADR-012
@@ -120,7 +119,6 @@ Hash و Business Context می‌توانند برای تشخیص Duplicate Candi
 - File Versioning اجباری است.
 - Processing Async است.
 - Result قبلی نباید silent overwrite شود.
-=======
 # ADR-012 — معماری فایل و پردازش اسناد
 
 - شناسه: ADR-012
@@ -242,4 +240,3 @@ Hash و Business Context می‌توانند برای تشخیص Duplicate Candi
 - File Versioning اجباری است.
 - Processing Async است.
 - Result قبلی نباید silent overwrite شود.
->>>>>>> 8b93ab9 (git init)

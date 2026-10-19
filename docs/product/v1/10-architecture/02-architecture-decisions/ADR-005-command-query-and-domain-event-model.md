@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # ADR-005 — Command / Query / Domain Event Model
 
 - شناسه: ADR-005
@@ -181,7 +180,6 @@ Event فقط می‌گوید آن اتفاق رخ داده است.
 ## 15. ADRهای وابسته
 
 ADR-002، ADR-003، ADR-004، ADR-006، ADR-008، ADR-009
-=======
 # ADR-005 — Command / Query / Domain Event Model
 
 - شناسه: ADR-005
@@ -364,4 +362,3 @@ Event فقط می‌گوید آن اتفاق رخ داده است.
 ## 15. ADRهای وابسته
 
 ADR-002، ADR-003، ADR-004، ADR-006، ADR-008، ADR-009
->>>>>>> 8b93ab9 (git init)

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # ADR-008 — Job / Queue و پردازش پس‌زمینه
 
 - شناسه: ADR-008
@@ -139,7 +138,6 @@ Business Logic Scheduler نباید Source of Truth باشد.
 - Job بدون Owner Context اجرا نمی‌شود.
 - Retry بدون Idempotency ممنوع است.
 - Failure پنهان ممنوع است.
-=======
 # ADR-008 — Job / Queue و پردازش پس‌زمینه
 
 - شناسه: ADR-008
@@ -280,4 +278,3 @@ Business Logic Scheduler نباید Source of Truth باشد.
 - Job بدون Owner Context اجرا نمی‌شود.
 - Retry بدون Idempotency ممنوع است.
 - Failure پنهان ممنوع است.
->>>>>>> 8b93ab9 (git init)

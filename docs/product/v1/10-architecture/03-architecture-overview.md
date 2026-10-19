@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Architecture Overview — نسخه MVP
 
 - وضعیت: تصویب‌شده بر اساس ADRهای 001 تا 015
@@ -242,7 +241,6 @@ Performance
 ## 20. Technology Decisions
 
 این Overview عمداً Technology Stack سطح زبان/Framework/ORM/Database Engine را قطعی نمی‌کند. این انتخاب‌ها باید بعد از تأیید معماری و بر مبنای ADR جداگانه انجام شوند.
-=======
 # Architecture Overview — نسخه MVP
 
 - وضعیت: تصویب‌شده بر اساس ADRهای 001 تا 015
@@ -486,4 +484,3 @@ Performance
 ## 20. Technology Decisions
 
 این Overview عمداً Technology Stack سطح زبان/Framework/ORM/Database Engine را قطعی نمی‌کند. این انتخاب‌ها باید بعد از تأیید معماری و بر مبنای ADR جداگانه انجام شوند.
->>>>>>> 8b93ab9 (git init)

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { cn } from '@/core/utils/shadcn/utils';
 import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
@@ -6,7 +5,6 @@ import * as React from 'react';
 
 const buttonVariants = cva(
   'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm   transition-all duration-300 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none  shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2',
-=======
 import { cn } from "@/core/utils/shadcn/utils";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
@@ -14,12 +12,10 @@ import * as React from "react";
 
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm   transition-all duration-300 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none  shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2",
->>>>>>> 8b93ab9 (git init)
   {
     variants: {
       variant: {
         default:
-<<<<<<< HEAD
           'bg-primary text-primary-foreground shadow-sm ' +
           'hover:bg-primary-dark hover:shadow-sm hover:scale-[1.01] ' +
           'active:scale-95 active:shadow-sm ',
@@ -62,7 +58,6 @@ const buttonVariants = cva(
     defaultVariants: {
       variant: 'default',
       size: 'default',
-=======
           "bg-primary text-primary-foreground shadow-sm " +
           "hover:bg-primary-dark hover:shadow-sm hover:scale-[1.01] " +
           "active:scale-95 active:shadow-sm ",
@@ -105,25 +100,20 @@ const buttonVariants = cva(
     defaultVariants: {
       variant: "default",
       size: "default",
->>>>>>> 8b93ab9 (git init)
     },
   },
 );
 
 export interface ButtonProps
-<<<<<<< HEAD
   extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
-=======
   extends
     React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
->>>>>>> 8b93ab9 (git init)
   asChild?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
-<<<<<<< HEAD
     const Comp = asChild ? Slot : 'button';
     return (
       <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />
@@ -131,7 +121,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   },
 );
 Button.displayName = 'Button';
-=======
     const Comp = asChild ? Slot : "button";
     return (
       <Comp
@@ -143,6 +132,5 @@ Button.displayName = 'Button';
   },
 );
 Button.displayName = "Button";
->>>>>>> 8b93ab9 (git init)
 
 export { Button, buttonVariants };

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Development Readiness — Gate نهایی شروع توسعه
 
 - وضعیت: READY
@@ -466,7 +465,6 @@ Real-world Validation
 Product، Domain، Architecture و Engineering برای شروع توسعه به سطح موردنیاز رسیده‌اند.
 
 از این نقطه، هدف اصلی دیگر «مستندسازی بیشتر» نیست؛ هدف اصلی «اجرای کنترل‌شده مستندات موجود» است.
-=======
 # Development Readiness — Gate نهایی شروع توسعه
 
 - وضعیت: READY
@@ -934,4 +932,3 @@ Real-world Validation
 Product، Domain، Architecture و Engineering برای شروع توسعه به سطح موردنیاز رسیده‌اند.
 
 از این نقطه، هدف اصلی دیگر «مستندسازی بیشتر» نیست؛ هدف اصلی «اجرای کنترل‌شده مستندات موجود» است.
->>>>>>> 8b93ab9 (git init)

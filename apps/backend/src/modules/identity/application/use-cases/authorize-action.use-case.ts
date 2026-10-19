@@ -1,9 +1,6 @@
 import type { DomainError } from '../../../../shared/errors/domain-error.js';
 import { Result } from '../../../../shared/errors/result.js';
-<<<<<<< HEAD
 import type { AuditRecorder } from '../../../audit/application/ports/audit-recorder.port.js';
-=======
->>>>>>> 8b93ab9 (git init)
 import { AccountNotAuthenticatableError } from '../../domain/errors/authentication.errors.js';
 import type { Membership } from '../../domain/aggregates/membership.js';
 import type { AuthorizationEvidence } from '../../domain/authorization/authorization-evidence.js';
@@ -61,7 +58,6 @@ import { resolveEffectivePermissionKeys } from '../services/effective-permission
  *   the membership's tenant. A caller can therefore not grant itself a tenant by
  *   naming one, and a tenant it does not belong to is indistinguishable from one
  *   that does not exist.
-<<<<<<< HEAD
  * - **Nothing business-related is written.** A decision changes no business
  *   state, raises no business event and touches no credential. The one thing a
  *   refusal does write is its own audit record (AUD-001): the denial is stated
@@ -69,12 +65,10 @@ import { resolveEffectivePermissionKeys } from '../services/effective-permission
  *   survives as durable evidence — while the decision itself stays free of
  *   side effects and the audit module learns no authorization rule
  *   (ADR-002 section 12).
-=======
  * - **Nothing is written.** A decision changes no state, raises no event and
  *   touches no credential; refusing an operation must not itself have side
  *   effects (the access-denial audit record, when the Audit capability arrives,
  *   is the boundary's concern, not a mutation this use case performs).
->>>>>>> 8b93ab9 (git init)
  */
 export class AuthorizeActionUseCase implements Authorization {
   public constructor(
@@ -82,10 +76,7 @@ export class AuthorizeActionUseCase implements Authorization {
     private readonly memberships: MembershipRepository,
     private readonly assignments: MembershipRoleRepository,
     private readonly roles: RoleRepository,
-<<<<<<< HEAD
     private readonly audit: AuditRecorder,
-=======
->>>>>>> 8b93ab9 (git init)
   ) {}
 
   public async authorize(
@@ -117,11 +108,8 @@ export class AuthorizeActionUseCase implements Authorization {
         : await this.resolveTenantEvidence(loaded, target);
 
     if (resolved.isFail()) {
-<<<<<<< HEAD
       return this.deny(request, userId.value, resolved.errorOrThrow());
-=======
       return Result.fail(resolved.errorOrThrow());
->>>>>>> 8b93ab9 (git init)
     }
 
     const evidence = resolved.valueOrThrow();
@@ -133,15 +121,12 @@ export class AuthorizeActionUseCase implements Authorization {
     );
 
     if (!decision.allowed) {
-<<<<<<< HEAD
       return this.deny(
         request,
         userId.value,
         authorizationErrorFor(decision.reason, request.requiredPermission.value),
       );
-=======
       return Result.fail(authorizationErrorFor(decision.reason, request.requiredPermission.value));
->>>>>>> 8b93ab9 (git init)
     }
 
     return Result.ok(this.toContext(userId.value, evidence, target !== undefined));
@@ -152,7 +137,6 @@ export class AuthorizeActionUseCase implements Authorization {
   }
 
   /**
-<<<<<<< HEAD
    * Records a refusal and answers with it (AUD-001; ADR-010 section 9).
    *
    * A refusal is a security event in its own right — the acceptance criteria
@@ -210,8 +194,6 @@ export class AuthorizeActionUseCase implements Authorization {
   }
 
   /**
-=======
->>>>>>> 8b93ab9 (git init)
    * Evidence for a tenant-scoped requirement: the membership in the target
    * tenant and the permissions it confers.
    *

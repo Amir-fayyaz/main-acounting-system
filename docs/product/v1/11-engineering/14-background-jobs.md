@@ -22,14 +22,11 @@ MySQL            durable business data, owned by the module
 ```
 
 `apps/backend` is one workspace package with three entry points:
-<<<<<<< HEAD
 `dist/main.js` (API), `dist/processes/worker/worker.js` (Worker) and
 `dist/processes/scheduler/scheduler.js` (Scheduler). All three load the same
 configuration from FND-003.
-=======
 `dist/main.js` (API), `dist/worker.js` (Worker) and `dist/scheduler.js`
 (Scheduler). All three load the same configuration from FND-003.
->>>>>>> 8b93ab9 (git init)
 
 ## Queue abstraction
 

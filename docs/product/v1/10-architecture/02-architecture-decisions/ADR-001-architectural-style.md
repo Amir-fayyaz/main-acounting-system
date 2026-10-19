@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # ADR-001 — سبک معماری کل سیستم
 
 - شناسه: ADR-001
@@ -601,7 +600,6 @@ Strong Tenant Isolation
 +
 No Microservices Strategy
 ```
-=======
 # ADR-001 — سبک معماری کل سیستم
 
 - شناسه: ADR-001
@@ -1204,4 +1202,3 @@ Strong Tenant Isolation
 +
 No Microservices Strategy
 ```
->>>>>>> 8b93ab9 (git init)

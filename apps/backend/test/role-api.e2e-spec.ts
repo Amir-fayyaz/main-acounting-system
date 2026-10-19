@@ -363,7 +363,6 @@ describe('role and permission resources (e2e)', () => {
     it('lists the platform capabilities in the standard envelope', async () => {
       const response = await request(app.getHttpServer()).get('/api/v1/permissions').expect(200);
 
-<<<<<<< HEAD
       expect(response.body.meta).toEqual({ page: 1, limit: 20, total: 7, totalPages: 1 });
       expect(response.body.data.map((permission: { key: string }) => permission.key)).toContain(
         'company.read',
@@ -373,12 +372,10 @@ describe('role and permission resources (e2e)', () => {
       expect(response.body.data.map((permission: { key: string }) => permission.key)).toContain(
         'audit.read',
       );
-=======
       expect(response.body.meta).toEqual({ page: 1, limit: 20, total: 6, totalPages: 1 });
       expect(response.body.data.map((permission: { key: string }) => permission.key)).toContain(
         'company.read',
       );
->>>>>>> 8b93ab9 (git init)
       expect(response.body.data[0]).toMatchObject({
         key: expect.any(String),
         description: expect.any(String),

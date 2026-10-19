@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # ADR-006 — معماری Agent و Plan Execution
 
 - شناسه: ADR-006
@@ -216,7 +215,6 @@ Snapshot کامل Entityهای Business به‌عنوان Truth مستقل مج�
 - Agent never bypasses Business Rules.
 - No silent execution.
 - No silent partial execution.
-=======
 # ADR-006 — معماری Agent و Plan Execution
 
 - شناسه: ADR-006
@@ -434,4 +432,3 @@ Snapshot کامل Entityهای Business به‌عنوان Truth مستقل مج�
 - Agent never bypasses Business Rules.
 - No silent execution.
 - No silent partial execution.
->>>>>>> 8b93ab9 (git init)

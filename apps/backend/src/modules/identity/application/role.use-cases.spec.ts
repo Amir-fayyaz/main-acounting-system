@@ -1119,12 +1119,9 @@ describe('role use cases', () => {
 
       expect(outcome.isOk()).toBe(true);
       const keys = outcome.valueOrThrow().map((permission) => permission.key);
-<<<<<<< HEAD
       // Declaration order, so the list is stable across calls. `audit.read`
       // arrives with the Audit capability (AUD-001) and is declared last.
-=======
       // Declaration order, so the list is stable across calls.
->>>>>>> 8b93ab9 (git init)
       expect(keys).toEqual([
         'company.read',
         'company.update',
@@ -1132,10 +1129,7 @@ describe('role use cases', () => {
         'user.manage',
         'role.read',
         'role.manage',
-<<<<<<< HEAD
         'audit.read',
-=======
->>>>>>> 8b93ab9 (git init)
       ]);
       expect(app.boundary.executions).toBe(0);
     });

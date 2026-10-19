@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # ADR-015 — معماری Observability و Recovery
 
 - شناسه: ADR-015
@@ -133,7 +132,6 @@ Log/Trace نباید شامل:
 - Audit ≠ Log
 - Every long-running operation is observable
 - Every critical recovery action is traceable
-=======
 # ADR-015 — معماری Observability و Recovery
 
 - شناسه: ADR-015
@@ -268,4 +266,3 @@ Log/Trace نباید شامل:
 - Audit ≠ Log
 - Every long-running operation is observable
 - Every critical recovery action is traceable
->>>>>>> 8b93ab9 (git init)

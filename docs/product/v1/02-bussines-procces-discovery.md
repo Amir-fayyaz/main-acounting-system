@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Phase 2 — Business Process Discovery
 
 ## 1. هدف این مرحله
@@ -891,7 +890,6 @@ Output
 □ سرعت را نسبت به روش دستی بهبود دهد
 □ Consistency قابل اندازه‌گیری داشته باشد
 ```
-=======
 # Phase 2 — Business Process Discovery
 
 ## 1. هدف این مرحله
@@ -1784,4 +1782,3 @@ Output
 □ سرعت را نسبت به روش دستی بهبود دهد
 □ Consistency قابل اندازه‌گیری داشته باشد
 ```
->>>>>>> 8b93ab9 (git init)

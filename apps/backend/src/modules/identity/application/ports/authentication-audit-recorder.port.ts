@@ -1,7 +1,6 @@
 import type { DomainEvent } from '../../../../shared/messaging/domain-event.js';
 
 /**
-<<<<<<< HEAD
  * How the authentication flow states a fact that must be audited (IAM-005;
  * AUD-001; ADR-003 section 21; ADR-010 section 9; ADR-015 section 6).
  *
@@ -21,7 +20,6 @@ import type { DomainEvent } from '../../../../shared/messaging/domain-event.js';
  *   and rejected authentication states change no state, so there is no
  *   transaction to commit. The audit recorder therefore records a fact in its
  *   own transaction when the caller has none open, and joins the caller's
-=======
  * The approved audit boundary, as the authentication flow uses it (IAM-005;
  * ADR-003 section 21; ADR-010 section 9; ADR-015 section 6).
  *
@@ -41,7 +39,6 @@ import type { DomainEvent } from '../../../../shared/messaging/domain-event.js';
  *   and rejected authentication states change no state, so there is no
  *   transaction to commit. The adapter therefore records a fact in its own
  *   transaction when the caller has none open, and joins the caller's
->>>>>>> 8b93ab9 (git init)
  *   transaction when one is open — so a successful sign-in and its audit record
  *   commit together (they cannot drift apart), while a failed attempt is still
  *   recorded.
@@ -51,13 +48,10 @@ import type { DomainEvent } from '../../../../shared/messaging/domain-event.js';
  * - **An audit failure is not swallowed.** If the record cannot be written, the
  *   operation fails: silent loss of a security record is worse than a failed
  *   request (ADR-010 section 13, fail closed).
-<<<<<<< HEAD
  *
  * The port names no action, outcome or column: which authentication fact maps to
  * which audit action is the adapter's translation, and the audit module learns
  * nothing about authentication in return (ADR-002 section 12).
-=======
->>>>>>> 8b93ab9 (git init)
  */
 export interface AuthenticationAuditRecorder {
   record(event: DomainEvent<unknown>): Promise<void>;

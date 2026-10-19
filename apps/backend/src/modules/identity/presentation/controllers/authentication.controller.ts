@@ -2,20 +2,14 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@n
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
-<<<<<<< HEAD
   ApiConflictResponse,
-=======
->>>>>>> 8b93ab9 (git init)
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
-<<<<<<< HEAD
   ApiUnprocessableEntityResponse,
-=======
->>>>>>> 8b93ab9 (git init)
 } from '@nestjs/swagger';
 import {
   Public,
@@ -24,7 +18,6 @@ import {
 import { ApiErrorResponseDto } from '../../../../infrastructure/api/errors/api-error.dto.js';
 import { SignIn } from '../../application/commands/sign-in.command.js';
 import { SignOut } from '../../application/commands/sign-out.command.js';
-<<<<<<< HEAD
 import { SignUp } from '../../application/commands/sign-up.command.js';
 import type { AuthenticatedSessionView } from '../../application/views/authenticated-session.view.js';
 import type { SignedInView } from '../../application/views/signed-in.view.js';
@@ -32,42 +25,31 @@ import type { SignedUpView } from '../../application/views/signed-up.view.js';
 import { SignInUseCase } from '../../application/use-cases/sign-in.use-case.js';
 import { SignOutUseCase } from '../../application/use-cases/sign-out.use-case.js';
 import { SignUpUseCase } from '../../application/use-cases/sign-up.use-case.js';
-=======
 import type { AuthenticatedSessionView } from '../../application/views/authenticated-session.view.js';
 import type { SignedInView } from '../../application/views/signed-in.view.js';
 import { SignInUseCase } from '../../application/use-cases/sign-in.use-case.js';
 import { SignOutUseCase } from '../../application/use-cases/sign-out.use-case.js';
->>>>>>> 8b93ab9 (git init)
 import { CurrentAuthentication } from '../decorators/current-principal.decorator.js';
 import { AuthenticatedSessionResponseDto } from '../dto/authenticated-session-response.dto.js';
 import { SignInDto } from '../dto/sign-in.dto.js';
 import { SignInResponseDto } from '../dto/sign-in-response.dto.js';
-<<<<<<< HEAD
 import { SignUpDto } from '../dto/sign-up.dto.js';
 import { SignUpResponseDto } from '../dto/sign-up-response.dto.js';
-=======
->>>>>>> 8b93ab9 (git init)
 import { AuthenticationGuard } from '../guards/authentication.guard.js';
 import { raiseAuthenticationFailure } from '../http/authentication-error.mapper.js';
 
 /**
-<<<<<<< HEAD
  * The authentication REST resource (IAM-005; IAM-008; FND-006; ADR-013).
  *
  * Four operations, and no more, because four is what the authentication
-=======
  * The authentication REST resource (IAM-005; FND-006; ADR-013).
  *
  * Three operations, and no more, because three is what the authentication
->>>>>>> 8b93ab9 (git init)
  * contract needs:
  *
  * | Operation | Meaning                                                        |
  * | --------- | -------------------------------------------------------------- |
-<<<<<<< HEAD
  * | `POST /auth/sign-up`  | register an identity **and** its sign-in credential |
-=======
->>>>>>> 8b93ab9 (git init)
  * | `POST /auth/sign-in`  | establish an authenticated identity                 |
  * | `GET /auth/session`   | validate the presented state and describe it        |
  * | `POST /auth/sign-out` | invalidate the presented state                      |
@@ -78,7 +60,6 @@ import { raiseAuthenticationFailure } from '../http/authentication-error.mapper.
  * `AuthenticationGuard` explicitly, so "this endpoint requires authentication" is
  * visible where the endpoint is defined rather than hidden in global state.
  *
-<<<<<<< HEAD
  * **What is deliberately not here:** no password reset or recovery, no MFA, no
  * SSO/OIDC/LDAP, no refresh token, and no tenant selection. Authentication
  * establishes who the user is; the tenant comes from the membership
@@ -91,7 +72,6 @@ import { raiseAuthenticationFailure } from '../http/authentication-error.mapper.
  * *current* session are `@RequiresAuthentication()`: they need a validated
  * caller but no capability, which is exactly the distinction the product draws
  * between authentication and authorization.
-=======
  * **What is deliberately not here:** no registration, no password reset or
  * recovery, no MFA, no SSO/OIDC/LDAP, no refresh token, and no tenant selection.
  * Authentication establishes who the user is; the tenant comes from the
@@ -104,21 +84,16 @@ import { raiseAuthenticationFailure } from '../http/authentication-error.mapper.
  * session are `@RequiresAuthentication()`: they need a validated caller but no
  * capability, which is exactly the distinction the product draws between
  * authentication and authorization.
->>>>>>> 8b93ab9 (git init)
  */
 @ApiTags('auth')
 @Controller('auth')
 export class AuthenticationController {
   public constructor(
-<<<<<<< HEAD
     private readonly signUpUseCase: SignUpUseCase,
-=======
->>>>>>> 8b93ab9 (git init)
     private readonly signInUseCase: SignInUseCase,
     private readonly signOutUseCase: SignOutUseCase,
   ) {}
 
-<<<<<<< HEAD
   @Post('sign-up')
   @Public()
   @HttpCode(HttpStatus.CREATED)
@@ -153,8 +128,6 @@ export class AuthenticationController {
     });
   }
 
-=======
->>>>>>> 8b93ab9 (git init)
   @Post('sign-in')
   @Public()
   @ApiOperation({
@@ -230,7 +203,6 @@ export class AuthenticationController {
   }
 }
 
-<<<<<<< HEAD
 /** Maps the sign-up outcome to its response DTO — the public user fields only. */
 function toSignUpResponse(view: SignedUpView): SignUpResponseDto {
   return {
@@ -244,8 +216,6 @@ function toSignUpResponse(view: SignedUpView): SignUpResponseDto {
   };
 }
 
-=======
->>>>>>> 8b93ab9 (git init)
 /** Maps the sign-in outcome to its response DTO. */
 function toSignInResponse(view: SignedInView): SignInResponseDto {
   return {

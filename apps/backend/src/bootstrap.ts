@@ -4,10 +4,7 @@ import { correlationIdMiddleware } from './infrastructure/api/correlation/correl
 import { ApiExceptionFilter } from './infrastructure/api/errors/api-exception.filter.js';
 import { setupOpenApi } from './infrastructure/api/openapi/openapi.js';
 import { createApiValidationPipe } from './infrastructure/api/validation/api-validation.pipe.js';
-<<<<<<< HEAD
 import { ActorScopeInterceptor } from './infrastructure/api/actor/actor-scope.interceptor.js';
-=======
->>>>>>> 8b93ab9 (git init)
 import { AppConfigService } from './infrastructure/config/app-config.service.js';
 
 /**
@@ -22,12 +19,9 @@ import { AppConfigService } from './infrastructure/config/app-config.service.js'
  * - a correlation id on every request, assigned before any route;
  * - the shared input-validation pipe;
  * - the shared exception filter, so every failure leaves in one error contract;
-<<<<<<< HEAD
  * - the actor-scope interceptor, which publishes the authenticated principal the
  *   guard verified as the ambient actor a security-audit record is filed under
  *   (AUD-001);
-=======
->>>>>>> 8b93ab9 (git init)
  * - the generated OpenAPI document, in development and test only.
  */
 export function configureApplication(app: INestApplication): AppConfigService {
@@ -39,10 +33,7 @@ export function configureApplication(app: INestApplication): AppConfigService {
   app.use(correlationIdMiddleware);
   app.useGlobalPipes(createApiValidationPipe());
   app.useGlobalFilters(new ApiExceptionFilter());
-<<<<<<< HEAD
   app.useGlobalInterceptors(new ActorScopeInterceptor());
-=======
->>>>>>> 8b93ab9 (git init)
 
   setupOpenApi(app, config);
   app.enableShutdownHooks();

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # ADR-010 — معماری امنیت
 
 - شناسه: ADR-010
@@ -113,7 +112,6 @@ Agent، Reporting و Integration فقط داده موردنیاز را دریا�
 - No Secret in Code
 - No Direct File Access Bypass
 - Agent cannot elevate privilege
-=======
 # ADR-010 — معماری امنیت
 
 - شناسه: ADR-010
@@ -228,4 +226,3 @@ Agent، Reporting و Integration فقط داده موردنیاز را دریا�
 - No Secret in Code
 - No Direct File Access Bypass
 - Agent cannot elevate privilege
->>>>>>> 8b93ab9 (git init)
