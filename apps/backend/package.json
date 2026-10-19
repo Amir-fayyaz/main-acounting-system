@@ -6,9 +6,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-<<<<<<< HEAD
-    "dev": "nest start --watch",
-<<<<<<< HEAD
+    "dev": "tsc -p tsconfig.build.json && node --enable-source-maps dist/main.js",
     "dev:worker": "nest start --watch --entryFile processes/worker/worker",
     "dev:scheduler": "nest start --watch --entryFile processes/scheduler/scheduler",
     "build": "nest build",
@@ -16,18 +14,6 @@
     "start:worker": "node dist/processes/worker/worker.js",
     "start:scheduler": "node dist/processes/scheduler/scheduler.js",
     "job:enqueue": "node dist/processes/cli/enqueue-sample-job.js",
-=======
-=======
-    "dev": "tsc -p tsconfig.build.json && node --enable-source-maps dist/main.js",
->>>>>>> 043b763 (- change backend package.json for pnpm dev)
-    "dev:worker": "nest start --watch --entryFile worker",
-    "dev:scheduler": "nest start --watch --entryFile scheduler",
-    "build": "nest build",
-    "start": "node dist/main.js",
-    "start:worker": "node dist/worker.js",
-    "start:scheduler": "node dist/scheduler.js",
-    "job:enqueue": "node dist/cli/enqueue-sample-job.js",
->>>>>>> 8b93ab9 (git init)
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
     "test": "vitest run",
