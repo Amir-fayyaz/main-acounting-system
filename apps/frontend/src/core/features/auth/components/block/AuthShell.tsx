@@ -2,7 +2,7 @@ import { Span } from "@/core/components/custom/ui/typography/Typography";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { LedgerPanel } from "../ui/LedgerPanel";
+import { LedgerPanel } from "../ui/Ledger-Panel/LedgerPanel";
 
 /** layout دو ستونه: ستون فرم (brand + بازگشت + کارت) و پنل ledger */
 export function AuthShell({
@@ -19,7 +19,7 @@ export function AuthShell({
       <div className="flex flex-col px-5 py-5 sm:px-10 sm:py-7">
         <header className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 text-xl font-extrabold">
-            <span className="bg-primary grid size-[38px] place-items-center rounded-[11px] shadow-[0_6px_16px_-6px_#ef8f00]">
+            <span className="bg-primary grid size-9.5 place-items-center rounded-[11px] shadow-[0_6px_16px_-6px_#ef8f00]">
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -27,7 +27,7 @@ export function AuthShell({
                 strokeWidth="2.4"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="size-[22px]"
+                className="size-5.5"
                 aria-hidden="true"
               >
                 <path d="M4 19V9l8-5 8 5v10" />
@@ -44,7 +44,7 @@ export function AuthShell({
             <ArrowRight className="size-4 rotate-180" aria-hidden="true" />
           </Link>
         </header>
-        <main className="m-auto w-full max-w-[420px] py-8">{children}</main>
+        <main className="m-auto w-full max-w-105 py-8">{children}</main>
       </div>
       <LedgerPanel title={title} subtitle={subtitle} />
     </div>

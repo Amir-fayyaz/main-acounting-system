@@ -19,16 +19,16 @@ export function LedgerPanel({
     <aside className="bg-ink-soft relative hidden flex-col justify-center overflow-hidden p-14 text-white lg:flex">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(rgba(255,160,10,0.25)_1.4px,transparent_1.4px)] bg-[length:28px_28px] [mask-image:radial-gradient(circle_at_30%_70%,#000,transparent_70%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(rgba(255,160,10,0.25)_1.4px,transparent_1.4px)] bg-size-[28px_28px] mask-[radial-gradient(circle_at_30%_70%,#000,transparent_70%)]"
       />
       <div className="relative">
-        <H2 className="max-w-[440px] text-start text-[clamp(1.6rem,2.6vw,2.2rem)] leading-[1.6] font-extrabold">
+        <H2 className="max-w-110 text-start text-[clamp(1.6rem,2.6vw,2.2rem)] leading-[1.6] font-extrabold">
           {title}
         </H2>
-        <P className="mt-3 mb-8 max-w-[420px] text-[#cdbfa9]">{subtitle}</P>
+        <P className="mt-3 mb-8 max-w-105 text-[#cdbfa9]">{subtitle}</P>
         <ul
           aria-hidden="true"
-          className="grid max-w-[420px] gap-3 rounded-[18px] border border-white/12 bg-white/6 p-5"
+          className="grid max-w-105 gap-3 rounded-[18px] border border-white/12 bg-white/6 p-5"
         >
           {LEDGER_ROWS.map((row, i) => {
             const last = i === LEDGER_ROWS.length - 1;

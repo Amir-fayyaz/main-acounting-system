@@ -20,7 +20,7 @@ import type {
 } from "../../assets/@types/auth.types";
 import { useAuthForm } from "../../hook/useAuthForm";
 import { forgotStep1Schema, forgotStep2Schema } from "../../lib/auth-schemas";
-import { AuthField } from "../ui/AuthField";
+import { AuthField } from "../ui/Auth-Field/AuthField";
 
 /** فارسی/عربی → انگلیسی (برای OTP) */
 const toEn = (s: string) =>
