@@ -2,7 +2,7 @@ import { Input } from "@/core/components/shadcn/ui/input/input";
 import { InputErrorMassage } from "@/core/components/custom/ui/typography/Typography";
 import { cn } from "@/core/utils/shadcn/utils";
 import type { ComponentProps } from "react";
-import { PasswordInput } from "./PasswordInput";
+import { PasswordInput } from "../Password-Input/PasswordInput";
 
 export const authInputClass =
   "bg-card border-input h-12 rounded-xl px-4 text-base shadow-none md:text-base";

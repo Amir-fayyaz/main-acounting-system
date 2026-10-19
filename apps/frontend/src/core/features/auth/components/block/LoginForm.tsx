@@ -10,7 +10,7 @@ import type { FormEvent } from "react";
 import { useAuthForm } from "../../hook/useAuthForm";
 import { useSignIn } from "../../hook/useSignIn";
 import { signInSchema } from "../../lib/auth-schemas";
-import { AuthField } from "../ui/AuthField";
+import { AuthField } from "../ui/Auth-Field/AuthField";
 
 export function LoginForm() {
   const { signIn, loading } = useSignIn();
@@ -65,7 +65,7 @@ export function LoginForm() {
               name="remember"
               checked={values.remember}
               onChange={(e) => setValue("remember", e.target.checked)}
-              className="accent-primary size-[18px]"
+              className="accent-primary size-4.5"
             />
             مرا به خاطر بسپار
           </label>

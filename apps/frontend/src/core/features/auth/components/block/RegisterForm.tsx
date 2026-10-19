@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import type { RegisterFormValues } from "../../assets/@types/auth.types";
 import { useAuthForm } from "../../hook/useAuthForm";
 import { registerSchema } from "../../lib/auth-schemas";
-import { AuthField } from "../ui/AuthField";
+import { AuthField } from "../ui/Auth-Field/AuthField";
 
 export function RegisterForm() {
   const { values, errors, setValue, validate } = useAuthForm<RegisterFormValues>(

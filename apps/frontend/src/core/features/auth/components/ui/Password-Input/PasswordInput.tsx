@@ -21,7 +21,7 @@ export function PasswordInput({
         onClick={() => setVisible((v) => !v)}
         aria-label={visible ? "پنهان کردن رمز" : "نمایش رمز"}
         aria-pressed={visible}
-        className="text-muted-foreground hover:bg-muted absolute start-2 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+        className="text-muted-foreground hover:bg-muted absolute inset-s-2 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
       >
         {visible ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
       </button>
