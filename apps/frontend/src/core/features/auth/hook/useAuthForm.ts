@@ -1,35 +1,37 @@
-"use client";
-import { useState } from "react";
-import * as z from "zod/mini";
-import { fieldErrors } from "../lib/auth-schemas";
+'use client';
 
-/** مدیریت ساده‌ی state فرم + اعتبارسنجی zod (بدون وابستگی اضافه). */
-export function useAuthForm<T extends Record<string, string | boolean>>(
-  initial: T,
-  schema: z.ZodMiniType,
-) {
+import { useState } from 'react';
+import * as z from 'zod/mini';
+import { fieldErrors } from '../lib/auth-schemas';
+
+type AuthFormValues = Record<string, string | boolean>;
+
+/**
+ * مدیریت state فرم + اعتبارسنجی zod.
+ * T = شکل values فرم (مثلاً SignUpFormValues)
+ */
+export function useAuthForm<T extends AuthFormValues>(initial: T, schema: z.ZodMiniType) {
   const [values, setValues] = useState<T>(initial);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof T, string>>>({});
 
   function setValue<K extends keyof T>(name: K, value: T[K]) {
-    setValues((v) => ({ ...v, [name]: value }));
-    // مثل auth.html: با تایپ، خطای همان فیلد پاک می‌شود
-    setErrors((e) => {
-      if (!(name as string in e)) return e;
-      const next = { ...e };
-      delete next[name as string];
+    setValues((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => {
+      if (!(name in prev)) return prev;
+      const next = { ...prev };
+      delete next[name];
       return next;
     });
   }
 
-  /** در صورت موفقیت داده‌ی پارس‌شده (trim شده) را برمی‌گرداند، وگرنه null. */
-  function validate(): z.output<typeof schema> | null {
+  /** در صورت موفقیت دادهٔ پارس‌شده را برمی‌گرداند، وگرنه null. */
+  function validate(): T | null {
     const result = z.safeParse(schema, values);
     if (result.success) {
       setErrors({});
-      return result.data;
+      return result.data as T;
     }
-    setErrors(fieldErrors(result.error));
+    setErrors(fieldErrors(result.error) as Partial<Record<keyof T, string>>);
     return null;
   }
 
