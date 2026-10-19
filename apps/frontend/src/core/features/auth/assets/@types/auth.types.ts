@@ -39,15 +39,28 @@ export type SignInInput = {
   password: string;
 };
 
-export type RegisterFormValues = {
-  name: string;
-  company: string;
-  mobile: string;
+export type ForgotStep1Values = { id: string }; // email or mobile
+export type ForgotStep2Values = { otp: string; password: string };
+
+export interface SignUpInput {
+  displayName: string;
+  email: string;
+  password: string;
+}
+
+export type SignUpFormValues = {
+  displayName: string;
   email: string;
   password: string;
   password2: string;
-  terms: boolean;
 };
 
-export type ForgotStep1Values = { id: string }; // email or mobile
-export type ForgotStep2Values = { otp: string; password: string };
+export interface SignUpResponse {
+  id: string;
+  displayName: string;
+  email: string;
+  status: "active";
+  createdAt: string;
+  updatedAt: string;
+  revision: number;
+}

@@ -1,6 +1,4 @@
 import * as z from "zod/mini";
-import { ZodString } from "../../../lib/zod/zod";
-
 const emailField = () =>
   z
     .string()
@@ -10,15 +8,6 @@ const emailField = () =>
       z.email("ایمیل وارد شده معتبر نیست"),
     );
 
-/** موبایل ایرانی: 09xxxxxxxxx (۱۱ رقم) */
-const mobileField = () =>
-  z
-    .string()
-    .check(
-      z.trim(),
-      z.minLength(1, "شماره موبایل را وارد کنید"),
-      z.regex(/^09\d{9}$/, "شماره موبایل باید مثل 09123456789 باشد"),
-    );
 
 const newPasswordField = () =>
   z
@@ -34,22 +23,32 @@ export const signInSchema = z.object({
   password: z.string().check(z.minLength(1, "رمز عبور را وارد کنید")),
 });
 
-export const registerSchema = z
+export const signUpSchema = z
   .object({
-    name: ZodString({ min: 2, message: "نام و نام خانوادگی را وارد کنید" }),
-    company: ZodString({ min: 2, message: "نام شرکت را وارد کنید" }),
-    mobile: mobileField(),
+    displayName: z
+      .string()
+      .check(
+        z.trim(),
+        z.minLength(1, "نام کاربری را وارد کنید"),
+      ),
     email: emailField(),
     password: newPasswordField(),
-    password2: z.string().check(z.minLength(1, "تکرار رمز عبور را وارد کنید")),
-    terms: z.boolean().check(
-      z.refine((v) => v === true, "برای ادامه باید قوانین را بپذیرید."),
-    ),
+    password2: z
+      .string()
+      .check(
+        z.minLength(1, "تکرار رمز عبور را وارد کنید"),
+      ),
   })
   .check(
-    z.refine((v) => v.password === v.password2, {
-      message: "تکرار رمز با رمز عبور یکسان نیست.",
-      path: ["password2"],
+    z.check((ctx) => {
+      if (ctx.value.password !== ctx.value.password2) {
+        ctx.issues.push({
+          code: "custom",
+          message: "رمز عبور و تکرار آن یکسان نیستند",
+          path: ["password2"],
+          input: ctx.value.password2,
+        });
+      }
     }),
   );
 
