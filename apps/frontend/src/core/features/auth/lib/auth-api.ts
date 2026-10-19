@@ -3,6 +3,8 @@ import type {
   SessionResponse,
   SignInInput,
   SignInResponse,
+  SignUpInput,
+  SignUpResponse,
 } from "../assets/@types/auth.types";
 
 const AUTH_PREFIX = `${BASE_URL}/v1/auth`;
@@ -10,6 +12,16 @@ const AUTH_PREFIX = `${BASE_URL}/v1/auth`;
 async function failure(res: Response) {
   const data = await res.json().catch(() => null);
   return { status: res.status, body: data };
+}
+
+export async function signUpApi(body: SignUpInput): Promise<SignUpResponse> {
+  const res = await fetch(`${AUTH_PREFIX}/sign-up`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw await failure(res);
+  return res.json();
 }
 
 export async function signInApi(body: SignInInput): Promise<SignInResponse> {
