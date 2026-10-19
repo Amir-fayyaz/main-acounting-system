@@ -16,27 +16,46 @@ type ErrorLike = {
   message?: string;
 };
 
-export function getErrorMessage(error: ErrorLike | null | undefined): string {
-  if (!error) return "خطای ناشناخته";
+export function getErrorMessage(
+  error: ErrorLike | string | null | undefined,
+): string {
+  if (
+    !error ||
+    (typeof error === "string" && !error.trim())
+  ) {
+    return "خطای ناشناخته";
+  }
+
+  if (typeof error === "string") {
+    return error;
+  }
 
   try {
-    if (
-      error?.errors &&
-      Array.isArray(error.errors) &&
-      error.errors.length > 0
-    ) {
-      const firstError = error.errors[0];
+    const errorLists = [error.errors, error.graphQLErrors];
 
-      if (firstError?.extensions?.response?.body?.message) {
-        return firstError.extensions.response.body.message;
+    for (const errors of errorLists) {
+      if (!Array.isArray(errors) || errors.length === 0) {
+        continue;
       }
 
-      if (firstError?.extensions?.response?.body?.errors?.[0]) {
-        return firstError.extensions.response.body.errors[0];
+      const firstError = errors[0];
+
+      if (!firstError) {
+        continue;
+      }
+
+      const responseBody = firstError.extensions?.response?.body;
+
+      if (responseBody?.message) {
+        return responseBody.message;
+      }
+
+      if (responseBody?.errors?.[0]) {
+        return responseBody.errors[0];
       }
 
       if (
-        firstError?.message &&
+        firstError.message &&
         !firstError.message.includes("Upstream HTTP Error")
       ) {
         return firstError.message;
@@ -44,31 +63,7 @@ export function getErrorMessage(error: ErrorLike | null | undefined): string {
     }
 
     if (
-      error?.graphQLErrors &&
-      Array.isArray(error.graphQLErrors) &&
-      error.graphQLErrors.length > 0
-    ) {
-      const firstError = error.graphQLErrors[0];
-
-      if (firstError?.extensions?.response?.body?.message) {
-        return firstError.extensions.response.body.message;
-      }
-
-      if (firstError?.extensions?.response?.body?.errors?.[0]) {
-        return firstError.extensions.response.body.errors[0];
-      }
-
-      if (
-        firstError?.message &&
-        !firstError.message.includes("Upstream HTTP Error")
-      ) {
-        return firstError.message;
-      }
-    }
-
-    if (
-      error?.message &&
-      typeof error.message === "string" &&
+      error.message &&
       !error.message.includes("Upstream HTTP Error")
     ) {
       return error.message;

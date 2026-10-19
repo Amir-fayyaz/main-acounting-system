@@ -4,94 +4,117 @@ import {
   fieldErrors,
   forgotStep1Schema,
   forgotStep2Schema,
-  registerSchema,
+  signUpSchema,
   signInSchema,
 } from "../lib/auth-schemas";
 
 const errorsOf = (schema: z.ZodMiniType, data: unknown) => {
-  const r = z.safeParse(schema, data);
-  return r.success ? {} : fieldErrors(r.error);
+  const result = z.safeParse(schema, data);
+  return result.success ? {} : fieldErrors(result.error);
 };
 
-const validRegister = {
-  name: "علی رضایی",
-  company: "شرکت نمونه",
-  mobile: "09123456789",
+const validSignUp = {
+  displayName: "علی رضایی",
   email: "ali@company.ir",
   password: "12345678",
   password2: "12345678",
-  terms: true,
 };
 
 describe("signInSchema", () => {
-  it("فیلد خالی خطا می‌دهد", () => {
-    const e = errorsOf(signInSchema, { email: "", password: "" });
-    expect(e.email).toBe("ایمیل را وارد کنید");
-    expect(e.password).toBe("رمز عبور را وارد کنید");
+  it("برای فیلدهای خالی خطا می‌دهد", () => {
+    const errors = errorsOf(signInSchema, { email: "", password: "" });
+
+    expect(errors.email).toBe("ایمیل را وارد کنید");
+    expect(errors.password).toBe("رمز عبور را وارد کنید");
   });
 
-  it("ایمیل نامعتبر", () => {
-    expect(errorsOf(signInSchema, { email: "abc", password: "x" }).email).toBe(
-      "ایمیل وارد شده معتبر نیست",
-    );
+  it("ایمیل نامعتبر را رد می‌کند", () => {
+    expect(
+      errorsOf(signInSchema, { email: "abc", password: "x" }).email,
+    ).toBe("ایمیل وارد شده معتبر نیست");
   });
 
-  it("طول رمز بررسی نمی‌شود (هماهنگ با API)", () => {
-    expect(errorsOf(signInSchema, { email: "a@b.co", password: "1" })).toEqual({});
+  it("رمز عبور کوتاه را می‌پذیرد", () => {
+    expect(
+      errorsOf(signInSchema, { email: "a@b.co", password: "1" }),
+    ).toEqual({});
   });
 
-  it("ایمیل trim می‌شود", () => {
-    const r = z.safeParse(signInSchema, { email: "  a@b.co ", password: "1" });
-    expect(r.success && r.data.email).toBe("a@b.co");
+  it("فاصله‌های ابتدا و انتهای ایمیل را حذف می‌کند", () => {
+    const result = z.safeParse(signInSchema, {
+      email: "  a@b.co ",
+      password: "1",
+    });
+
+    expect(result.success && result.data.email).toBe("a@b.co");
   });
 });
 
-describe("registerSchema", () => {
-  it("داده‌ی معتبر پذیرفته می‌شود", () => {
-    expect(z.safeParse(registerSchema, validRegister).success).toBe(true);
+describe("signUpSchema", () => {
+  it("اطلاعات معتبر را می‌پذیرد", () => {
+    expect(z.safeParse(signUpSchema, validSignUp).success).toBe(true);
   });
 
-  it("موبایل باید الگوی 09xxxxxxxxx باشد", () => {
-    for (const mobile of ["9123456789", "0912345678", "+989123456789", "abc"]) {
-      expect(errorsOf(registerSchema, { ...validRegister, mobile }).mobile).toBeTruthy();
-    }
+  it("نام نمایشی خالی را رد می‌کند", () => {
+    expect(
+      errorsOf(signUpSchema, { ...validSignUp, displayName: "" }).displayName,
+    ).toBe("نام کاربری را وارد کنید");
   });
 
-  it("رمز حداقل ۸ کاراکتر", () => {
-    const e = errorsOf(registerSchema, { ...validRegister, password: "1234567", password2: "1234567" });
-    expect(e.password).toBe("رمز عبور باید حداقل ۸ کاراکتر باشد");
+  it("ایمیل نامعتبر را رد می‌کند", () => {
+    expect(
+      errorsOf(signUpSchema, { ...validSignUp, email: "invalid" }).email,
+    ).toBe("ایمیل وارد شده معتبر نیست");
   });
 
-  it("تکرار رمز باید برابر باشد", () => {
-    const e = errorsOf(registerSchema, { ...validRegister, password2: "different1" });
-    expect(e.password2).toBe("تکرار رمز با رمز عبور یکسان نیست.");
+  it("رمز عبور کمتر از ۸ کاراکتر را رد می‌کند", () => {
+    const errors = errorsOf(signUpSchema, {
+      ...validSignUp,
+      password: "1234567",
+      password2: "1234567",
+    });
+
+    expect(errors.password).toBe("رمز عبور باید حداقل ۸ کاراکتر باشد");
   });
 
-  it("نام و شرکت حداقل ۲ کاراکتر", () => {
-    const e = errorsOf(registerSchema, { ...validRegister, name: "a", company: "" });
-    expect(e.name).toBeTruthy();
-    expect(e.company).toBeTruthy();
+  it("تکرار رمز عبور متفاوت را رد می‌کند", () => {
+    const errors = errorsOf(signUpSchema, {
+      ...validSignUp,
+      password2: "different1",
+    });
+
+    expect(errors.password2).toBe("رمز عبور و تکرار آن یکسان نیستند");
   });
 
-  it("پذیرش قوانین الزامی است", () => {
-    expect(errorsOf(registerSchema, { ...validRegister, terms: false }).terms).toBe(
-      "برای ادامه باید قوانین را بپذیرید.",
-    );
+  it("تکرار رمز عبور خالی را رد می‌کند", () => {
+    expect(
+      errorsOf(signUpSchema, { ...validSignUp, password2: "" }).password2,
+    ).toBe("تکرار رمز عبور را وارد کنید");
   });
 });
 
 describe("forgot schemas", () => {
-  it("step1 ایمیل یا موبایل می‌پذیرد", () => {
+  it("مرحله اول ایمیل یا موبایل معتبر را می‌پذیرد", () => {
     expect(errorsOf(forgotStep1Schema, { id: "a@b.co" })).toEqual({});
     expect(errorsOf(forgotStep1Schema, { id: "09123456789" })).toEqual({});
     expect(errorsOf(forgotStep1Schema, { id: "" }).id).toBeTruthy();
     expect(errorsOf(forgotStep1Schema, { id: "hello" }).id).toBeTruthy();
   });
 
-  it("step2 کد ۶ رقمی و رمز ۸ کاراکتری", () => {
-    expect(errorsOf(forgotStep2Schema, { otp: "123456", password: "12345678" })).toEqual({});
-    const e = errorsOf(forgotStep2Schema, { otp: "123", password: "1" });
-    expect(e.otp).toBe("کد ۶ رقمی را کامل وارد کنید.");
-    expect(e.password).toBeTruthy();
+  it("مرحله دوم کد ۶ رقمی و رمز معتبر را می‌پذیرد", () => {
+    expect(
+      errorsOf(forgotStep2Schema, {
+        otp: "123456",
+        password: "12345678",
+      }),
+    ).toEqual({});
+
+    const errors = errorsOf(forgotStep2Schema, {
+      otp: "123",
+      password: "1",
+    });
+
+    expect(errors.otp).toBe("کد ۶ رقمی را کامل وارد کنید.");
+    expect(errors.password).toBeTruthy();
   });
 });
