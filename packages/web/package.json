@@ -6,7 +6,9 @@
     "./ui/utils/cn": "./ui/utils/cn.ts",
     "./hooks/useIsMobile": "./hooks/useIsMobile.tsx",
     "./ui/components/*": "./ui/components/*",
+    "./ui/components/shadcn/ui/button/button": "./ui/components/shadcn/ui/button/button.tsx",
     "./styles/globals.css": "./styles/globals.css",
+    "./ui": "./ui/index.ts",
     "./styles/fonts/font": "./styles/fonts/font.ts"
   },
   "peerDependencies": {
