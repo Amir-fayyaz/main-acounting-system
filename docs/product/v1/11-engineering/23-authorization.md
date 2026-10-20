@@ -50,6 +50,7 @@ Presentation (Handler)       فقط پس از allow؛ TenantScope از همان 
 | `decideAuthorization(requirement, evidence)` | تصمیم خالص: allow یا ردِ دلیل‌دار | Application |
 | `permits(permissions, key)` | پرسشِ درون‌حافظه‌ای پس از حلِ Context | Application / ماژول‌ها |
 | `Authorization` (پورت، توکن `AUTHORIZATION`) | `authorize(request)` + `permits(context, key)` | Application / Presentation / ماژول‌های بعدی |
+| `TenantMembership` (پورت، توکن `TENANT_MEMBERSHIP`) | شواهد حداقلی Membership فعال برای یک زوج User/Tenant؛ بدون پرس‌وجوی Tenant Directory | Identity Authorization |
 | `AuthorizationContextView` | `userId`، `tenantId?`، `membershipId?`، `membershipStatus?`، `permissions[]` | مصرف‌کنندهٔ عملیات |
 | `AuthorizationGuard` | مرزِ HTTP + Deny-by-Default | کل Process (Global) |
 | `@Public` / `@RequiresAuthentication` / `@Authorize` | اعلامِ Endpoint (`src/infrastructure/api/authorization/`) | همهٔ Controllerها |
@@ -58,10 +59,9 @@ Presentation (Handler)       فقط پس از allow؛ TenantScope از همان 
 
 ```text
 tenant-scoped؟
-  ├─ Tenant معتبر نیست        → TENANT_CONTEXT_REQUIRED
-  ├─ Membership ندارد        → MEMBERSHIP_REQUIRED      (ادعای جعلیِ Tenant هم همین)
-  ├─ Membership جای دیگری است → AUTHORIZATION_CONTEXT_INVALID
-  └─ Membership فعال نیست     → MEMBERSHIP_INACTIVE
+  ├─ Tenant context معتبر نیست → TENANT_CONTEXT_REQUIRED
+  ├─ Membership ندارد/غیرفعال است یا Header متعارض است → TENANT_ACCESS_DENIED
+  └─ Membership فعال است
 Permission در دست است؟
   ├─ نه                      → AUTHORIZATION_DENIED
   └─ بله                     → allow
@@ -91,8 +91,8 @@ Permission در دست است؟
 | بدون Authentication یا حالتِ نامعتبر | `AUTHENTICATION_REQUIRED` / `AUTHENTICATION_STATE_REJECTED` / `SESSION_*` | 401 |
 | Authentication معتبر، بدون مجوز | `AUTHORIZATION_DENIED` | 403 |
 | عملیات Tenant-Scoped بدونِ Tenantِ معتبر | `TENANT_CONTEXT_REQUIRED` | 403 |
-| بدونِ Membership در Tenantِ هدف | `MEMBERSHIP_REQUIRED` | 403 |
-| Membership غیرفعال | `MEMBERSHIP_INACTIVE` | 403 |
+| بدونِ Membership فعال در Tenantِ هدف / Header متعارض | `TENANT_ACCESS_DENIED` | 403 |
+| `MEMBERSHIP_REQUIRED` / `MEMBERSHIP_INACTIVE` قدیمی | داخلی؛ نباید از مرز Tenant به Client برسد | — |
 | Context ناسازگار/ناقص | `AUTHORIZATION_CONTEXT_INVALID` | 403 |
 | عملیاتی که سیاستی اعلام نکرده | `AUTHORIZATION_POLICY_MISSING` | 403 |
 | حسابِ غیرقابلِ احراز (غیرفعال‌شده پس از ورود) | `ACCOUNT_NOT_AUTHENTICATABLE` | 401 |
@@ -107,8 +107,14 @@ Permission در دست است؟
   Establish می‌شود، پس Scope هرگز به ادعای Client متکی نیست (سند ۲۱).
 - تلاشِ Cross-Tenant، مستقل از Endpoint، در **مرز** رد می‌شود: عملیات هرگز اجرا نمی‌شود
   و دادهٔ Tenantِ دیگر خوانده/نوشته نمی‌شود.
-- Headerهای Client (مثل `x-tenant-id`) خوانده نمی‌شوند؛ صحت‌سنجیِ مستقل این رفتار در تست
-  e2e موجود است و تست‌های IAM-006 آن را دوباره تأیید می‌کنند.
+- Port `TenantMembership` و آداپتور آن در سند ۲۵ ثبت شده‌اند؛ مالکیت داده همچنان با
+  Identity است و ماژول‌های دیگر مستقیماً Repository را مصرف نمی‌کنند.
+- Headerهای Client (مثل `x-tenant-id`) هیچ‌گاه Tenant را انتخاب نمی‌کنند. روی Routeِ
+  Tenant-Scoped، اگر Header با Tenant حل‌شدهٔ Route تعارض داشته باشد یا چندمقداری باشد،
+  درخواست با `TENANT_ACCESS_DENIED` رد می‌شود؛ اگر با Route منطبق باشد، تصمیم بر اساس
+  Membership همان Tenant گرفته می‌شود. مقایسهٔ Header صرفاً یک کنترل سازگاری است.
+- شناسهٔ Tenant از Headerِ متعارض وارد Audit نمی‌شود. رد دسترسی با correlation ID ثبت
+  می‌شود و metadata فاقد نام و شناسهٔ Tenant هدف است.
 
 ## 8. مرزِ ماژول‌ها و قراردادِ قابلِ استفادهٔ مجدد
 
@@ -167,8 +173,8 @@ Permissionها فقط از **کاتالوگ IAM-004** می‌آیند؛ IAM-006 
 | سطح | فایل | پوشش |
 | --- | --- | --- |
 | واحد (Domain) | `src/modules/identity/domain/authorization/authorization-policy.spec.ts` | allow، هر شش ردِ متمایز، بی‌اثری Tenantِ اضافی در تصمیمِ Platform، `permits` |
-| واحد (Application) | `src/modules/identity/application/authorization.use-cases.spec.ts` | حلِ Membership/Permission، نقش‌های چندگانه، نقش/Assignment غیرفعال، غیرفعال‌بودنِ User، جداسازیِ احراز هویت از مجوز، عدمِ اجرای عمل هنگام رد، `permits` |
-| یکپارچه (HTTP) | `test/authorization-api.e2e-spec.ts` | Guardِ واقعی + Controllerهای واقعی: موفقیت، ۴۰۱/۴۰۳ متمایز، ردِ Cross-Tenant، Membershipِ غیرفعال، Tenantِ بدشکل، نادیده‌گرفتنِ Header، Deny-by-Default، یکسانیِ تصمیم از HTTP و Application، عدمِ اجرای عمل |
+| واحد (Application) | `src/modules/identity/application/authorization.use-cases.spec.ts` | حلِ Membership/Permission، Tenant ناشناخته در برابر non-member، Header claim متعارض، Audit بدون Tenant ID و با correlation ID، نقش‌های چندگانه، وضعیت‌های غیرفعال |
+| یکپارچه (HTTP) | `test/authorization-api.e2e-spec.ts` | Guardِ واقعی: موفقیت عضو، ردِ Cross-Tenant، Header متعارض، پاسخ یکسان Tenant ناشناخته/non-member، عدم دورزدن با `@Public` / `@RequiresAuthentication`، Deny-by-Default، Audit correlation و عدمِ اجرای عمل |
 | کاربردی (e2e موجود) | `test/{tenant,user,membership,role}-api.e2e-spec.ts` | اعلامِ `bearer` روی OpenAPI برای هر عملیاتِ محافظت‌شده |
 
 ```bash
