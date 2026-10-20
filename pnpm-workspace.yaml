@@ -5,6 +5,6 @@ allowBuilds:
   '@parcel/watcher': true
   '@scarf/scarf': true
   '@swc/core': true
-  esbuild: false
-  sharp: false
+  esbuild: true
+  sharp: true
   unrs-resolver: true

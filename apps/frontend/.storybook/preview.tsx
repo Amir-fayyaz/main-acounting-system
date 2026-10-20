@@ -1,5 +1,6 @@
-import type { Preview } from "@storybook/nextjs-vite";
-import "../src/app/globals.css";
+import '@repo/web/styles/globals.css';
+import type { Preview } from '@storybook/nextjs-vite';
+
 const preview: Preview = {
   parameters: {
     controls: {
@@ -12,7 +13,7 @@ const preview: Preview = {
       appDirectory: true,
     },
   },
-  tags: ["autodocs"],
+  tags: ['autodocs'],
 };
 
 export default preview;
