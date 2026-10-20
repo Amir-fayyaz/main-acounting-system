@@ -687,6 +687,56 @@ expectedRevision)` has no path that omits the expectation, so a silent
   `test/optimistic-concurrency.e2e-spec.ts` (opt-in, `MYSQL_INTEGRATION=1`)
   proves the same contract on real MySQL transactions racing on one row.
 
+## Database schema and migrations (FND-008)
+
+MySQL is the only database (TECH-002) and Drizzle the only ORM (TECH-003). The
+connection lives in `src/infrastructure/database/` (`DatabaseModule`): a lazily
+drained `mysql2` pool behind a single shared Drizzle instance
+(`DATABASE` token), with the transaction boundary exported alongside it. The
+pool is owned by infrastructure and shut down in `onApplicationShutdown`; the
+readiness probe pings it for `/api/health/ready`.
+
+**Schema ownership follows the module boundaries.** There is no global schema
+file. Each business module owns the tables of its own persistence boundary in
+`<module>/infrastructure/persistence/*.schema.ts` (Drizzle `mysqlTable`
+definitions, foreign keys only *inside* the module), and infrastructure-owned
+persistence (the outbox) keeps its schema beside its adapter.
+`src/modules/README.md` states the boundary rules
+(`module-boundaries.spec.ts` enforces them); Drizzle and `mysql2` imports may
+appear in `infrastructure/` only, never in `domain/` or `application/`.
+
+**Migrations are versioned SQL in `drizzle/`**, generated from the schema
+files by drizzle-kit with a deterministic journal (`meta/_journal.json`) and
+applied explicitly — never implicitly at boot:
+
+```bash
+pnpm infra:up                            # MySQL in Docker (infrastructure/)
+pnpm --filter @accounting-saas/backend build
+cp .env.example .env                     # MySQL credentials for the toolchain
+pnpm --filter @accounting-saas/backend db:generate   # new migration from schema diff
+pnpm --filter @accounting-saas/backend db:check      # fail on migration-history conflicts
+pnpm --filter @accounting-saas/backend db:migrate    # apply pending migrations
+pnpm --filter @accounting-saas/backend db:migrate:status # applied/pending counts
+```
+
+- **Tracked deterministically** in `__drizzle_migrations`: the same journal
+  always produces the same applied set, and re-running an applied folder is a
+  verified no-op.
+- **Fail-safe**: a migration command fails — with a non-zero exit and no
+  continuation — on missing or invalid configuration, an unreachable database,
+  an inconsistent journal or a statement that cannot apply. A half-applied
+  schema is never reported as ready.
+- **No destructive workflow by accident**: schema changes reach a database
+  only through a generated, committed, reviewable migration
+  (`docs/product/v1/11-engineering/07-database-and-migrations.md` holds the
+  compatibility rules for sensitive changes).
+- Persistence integration tests are opt-in and reuse the same configuration
+  boundary: `pnpm infra:up` then
+  `MYSQL_INTEGRATION=1 pnpm --filter @accounting-saas/backend test`
+  — the global setup (`test/support/database-global-setup.ts`) applies the
+  migration journal once before any spec runs, so the specs exercise the real,
+  indexed schema (see `test/database-migrations.e2e-spec.ts`).
+
 ## Rules for new code
 
 See `src/modules/README.md` (module boundaries) and `src/shared/README.md` (shared
