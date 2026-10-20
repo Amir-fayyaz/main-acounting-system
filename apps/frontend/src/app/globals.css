@@ -19,6 +19,32 @@
   --color-ink-soft: #241a12;
   --color-sand: #f4f3e7;
   --color-sand-soft: #f7f6ee;
+  --color-line: #e7e1d4;
+  --color-ink-muted: #746b60;
+  /* رنگ‌های ثابت صفحات بازاریابی تراز (درباره ما و شبیه آن) */
+  --color-eyebrow: #8f5800;
+  --color-accent-text: #a86400;
+  --color-visual: #241b11;
+  --color-visual-foreground: #fff3df;
+  --color-visual-muted: #d0bc9b;
+  --color-cycle-line: #6b5130;
+  --color-cycle-card: #302316;
+  --color-cycle-note: #ccb48e;
+  --color-cycle-accent: #6d420b;
+  --color-manifesto-label: #936015;
+  --color-principle-number: #9a702a;
+  --color-principle-line: #daceb7;
+  --color-ribbon: #fffdf7;
+  --color-mini-cta: #efe9d9;
+  --color-mini-cta-border: #e1d7c3;
+  --font-taraz: var(--font-vazirmatn), Tahoma, sans-serif;
+  --breakpoint-taraz-3xl: 1100px;
+  --breakpoint-taraz-2xl: 1050px;
+  --breakpoint-taraz-xl: 900px;
+  --breakpoint-taraz-lg: 850px;
+  --breakpoint-taraz-md: 680px;
+  --breakpoint-taraz-sm: 600px;
+  --breakpoint-taraz-xs: 440px;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -165,6 +191,29 @@
 
 .pages-container {
   @apply mx-auto w-full max-w-340 space-y-4 px-5 sm:space-y-10 sm:px-15;
+}
+
+/* Icon defaults for the taraz marketing pages (sprite-based svg icons) */
+@utility tz-icon {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+@utility tz-container {
+  width: min(1160px, calc(100% - 80px));
+  margin-inline: auto;
+
+  @media (max-width: 1050px) {
+    width: calc(100% - 48px);
+  }
+
+  @media (max-width: 600px) {
+    width: calc(100% - 36px);
+  }
 }
 
 .section-layout {
