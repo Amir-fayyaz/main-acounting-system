@@ -1,22 +1,16 @@
-"use server";
-import { getAccessTokenSSR } from "@/core/lib/coockie/getAccess";
-import { removeCoockie, setCoockie } from "@/core/lib/coockie/setCoockie";
-import type {
-  AuthApiError,
-  SessionResponse,
-} from "../assets/@types/auth.types";
-import { getSessionApi, signOutApi } from "./auth-api";
+'use server';
+
+import { getAccessTokenSSR } from '@/core/lib/coockie/getAccess';
+import { removeCoockie, setCoockie } from '@/core/lib/coockie/setCoockie';
+import type { AuthApiError, SessionResponse } from '../assets/@types/auth.types';
+import { getSessionApi, signOutApi } from './auth-api';
+import { env } from 'process';
 
 const REMEMBER_MAX_AGE = 30 * 24 * 60 * 60; // ۳۰ روز
-const FALLBACK_MAX_AGE = (Number(process.env.AUTH_SESSION_TTL_MINUTES) || 60) * 60;
-
+const FALLBACK_MAX_AGE = (Number(env.AUTH_SESSION_TTL_MINUTES) || 60) * 60;
 
 /** Server Action — cookie `Token` (httpOnly). remember فقط روی maxAge اثر دارد. */
-export async function setAuthToken(
-  token: string,
-  expiresAt?: string,
-  remember = false,
-) {
+export async function setAuthToken(token: string, expiresAt?: string, remember = false) {
   let maxAge = FALLBACK_MAX_AGE;
   if (remember) {
     maxAge = REMEMBER_MAX_AGE;
@@ -33,8 +27,7 @@ export async function clearAuthToken() {
 }
 
 export type SessionActionResult =
-  | { ok: true; session: SessionResponse }
-  | { ok: false; error: AuthApiError };
+  { ok: true; session: SessionResponse } | { ok: false; error: AuthApiError };
 
 /**
  * چون cookie خاصیت httpOnly دارد، کلاینت نمی‌تواند آن را بخواند؛
