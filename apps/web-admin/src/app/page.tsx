@@ -1,7 +1,5 @@
-import Image from "next/image";
+import { Button } from '@repo/web/ui';
 
 export default function Home() {
-  return (
-  <Butt
-  );
+  return <Button>1</Button>;
 }

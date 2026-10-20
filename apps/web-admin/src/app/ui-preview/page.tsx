@@ -3,28 +3,25 @@
 import { ArrowLeft, Check, Heart, Search, ShoppingCart, Star } from 'lucide-react';
 import { useState } from 'react';
 
-import { Textarea } from '@/shadcn/Textarea/textarea';
-import { Badge } from '@/shadcn/badge/badge';
-import { Button } from '@/shadcn/button/button';
 import {
+  Badge,
+  Button,
   Card,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/shadcn/card/card';
-import { Input } from '@/shadcn/input/input';
-import {
+  Input,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/shadcn/select/select';
-import { Separator } from '@/shadcn/separator/separator';
-import { Switch } from '@/shadcn/switch/switch';
-
+  Separator,
+  Switch,
+  Textarea,
+} from '@repo/web/ui';
 export default function UIShowcasePage() {
   const [dark, setDark] = useState(false);
   const [selectedSize, setSelectedSize] = useState('medium');
