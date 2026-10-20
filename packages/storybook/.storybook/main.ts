@@ -1,7 +1,12 @@
 import type { StorybookConfig } from '@storybook/nextjs-vite';
 
 const config: StorybookConfig = {
-  stories: ['../../web/ui/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
+  stories: [
+    '../../web/ui/**/*.stories.@(js|jsx|mjs|ts|tsx)',
+    '../../../apps/frontend/src/**/*.stories.@(js|jsx|mjs|ts|tsx)',
+    '../../../apps/web-admin/src/**/*.stories.@(js|jsx|mjs|ts|tsx)',
+    '../../../apps/web-business/src/**/*.stories.@(js|jsx|mjs|ts|tsx)',
+  ],
   addons: [
     '@chromatic-com/storybook',
     '@storybook/addon-vitest',
