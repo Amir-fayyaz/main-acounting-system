@@ -16,7 +16,6 @@ function contextWith(
 ): ExecutionContext {
   const handler = () => undefined;
   const controller = class {};
-  const reflector = new Reflector();
   if (policy !== undefined) {
     Reflect.defineMetadata(AUTHORIZATION_POLICY_METADATA, policy, handler);
   }
