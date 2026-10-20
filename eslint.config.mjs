@@ -97,7 +97,10 @@ export default [
   },
   {
     name: 'workspace/configuration-boundary-exceptions',
-    files: ['apps/backend/src/infrastructure/config/**/*.ts', 'apps/frontend/lib/env.ts'],
+    files: [
+      'apps/backend/src/infrastructure/config/**/*.ts',
+      'apps/frontend/src/core/lib/basic-link/env.ts',
+    ],
     rules: {
       'no-restricted-properties': 'off',
     },
