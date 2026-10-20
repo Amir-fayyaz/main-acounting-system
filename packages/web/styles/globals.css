@@ -3,7 +3,7 @@
 @import 'swiper/css';
 @import 'swiper/css/free-mode';
 @import 'swiper/css/pagination';
-
+@source "../ui";
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { cn } from '@/ui/utils/cn';
+import { cn } from '@repo/web/ui/utils/cn';
 
 type TextAreaProps = React.ComponentProps<'textarea'> & {
   label?: string;
