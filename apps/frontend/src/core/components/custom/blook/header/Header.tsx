@@ -1,11 +1,5 @@
-import TitleHeader from '../../ui/footer/header/TitleHeader';
-
 function Header() {
-  return (
-    <header>
-      <TitleHeader /> 2 3
-    </header>
-  );
+  return <div>Header</div>;
 }
 
 export default Header;
