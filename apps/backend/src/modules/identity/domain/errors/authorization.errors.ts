@@ -13,8 +13,8 @@ import type { AuthorizationDenialReason } from '../authorization/authorization-d
  * | --- | --- |
  * | `AUTHORIZATION_DENIED` | The subject is authenticated but lacks the capability. |
  * | `TENANT_CONTEXT_REQUIRED` | The operation needs a valid tenant and none was supplied. |
- * | `MEMBERSHIP_REQUIRED` | The subject has no membership in the target tenant. |
- * | `MEMBERSHIP_INACTIVE` | The membership exists but is not in force. |
+ * | `TENANT_ACCESS_DENIED` | The subject cannot access the target tenant, regardless of whether it exists. |
+ * | `MEMBERSHIP_REQUIRED` / `MEMBERSHIP_INACTIVE` | Legacy internal reasons; never exposed by the tenant boundary. |
  * | `AUTHORIZATION_CONTEXT_INVALID` | The resolved context is inconsistent or incomplete. |
  * | `AUTHORIZATION_POLICY_MISSING` | The operation declared no authorization policy at all. |
  *
@@ -61,7 +61,23 @@ export class TenantContextRequiredError extends DomainError {
   }
 }
 
-/** The authenticated subject has no membership in the target tenant. */
+
+/**
+ * The caller cannot enter the requested tenant. This intentionally covers a
+ * missing membership, an inactive membership, an unknown tenant and a
+ * conflicting client-supplied tenant claim with the same public response.
+ */
+export class TenantAccessDeniedError extends DomainError {
+  public constructor() {
+    super(
+      'TENANT_ACCESS_DENIED',
+      'The authenticated principal cannot access this tenant.',
+      { category: ErrorCategory.BUSINESS_RULE },
+    );
+  }
+}
+
+/** Legacy internal error; tenant-boundary responses use `TENANT_ACCESS_DENIED`. */
 export class MembershipRequiredError extends DomainError {
   public constructor() {
     super('MEMBERSHIP_REQUIRED', 'The authenticated principal is not a member of this tenant.', {
@@ -70,7 +86,7 @@ export class MembershipRequiredError extends DomainError {
   }
 }
 
-/** The subject's membership in the target tenant is not in force. */
+/** Legacy internal error; tenant-boundary responses use `TENANT_ACCESS_DENIED`. */
 export class InactiveMembershipError extends DomainError {
   public constructor() {
     super('MEMBERSHIP_INACTIVE', 'The membership in this tenant is not active.', {
@@ -119,9 +135,8 @@ export function authorizationErrorFor(
     case 'TENANT_CONTEXT_MISSING':
       return new TenantContextRequiredError();
     case 'MEMBERSHIP_MISSING':
-      return new MembershipRequiredError();
     case 'MEMBERSHIP_INACTIVE':
-      return new InactiveMembershipError();
+      return new TenantAccessDeniedError();
     case 'CONTEXT_INCONSISTENT':
       return new AuthorizationContextInvalidError();
     case 'PERMISSION_MISSING':

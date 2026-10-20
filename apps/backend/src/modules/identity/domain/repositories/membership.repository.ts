@@ -43,6 +43,17 @@ export interface MembershipRepository
    */
   existsForPair(userId: UserId, tenantId: TenantReference): Promise<boolean>;
 
+  /**
+   * The single membership for one (User, Tenant) pair, whatever its state.
+   * The unique pair constraint makes this a maximum-one result and lets the
+   * authorization path query the indexed pair without loading every membership
+   * belonging to the user.
+   */
+  findByUserAndTenant(
+    userId: UserId,
+    tenantId: TenantReference,
+  ): Promise<Loaded<Membership> | undefined>;
+
   /** Every membership of one user, whatever its state. */
   findByUserId(userId: UserId): Promise<readonly Loaded<Membership>[]>;
 

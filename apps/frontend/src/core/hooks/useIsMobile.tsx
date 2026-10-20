@@ -1,7 +1,25 @@
-"use client";
-import * as React from "react";
+'use client';
+
+import * as React from 'react';
 
 const MOBILE_BREAKPOINT = 768;
+const QUERY = `(max-width: ${MOBILE_BREAKPOINT - 1}px)`;
+
+function subscribe(callback: () => void) {
+  const mediaQuery = window.matchMedia(QUERY);
+
+  mediaQuery.addEventListener('change', callback);
+
+  return () => mediaQuery.removeEventListener('change', callback);
+}
+
+function getSnapshot() {
+  return window.matchMedia(QUERY).matches;
+}
+
+function getServerSnapshot() {
+  return false;
+}
 
 export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState(false);

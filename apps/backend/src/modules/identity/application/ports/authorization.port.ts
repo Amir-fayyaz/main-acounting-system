@@ -72,4 +72,12 @@ export interface AuthorizationRequest {
    * memberships.
    */
   readonly targetTenantId?: string;
+  /**
+   * A transport boundary may set this when a secondary, untrusted tenant claim
+   * conflicts with the resolved route tenant. `true` can only make a decision
+   * more restrictive; the claim itself is never used to select a tenant.
+   */
+  readonly tenantClaimConflict?: boolean;
+  /** Correlates a denied decision with its HTTP response and audit record. */
+  readonly correlationId?: string;
 }

@@ -20,6 +20,7 @@ import { PermissionKey } from '../domain/value-objects/permission-key.js';
 import { RoleName } from '../domain/value-objects/role-name.js';
 import { tenantReferenceFrom } from '../domain/value-objects/tenant-reference.js';
 import { AuthorizeActionUseCase } from './use-cases/authorize-action.use-case.js';
+import type { TenantMembership } from './ports/tenant-membership.port.js';
 
 /**
  * The authorization decision over the real use case (IAM-006).
@@ -37,6 +38,7 @@ import { AuthorizeActionUseCase } from './use-cases/authorize-action.use-case.js
 
 const TENANT_A = '018f0d3c-6d0f-7a4b-9d4e-2b3c4d5e6f70';
 const TENANT_B = '018f0d3c-6d0f-7a4b-9d4e-2b3c4d5e6f71';
+const TENANT_UNKNOWN = '018f0d3c-6d0f-7a4b-9d4e-2b3c4d5e6f72';
 
 interface Harness {
   readonly users: InMemoryUserRepository;
@@ -53,6 +55,18 @@ function harness(): Harness {
   const assignments = new InMemoryMembershipRoleRepository();
   const roles = new InMemoryRoleRepository();
   const audit = new RecordingAuditTrail();
+  const tenantMembership: TenantMembership = {
+    async findActiveForUserAndTenant(userId, tenantId) {
+      const found = await memberships.findByUserAndTenant(userId, tenantId);
+      const membership = found?.aggregate;
+
+      if (membership === undefined || !membership.isActive()) {
+        return undefined;
+      }
+
+      return { membershipId: membership.id, tenantId: membership.tenantId };
+    },
+  };
 
   return {
     users,
@@ -60,7 +74,14 @@ function harness(): Harness {
     assignments,
     roles,
     audit,
-    authorize: new AuthorizeActionUseCase(users, memberships, assignments, roles, audit),
+    authorize: new AuthorizeActionUseCase(
+      users,
+      memberships,
+      tenantMembership,
+      assignments,
+      roles,
+      audit,
+    ),
   };
 }
 
@@ -211,7 +232,71 @@ describe('authorize — tenant-scoped decisions', () => {
 
     // Indistinguishable from a tenant that does not exist: the boundary never
     // confirms what the caller cannot see.
-    expect(outcome.errorOrThrow().code).toBe('MEMBERSHIP_REQUIRED');
+    expect(outcome.errorOrThrow().code).toBe('TENANT_ACCESS_DENIED');
+  });
+
+  it('returns the same public error for an unknown tenant and a tenant with no membership', async () => {
+    const app = harness();
+    const user = seedUser(app);
+    const otherUser = seedUser(app);
+    seedMembership(app, user, { tenantId: TENANT_A, permissions: ['role.manage'] });
+    // This relationship makes TENANT_B an existing tenant for the harness,
+    // without granting the caller a membership in it.
+    seedMembership(app, otherUser, { tenantId: TENANT_B, permissions: ['role.manage'] });
+    const membershipLookup = vi.spyOn(app.memberships, 'findByUserAndTenant');
+
+    const existingTenant = await app.authorize.authorize({
+      principal: principalOf(user),
+      requiredPermission: PermissionKey.from('role.manage'),
+      targetTenantId: TENANT_B,
+    });
+    const unknownTenant = await app.authorize.authorize({
+      principal: principalOf(user),
+      requiredPermission: PermissionKey.from('role.manage'),
+      targetTenantId: TENANT_UNKNOWN,
+    });
+
+    expect(existingTenant.errorOrThrow().code).toBe('TENANT_ACCESS_DENIED');
+    expect(unknownTenant.errorOrThrow().code).toBe('TENANT_ACCESS_DENIED');
+    expect(unknownTenant.errorOrThrow().message).toBe(existingTenant.errorOrThrow().message);
+    // Both requests use the same indexed (user, tenant) membership query; the
+    // authorization path never asks the Tenant Directory whether the id exists.
+    expect(membershipLookup).toHaveBeenCalledTimes(2);
+    expect(
+      membershipLookup.mock.calls.map(([queriedUserId, queriedTenantId]) => [
+        queriedUserId.value,
+        queriedTenantId.value,
+      ]),
+    ).toEqual([
+      [user.id.value, TENANT_B],
+      [user.id.value, TENANT_UNKNOWN],
+    ]);
+  });
+
+  it('denies a conflicting tenant claim and records a correlated, tenant-id-free refusal', async () => {
+    const app = harness();
+    const user = seedUser(app);
+    seedMembership(app, user, { tenantId: TENANT_A, permissions: ['role.manage'] });
+
+    const outcome = await app.authorize.authorize({
+      principal: principalOf(user),
+      requiredPermission: PermissionKey.from('role.manage'),
+      targetTenantId: TENANT_A,
+      tenantClaimConflict: true,
+      correlationId: 'tenant-access-denied-1',
+    });
+
+    expect(outcome.errorOrThrow().code).toBe('TENANT_ACCESS_DENIED');
+    const recorded = app.audit.find('authorization.denied')!;
+    expect(recorded.correlationId).toBe('tenant-access-denied-1');
+    expect(recorded.metadata).toMatchObject({
+      permission: 'role.manage',
+      reason: 'TENANT_ACCESS_DENIED',
+      tenantScoped: true,
+      tenantClaimConflict: true,
+    });
+    expect(recorded.metadata).not.toHaveProperty('claimedTenantId');
+    expect(JSON.stringify(recorded.metadata)).not.toContain(TENANT_A);
   });
 
   it('denies an inactive membership even when the role grants the capability', async () => {
@@ -225,7 +310,7 @@ describe('authorize — tenant-scoped decisions', () => {
       targetTenantId: TENANT_A,
     });
 
-    expect(outcome.errorOrThrow().code).toBe('MEMBERSHIP_INACTIVE');
+    expect(outcome.errorOrThrow().code).toBe('TENANT_ACCESS_DENIED');
   });
 });
 
@@ -408,7 +493,7 @@ describe('authorize — the protected action does not run on denial', () => {
 });
 
 describe('authorize — a refusal is recorded through the audit contract', () => {
-  it('records the denial with the resolved actor and the claimed tenant as context', async () => {
+  it('records tenant denials without the requested tenant id and with the request correlation id', async () => {
     const app = harness();
     const user = seedUser(app);
     seedMembership(app, user, { tenantId: TENANT_A, permissions: ['role.read'] });
@@ -417,21 +502,21 @@ describe('authorize — a refusal is recorded through the audit contract', () =>
       principal: principalOf(user),
       requiredPermission: PermissionKey.from('role.manage'),
       targetTenantId: TENANT_B,
+      correlationId: 'tenant-denied-audit-1',
     });
 
     expect(app.audit.actions()).toEqual(['authorization.denied']);
     const recorded = app.audit.find('authorization.denied')!;
     expect(recorded.outcome).toBe('denied');
-    // The actor is the identity the decision itself resolved, not an input.
     expect(recorded.actorUserId).toBe(user.id.value);
+    expect(recorded.correlationId).toBe('tenant-denied-audit-1');
     expect(recorded.metadata).toMatchObject({
       permission: 'role.manage',
-      reason: 'MEMBERSHIP_REQUIRED',
+      reason: 'TENANT_ACCESS_DENIED',
       tenantScoped: true,
-      // The claim is context, never the tenant of a record: nothing here ran
-      // under a tenant scope, so the record itself is platform-level.
-      claimedTenantId: TENANT_B,
     });
+    expect(recorded.metadata).not.toHaveProperty('claimedTenantId');
+    expect(JSON.stringify(recorded.metadata)).not.toContain(TENANT_B);
   });
 
   it('records a platform-scope denial without inventing a claimed tenant', async () => {

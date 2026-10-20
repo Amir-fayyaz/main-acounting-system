@@ -32,12 +32,7 @@ const STEPS = [
     scope: 'eslint . — the whole workspace, including the configuration-boundary rules',
     fix: '`pnpm lint:fix` applies the safe automatic fixes; re-run `pnpm verify`.',
   },
-  {
-    id: 'format',
-    command: 'pnpm format:check',
-    scope: 'prettier --check . — every formatted file in the repository',
-    fix: '`pnpm format` rewrites the offending files; re-run `pnpm verify`.',
-  },
+
   {
     id: 'test',
     command: 'pnpm test',

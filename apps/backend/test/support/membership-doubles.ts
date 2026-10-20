@@ -108,6 +108,17 @@ export class InMemoryMembershipRepository implements MembershipRepository {
     );
   }
 
+  public async findByUserAndTenant(
+    userId: UserId,
+    tenantId: TenantReference,
+  ): Promise<Loaded<Membership> | undefined> {
+    return this.loaded().find(
+      (record) =>
+        record.aggregate.userId.value === userId.value &&
+        record.aggregate.tenantId.value === tenantId.value,
+    );
+  }
+
   public async findByUserId(userId: UserId): Promise<readonly Loaded<Membership>[]> {
     return this.loaded().filter((record) => record.aggregate.userId.value === userId.value);
   }
