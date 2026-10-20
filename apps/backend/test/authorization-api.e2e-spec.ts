@@ -17,6 +17,7 @@ import {
   SESSION_TOKEN_SERVICE,
 } from '../src/modules/identity/application/authentication.tokens.js';
 import { AUTHORIZATION } from '../src/modules/identity/application/authorization/authorization.tokens.js';
+import { Authorize, Public, RequiresAuthentication } from '../src/infrastructure/api/authorization/authorization-policy.js';
 import {
   MEMBERSHIP_EVENT_RECORDER,
   MEMBERSHIP_REPOSITORY,
@@ -41,6 +42,7 @@ import { tenantReferenceFrom } from '../src/modules/identity/domain/value-object
 import { GetAuthenticatedSessionUseCase } from '../src/modules/identity/application/use-cases/get-authenticated-session.use-case.js';
 import { ListPermissionsUseCase } from '../src/modules/identity/application/use-cases/list-permissions.use-case.js';
 import { AuthorizeActionUseCase } from '../src/modules/identity/application/use-cases/authorize-action.use-case.js';
+import { MembershipTenantMembershipAdapter } from '../src/modules/identity/infrastructure/authorization/membership-tenant-membership.adapter.js';
 import { ChangeMembershipStatusUseCase } from '../src/modules/identity/application/use-cases/change-membership-status.use-case.js';
 import { CreateMembershipUseCase } from '../src/modules/identity/application/use-cases/create-membership.use-case.js';
 import { GetMembershipUseCase } from '../src/modules/identity/application/use-cases/get-membership.use-case.js';
@@ -99,6 +101,7 @@ import { RecordingAuditTrail } from './support/audit-doubles.js';
 
 const TENANT_A = '018f0d3c-6d0f-7a4b-9d4e-2b3c4d5e6f70';
 const TENANT_B = '018f0d3c-6d0f-7a4b-9d4e-2b3c4d5e6f71';
+const TENANT_UNKNOWN = '018f0d3c-6d0f-7a4b-9d4e-2b3c4d5e6f72';
 
 /**
  * A test-only route that classifies itself as **nothing**: it declares no
@@ -117,6 +120,58 @@ class UnclassifiedProbeController {
   }
 }
 
+/** Proves the conventional `:tenantId` parameter is tenant-scoped by default. */
+@Controller('authorization-tenant-probe')
+class ImplicitTenantPolicyProbeController {
+  @Get(':tenantId')
+  @Authorize({ permission: 'user.read' })
+  probe(): { readonly reached: true } {
+    return { reached: true };
+  }
+}
+
+/** A tenant route cannot opt out of membership by requesting authentication only. */
+@Controller('authorization-auth-only-tenant-probe')
+class TenantAuthOnlyProbeController {
+  @Get(':tenantId')
+  @RequiresAuthentication()
+  probe(): { readonly reached: true } {
+    return { reached: true };
+  }
+}
+
+/** A tenant route cannot opt out of the authorization boundary by being public. */
+@Controller('authorization-public-tenant-probe')
+class TenantPublicProbeController {
+  @Get(':tenantId')
+  @Public()
+  probe(): { readonly reached: true } {
+    return { reached: true };
+  }
+}
+
+/** The root Tenant resource names the target parameter `id`, not `tenantId`. */
+@Controller('tenants')
+class TenantResourceDefaultProbeController {
+  @Get('implicit-policy/:id')
+  @Authorize({ permission: 'user.read' })
+  tenantById(): { readonly reached: true } {
+    return { reached: true };
+  }
+
+  @Get('auth-only/:id')
+  @RequiresAuthentication()
+  authOnly(): { readonly reached: true } {
+    return { reached: true };
+  }
+
+  @Get('public/:id')
+  @Public()
+  publicRoute(): { readonly reached: true } {
+    return { reached: true };
+  }
+}
+
 interface Harness {
   readonly app: INestApplication;
   readonly users: InMemoryUserRepository;
@@ -126,6 +181,7 @@ interface Harness {
   readonly tokens: CryptoSessionTokenService;
   readonly sessions: InMemoryAuthSessionRepository;
   readonly authorization: Authorization;
+  readonly auditTrail: RecordingAuditTrail;
 }
 
 async function createHarness(): Promise<Harness> {
@@ -149,6 +205,10 @@ async function createHarness(): Promise<Harness> {
       MembershipsController,
       PermissionsController,
       UnclassifiedProbeController,
+      ImplicitTenantPolicyProbeController,
+      TenantAuthOnlyProbeController,
+      TenantPublicProbeController,
+      TenantResourceDefaultProbeController,
     ],
     providers: [
       { provide: USER_REPOSITORY, useValue: users },
@@ -171,7 +231,7 @@ async function createHarness(): Promise<Harness> {
           a: InMemoryMembershipRoleRepository,
           r: InMemoryRoleRepository,
           au: RecordingAuditTrail,
-        ): Authorization => new AuthorizeActionUseCase(u, m, a, r, au),
+        ): Authorization => new AuthorizeActionUseCase(u, m, new MembershipTenantMembershipAdapter(m), a, r, au),
         inject: [
           USER_REPOSITORY,
           MEMBERSHIP_REPOSITORY,
@@ -235,6 +295,7 @@ async function createHarness(): Promise<Harness> {
     tokens,
     sessions,
     authorization: app.get<Authorization>(AUTHORIZATION),
+    auditTrail,
   };
 }
 
@@ -447,6 +508,7 @@ describe('authorization (e2e)', () => {
       const response = await request(server())
         .get(`/api/v1/tenants/${TENANT_A}/memberships`)
         .set('authorization', `Bearer ${token}`)
+        .set('x-tenant-id', TENANT_A)
         .expect(200);
 
       expect(response.body.data).toBeInstanceOf(Array);
@@ -462,26 +524,63 @@ describe('authorization (e2e)', () => {
         .set('authorization', `Bearer ${token}`)
         .expect(403);
 
-      expect(response.body.error.code).toBe('MEMBERSHIP_REQUIRED');
+      expect(response.body.error.code).toBe('TENANT_ACCESS_DENIED');
       expect(JSON.stringify(response.body)).not.toContain(TENANT_B);
     });
 
-    it('ignores a client-supplied tenant header entirely', async () => {
+    it('rejects a conflicting tenant header without treating it as the tenant selector', async () => {
       const reader = seedUser();
       seedMembership(reader, { tenantId: TENANT_A, permissions: ['user.read'] });
       const token = seedSession(reader);
-
-      // The caller really does belong to TENANT_B as well — and the header still
-      // changes nothing: the route's tenant is what the boundary verifies.
+      // Even membership in both tenants does not make a conflicting secondary
+      // claim valid: only the route target is authoritative, and conflict fails closed.
       seedMembership(reader, { tenantId: TENANT_B, permissions: ['user.read'] });
 
       const response = await request(server())
         .get(`/api/v1/tenants/${TENANT_A}/memberships`)
         .set('authorization', `Bearer ${token}`)
         .set('x-tenant-id', TENANT_B)
-        .expect(200);
+        .set('x-correlation-id', 'tenant-header-conflict-1')
+        .expect(403);
 
-      expect(response.body.data).toBeInstanceOf(Array);
+      expect(response.body.error).toMatchObject({
+        code: 'TENANT_ACCESS_DENIED',
+        correlationId: 'tenant-header-conflict-1',
+      });
+      expect(JSON.stringify(response.body)).not.toContain(TENANT_B);
+      const denial = harness.auditTrail.recorded.find(
+        (entry) =>
+          entry.action === 'authorization.denied' &&
+          entry.correlationId === 'tenant-header-conflict-1',
+      );
+
+      expect(denial).toBeDefined();
+      expect(denial?.correlationId).toBe('tenant-header-conflict-1');
+      expect(denial?.metadata).not.toHaveProperty('claimedTenantId');
+      expect(JSON.stringify(denial?.metadata)).not.toContain(TENANT_A);
+      expect(JSON.stringify(denial?.metadata)).not.toContain(TENANT_B);
+    });
+
+    it('returns an identical denial for an existing tenant and an unknown tenant', async () => {
+      const reader = seedUser();
+      seedMembership(reader, { tenantId: TENANT_A, permissions: ['user.read'] });
+      const token = seedSession(reader);
+
+      const existingTenant = await request(server())
+        .get(`/api/v1/tenants/${TENANT_B}/memberships`)
+        .set('authorization', `Bearer ${token}`)
+        .set('x-correlation-id', 'tenant-existence-probe-1')
+        .expect(403);
+      const unknownTenant = await request(server())
+        .get(`/api/v1/tenants/${TENANT_UNKNOWN}/memberships`)
+        .set('authorization', `Bearer ${token}`)
+        .set('x-correlation-id', 'tenant-existence-probe-1')
+        .expect(403);
+
+      expect(existingTenant.body).toEqual(unknownTenant.body);
+      expect(existingTenant.body.error.code).toBe('TENANT_ACCESS_DENIED');
+      expect(JSON.stringify(existingTenant.body)).not.toContain(TENANT_B);
+      expect(JSON.stringify(unknownTenant.body)).not.toContain(TENANT_UNKNOWN);
     });
 
     it('rejects an inactive membership in the target tenant', async () => {
@@ -498,7 +597,7 @@ describe('authorization (e2e)', () => {
         .set('authorization', `Bearer ${token}`)
         .expect(403);
 
-      expect(response.body.error.code).toBe('MEMBERSHIP_INACTIVE');
+      expect(response.body.error.code).toBe('TENANT_ACCESS_DENIED');
     });
 
     it('rejects a malformed tenant identifier as invalid tenant context', async () => {
@@ -580,6 +679,65 @@ describe('authorization (e2e)', () => {
       expect(deniedHttp.status).toBe(403);
       expect(deniedApplication.isFail()).toBe(true);
       expect(deniedApplication.errorOrThrow().code).toBe(deniedHttp.body.error.code);
+    });
+  });
+
+  describe('tenant membership is on by default', () => {
+    it('infers tenant scope for a :tenantId route even if the policy omits tenantParam', async () => {
+      const reader = seedUser();
+      seedMembership(reader, { tenantId: TENANT_A, permissions: ['user.read'] });
+      const token = seedSession(reader);
+
+      const member = await request(server())
+        .get(`/api/v1/authorization-tenant-probe/${TENANT_A}`)
+        .set('authorization', `Bearer ${token}`)
+        .expect(200);
+      expect(member.body).toEqual({ reached: true });
+
+      const nonMember = await request(server())
+        .get(`/api/v1/authorization-tenant-probe/${TENANT_B}`)
+        .set('authorization', `Bearer ${token}`)
+        .expect(403);
+      expect(nonMember.body.error.code).toBe('TENANT_ACCESS_DENIED');
+
+      const memberById = await request(server())
+        .get(`/api/v1/tenants/implicit-policy/${TENANT_A}`)
+        .set('authorization', `Bearer ${token}`)
+        .expect(200);
+      expect(memberById.body).toEqual({ reached: true });
+
+      const nonMemberById = await request(server())
+        .get(`/api/v1/tenants/implicit-policy/${TENANT_B}`)
+        .set('authorization', `Bearer ${token}`)
+        .expect(403);
+      expect(nonMemberById.body.error.code).toBe('TENANT_ACCESS_DENIED');
+    });
+
+    it('refuses tenant routes declared public or authentication-only', async () => {
+      const user = seedUser();
+      const token = seedSession(user);
+
+      const authOnly = await request(server())
+        .get(`/api/v1/authorization-auth-only-tenant-probe/${TENANT_A}`)
+        .set('authorization', `Bearer ${token}`)
+        .expect(403);
+      expect(authOnly.body.error.code).toBe('AUTHORIZATION_POLICY_MISSING');
+
+      const publicRoute = await request(server())
+        .get(`/api/v1/authorization-public-tenant-probe/${TENANT_A}`)
+        .expect(403);
+      expect(publicRoute.body.error.code).toBe('AUTHORIZATION_POLICY_MISSING');
+
+      const rootResourceAuthOnly = await request(server())
+        .get(`/api/v1/tenants/auth-only/${TENANT_A}`)
+        .set('authorization', `Bearer ${token}`)
+        .expect(403);
+      expect(rootResourceAuthOnly.body.error.code).toBe('AUTHORIZATION_POLICY_MISSING');
+
+      const rootResourcePublic = await request(server())
+        .get(`/api/v1/tenants/public/${TENANT_A}`)
+        .expect(403);
+      expect(rootResourcePublic.body.error.code).toBe('AUTHORIZATION_POLICY_MISSING');
     });
   });
 

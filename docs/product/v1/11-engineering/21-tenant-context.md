@@ -23,7 +23,7 @@ UI انتخاب Tenant، Middleware احراز هویتِ HTTP، پیاده‌س
 ## 2. مالکیت — مسیرِ Context
 
 ```text
-Client (بدونِ اعتماد)          هیچ‌وقت tenantId نمی‌دهد — Header/Body/Query خوانده نمی‌شود
+Client (بدونِ اعتماد)          Header/Body/Query هرگز Tenant را انتخاب نمی‌کنند
     │
 Trusted entry (آینده: Auth)     TenantScope.run(context, work)  ← تنها نقطهٔ Establish
 Worker (امروز)                  TenantScope.run از envelope.companyId
@@ -120,9 +120,11 @@ await TenantScope.run(principalContext, async () => {
 
 ## 8. مرزِ امنیتی — Client هرگز Tenant را انتخاب نمی‌کند
 
-- **هیچ ورودیِ Client خوانده نمی‌شود:** نه Header (مثلِ `x-tenant-id`)، نه Query، نه
-  Body — e2e این را روی Requestِ واقعی اثبات می‌کند: Header می‌رسد، شنیده می‌شود و
-  نادیده گرفته می‌شود؛ Scope بی‌صدا `missing` می‌ماند.
+- **ورودی Client هویت Tenant را انتخاب نمی‌کند:** `TenantScope` از Header، Query یا Body
+  ساخته نمی‌شود. در مسیرهای API که Tenant از Route حل می‌شود، مرز Authorization یک
+  `x-tenant-id` متعارض/مبهم را نیز رد می‌کند؛ این بررسی فقط سازگاری ادعاها را می‌سنجد و
+  Header را به منبع انتخاب Tenant تبدیل نمی‌کند. تست مستقل `TenantScope` نشان می‌دهد که
+  ارسال Header به‌تنهایی همچنان Scope را `missing` نگه می‌دارد.
 - **فقط نقطهٔ موردِ اعتماد Establish می‌کند:** امروز Worker (از Envelope) و تست؛
   فردا Guardِ احراز هویت (از Principal) — همان `TenantScope.run`، بدونِ بازطراحی.
 - **Fail-Closed:** ناشناخته یا غایب یعنی «بدونِ اجرا»، نه «بدونِ فیلتر» (ADR-010،

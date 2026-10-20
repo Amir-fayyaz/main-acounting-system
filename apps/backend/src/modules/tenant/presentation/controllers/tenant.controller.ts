@@ -60,9 +60,10 @@ import { UpdateTenantDto } from '../dto/update-tenant.dto.js';
  * membership: the same claim the boundary verified is the tenant the operation
  * runs under, through `createTenantContext` + `TenantScope` (SHR-007).
  *
- * No request header, body or query field is ever read as tenant identity — even
- * a header that names a tenant the caller genuinely belongs to is ignored, and
- * a path identifier for a tenant the caller does not belong to is refused.
+ * No request header, body or query field selects the tenant. The global
+ * authorization guard verifies the route identifier against the caller's active
+ * membership and rejects a conflicting `x-tenant-id` claim before this handler
+ * runs; the controller itself only uses the checked route identifier.
  */
 @ApiBearerAuth()
 @ApiTags('tenants')

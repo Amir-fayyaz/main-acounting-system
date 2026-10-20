@@ -119,6 +119,20 @@ export class DrizzleMembershipRepository implements MembershipRepository {
     return rows.length > 0;
   }
 
+  public async findByUserAndTenant(
+    userId: UserId,
+    tenantId: TenantReference,
+  ): Promise<Loaded<Membership> | undefined> {
+    const rows = await scopedDatabase(this.database)
+      .select()
+      .from(memberships)
+      .where(and(eq(memberships.userId, userId.value), eq(memberships.tenantId, tenantId.value)))
+      .limit(1);
+
+    const row = rows[0];
+    return row === undefined ? undefined : toLoadedMembership(row);
+  }
+
   public async findByUserId(userId: UserId): Promise<readonly Loaded<Membership>[]> {
     const rows = await scopedDatabase(this.database)
       .select()

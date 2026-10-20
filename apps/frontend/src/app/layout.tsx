@@ -1,8 +1,8 @@
 import { rubik } from '@/core/assets/style/fonts/font';
+import '@repo/web/styles/globals.css';
 import type { Metadata } from 'next';
 import NextTopLoader from 'nextjs-toploader';
 import { Toaster } from 'sonner';
-import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Create Next App',
