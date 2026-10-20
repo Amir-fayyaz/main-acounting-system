@@ -1,4 +1,5 @@
-import { Button } from "@/components/shadcn/ui/button/button";
+import { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { Button } from '../../../shadcn/ui/button/button';
 import {
   Dialog,
   DialogContent,
@@ -7,26 +8,25 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/shadcn/ui/dialog/dialog";
-import { Input } from "@/components/shadcn/ui/input/input";
-import { Meta, StoryObj } from "@storybook/nextjs-vite";
+} from '../../../shadcn/ui/dialog/dialog';
+import { Input } from '../../../shadcn/ui/input/input';
 
 const meta = {
-  title: "shadcn/Dialog",
+  title: 'shadcn/Dialog',
   component: Dialog,
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   argTypes: {
     open: {
-      control: "boolean",
-      description: "باز یا بسته بودن مودال",
+      control: 'boolean',
+      description: 'باز یا بسته بودن مودال',
     },
     defaultOpen: {
-      control: "boolean",
-      description: "باز شدن پیش‌فرض",
+      control: 'boolean',
+      description: 'باز شدن پیش‌فرض',
     },
     onOpenChange: {
-      action: "open changed",
-      description: "تابع تغییر وضعیت",
+      action: 'open changed',
+      description: 'تابع تغییر وضعیت',
     },
   },
 } satisfies Meta<typeof Dialog>;
@@ -43,9 +43,7 @@ export const Default: Story = {
       <DialogContent className="sm:max-w-106.25">
         <DialogHeader>
           <DialogTitle>ویرایش اطلاعات</DialogTitle>
-          <DialogDescription>
-            تغییرات خود را در اینجا وارد کنید و ذخیره کنید.
-          </DialogDescription>
+          <DialogDescription>تغییرات خود را در اینجا وارد کنید و ذخیره کنید.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <p>این یک محتوای نمونه است.</p>
@@ -67,9 +65,7 @@ export const WithForm: Story = {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>محصول جدید</DialogTitle>
-          <DialogDescription>
-            اطلاعات محصول جدید را وارد کنید.
-          </DialogDescription>
+          <DialogDescription>اطلاعات محصول جدید را وارد کنید.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <Input

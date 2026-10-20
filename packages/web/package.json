@@ -4,11 +4,13 @@
   "private": true,
   "exports": {
     "./ui/utils/cn": "./ui/utils/cn.ts",
+    "./assets/@types/Typography": "./assets/@types/Typography.ts",
     "./hooks/useIsMobile": "./hooks/useIsMobile.tsx",
     "./ui/components/*": "./ui/components/*",
     "./ui/components/shadcn/ui/button/button": "./ui/components/shadcn/ui/button/button.tsx",
     "./styles/globals.css": "./styles/globals.css",
     "./ui": "./ui/index.ts",
+    "./ui/components/shadcn/ui/dialog/dialog": "./ui/components/shadcn/ui/dialog/dialog.tsx",
     "./styles/fonts/font": "./styles/fonts/font.ts"
   },
   "peerDependencies": {
@@ -36,6 +38,9 @@
   "devDependencies": {
     "@storybook/nextjs-vite": "^10.6.1",
     "@types/react": "^19.3.0",
-    "@types/react-dom": "^19.3.0"
+    "@types/react-dom": "^19.3.0",
+    "@tailwindcss/postcss": "^4",
+    "tailwindcss": "^4",
+    "tailwindcss-animate": "^1.0.7"
   }
 }

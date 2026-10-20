@@ -19,7 +19,8 @@
       "@/*": ["./src/*"],
       "@/core/*": ["./src/core/*"],
       "@/components/*": ["./src/core/components/*"],
-      "@/shadcn/*": ["./src/core/components/shadcn/ui/*"]
+      "@/shadcn/*": ["./src/core/components/shadcn/ui/*"],
+      "@web/*": ["../../packages/web/*"]
     }
   },
   "include": [
