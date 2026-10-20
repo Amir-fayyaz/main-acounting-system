@@ -53,6 +53,21 @@ export default [
     },
   },
   {
+    name: 'workspace/typescript-unused-vars',
+    files: [...BACKEND_FILES, ...FRONTEND_FILES],
+    rules: {
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
+    },
+  },
+  {
     name: 'workspace/frontend',
     files: FRONTEND_FILES,
     rules: {

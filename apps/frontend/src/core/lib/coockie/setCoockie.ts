@@ -1,17 +1,23 @@
-"use server";
-import { NextResponse } from "next/server";
-type SameSiteOption = "strict" | "lax" | "none" | false;
+'use server';
+
+import { NextResponse } from 'next/server';
+import { env } from '../basic-link/env';
+
+type SameSiteOption = 'strict' | 'lax' | 'none' | false;
+
 export async function setCoockie(access_token: string) {
   const cookieOptions = {
-    name: "accessToken",
+    name: 'accessToken',
     value: access_token,
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax" as SameSiteOption,
-    path: "/",
+    secure: env.NODE_ENV === 'production',
+    sameSite: 'lax' as SameSiteOption,
+    path: '/',
     maxAge: 15 * 60,
   };
+
   const response = NextResponse.json({ success: true });
+
   response.cookies.set({
     name: cookieOptions.name,
     value: cookieOptions.value,
@@ -21,5 +27,6 @@ export async function setCoockie(access_token: string) {
     path: cookieOptions.path,
     maxAge: cookieOptions.maxAge,
   });
+
   return response;
 }
