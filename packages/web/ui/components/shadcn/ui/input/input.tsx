@@ -1,7 +1,7 @@
-import { cn } from "@/core/utils/shadcn/utils";
-import * as React from "react";
+import { cn } from '@/ui/utils/cn';
+import * as React from 'react';
 
-type InputProps = React.ComponentProps<"input"> & {
+type InputProps = React.ComponentProps<'input'> & {
   label?: string;
 };
 function Input({ className, label, type, ...props }: InputProps) {
@@ -12,9 +12,9 @@ function Input({ className, label, type, ...props }: InputProps) {
         type={type}
         data-slot="input"
         className={cn(
-          "file:text-foreground  border-muted-foreground/50 placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30  h-9 w-full border min-w-0 rounded-sm  bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-4 file:border-[0.5px] file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-          "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
-          "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+          'file:text-foreground  border-muted-foreground/50 placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30  h-9 w-full border min-w-0 rounded-sm  bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-4 file:border-[0.5px] file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
+          'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+          'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
           className,
         )}
         {...props}

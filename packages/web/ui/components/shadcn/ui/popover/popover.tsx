@@ -1,24 +1,21 @@
-"use client";
+'use client';
 
-import { cn } from "@/core/utils/shadcn/utils";
-import { Popover as PopoverPrimitive } from "radix-ui";
-import * as React from "react";
+import { cn } from '@/ui/utils/cn';
 
-function Popover({
-  ...props
-}: React.ComponentProps<typeof PopoverPrimitive.Root>) {
+import { Popover as PopoverPrimitive } from 'radix-ui';
+import * as React from 'react';
+
+function Popover({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Root>) {
   return <PopoverPrimitive.Root data-slot="popover" {...props} />;
 }
 
-function PopoverTrigger({
-  ...props
-}: React.ComponentProps<typeof PopoverPrimitive.Trigger>) {
+function PopoverTrigger({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Trigger>) {
   return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />;
 }
 
 function PopoverContent({
   className,
-  align = "center",
+  align = 'center',
   sideOffset = 4,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
@@ -29,7 +26,7 @@ function PopoverContent({
         align={align}
         sideOffset={sideOffset}
         className={cn(
-          "cn-popover-content z-50 w-72 origin-(--radix-popover-content-transform-origin) outline-hidden",
+          'cn-popover-content z-50 w-72 origin-(--radix-popover-content-transform-origin) outline-hidden',
           className,
         )}
         {...props}
@@ -38,40 +35,25 @@ function PopoverContent({
   );
 }
 
-function PopoverAnchor({
-  ...props
-}: React.ComponentProps<typeof PopoverPrimitive.Anchor>) {
+function PopoverAnchor({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Anchor>) {
   return <PopoverPrimitive.Anchor data-slot="popover-anchor" {...props} />;
 }
 
-function PopoverHeader({ className, ...props }: React.ComponentProps<"div">) {
+function PopoverHeader({ className, ...props }: React.ComponentProps<'div'>) {
   return (
-    <div
-      data-slot="popover-header"
-      className={cn("cn-popover-header", className)}
-      {...props}
-    />
+    <div data-slot="popover-header" className={cn('cn-popover-header', className)} {...props} />
   );
 }
 
-function PopoverTitle({ className, ...props }: React.ComponentProps<"h2">) {
-  return (
-    <div
-      data-slot="popover-title"
-      className={cn("cn-popover-title", className)}
-      {...props}
-    />
-  );
+function PopoverTitle({ className, ...props }: React.ComponentProps<'h2'>) {
+  return <div data-slot="popover-title" className={cn('cn-popover-title', className)} {...props} />;
 }
 
-function PopoverDescription({
-  className,
-  ...props
-}: React.ComponentProps<"p">) {
+function PopoverDescription({ className, ...props }: React.ComponentProps<'p'>) {
   return (
     <p
       data-slot="popover-description"
-      className={cn("cn-popover-description", className)}
+      className={cn('cn-popover-description', className)}
       {...props}
     />
   );

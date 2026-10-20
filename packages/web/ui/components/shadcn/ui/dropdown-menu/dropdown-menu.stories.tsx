@@ -1,6 +1,6 @@
-import { Button } from "@/components/shadcn/ui/button/button";
-import { DropdownMenuCheckboxItem } from "@radix-ui/react-dropdown-menu";
-import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { DropdownMenuCheckboxItem } from '@radix-ui/react-dropdown-menu';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { Button } from '../button/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,20 +8,20 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "./dropdown-menu";
+} from './dropdown-menu';
 
 const meta = {
-  title: "shadcn/DropdownMenu",
+  title: 'shadcn/DropdownMenu',
   component: DropdownMenu,
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   argTypes: {
     open: {
-      control: "boolean",
-      description: "باز یا بسته بودن منو",
+      control: 'boolean',
+      description: 'باز یا بسته بودن منو',
     },
     defaultOpen: {
-      control: "boolean",
-      description: "باز شدن پیش‌فرض",
+      control: 'boolean',
+      description: 'باز شدن پیش‌فرض',
     },
   },
 } satisfies Meta<typeof DropdownMenu>;
