@@ -1,10 +1,11 @@
 packages:
   - apps/*
   - packages/*
+
 allowBuilds:
   '@parcel/watcher': true
   '@scarf/scarf': true
   '@swc/core': true
-  esbuild: set this to true or false
-  sharp: set this to true or false
+  esbuild: true
+  sharp: true
   unrs-resolver: true
