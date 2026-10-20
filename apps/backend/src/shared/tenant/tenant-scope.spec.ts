@@ -141,3 +141,51 @@ describe('TenantScope — nesting', () => {
     expect(TenantScope.current().state).toBe('missing');
   });
 });
+
+describe('TenantScope — requireTenantId / currentTenantId (TNT-002 aliases)', () => {
+  it('requireTenantId throws when the scope is missing', () => {
+    let caught: unknown;
+    try {
+      TenantScope.requireTenantId();
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(TenantContextMissingError);
+    expect(caught).toMatchObject({ code: 'TENANT_CONTEXT_MISSING', state: 'missing' });
+  });
+
+  it('requireTenantId throws under an explicit system scope', async () => {
+    const observed = await TenantScope.runAsSystem(async () => {
+      let refusal: unknown;
+      try {
+        TenantScope.requireTenantId();
+      } catch (error) {
+        refusal = error;
+      }
+      return refusal;
+    });
+    expect(observed).toBeInstanceOf(TenantContextMissingError);
+    expect(observed).toMatchObject({ state: 'system' });
+  });
+
+  it('requireTenantId returns the tenant id inside an available scope', async () => {
+    const tenant = createTenantContext('tenant-99');
+    const id = await TenantScope.run(tenant, async () => TenantScope.requireTenantId());
+    expect(id).toBe('tenant-99');
+  });
+
+  it('currentTenantId returns undefined when missing', () => {
+    expect(TenantScope.currentTenantId()).toBeUndefined();
+  });
+
+  it('currentTenantId returns undefined under system scope', async () => {
+    const id = await TenantScope.runAsSystem(async () => TenantScope.currentTenantId());
+    expect(id).toBeUndefined();
+  });
+
+  it('currentTenantId returns the id inside an available scope', async () => {
+    const tenant = createTenantContext('tenant-77');
+    const id = await TenantScope.run(tenant, async () => TenantScope.currentTenantId());
+    expect(id).toBe('tenant-77');
+  });
+});
