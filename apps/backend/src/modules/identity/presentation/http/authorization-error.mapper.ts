@@ -4,6 +4,7 @@ import { ApiErrorException } from '../../../../infrastructure/api/errors/api-err
 import type { DomainError } from '../../../../shared/errors/domain-error.js';
 import { ErrorCategory } from '../../../../shared/errors/error-category.js';
 import { raiseAuthenticationFailure, toApiDetails } from './authentication-error.mapper.js';
+import { TenantAccessDeniedError } from '../../domain/errors/authorization.errors.js';
 
 /**
  * Turns an authorization failure into the standard transport failure (IAM-006;
@@ -18,10 +19,10 @@ import { raiseAuthenticationFailure, toApiDetails } from './authentication-error
  *   deactivated account keep their own codes.
  * - **`403 Forbidden`** — the request *is* authenticated but may not perform
  *   this operation: the capability is missing, the operation needs a tenant and
- *   none was resolved, the caller has no membership there, or that membership
- *   is not active. The domain's own stable code travels with it
- *   (`AUTHORIZATION_DENIED`, `MEMBERSHIP_REQUIRED`, …) so a client can react
- *   without parsing a message.
+ *   none was resolved, the caller has no active membership there, or a client
+ *   supplied a conflicting tenant header. Tenant access failures use the same
+ *   stable code (`TENANT_ACCESS_DENIED`) so the response cannot disclose tenant
+ *   existence.
  *
  * No failure discloses whether a tenant, a membership or a record exists for
  * somebody else: the messages come from the authorization vocabulary, which
@@ -30,14 +31,20 @@ import { raiseAuthenticationFailure, toApiDetails } from './authentication-error
 const FORBIDDEN_CODES: readonly string[] = [
   'AUTHORIZATION_DENIED',
   'TENANT_CONTEXT_REQUIRED',
-  'MEMBERSHIP_REQUIRED',
-  'MEMBERSHIP_INACTIVE',
+  'TENANT_ACCESS_DENIED',
   'AUTHORIZATION_CONTEXT_INVALID',
   'AUTHORIZATION_POLICY_MISSING',
 ];
 
 /** Raises the transport failure that matches `error`; never returns. */
 export function raiseAuthorizationFailure(error: DomainError): never {
+  if (error.code === 'MEMBERSHIP_REQUIRED' || error.code === 'MEMBERSHIP_INACTIVE') {
+    // Normalize legacy internal reasons at the transport boundary as well, so
+    // an older caller can never reintroduce an existence-revealing response.
+    const denied = new TenantAccessDeniedError();
+    throw new ApiErrorException(HttpStatus.FORBIDDEN, denied.code, 'client', denied.message);
+  }
+
   if (FORBIDDEN_CODES.includes(error.code)) {
     throw new ApiErrorException(HttpStatus.FORBIDDEN, error.code, 'client', error.message);
   }

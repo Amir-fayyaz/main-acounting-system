@@ -21,6 +21,8 @@ export interface AuthenticatedRequest {
   readonly headers: Record<string, string | string[] | undefined>;
   /** The route parameters, populated by routing before any guard runs. */
   readonly params?: Record<string, string | undefined>;
+  /** Assigned before routing by the global correlation-id middleware. */
+  readonly correlationId?: string;
   authentication?: AuthenticatedSessionView;
   principal?: AuthenticatedPrincipalView;
   /**

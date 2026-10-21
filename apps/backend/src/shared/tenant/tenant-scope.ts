@@ -83,6 +83,27 @@ export class TenantScope {
   }
 
   /**
+   * The current tenant id when an available scope is established; otherwise
+   * `undefined` (missing or system). Thin alias of the issue surface
+   * (`currentTenantId`) so application code can read the id without branching
+   * on the context state object.
+   */
+  public static currentTenantId(): string | undefined {
+    const context = TenantScope.current();
+    return context.state === 'available' ? context.tenantId : undefined;
+  }
+
+  /**
+   * The tenant id of the current available scope.
+   *
+   * @throws TenantContextMissingError — same fail-closed contract as
+   * `require()` (issue surface `requireTenantId`).
+   */
+  public static requireTenantId(): string {
+    return TenantScope.require().tenantId;
+  }
+
+  /**
    * Runs `work` with `context` published as the current tenant scope, and
    * restores the caller's scope when it settles.
    *

@@ -6,7 +6,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev": "nest start --watch",
+    "dev": "tsc -p tsconfig.build.json && node --enable-source-maps dist/main.js",
     "dev:worker": "nest start --watch --entryFile processes/worker/worker",
     "dev:scheduler": "nest start --watch --entryFile processes/scheduler/scheduler",
     "build": "nest build",

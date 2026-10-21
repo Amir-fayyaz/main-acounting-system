@@ -28,7 +28,9 @@
     "stack:up": "docker compose --profile app up -d --build",
     "stack:down": "docker compose --profile app down",
     "stack:logs": "docker compose --profile app logs -f",
-    "dev:reset": "docker compose --profile app down -v"
+    "dev:reset": "docker compose --profile app down -v",
+    "storybook": "pnpm --filter @repo/storybook dev",
+    "storybook:build": "pnpm --filter @repo/storybook build"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
