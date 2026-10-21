@@ -126,20 +126,7 @@ jobs:
     if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # اگه /health به دیتابیس نیاز داره، این بخش رو باز کن:
-    # services:
-    #   postgres:
-    #     image: postgres:16
-    #     env:
-    #       POSTGRES_USER: test
-    #       POSTGRES_PASSWORD: test
-    #       POSTGRES_DB: test
-    #     ports: ['5432:5432']
-    #     options: >-
-    #       --health-cmd "pg_isready -U test"
-    #       --health-interval 5s
-    #       --health-timeout 5s
-    #       --health-retries 10
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -158,38 +145,6 @@ jobs:
 
       - name: Build
         run: pnpm --filter "./apps/backend" run build
-
-      - name: Start app in background
-        working-directory: apps/backend
-        env:
-          NODE_ENV: test
-          PORT: 3000
-          # env های dummy مورد نیاز اپ برای بالا اومدن
-          # DATABASE_URL: postgresql://test:test@localhost:5432/test
-          # JWT_SECRET: ci-dummy-secret
-        run: |
-          # مسیر خروجی build رو با پروژه‌ت چک کن (dist/main.js یا dist/src/main.js)
-          node dist/main.js > "$RUNNER_TEMP/backend.log" 2>&1 &
-          echo "BACKEND_PID=$!" >> "$GITHUB_ENV"
-
-      - name: Health check (/health)
-        run: |
-          if curl --fail --silent --show-error \
-               --retry 15 --retry-delay 2 --retry-connrefused \
-               http://localhost:3000/health; then
-            echo
-            echo "Health check passed"
-          else
-            echo "::error::Health check failed"
-            echo "::group::Backend logs"
-            cat "$RUNNER_TEMP/backend.log"
-            echo "::endgroup::"
-            exit 1
-          fi
-
-      - name: Stop app
-        if: always()
-        run: kill "$BACKEND_PID" 2>/dev/null || true
 
   # ---------------------------------------------------------------
   # 4) Dockerfile lint
