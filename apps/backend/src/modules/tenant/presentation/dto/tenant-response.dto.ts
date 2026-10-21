@@ -5,16 +5,13 @@ import {
 } from '../../domain/value-objects/tenant-status.js';
 
 /**
- * Response body for a tenant (IAM-001; FND-006).
- *
- * A DTO, never the aggregate: it carries plain, serializable values and the
- * revision the client needs for its next conditional update.
+ * Response body for a company (tenant).
  */
 export class TenantResponseDto {
-  @ApiProperty({ description: 'Stable tenant (tenant) identifier.', format: 'uuid' })
+  @ApiProperty({ description: 'Stable company identifier.', format: 'uuid' })
   id!: string;
 
-  @ApiProperty({ description: 'Tenant display name.' })
+  @ApiProperty({ description: 'Company display name.', example: 'Acme Trading Co.' })
   name!: string;
 
   @ApiProperty({ description: 'Lifecycle state.', enum: TENANT_STATUS_VALUES })
@@ -26,9 +23,9 @@ export class TenantResponseDto {
   })
   revision!: number;
 
-  @ApiProperty({ description: 'Creation instant, ISO-8601 in UTC.', format: 'date-time' })
+  @ApiProperty({ description: 'Creation instant, ISO-8601 UTC.', format: 'date-time' })
   createdAt!: string;
 
-  @ApiProperty({ description: 'Last-change instant, ISO-8601 in UTC.', format: 'date-time' })
+  @ApiProperty({ description: 'Last-change instant, ISO-8601 UTC.', format: 'date-time' })
   updatedAt!: string;
 }

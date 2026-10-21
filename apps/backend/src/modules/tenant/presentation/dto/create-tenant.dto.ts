@@ -3,16 +3,15 @@ import { IsString, Length } from 'class-validator';
 import { TenantName } from '../../domain/value-objects/tenant-name.js';
 
 /**
- * Request body for creating a tenant (IAM-001; FND-006).
+ * Request body for creating a company (Tenant Presentation; FND-006).
  *
- * Validation at the HTTP boundary is a *client* guard, not the domain rule: the
- * domain still validates the name through `TenantName`. It exists so an
- * obvious mistake is answered with a 400 and per-field detail before a use case
- * runs.
+ * Only the display name is accepted. The creator is the authenticated
+ * principal — never a user id in the body. A tenant id is never accepted
+ * here: creation establishes a new boundary.
  */
 export class CreateTenantDto {
   @ApiProperty({
-    description: 'The tenant display name.',
+    description: 'Company display name.',
     minLength: 1,
     maxLength: TenantName.MAX_LENGTH,
     example: 'Acme Trading Co.',
