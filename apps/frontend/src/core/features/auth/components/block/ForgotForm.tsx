@@ -93,7 +93,7 @@ export function ForgotForm() {
                     <InputOTPSlot
                       key={i}
                       index={i}
-                      className="bg-card h-14 w-12 rounded-xl border font-sans text-xl"
+                      className="bg-card h-14 w-12 rounded-xl border "
                     />
                   ))}
                 </InputOTPGroup>
