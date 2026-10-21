@@ -29,7 +29,7 @@ export function setupOpenApi(app: INestApplication, config: AppConfigService): v
         'Versioned REST contract for the Accounting SaaS platform, generated from the running API.',
       )
       .setVersion(API_VERSION)
-      .addServer(config.apiPrefix)
+      // .addServer(config.apiPrefix)
       // The authentication scheme of the API (IAM-005): an opaque bearer session
       // token. Registering the scheme makes it selectable in the generated UI;
       // it is *not* applied as a document-wide requirement, so an endpoint only
