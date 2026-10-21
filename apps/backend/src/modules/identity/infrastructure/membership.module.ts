@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 
 import { DatabaseModule, type Database } from '../../../infrastructure/database/database.module.js';
 import {
@@ -17,6 +17,7 @@ import { CreateMembershipUseCase } from '../application/use-cases/create-members
 import { GetMembershipUseCase } from '../application/use-cases/get-membership.use-case.js';
 import { ListTenantMembersUseCase } from '../application/use-cases/list-tenant-members.use-case.js';
 import { ListUserMembershipsUseCase } from '../application/use-cases/list-user-memberships.use-case.js';
+import { SelectActiveCompanyUseCase } from '../application/use-cases/select-active-company.use-case.js';
 import {
   MEMBERSHIP_EVENT_RECORDER,
   MEMBERSHIP_REPOSITORY,
@@ -24,12 +25,17 @@ import {
 } from '../application/membership.tokens.js';
 import type { MembershipEventRecorder } from '../application/ports/membership-event-recorder.port.js';
 import type { TenantMembership } from '../application/ports/tenant-membership.port.js';
+import {
+  ACTIVE_TENANT_PREFERENCE,
+  type ActiveTenantPreference,
+} from '../application/ports/active-tenant-preference.port.js';
 import { USER_REPOSITORY } from '../application/user.tokens.js';
 import type { MembershipRepository } from '../domain/repositories/membership.repository.js';
 import type { UserRepository } from '../domain/repositories/user.repository.js';
 import { MembershipsController } from '../presentation/controllers/membership.controller.js';
 import { ActorEventRecorder } from './audit/audit-trail-access-control-event-recorder.js';
 import { DrizzleMembershipRepository } from './persistence/drizzle-membership.repository.js';
+import { InMemoryActiveTenantPreference } from './persistence/in-memory-active-tenant-preference.js';
 import { MembershipTenantMembershipAdapter } from './authorization/membership-tenant-membership.adapter.js';
 import { UserModule } from './user.module.js';
 
@@ -51,10 +57,21 @@ import { UserModule } from './user.module.js';
  *   `src/modules/` can consume another module's contract at all
  *   (`src/modules/module-boundaries.spec.ts`);
  * - `TRANSACTION_BOUNDARY` → the shared boundary the use cases open (SHR-005).
+ * - `ACTIVE_TENANT_PREFERENCE` / `SelectActiveCompanyUseCase` → active company
+ *   selection for the authenticated user (Tenant Presentation).
+ *
+ * This module is `@Global()` so that consumers of its *published exports*
+ * (notably `TenantController`, which needs `CreateMembershipUseCase` and
+ * `SelectActiveCompanyUseCase` to enroll the creator and to select the active
+ * company) can inject them without importing this module's infrastructure
+ * file — which the module-boundary rule forbids. The module still has to be
+ * imported once at the application root (`AppModule` / test harness) for the
+ * global registration to take effect.
  *
  * No adapter is exposed: the Drizzle table and repository stay private, and the
  * only cross-module dependency is a published contract, never an internal.
  */
+@Global()
 @Module({
   imports: [DatabaseModule, OutboxModule, UserModule],
   controllers: [MembershipsController],
@@ -79,6 +96,10 @@ import { UserModule } from './user.module.js';
       useFactory: (outbox: MembershipEventRecorder, audit: AuditRecorder) =>
         new ActorEventRecorder(outbox, audit),
       inject: [OUTBOX_RECORDER, AUDIT_RECORDER],
+    },
+    {
+      provide: ACTIVE_TENANT_PREFERENCE,
+      useClass: InMemoryActiveTenantPreference,
     },
     {
       provide: CreateMembershipUseCase,
@@ -123,11 +144,24 @@ import { UserModule } from './user.module.js';
       ) => new ChangeMembershipStatusUseCase(repository, events, boundary),
       inject: [MEMBERSHIP_REPOSITORY, MEMBERSHIP_EVENT_RECORDER, TRANSACTION_BOUNDARY],
     },
+    {
+      provide: SelectActiveCompanyUseCase,
+      useFactory: (
+        repository: MembershipRepository,
+        preferences: ActiveTenantPreference,
+        audit: AuditRecorder,
+      ) => new SelectActiveCompanyUseCase(repository, preferences, audit),
+      inject: [MEMBERSHIP_REPOSITORY, ACTIVE_TENANT_PREFERENCE, AUDIT_RECORDER],
+    },
   ],
-  // Exported to this module's own role feature (IAM-004), which must confirm a
-  // membership exists and belongs to the tenant before assigning a role. It is
-  // not an invitation to other modules: the boundary guard still forbids them
-  // from importing this file.
-  exports: [MEMBERSHIP_REPOSITORY, TENANT_MEMBERSHIP],
+  // MEMBERSHIP_REPOSITORY / TENANT_MEMBERSHIP: for this module's role feature (IAM-004).
+  // CreateMembershipUseCase / SelectActiveCompanyUseCase: for TenantController
+  // (company create enrolls creator; select active company).
+  exports: [
+    MEMBERSHIP_REPOSITORY,
+    TENANT_MEMBERSHIP,
+    CreateMembershipUseCase,
+    SelectActiveCompanyUseCase,
+  ],
 })
 export class MembershipModule {}

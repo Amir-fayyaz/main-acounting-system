@@ -39,6 +39,10 @@ import { DrizzleTenantRepository } from './persistence/drizzle-tenant.repository
  * reach past a port — and the module owns its persistence, exposing the
  * Drizzle table and adapter to no one else (ADR-002 sections 8 and 12).
  *
+ * `MembershipModule` is imported so `TenantController` can inject
+ * `CreateMembershipUseCase` and `SelectActiveCompanyUseCase` (creator enrollment
+ * on create; select active company).
+ *
  * The module is `@Global` for one reason only: it publishes the
  * `TENANT_DIRECTORY` contract (IAM-003), a read-only existence question other
  * modules may depend on. A consumer inside `src/modules/` may not import
