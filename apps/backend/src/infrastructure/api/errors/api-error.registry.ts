@@ -19,6 +19,8 @@ export const API_ERROR_CODES = {
   REQUEST_FAILED: 'REQUEST_FAILED',
   DOMAIN_ERROR: 'DOMAIN_ERROR',
   INTERNAL_ERROR: 'INTERNAL_ERROR',
+  /** Tenant context required but missing or malformed (TNT-002). */
+  TENANT_REQUIRED: 'TENANT_REQUIRED',
 } as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[keyof typeof API_ERROR_CODES];
@@ -70,6 +72,11 @@ const DEFINITIONS: Readonly<Record<ApiErrorCode, ApiErrorDefinition>> = {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     category: 'technical',
     defaultMessage: 'An unexpected error occurred.',
+  },
+  TENANT_REQUIRED: {
+    status: HttpStatus.BAD_REQUEST,
+    category: 'client',
+    defaultMessage: 'A tenant context is required for this operation.',
   },
 };
 
