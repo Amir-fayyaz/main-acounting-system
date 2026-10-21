@@ -1,4 +1,5 @@
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
+import { PATH_METADATA } from '@nestjs/common/constants';
 import { Reflector } from '@nestjs/core';
 import { firstValueFrom, Observable, of, throwError } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
@@ -13,13 +14,16 @@ import { TenantScopeInterceptor } from './tenant-scope.interceptor.js';
 function contextWith(
   params: Record<string, string | undefined>,
   policy: { permission: string; tenantParam?: string } | undefined,
+  authorization?: { readonly tenantId?: string },
 ): ExecutionContext {
   const handler = () => undefined;
   const controller = class {};
   if (policy !== undefined) {
     Reflect.defineMetadata(AUTHORIZATION_POLICY_METADATA, policy, handler);
   }
-  const switchToHttp = () => ({ getRequest: () => ({ params }) });
+  const switchToHttp = () => ({
+    getRequest: () => ({ params, ...(authorization === undefined ? {} : { authorization }) }),
+  });
   return {
     switchToHttp,
     getHandler: () => handler,
@@ -28,8 +32,7 @@ function contextWith(
 }
 
 function reportingHandler(
-  build: () => Observable<unknown> = () =>
-    of(TenantScope.currentTenantId() ?? 'no-tenant'),
+  build: () => Observable<unknown> = () => of(TenantScope.currentTenantId() ?? 'no-tenant'),
 ): CallHandler {
   return { handle: build } as CallHandler;
 }
@@ -63,14 +66,43 @@ describe('TenantScopeInterceptor', () => {
     const interceptor = new TenantScopeInterceptor(reflector);
 
     const value = await firstValueFrom(
+      interceptor.intercept(contextWith({ tenantId: 'tenant-42' }, undefined), reportingHandler()),
+    );
+
+    expect(value).toBe('tenant-42');
+    expect(TenantScope.current().state).toBe('missing');
+  });
+
+  it('infers the conventional :tenantId parameter the authorization guard verified', async () => {
+    const interceptor = new TenantScopeInterceptor(new Reflector());
+    // The policy omits tenantParam; the guard treats :tenantId as tenant-scoped
+    // by convention, and the interceptor must publish exactly that target.
+    const value = await firstValueFrom(
       interceptor.intercept(
-        contextWith({ tenantId: 'tenant-42' }, undefined),
+        contextWith({ tenantId: 'tenant-42' }, { permission: 'user.read' }),
         reportingHandler(),
       ),
     );
 
     expect(value).toBe('tenant-42');
     expect(TenantScope.current().state).toBe('missing');
+  });
+
+  it('infers :id on the root tenants resource', async () => {
+    const interceptor = new TenantScopeInterceptor(new Reflector());
+    const handler = () => undefined;
+    class TenantsController {}
+    Reflect.defineMetadata(PATH_METADATA, 'tenants', TenantsController);
+    Reflect.defineMetadata(AUTHORIZATION_POLICY_METADATA, { permission: 'company.read' }, handler);
+    const context = {
+      switchToHttp: () => ({ getRequest: () => ({ params: { id: 'tenant-42' } }) }),
+      getHandler: () => handler,
+      getClass: () => TenantsController,
+    } as unknown as ExecutionContext;
+
+    const value = await firstValueFrom(interceptor.intercept(context, reportingHandler()));
+
+    expect(value).toBe('tenant-42');
   });
 
   it('rejects a missing tenant param on a tenant-scoped route with TENANT_REQUIRED', async () => {
@@ -83,9 +115,7 @@ describe('TenantScopeInterceptor', () => {
     const interceptor = new TenantScopeInterceptor(reflector);
 
     await expect(
-      firstValueFrom(
-        interceptor.intercept(contextWith({}, undefined), reportingHandler()),
-      ),
+      firstValueFrom(interceptor.intercept(contextWith({}, undefined), reportingHandler())),
     ).rejects.toSatisfy((error: unknown) => {
       expect(error).toBeInstanceOf(ApiErrorException);
       expect((error as ApiErrorException).code).toBe(API_ERROR_CODES.TENANT_REQUIRED);
@@ -105,10 +135,7 @@ describe('TenantScopeInterceptor', () => {
 
     await expect(
       firstValueFrom(
-        interceptor.intercept(
-          contextWith({ tenantId: '   ' }, undefined),
-          reportingHandler(),
-        ),
+        interceptor.intercept(contextWith({ tenantId: '   ' }, undefined), reportingHandler()),
       ),
     ).rejects.toSatisfy((error: unknown) => {
       expect(error).toBeInstanceOf(ApiErrorException);
@@ -140,6 +167,54 @@ describe('TenantScopeInterceptor', () => {
     });
   });
 
+  it('publishes the tenant the authorization boundary proved, not the one in the route', async () => {
+    const reflector = {
+      getAllAndOverride: vi.fn().mockReturnValue({
+        permission: 'role.read',
+        tenantParam: 'tenantId',
+      }),
+    } as unknown as Reflector;
+    const interceptor = new TenantScopeInterceptor(reflector);
+
+    // The route names one tenant; the membership the guard verified belongs to
+    // another spelling of the same company. The proven identity wins.
+    const value = await firstValueFrom(
+      interceptor.intercept(
+        contextWith({ tenantId: '018F0D3C-6D0F-7A4B-9D4E-2B3C4D5E6F70' }, undefined, {
+          tenantId: '018f0d3c-6d0f-7a4b-9d4e-2b3c4d5e6f70',
+        }),
+        reportingHandler(),
+      ),
+    );
+
+    expect(value).toBe('018f0d3c-6d0f-7a4b-9d4e-2b3c4d5e6f70');
+  });
+
+  it('refuses a tenant-scoped route whose tenant could not be proven', async () => {
+    const reflector = {
+      getAllAndOverride: vi.fn().mockReturnValue({
+        permission: 'role.read',
+        tenantParam: 'tenantId',
+      }),
+    } as unknown as Reflector;
+    const interceptor = new TenantScopeInterceptor(reflector);
+
+    // The boundary ran and allowed the route, yet it proved no tenant: that is
+    // a contradiction, and the answer to it is refusal.
+    await expect(
+      firstValueFrom(
+        interceptor.intercept(
+          contextWith({ tenantId: 'tenant-42' }, undefined, {}),
+          reportingHandler(),
+        ),
+      ),
+    ).rejects.toSatisfy((error: unknown) => {
+      expect(error).toBeInstanceOf(ApiErrorException);
+      expect((error as ApiErrorException).code).toBe(API_ERROR_CODES.TENANT_REQUIRED);
+      return true;
+    });
+  });
+
   it('propagates a handler failure and still tears the scope down', async () => {
     const reflector = {
       getAllAndOverride: vi.fn().mockReturnValue({
@@ -152,10 +227,7 @@ describe('TenantScopeInterceptor', () => {
 
     await expect(
       firstValueFrom(
-        interceptor.intercept(
-          contextWith({ tenantId: 'tenant-42' }, undefined),
-          failing,
-        ),
+        interceptor.intercept(contextWith({ tenantId: 'tenant-42' }, undefined), failing),
       ),
     ).rejects.toThrow('boom');
 
@@ -166,8 +238,7 @@ describe('TenantScopeInterceptor', () => {
     const a = createTenantContext('tenant-A');
     const b = createTenantContext('tenant-B');
 
-    const interleave = (): Promise<void> =>
-      new Promise((resolve) => setTimeout(resolve, 5));
+    const interleave = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 5));
 
     const [seenA, seenB] = await Promise.all([
       TenantScope.run(a, async () => {

@@ -2,6 +2,7 @@ import { and, desc, eq, gte, lte, sql, type SQL } from 'drizzle-orm';
 
 import type { Database } from '../../../../infrastructure/database/database.module.js';
 import { scopedDatabase } from '../../../../infrastructure/database/scoped-database.js';
+import { assertTenantCriterion } from '../../../../infrastructure/database/tenant-scoped.js';
 import type {
   AuditRecordCriteria,
   AuditRecordPage,
@@ -39,6 +40,10 @@ export class DrizzleAuditRecordQuery implements AuditRecordQuery {
   public constructor(private readonly database: Database) {}
 
   public async read(criteria: AuditRecordCriteria): Promise<AuditRecordPage> {
+    // The criterion must be the active tenant: a caller cannot widen the read
+    // by constructing a different id, and an unscoped read is refused.
+    assertTenantCriterion(criteria.tenantId, 'AuditRecordQuery.read');
+
     const db = scopedDatabase(this.database);
     const where = conditionsOf(criteria);
     const offset = (criteria.page - 1) * criteria.limit;

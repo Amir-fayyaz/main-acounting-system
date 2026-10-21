@@ -1,13 +1,15 @@
-import { CanActivate, ExecutionContext, Inject, Injectable, Type } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Inject, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { PATH_METADATA } from '@nestjs/common/constants';
 
 import {
   AuthorizationPolicyMissingError,
   TenantContextRequiredError,
 } from '../../domain/errors/authorization.errors.js';
 import { PermissionKey } from '../../domain/value-objects/permission-key.js';
-import { isTenantReference, tenantReferenceFrom } from '../../domain/value-objects/tenant-reference.js';
+import {
+  isTenantReference,
+  tenantReferenceFrom,
+} from '../../domain/value-objects/tenant-reference.js';
 import { GetAuthenticatedSession } from '../../application/queries/get-authenticated-session.query.js';
 import { GetAuthenticatedSessionUseCase } from '../../application/use-cases/get-authenticated-session.use-case.js';
 import { AUTHORIZATION } from '../../application/authorization/authorization.tokens.js';
@@ -18,6 +20,10 @@ import {
   PUBLIC_ENDPOINT_METADATA,
   type AuthorizationPolicy,
 } from '../../../../infrastructure/api/authorization/authorization-policy.js';
+import {
+  claimedTenantId,
+  resolveTenantRouteParam,
+} from '../../../../infrastructure/api/tenant/tenant-route.js';
 import type { AuthenticatedRequest } from '../http/authenticated-request.js';
 import { readBearerToken } from '../http/authenticated-request.js';
 import { raiseAuthenticationFailure } from '../http/authentication-error.mapper.js';
@@ -81,9 +87,11 @@ export class AuthorizationGuard implements CanActivate {
     ]);
     const authenticatedOnly =
       this.declared<boolean>(AUTHENTICATED_ENDPOINT_METADATA, [handler, controller]) === true;
-    const defaultTenantParam = this.defaultTenantParam(request, controller);
-    const hasTenantRouteParameter =
-      policy?.tenantParam !== undefined || defaultTenantParam !== undefined;
+    // One resolution, shared with the interceptor that publishes the ambient
+    // scope: a route cannot be authorized as tenant-scoped while executing
+    // without a tenant scope (IAM-007).
+    const tenantParam = resolveTenantRouteParam(request, controller, policy);
+    const hasTenantRouteParameter = tenantParam !== undefined;
 
     if (publicEndpoint) {
       // A tenant-nested route cannot turn off the boundary by declaring itself
@@ -117,7 +125,7 @@ export class AuthorizationGuard implements CanActivate {
       return raiseAuthorizationFailure(new AuthorizationPolicyMissingError());
     }
 
-    const targetTenantId = this.targetTenant(request, policy, defaultTenantParam);
+    const targetTenantId = this.targetTenant(request, tenantParam);
     const tenantClaimConflict = this.tenantClaimConflicts(request, targetTenantId);
 
     const outcome = await this.authorization.authorize({
@@ -189,56 +197,21 @@ export class AuthorizationGuard implements CanActivate {
    */
   private targetTenant(
     request: AuthenticatedRequest,
-    policy: AuthorizationPolicy,
-    defaultTenantParam: string | undefined,
+    tenantParam: string | undefined,
   ): string | undefined {
-    // `tenantId` is the default route convention. The root Tenant resource uses
-    // `id`; its controller prefix is recognized so omitting tenantParam there
-    // cannot accidentally turn an individual tenant operation into a platform one.
-    const tenantParam = policy.tenantParam ?? defaultTenantParam;
-
     if (tenantParam === undefined) {
       return undefined;
     }
 
-    const claimed = request.params?.[tenantParam];
+    const claimed = claimedTenantId(request, tenantParam);
 
-    if (claimed === undefined || claimed.trim() === '') {
+    if (claimed === undefined) {
+      // A tenant-scoped policy whose claim is absent is invalid tenant
+      // context, never a platform operation by accident.
       return raiseAuthorizationFailure(new TenantContextRequiredError());
     }
 
     return claimed;
-  }
-
-  /**
-   * Infers tenant-scoped route parameters when a policy omits `tenantParam`.
-   * The conventional `tenantId` name applies across modules; the `id` name is
-   * inferred only on the root `tenants` resource controller, where it names the
-   * Tenant itself rather than an ordinary child resource.
-   */
-  private defaultTenantParam(
-    request: AuthenticatedRequest,
-    controller: Type<unknown>,
-  ): string | undefined {
-    if (request.params?.tenantId !== undefined) {
-      return 'tenantId';
-    }
-
-    const controllerPath = Reflect.getMetadata(PATH_METADATA, controller) as
-      | string
-      | readonly string[]
-      | undefined;
-    const paths =
-      controllerPath === undefined
-        ? []
-        : Array.isArray(controllerPath)
-          ? controllerPath
-          : [controllerPath];
-    const isTenantResourceController = paths.some(
-      (path) => path.replace(/^\/+|\/+$/g, '') === 'tenants',
-    );
-
-    return isTenantResourceController && request.params?.id !== undefined ? 'id' : undefined;
   }
 
   /**

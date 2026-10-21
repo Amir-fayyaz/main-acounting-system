@@ -2,6 +2,12 @@ import { and, eq } from 'drizzle-orm';
 
 import type { Database } from '../../../../infrastructure/database/database.module.js';
 import { scopedDatabase } from '../../../../infrastructure/database/scoped-database.js';
+import {
+  assertTenantCriterion,
+  assertTenantOwnership,
+  requireSystemScope,
+  tenantEq,
+} from '../../../../infrastructure/database/tenant-scoped.js';
 import { staleRevisionConflict } from '../../../../shared/persistence/optimistic-concurrency.js';
 import {
   PersistenceError,
@@ -48,10 +54,12 @@ export class DrizzleMembershipRepository implements MembershipRepository {
   public constructor(private readonly database: Database) {}
 
   public async get(id: MembershipId): Promise<Loaded<Membership> | undefined> {
+    // The tenant predicate is part of the lookup, not an optional filter a
+    // caller could forget: an id from another company simply does not match.
     const rows = await scopedDatabase(this.database)
       .select()
       .from(memberships)
-      .where(eq(memberships.id, id.value))
+      .where(and(eq(memberships.id, id.value), tenantEq(memberships.tenantId)))
       .limit(1);
 
     const row = rows[0];
@@ -61,6 +69,8 @@ export class DrizzleMembershipRepository implements MembershipRepository {
   }
 
   public async add(membership: Membership): Promise<WriteReceipt> {
+    assertTenantOwnership(membership.tenantId.value, 'MembershipRepository.add');
+
     try {
       await scopedDatabase(this.database).insert(memberships).values({
         id: membership.id.value,
@@ -86,6 +96,8 @@ export class DrizzleMembershipRepository implements MembershipRepository {
   }
 
   public async update(membership: Membership, expectedRevision: Revision): Promise<WriteReceipt> {
+    assertTenantOwnership(membership.tenantId.value, 'MembershipRepository.update');
+
     const [header] = await scopedDatabase(this.database)
       .update(memberships)
       .set({
@@ -97,6 +109,7 @@ export class DrizzleMembershipRepository implements MembershipRepository {
         and(
           eq(memberships.id, membership.id.value),
           eq(memberships.revision, expectedRevision.value),
+          tenantEq(memberships.tenantId),
         ),
       );
 
@@ -110,6 +123,8 @@ export class DrizzleMembershipRepository implements MembershipRepository {
   }
 
   public async existsForPair(userId: UserId, tenantId: TenantReference): Promise<boolean> {
+    assertTenantCriterion(tenantId.value, 'MembershipRepository.existsForPair');
+
     const rows = await scopedDatabase(this.database)
       .select({ id: memberships.id })
       .from(memberships)
@@ -123,6 +138,10 @@ export class DrizzleMembershipRepository implements MembershipRepository {
     userId: UserId,
     tenantId: TenantReference,
   ): Promise<Loaded<Membership> | undefined> {
+    // A tenant-scoped caller may only ask about its own tenant; the platform
+    // authorization path asks this under an explicit system scope.
+    assertTenantCriterion(tenantId.value, 'MembershipRepository.findByUserAndTenant');
+
     const rows = await scopedDatabase(this.database)
       .select()
       .from(memberships)
@@ -134,6 +153,10 @@ export class DrizzleMembershipRepository implements MembershipRepository {
   }
 
   public async findByUserId(userId: UserId): Promise<readonly Loaded<Membership>[]> {
+    // Deliberately cross-tenant: the memberships of a person span companies.
+    // Only an explicit system operation may ask this question.
+    requireSystemScope('MembershipRepository.findByUserId');
+
     const rows = await scopedDatabase(this.database)
       .select()
       .from(memberships)
@@ -143,6 +166,8 @@ export class DrizzleMembershipRepository implements MembershipRepository {
   }
 
   public async findByTenantId(tenantId: TenantReference): Promise<readonly Loaded<Membership>[]> {
+    assertTenantCriterion(tenantId.value, 'MembershipRepository.findByTenantId');
+
     const rows = await scopedDatabase(this.database)
       .select()
       .from(memberships)

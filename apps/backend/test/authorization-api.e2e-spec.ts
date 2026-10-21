@@ -17,7 +17,11 @@ import {
   SESSION_TOKEN_SERVICE,
 } from '../src/modules/identity/application/authentication.tokens.js';
 import { AUTHORIZATION } from '../src/modules/identity/application/authorization/authorization.tokens.js';
-import { Authorize, Public, RequiresAuthentication } from '../src/infrastructure/api/authorization/authorization-policy.js';
+import {
+  Authorize,
+  Public,
+  RequiresAuthentication,
+} from '../src/infrastructure/api/authorization/authorization-policy.js';
 import {
   MEMBERSHIP_EVENT_RECORDER,
   MEMBERSHIP_REPOSITORY,
@@ -59,6 +63,7 @@ import { AuthorizationGuard } from '../src/modules/identity/presentation/guards/
 import { CryptoSessionTokenService } from '../src/modules/identity/infrastructure/security/crypto-session-token-service.js';
 import { TENANT_DIRECTORY } from '../src/modules/tenant/application/tenant.tokens.js';
 import { DateTime } from '../src/shared/time/date-time.js';
+import { TenantScope } from '../src/shared/tenant/tenant-scope.js';
 import {
   InMemoryMembershipRepository,
   PassthroughTransactionBoundary,
@@ -150,6 +155,20 @@ class TenantPublicProbeController {
   }
 }
 
+/**
+ * Proves an ordinary tenant-scoped endpoint cannot widen itself into system
+ * access (IAM-007, section 9). The handler is the attempt, not a business
+ * operation: it must be refused at the boundary of the scope.
+ */
+@Controller('isolation-probe')
+class TenantSystemEscalationProbeController {
+  @Get(':tenantId/system')
+  @Authorize({ permission: 'user.read', tenantParam: 'tenantId' })
+  async escalate(): Promise<{ readonly escalated: true }> {
+    return TenantScope.runAsSystem(async () => ({ escalated: true }));
+  }
+}
+
 /** The root Tenant resource names the target parameter `id`, not `tenantId`. */
 @Controller('tenants')
 class TenantResourceDefaultProbeController {
@@ -208,6 +227,7 @@ async function createHarness(): Promise<Harness> {
       ImplicitTenantPolicyProbeController,
       TenantAuthOnlyProbeController,
       TenantPublicProbeController,
+      TenantSystemEscalationProbeController,
       TenantResourceDefaultProbeController,
     ],
     providers: [
@@ -231,7 +251,8 @@ async function createHarness(): Promise<Harness> {
           a: InMemoryMembershipRoleRepository,
           r: InMemoryRoleRepository,
           au: RecordingAuditTrail,
-        ): Authorization => new AuthorizeActionUseCase(u, m, new MembershipTenantMembershipAdapter(m), a, r, au),
+        ): Authorization =>
+          new AuthorizeActionUseCase(u, m, new MembershipTenantMembershipAdapter(m), a, r, au),
         inject: [
           USER_REPOSITORY,
           MEMBERSHIP_REPOSITORY,
@@ -611,6 +632,62 @@ describe('authorization (e2e)', () => {
         .expect(403);
 
       expect(response.body.error.code).toBe('TENANT_CONTEXT_REQUIRED');
+    });
+
+    it('refuses a resource id owned by another tenant as not found', async () => {
+      const reader = seedUser();
+      const owner = seedUser();
+      seedMembership(reader, { tenantId: TENANT_A, permissions: ['user.read'] });
+      // The record exists in B only; the caller is entitled to A.
+      const foreignMembership = seedMembership(owner, {
+        tenantId: TENANT_B,
+        permissions: ['user.read'],
+      });
+      const token = seedSession(reader);
+
+      const response = await request(server())
+        .get(`/api/v1/tenants/${TENANT_A}/memberships/${foreignMembership.id.value}`)
+        .set('authorization', `Bearer ${token}`)
+        .expect(404);
+
+      expect(response.body.error.code).toBe('NOT_FOUND');
+      expect(JSON.stringify(response.body)).not.toContain(TENANT_B);
+      expect(JSON.stringify(response.body)).not.toContain(foreignMembership.id.value);
+    });
+
+    it('refuses an update of a resource owned by another tenant', async () => {
+      const reader = seedUser();
+      const owner = seedUser();
+      seedMembership(reader, { tenantId: TENANT_A, permissions: ['user.manage'] });
+      const foreignMembership = seedMembership(owner, {
+        tenantId: TENANT_B,
+        permissions: ['user.manage'],
+      });
+      const token = seedSession(reader);
+
+      const response = await request(server())
+        .post(`/api/v1/tenants/${TENANT_A}/memberships/${foreignMembership.id.value}/status`)
+        .set('authorization', `Bearer ${token}`)
+        .send({ status: 'inactive', expectedRevision: 1 })
+        .expect(404);
+
+      expect(response.body.error.code).toBe('NOT_FOUND');
+      // The foreign record is untouched.
+      expect(foreignMembership.isActive()).toBe(true);
+    });
+
+    it('refuses tenant work that tries to escalate into the system scope', async () => {
+      const reader = seedUser();
+      seedMembership(reader, { tenantId: TENANT_A, permissions: ['user.read'] });
+      const token = seedSession(reader);
+
+      const response = await request(server())
+        .get(`/api/v1/isolation-probe/${TENANT_A}/system`)
+        .set('authorization', `Bearer ${token}`)
+        .expect(403);
+
+      expect(response.body.error).toMatchObject({ code: 'FORBIDDEN', category: 'client' });
+      expect(JSON.stringify(response.body)).not.toContain(TENANT_A);
     });
 
     it('denies a tenant-scoped write from a caller who is only authenticated', async () => {

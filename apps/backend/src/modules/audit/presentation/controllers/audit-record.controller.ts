@@ -20,8 +20,6 @@ import { paginationMeta } from '../../../../infrastructure/api/pagination/pagina
 import type { DomainError } from '../../../../shared/errors/domain-error.js';
 import { ErrorCategory } from '../../../../shared/errors/error-category.js';
 import type { ErrorDetail } from '../../../../shared/errors/error-detail.js';
-import { createTenantContext } from '../../../../shared/tenant/tenant-context.js';
-import { TenantScope } from '../../../../shared/tenant/tenant-scope.js';
 import { isOpaqueIdentifier } from '../../domain/audit-identifiers.js';
 import { ListTenantAuditRecords } from '../../application/queries/list-tenant-audit-records.query.js';
 import { ListTenantAuditRecordsUseCase } from '../../application/use-cases/list-tenant-audit-records.use-case.js';
@@ -121,22 +119,22 @@ export class AuditRecordsController {
   }
 
   /**
-   * Runs `work` under the tenant's scope.
+   * Runs `work` under the tenant scope the trusted boundary published.
    *
-   * This is the trusted-entry-point responsibility SHR-007 assigns to the
-   * request path: the scope is established once, from the tenant the
-   * authorization boundary *verified* — it ran before this handler, and a
-   * request whose claim was not backed by a membership never reaches here. The
-   * scope is therefore never a client-supplied identity, and the use case
-   * re-checking the path against it is a second, cheap confirmation rather than
-   * the only guard.
+   * The scope is established once, by the global tenant-scope interceptor, from
+   * the tenant the authorization boundary *verified* — it ran before this
+   * handler, and a request whose claim was not backed by a membership never
+   * reaches here. This helper therefore does not *establish* anything: it only
+   * checks that the route carries a well-formed tenant identifier and lets the
+   * established scope stand. The use case re-checks the path against it, so a
+   * request for another company's trail is refused before anything is read.
    */
   private async inTenantScope<T>(rawId: string, work: () => Promise<T>): Promise<T> {
     if (!isOpaqueIdentifier(rawId)) {
       throw ApiErrorException.notFound();
     }
 
-    return TenantScope.run(createTenantContext(rawId), work);
+    return work();
   }
 
   /**

@@ -60,12 +60,17 @@ import { DrizzleTenantRepository } from './persistence/drizzle-tenant.repository
       // The published tenant contract (IAM-003): existence over the stable
       // tenant identity, answered through the module's own port so no caller
       // ever touches tenant storage. A malformed id is not a tenant.
+      //
+      // Existence is the one question about a tenant that is *not*
+      // tenant-scoped: it says whether the identity is taken and nothing about
+      // the company itself. The registry read it needs is therefore the
+      // repository's explicit `exists`, never the tenant-scoped `get` — so a
+      // caller can never reach a tenant's record through this contract
+      // (IAM-007, section 6).
       provide: TENANT_DIRECTORY,
       useFactory: (repository: TenantRepository): TenantDirectory => ({
         async exists(tenantId: string): Promise<boolean> {
-          return (
-            isTenantId(tenantId) && (await repository.get(tenantIdFrom(tenantId))) !== undefined
-          );
+          return isTenantId(tenantId) && (await repository.exists(tenantIdFrom(tenantId)));
         },
       }),
       inject: [TENANT_REPOSITORY],
