@@ -11,6 +11,7 @@
   },
   "scripts": {
     "dev": "pnpm -r --parallel dev",
+    "dev:local": "node tooling/scripts/dev.mjs",
     "dev:backend": "pnpm --filter @accounting-saas/backend dev",
     "dev:frontend": "pnpm --filter @accounting-saas/frontend dev",
     "build": "pnpm -r build",
