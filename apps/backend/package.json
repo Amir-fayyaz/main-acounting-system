@@ -16,7 +16,7 @@
     "job:enqueue": "node dist/processes/cli/enqueue-sample-job.js",
     "db:generate": "drizzle-kit generate",
     "db:check": "drizzle-kit check",
-    "db:migrate": "node dist/processes/cli/db-migrate.js migrate",
+    "db:migrate": "drizzle-kit migrate",
     "db:migrate:status": "node dist/processes/cli/db-migrate.js status",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
