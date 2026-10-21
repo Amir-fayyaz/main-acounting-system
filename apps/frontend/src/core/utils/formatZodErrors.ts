@@ -1,16 +1,11 @@
-type ZodErrorInput =
-  | {
-      issues?: Array<{
-        message: string;
-      }>;
-    }
-  | null
-  | undefined;
+type ZodErrorLike = {
+  issues?: { message?: string }[];
+} | null | undefined;
 
-const FALLBACK_MESSAGE = 'خطا در اعتبارسنجی فرم';
-
-export function formatZodErrors(errors: ZodErrorInput): string {
-  const firstIssue = errors?.issues?.[0];
-
-  return firstIssue?.message ?? FALLBACK_MESSAGE;
+export function formatZodErrors(errors: ZodErrorLike) {
+  if (errors && errors.issues && errors.issues.length > 0) {
+    return `${errors.issues[0].message}`;
+  } else {
+    return "خطا در اعتبارسنجی فرم";
+  }
 }
