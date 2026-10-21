@@ -1,5 +1,6 @@
 import type { DomainError } from '../../../../shared/errors/domain-error.js';
 import { Result } from '../../../../shared/errors/result.js';
+import { TenantScope } from '../../../../shared/tenant/tenant-scope.js';
 import { UserNotFoundError } from '../../domain/errors/user.errors.js';
 import type { MembershipRepository } from '../../domain/repositories/membership.repository.js';
 import type { UserRepository } from '../../domain/repositories/user.repository.js';
@@ -40,7 +41,10 @@ export class ListUserMembershipsUseCase {
       return Result.fail(new UserNotFoundError());
     }
 
-    const loaded = await this.repository.findByUserId(id);
+    // A person's memberships span every tenant they joined, so this is an
+    // explicit system-level read rather than a tenant-scoped one; the
+    // repository refuses it under a tenant scope instead of widening silently.
+    const loaded = await TenantScope.runAsSystem(() => this.repository.findByUserId(id));
 
     return Result.ok(loaded.map(toMembershipView));
   }

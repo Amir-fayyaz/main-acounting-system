@@ -28,6 +28,7 @@ import { MembershipRole } from '../src/modules/identity/domain/aggregates/member
 import { Role } from '../src/modules/identity/domain/aggregates/role.js';
 import { User } from '../src/modules/identity/domain/aggregates/user.js';
 import { PermissionKey } from '../src/modules/identity/domain/value-objects/permission-key.js';
+import { RoleName } from '../src/modules/identity/domain/value-objects/role-name.js';
 import { roleIdFrom } from '../src/modules/identity/domain/value-objects/role-id.js';
 import { tenantReferenceFrom } from '../src/modules/identity/domain/value-objects/tenant-reference.js';
 import { DrizzleMembershipRoleRepository } from '../src/modules/identity/infrastructure/persistence/drizzle-membership-role.repository.js';
@@ -54,6 +55,7 @@ import { Revision } from '../src/shared/persistence/revision.js';
 import { DateTime } from '../src/shared/time/date-time.js';
 import { createTenantContext } from '../src/shared/tenant/tenant-context.js';
 import { TenantScope } from '../src/shared/tenant/tenant-scope.js';
+import { TenantIsolationViolationError } from '../src/shared/tenant/tenant.errors.js';
 import {
   createTransactionBoundary,
   type TransactionBoundary,
@@ -143,7 +145,7 @@ describe.skipIf(!integrationEnabled)('role persistence (integration)', () => {
     boundary = createTransactionBoundary(new DrizzleTransactionRunner(database));
     directory = {
       async exists(tenantId: string): Promise<boolean> {
-        return isTenantId(tenantId) && (await tenants.get(tenantIdFrom(tenantId))) !== undefined;
+        return isTenantId(tenantId) && (await tenants.exists(tenantIdFrom(tenantId)));
       },
     };
   });
@@ -194,7 +196,7 @@ describe.skipIf(!integrationEnabled)('role persistence (integration)', () => {
       tenantId: tenantIdFrom(tenantId),
       now: DateTime.now(),
     });
-    await memberships.add(membership);
+    await inTenant(tenantId, () => memberships.add(membership));
 
     return membership;
   }
@@ -238,7 +240,7 @@ describe.skipIf(!integrationEnabled)('role persistence (integration)', () => {
     );
     expect(granted.isOk()).toBe(true);
 
-    const stored = await roles.get(roleIdFrom(id));
+    const stored = await inTenant(tenant.id.value, () => roles.get(roleIdFrom(id)));
     expect(stored).toBeDefined();
     expect(stored?.aggregate.tenantId.value).toBe(tenant.id.value);
     expect(stored?.aggregate.permissions()).toEqual(['company.read', 'user.manage']);
@@ -279,12 +281,14 @@ describe.skipIf(!integrationEnabled)('role persistence (integration)', () => {
     const tenant = await seedTenant();
     const id = await aRole(tenant.id.value);
 
-    const observed = await roles.get(roleIdFrom(id));
+    const observed = await inTenant(tenant.id.value, () => roles.get(roleIdFrom(id)));
     expect(observed?.revision.value).toBe(1);
 
     // The first writer commits against the revision both writers read.
     observed!.aggregate.grantPermission(PermissionKey.from('company.read'), DateTime.now());
-    await boundary.execute(() => roles.update(observed!.aggregate, Revision.initial()));
+    await inTenant(tenant.id.value, () =>
+      boundary.execute(() => roles.update(observed!.aggregate, Revision.initial())),
+    );
 
     // The second writer prepared its own aggregate from the same read.
     const stale = Role.rehydrate(observed!.aggregate.snapshot());
@@ -292,7 +296,9 @@ describe.skipIf(!integrationEnabled)('role persistence (integration)', () => {
 
     let failure: unknown;
     try {
-      await boundary.execute(() => roles.update(stale, Revision.initial()));
+      await inTenant(tenant.id.value, () =>
+        boundary.execute(() => roles.update(stale, Revision.initial())),
+      );
     } catch (error) {
       failure = error;
     }
@@ -302,8 +308,12 @@ describe.skipIf(!integrationEnabled)('role persistence (integration)', () => {
     expect(conflict?.details[0]).toMatchObject({ code: 'STALE_REVISION', expected: 1 });
 
     // The winner's permission set is intact and the loser changed nothing.
-    expect((await roles.get(roleIdFrom(id)))?.aggregate.permissions()).toEqual(['company.read']);
-    expect((await roles.get(roleIdFrom(id)))?.revision.value).toBe(2);
+    expect(
+      (await inTenant(tenant.id.value, () => roles.get(roleIdFrom(id))))?.aggregate.permissions(),
+    ).toEqual(['company.read']);
+    expect((await inTenant(tenant.id.value, () => roles.get(roleIdFrom(id))))?.revision.value).toBe(
+      2,
+    );
   });
 
   it('enforces the (membership, role) uniqueness invariant in storage', async () => {
@@ -317,7 +327,7 @@ describe.skipIf(!integrationEnabled)('role persistence (integration)', () => {
       roleId: roleIdFrom(id),
       now: DateTime.now(),
     });
-    await assignments.add(first);
+    await inTenant(tenant.id.value, () => assignments.add(first));
 
     const duplicate = MembershipRole.assign({
       tenantId: tenantReferenceFrom(tenant.id.value),
@@ -328,7 +338,7 @@ describe.skipIf(!integrationEnabled)('role persistence (integration)', () => {
 
     let failure: unknown;
     try {
-      await assignments.add(duplicate);
+      await inTenant(tenant.id.value, () => assignments.add(duplicate));
     } catch (error) {
       failure = error;
     }
@@ -336,7 +346,9 @@ describe.skipIf(!integrationEnabled)('role persistence (integration)', () => {
     expect(failure).toBeInstanceOf(PersistenceError);
     expect((failure as PersistenceError).kind).toBe(PersistenceFailureKind.CONFLICT);
 
-    const stored = await assignments.findPair(membership.id, roleIdFrom(id));
+    const stored = await inTenant(tenant.id.value, () =>
+      assignments.findPair(membership.id, roleIdFrom(id)),
+    );
     expect(stored?.aggregate.id.value).toBe(first.id.value);
     expect(stored?.aggregate.isActive()).toBe(true);
   });
@@ -472,6 +484,49 @@ describe.skipIf(!integrationEnabled)('role persistence (integration)', () => {
     );
     expect(retained.valueOrThrow()).toHaveLength(1);
     expect(retained.valueOrThrow()[0]?.status).toBe('inactive');
+  });
+
+  it('refuses cross-tenant repository reads and writes', async () => {
+    const first = await seedTenant('First Co.');
+    const second = await seedTenant('Second Co.');
+    const id = await aRole(first.id.value);
+    const membership = await seedMembership(first.id.value);
+
+    // Read by id is filtered: the other tenant simply sees no such role.
+    await expect(
+      inTenant(second.id.value, () => roles.get(roleIdFrom(id))),
+    ).resolves.toBeUndefined();
+
+    // Update of an aggregate owned by another tenant is refused before SQL.
+    const observed = await inTenant(first.id.value, () => roles.get(roleIdFrom(id)));
+    observed!.aggregate.grantPermission(PermissionKey.from('user.read'), DateTime.now());
+    await expect(
+      inTenant(second.id.value, () =>
+        boundary.execute(() => roles.update(observed!.aggregate, observed!.revision)),
+      ),
+    ).rejects.toBeInstanceOf(TenantIsolationViolationError);
+
+    // Insert of a role owned by another tenant is refused before SQL.
+    const foreign = Role.create({
+      tenantId: tenantReferenceFrom(first.id.value),
+      name: RoleName.from('Foreign Role'),
+      now: DateTime.now(),
+    });
+    await expect(inTenant(second.id.value, () => roles.add(foreign))).rejects.toBeInstanceOf(
+      TenantIsolationViolationError,
+    );
+
+    // Assignment reads are tenant-filtered: no foreign assignment leaks through.
+    await expect(
+      inTenant(second.id.value, () => assignments.findByMembershipId(membership.id)),
+    ).resolves.toEqual([]);
+    await expect(
+      inTenant(second.id.value, () => assignments.findPair(membership.id, roleIdFrom(id))),
+    ).resolves.toBeUndefined();
+
+    const unchanged = await inTenant(first.id.value, () => roles.get(roleIdFrom(id)));
+    expect(unchanged?.aggregate.permissions()).toEqual([]);
+    expect(unchanged?.revision.value).toBe(1);
   });
 
   it('does not read or resolve another tenant’s role or membership', async () => {

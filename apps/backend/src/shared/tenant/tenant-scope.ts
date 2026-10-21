@@ -6,7 +6,7 @@ import type {
   TenantContext,
 } from './tenant-context.js';
 import { MISSING_TENANT_CONTEXT, SYSTEM_TENANT_CONTEXT } from './tenant-context.js';
-import { TenantContextMissingError } from './tenant.errors.js';
+import { TenantContextMissingError, TenantIsolationViolationError } from './tenant.errors.js';
 
 /**
  * The ambient tenant scope: how the current operation's company boundary
@@ -41,6 +41,8 @@ import { TenantContextMissingError } from './tenant.errors.js';
  * - **Scopes nest and restore.** An inner scope is visible only inside its own
  *   `run`; when it returns, the caller's scope is exactly as it was — a nested
  *   operation can neither leak into its parent nor overwrite it afterwards.
+ *   Widening an active tenant scope to the system scope is refused, so a
+ *   tenant-scoped path cannot escalate itself into platform access (IAM-007).
  *
  * A scope is only as long as the work it wraps: fire-and-forget work started
  * inside a scope runs later, outside it, and must establish its own.
@@ -83,6 +85,27 @@ export class TenantScope {
   }
 
   /**
+   * The current tenant id when an available scope is established; otherwise
+   * `undefined` (missing or system). Thin alias of the issue surface
+   * (`currentTenantId`) so application code can read the id without branching
+   * on the context state object.
+   */
+  public static currentTenantId(): string | undefined {
+    const context = TenantScope.current();
+    return context.state === 'available' ? context.tenantId : undefined;
+  }
+
+  /**
+   * The tenant id of the current available scope.
+   *
+   * @throws TenantContextMissingError — same fail-closed contract as
+   * `require()` (issue surface `requireTenantId`).
+   */
+  public static requireTenantId(): string {
+    return TenantScope.require().tenantId;
+  }
+
+  /**
    * Runs `work` with `context` published as the current tenant scope, and
    * restores the caller's scope when it settles.
    *
@@ -102,8 +125,21 @@ export class TenantScope {
    * company) states "this execution intentionally has no tenant" — so a
    * tenant-scoped operation inside it is still refused, but with
    * `state: 'system'` instead of an ambiguous absence.
+   *
+   * A system scope may only be *entered* when no tenant scope is active. An
+   * ordinary tenant-scoped execution must not be able to widen itself into
+   * system access halfway through: that would turn any tenant endpoint into a
+   * platform one merely by calling one method (IAM-007, section 9). The refusal
+   * is `TenantIsolationViolationError`, not a silent downgrade.
+   *
+   * @throws TenantIsolationViolationError — called inside an available tenant
+   * scope.
    */
   public static runAsSystem<T>(work: () => Promise<T>): Promise<T> {
+    if (TenantScope.current().state === 'available') {
+      throw new TenantIsolationViolationError('TenantScope.runAsSystem');
+    }
+
     return TenantScope.storage.run(SYSTEM_TENANT_CONTEXT, work);
   }
 }

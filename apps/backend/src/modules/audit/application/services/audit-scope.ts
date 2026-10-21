@@ -2,11 +2,12 @@ import { NotFoundError, ValidationError } from '../../../../shared/errors/catego
 import type { DomainError } from '../../../../shared/errors/domain-error.js';
 import { Result } from '../../../../shared/errors/result.js';
 import { TenantScope } from '../../../../shared/tenant/tenant-scope.js';
+import { isSameTenant } from '../../../../shared/tenant/tenant-identity.js';
 import { isOpaqueIdentifier } from '../../domain/audit-identifiers.js';
 
 /**
  * Resolves the tenant whose audit trail a retrieval may read (AUD-001;
- * SHR-007; ADR-003 section 24; ADR-010 section 4).
+ * SHR-007; ADR-003 section 24; ADR-010 section 4; IAM-007).
  *
  * The scope is the authority and the requested id is only a claim: the tenant
  * is read from the ambient tenant scope — established by the trusted entry
@@ -19,6 +20,10 @@ import { isOpaqueIdentifier } from '../../domain/audit-identifiers.js';
  * `TenantScope.require()` fails closed first, so a retrieval can never run
  * unscoped: without an available tenant context this function throws
  * `TenantContextMissingError` before it looks at anything else.
+ *
+ * The comparison is canonical, so the two spellings of one tenant id are one
+ * boundary and a caller naming its own company is never refused for the
+ * spelling of the name.
  *
  * Note what is *not* read here: no header, no query parameter, no body. A
  * client-supplied tenant can therefore never become the scope of a read — it can
@@ -40,7 +45,7 @@ export function resolveAuditTenant(rawTenantId: string): Result<string, DomainEr
 
   const scope = TenantScope.require();
 
-  if (scope.tenantId !== rawTenantId.trim()) {
+  if (!isSameTenant(scope.tenantId, rawTenantId.trim())) {
     return Result.fail(new NotFoundError('The requested record was not found.'));
   }
 

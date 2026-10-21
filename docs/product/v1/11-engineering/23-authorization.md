@@ -113,6 +113,10 @@ Permission در دست است؟
   Tenant-Scoped، اگر Header با Tenant حل‌شدهٔ Route تعارض داشته باشد یا چندمقداری باشد،
   درخواست با `TENANT_ACCESS_DENIED` رد می‌شود؛ اگر با Route منطبق باشد، تصمیم بر اساس
   Membership همان Tenant گرفته می‌شود. مقایسهٔ Header صرفاً یک کنترل سازگاری است.
+- Claimِ Tenant پیش از رسیدن به تصمیم به **هویتِ Canonical** تبدیل می‌شود
+  (`shared/tenant/tenant-identity.ts`): دو نگارشِ یک UUID یک Tenant‌اند، پس تصمیم همیشه
+  دو مقدارِ Canonical را مقایسه می‌کند و نامی که Caller از خودش نوشته هرگز به بهانهٔ
+  «شرکت دیگری» رد نمی‌شود.
 - شناسهٔ Tenant از Headerِ متعارض وارد Audit نمی‌شود. رد دسترسی با correlation ID ثبت
   می‌شود و metadata فاقد نام و شناسهٔ Tenant هدف است.
 

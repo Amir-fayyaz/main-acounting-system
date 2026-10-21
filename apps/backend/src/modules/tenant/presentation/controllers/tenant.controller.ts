@@ -16,7 +16,6 @@ import type { ErrorDetail } from '../../../../shared/errors/error-detail.js';
 import { ErrorCategory } from '../../../../shared/errors/error-category.js';
 import type { DomainError } from '../../../../shared/errors/domain-error.js';
 import type { Result } from '../../../../shared/errors/result.js';
-import { createTenantContext } from '../../../../shared/tenant/tenant-context.js';
 import { TenantScope } from '../../../../shared/tenant/tenant-scope.js';
 import { Authorize } from '../../../../infrastructure/api/authorization/authorization-policy.js';
 import { API_ERROR_CODES } from '../../../../infrastructure/api/errors/api-error.registry.js';
@@ -56,9 +55,10 @@ import { UpdateTenantDto } from '../dto/update-tenant.dto.js';
  * rather than a grant, and an unauthenticated or unauthorized request never
  * reaches a use case here.
  *
- * The scope the controller establishes is therefore always backed by a proven
- * membership: the same claim the boundary verified is the tenant the operation
- * runs under, through `createTenantContext` + `TenantScope` (SHR-007).
+ * The scope the operation runs under is therefore always backed by a proven
+ * membership: the global tenant-scope interceptor publishes the tenant the
+ * boundary verified, and the controller never re-derives it from the path
+ * (SHR-007; IAM-007).
  *
  * No request header, body or query field selects the tenant. The global
  * authorization guard verifies the route identifier against the caller's active
@@ -194,21 +194,22 @@ export class TenantController {
   }
 
   /**
-   * Runs `work` under the tenant's tenant scope.
+   * Runs `work` under the tenant scope the trusted boundary published.
    *
-   * This is the trusted-entry-point responsibility SHR-007 assigns to the
-   * request path: establishing the scope once, from the target the application
-   * resolved, so use cases can `TenantScope.require()` it and raised events are
-   * stamped with the tenant as tenant. Until authentication exists this target
-   * comes from the resource path; when it does, the scope comes from the
-   * principal and this becomes a *check* rather than the source.
+   * The scope is established once, by the global tenant-scope interceptor, from
+   * the tenant the authorization boundary proved for this caller's membership
+   * (IAM-007). This helper therefore does not *establish* anything: it only
+   * checks that the route carries a well-formed tenant identifier and lets the
+   * established scope stand. The use case then compares the requested tenant
+   * with that scope, so a request for another company's record is refused
+   * before any data is read.
    */
   private async inTenantScope<T>(rawId: string, work: () => Promise<T>): Promise<T> {
     if (!isTenantId(rawId)) {
       throw ApiErrorException.notFound();
     }
 
-    return TenantScope.run(createTenantContext(rawId), work);
+    return work();
   }
 
   /** Maps a use-case outcome to a response, or raises the standard error. */

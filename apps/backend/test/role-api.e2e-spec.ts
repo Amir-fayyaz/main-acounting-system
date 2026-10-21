@@ -109,7 +109,7 @@ async function createHarness(): Promise<Harness> {
 
   const directory: TenantDirectory = {
     async exists(tenantId: string): Promise<boolean> {
-      return isTenantId(tenantId) && (await tenants.get(tenantIdFrom(tenantId))) !== undefined;
+      return isTenantId(tenantId) && (await tenants.exists(tenantIdFrom(tenantId)));
     },
   };
 

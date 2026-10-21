@@ -2,6 +2,10 @@ import { and, eq } from 'drizzle-orm';
 
 import type { Database } from '../../../../infrastructure/database/database.module.js';
 import { scopedDatabase } from '../../../../infrastructure/database/scoped-database.js';
+import {
+  assertPlatformWrite,
+  assertTenantOwnership,
+} from '../../../../infrastructure/database/tenant-scoped.js';
 import { staleRevisionConflict } from '../../../../shared/persistence/optimistic-concurrency.js';
 import {
   PersistenceError,
@@ -19,9 +23,9 @@ type TenantRow = typeof tenants.$inferSelect;
 
 /**
  * Drizzle/MySQL implementation of the tenant persistence port (IAM-001;
- * SHR-004, SHR-008).
+ * SHR-004, SHR-008; IAM-007).
  *
- * Two properties make this adapter correct rather than merely convenient:
+ * Three properties make this adapter correct rather than merely convenient:
  *
  * - **Every statement goes through `scopedDatabase`.** Inside a use case's
  *   transaction the write joins that boundary and commits with it; outside one
@@ -32,11 +36,21 @@ type TenantRow = typeof tenants.$inferSelect;
  *   affected rows means the record moved, and that is reported through
  *   `staleRevisionConflict` — the shared SHR-008 failure — instead of
  *   overwriting the winner.
+ * - **The tenant boundary is enforced here, not only in the application.**
+ *   The `tenants` table is the root registry, so it carries no `tenant_id`
+ *   column — but its primary key *is* the company boundary. Reading or
+ *   changing a tenant's own record therefore requires the active scope to name
+ *   that very tenant, and creating one is a platform-level write that tenant
+ *   work may not perform (IAM-007, sections 4 and 9).
  */
 export class DrizzleTenantRepository implements TenantRepository {
   public constructor(private readonly database: Database) {}
 
   public async get(id: TenantId): Promise<Loaded<Tenant> | undefined> {
+    // A tenant's own record belongs to that tenant: it may only be read from
+    // inside that tenant's scope.
+    assertTenantOwnership(id.value, 'TenantRepository.get');
+
     const rows = await scopedDatabase(this.database)
       .select()
       .from(tenants)
@@ -49,7 +63,23 @@ export class DrizzleTenantRepository implements TenantRepository {
       : { aggregate: toTenant(row), revision: Revision.of(row.revision) };
   }
 
+  public async exists(tenantId: TenantId): Promise<boolean> {
+    // Existence is a registry question, not a tenant-scoped read: it says
+    // whether the identity is taken and nothing about the company itself.
+    const rows = await scopedDatabase(this.database)
+      .select({ id: tenants.id })
+      .from(tenants)
+      .where(eq(tenants.id, tenantId.value))
+      .limit(1);
+
+    return rows.length > 0;
+  }
+
   public async add(tenant: Tenant): Promise<WriteReceipt> {
+    // Establishing a boundary is platform-level work: tenant-scoped execution
+    // may not create companies.
+    assertPlatformWrite('TenantRepository.add');
+
     try {
       await scopedDatabase(this.database).insert(tenants).values({
         id: tenant.id.value,
@@ -74,6 +104,8 @@ export class DrizzleTenantRepository implements TenantRepository {
   }
 
   public async update(tenant: Tenant, expectedRevision: Revision): Promise<WriteReceipt> {
+    assertTenantOwnership(tenant.id.value, 'TenantRepository.update');
+
     const [header] = await scopedDatabase(this.database)
       .update(tenants)
       .set({
