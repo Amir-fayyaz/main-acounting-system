@@ -389,4 +389,66 @@ describe('JobDispatcher � tenant scope (SHR-007)', () => {
 
     expect(observed).toMatchObject({ state: 'available', tenantId: 'tenant-42' });
   });
+
+  it('refuses a job whose payload names another tenant than its envelope', async () => {
+    let executions = 0;
+    const tenantJob: RegisteredJob = {
+      type: 'test.tenant-conflict',
+      tenantScoped: true,
+      async execute() {
+        executions += 1;
+
+        return { outcome: 'completed' };
+      },
+    };
+    const { dispatcher, queue } = setup([tenantJob]);
+    const job = {
+      ...envelope('test.tenant-conflict', { tenantId: 'tenant-B' }),
+      companyId: 'tenant-42',
+    };
+
+    await expect(dispatcher.dispatch(claimed(job))).resolves.toBe('failed');
+
+    // The work never ran, and the failure is terminal: no attempt can settle a
+    // disagreement about who owns the job.
+    expect(executions).toBe(0);
+    expect(queue.retries).toHaveLength(0);
+    expect(queue.states.get(job.jobId)?.lastError?.name).toBe('TenantIsolationViolationError');
+  });
+
+  it('runs a job whose payload repeats the tenant its envelope already names', async () => {
+    const tenantJob: RegisteredJob = {
+      type: 'test.tenant-agrees',
+      tenantScoped: true,
+      async execute() {
+        return { outcome: 'completed' };
+      },
+    };
+    const { dispatcher } = setup([tenantJob]);
+    const job = {
+      ...envelope('test.tenant-agrees', { tenantId: 'tenant-42' }),
+      companyId: 'tenant-42',
+    };
+
+    await expect(dispatcher.dispatch(claimed(job))).resolves.toBe('completed');
+  });
+
+  it('never lets a payload name the tenant of a job without owner context', async () => {
+    let observed: TenantContext | undefined;
+    const platformJob: RegisteredJob = {
+      type: 'test.payload-tenant',
+      async execute() {
+        observed = TenantScope.current();
+
+        return { outcome: 'completed' };
+      },
+    };
+    const { dispatcher } = setup([platformJob]);
+    const job = envelope('test.payload-tenant', { tenantId: 'tenant-B' });
+
+    await expect(dispatcher.dispatch(claimed(job))).resolves.toBe('completed');
+
+    // The payload never selects the tenant: the job still ran system-level.
+    expect(observed).toEqual({ state: 'system' });
+  });
 });

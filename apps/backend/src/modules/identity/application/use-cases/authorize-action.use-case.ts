@@ -1,9 +1,9 @@
 import type { DomainError } from '../../../../shared/errors/domain-error.js';
 import { Result } from '../../../../shared/errors/result.js';
+import { createTenantContext } from '../../../../shared/tenant/tenant-context.js';
 import { TenantScope } from '../../../../shared/tenant/tenant-scope.js';
 import type { AuditRecorder } from '../../../audit/application/ports/audit-recorder.port.js';
 import { AccountNotAuthenticatableError } from '../../domain/errors/authentication.errors.js';
-import type { Membership } from '../../domain/aggregates/membership.js';
 import type { AuthorizationEvidence } from '../../domain/authorization/authorization-evidence.js';
 import { decideAuthorization, permits } from '../../domain/authorization/authorization-policy.js';
 import {
@@ -22,7 +22,10 @@ import type { MembershipRoleRepository } from '../../domain/repositories/members
 import type { RoleRepository } from '../../domain/repositories/role.repository.js';
 import type { UserRepository } from '../../domain/repositories/user.repository.js';
 import type { PermissionKey } from '../../domain/value-objects/permission-key.js';
-import { isTenantReference, tenantReferenceFrom } from '../../domain/value-objects/tenant-reference.js';
+import {
+  isTenantReference,
+  tenantReferenceFrom,
+} from '../../domain/value-objects/tenant-reference.js';
 import { isUserId, userIdFrom } from '../../domain/value-objects/user-id.js';
 import type { AuthorizationContextView } from '../authorization/authorization-context.view.js';
 import type { Authorization, AuthorizationRequest } from '../ports/authorization.port.js';
@@ -108,10 +111,14 @@ export class AuthorizeActionUseCase implements Authorization {
       return this.deny(request, userId.value, new TenantAccessDeniedError());
     }
 
+    // Evidence resolution is deliberately a **system-level** read: whether a
+    // caller may enter a tenant is answered before that tenant's scope exists.
+    // If a caller already runs inside a tenant, the work stays there (no
+    // escalation), and the repository criterion must match it.
     const resolved =
       target === undefined
-        ? await this.resolvePlatformEvidence(await this.memberships.findByUserId(userId))
-        : await this.resolveTenantEvidence(userId, target);
+        ? await this.inSystemScope(() => this.resolvePlatformEvidence(userId))
+        : await this.inSystemScope(() => this.resolveTenantEvidence(userId, target));
 
     if (resolved.isFail()) {
       return this.deny(request, userId.value, resolved.errorOrThrow());
@@ -154,7 +161,7 @@ export class AuthorizeActionUseCase implements Authorization {
     actorUserId: string,
     error: DomainError,
   ): Promise<Result<AuthorizationContextView, DomainError>> {
-    await TenantScope.runAsSystem(() =>
+    const record = (): Promise<void> =>
       this.audit.record({
         action: 'authorization.denied',
         outcome: 'denied',
@@ -166,8 +173,13 @@ export class AuthorizeActionUseCase implements Authorization {
           tenantScoped: request.targetTenantId !== undefined,
           ...(request.tenantClaimConflict === true ? { tenantClaimConflict: true } : {}),
         },
-      }),
-    );
+      });
+
+    // A denial raised inside a tenant stays tenant-scoped; one raised before a
+    // scope exists is an explicit system fact. Never escalate a tenant scope.
+    await (TenantScope.current().state === 'available'
+      ? record()
+      : TenantScope.runAsSystem(record));
 
     return Result.fail(error);
   }
@@ -188,25 +200,31 @@ export class AuthorizeActionUseCase implements Authorization {
       return Result.fail(new TenantContextRequiredError());
     }
 
+    // The claim is resolved into the tenant's canonical identity before it
+    // reaches the evidence, so the two spellings of one UUID are one tenant
+    // and not two (IAM-007). The decision then compares two canonical values.
+    const target = tenantReferenceFrom(targetTenantId).value;
+
     const membership = await this.tenantMembership.findActiveForUserAndTenant(
       userId,
-      tenantReferenceFrom(targetTenantId),
+      tenantReferenceFrom(target),
     );
 
     if (membership === undefined) {
       // Missing and inactive memberships have the same evidence shape and the
       // same public denial; neither case triggers a Tenant Directory lookup.
-      return Result.ok({ targetTenantId, permissions: new Set<string>() });
+      return Result.ok({ targetTenantId: target, permissions: new Set<string>() });
     }
 
-    const permissions = await resolveEffectivePermissionKeys(
-      [membership.membershipId],
-      this.assignments,
-      this.roles,
+    // The membership's own tenant is now the scope of permission resolution:
+    // assignment and role reads are tenant-filtered even on this pre-request
+    // authorization path.
+    const permissions = await TenantScope.run(createTenantContext(membership.tenantId.value), () =>
+      resolveEffectivePermissionKeys([membership.membershipId], this.assignments, this.roles),
     );
 
     return Result.ok({
-      targetTenantId,
+      targetTenantId: target,
       membership: {
         membershipId: membership.membershipId.value,
         tenantId: membership.tenantId.value,
@@ -228,16 +246,38 @@ export class AuthorizeActionUseCase implements Authorization {
    * change of shape.
    */
   private async resolvePlatformEvidence(
-    loaded: readonly { readonly aggregate: Membership }[],
+    userId: ReturnType<typeof userIdFrom>,
   ): Promise<Result<AuthorizationEvidence, DomainError>> {
+    // A person's memberships span tenants; only an explicit system operation
+    // may ask that question, and the repository enforces it.
+    const loaded = await this.memberships.findByUserId(userId);
     const active = loaded.filter((candidate) => candidate.aggregate.isActive());
-    const permissions = await resolveEffectivePermissionKeys(
-      active.map((candidate) => candidate.aggregate.id),
-      this.assignments,
-      this.roles,
-    );
+    const permissions = new Set<string>();
+
+    // Each membership's roles are read under **its own** tenant scope, so the
+    // union is assembled without ever running a cross-tenant repository query.
+    for (const candidate of active) {
+      const granted = await TenantScope.run(
+        createTenantContext(candidate.aggregate.tenantId.value),
+        () =>
+          resolveEffectivePermissionKeys([candidate.aggregate.id], this.assignments, this.roles),
+      );
+
+      for (const key of granted) {
+        permissions.add(key);
+      }
+    }
 
     return Result.ok({ permissions });
+  }
+
+  /**
+   * Runs trusted evidence resolution under an explicit system scope, unless a
+   * tenant scope is already active — entering system from a tenant would be an
+   * escalation, so that case keeps the narrower scope.
+   */
+  private inSystemScope<T>(work: () => Promise<T>): Promise<T> {
+    return TenantScope.current().state === 'available' ? work() : TenantScope.runAsSystem(work);
   }
 
   /** The resolved context a permitted caller receives. */

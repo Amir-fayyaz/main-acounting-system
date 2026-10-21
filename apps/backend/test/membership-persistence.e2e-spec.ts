@@ -40,6 +40,7 @@ import { Revision } from '../src/shared/persistence/revision.js';
 import { DateTime } from '../src/shared/time/date-time.js';
 import { createTenantContext } from '../src/shared/tenant/tenant-context.js';
 import { TenantScope } from '../src/shared/tenant/tenant-scope.js';
+import { TenantIsolationViolationError } from '../src/shared/tenant/tenant.errors.js';
 import { createTransactionBoundary } from '../src/shared/transaction/transaction-boundary.js';
 import type { TransactionBoundary } from '../src/shared/transaction/transaction-boundary.js';
 import { RecordingMembershipEvents } from './support/membership-doubles.js';
@@ -117,7 +118,7 @@ describe.skipIf(!integrationEnabled)('membership persistence (integration)', () 
     boundary = createTransactionBoundary(new DrizzleTransactionRunner(database));
     directory = {
       async exists(tenantId: string): Promise<boolean> {
-        return isTenantId(tenantId) && (await tenants.get(tenantIdFrom(tenantId))) !== undefined;
+        return isTenantId(tenantId) && (await tenants.exists(tenantIdFrom(tenantId)));
       },
     };
   });
@@ -175,7 +176,9 @@ describe.skipIf(!integrationEnabled)('membership persistence (integration)', () 
     expect(created.isOk()).toBe(true);
     const view = created.valueOrThrow();
 
-    const stored = await memberships.get(membershipIdFrom(view.id));
+    const stored = await inTenant(tenant.id.value, () =>
+      memberships.get(membershipIdFrom(view.id)),
+    );
     expect(stored).toBeDefined();
     expect(stored?.aggregate.userId.value).toBe(user.id.value);
     expect(stored?.aggregate.tenantId.value).toBe(tenant.id.value);
@@ -193,7 +196,7 @@ describe.skipIf(!integrationEnabled)('membership persistence (integration)', () 
       tenantId: tenantIdFrom(tenant.id.value),
       now,
     });
-    await memberships.add(first);
+    await inTenant(tenant.id.value, () => memberships.add(first));
 
     const second = Membership.create({
       userId: user.id,
@@ -203,16 +206,18 @@ describe.skipIf(!integrationEnabled)('membership persistence (integration)', () 
 
     let failure: unknown;
     try {
-      await memberships.add(second);
+      await inTenant(tenant.id.value, () => memberships.add(second));
     } catch (error) {
       failure = error;
     }
 
     expect(failure).toBeInstanceOf(PersistenceError);
     expect((failure as PersistenceError).kind).toBe(PersistenceFailureKind.CONFLICT);
-    await expect(memberships.existsForPair(user.id, tenantIdFrom(tenant.id.value))).resolves.toBe(
-      true,
-    );
+    await expect(
+      inTenant(tenant.id.value, () =>
+        memberships.existsForPair(user.id, tenantIdFrom(tenant.id.value)),
+      ),
+    ).resolves.toBe(true);
   });
 
   it('deactivates a membership without deleting the record', async () => {
@@ -241,13 +246,17 @@ describe.skipIf(!integrationEnabled)('membership persistence (integration)', () 
     );
     expect(deactivated.valueOrThrow()).toMatchObject({ status: 'inactive', revision: 2 });
 
-    const stored = await memberships.get(membershipIdFrom(created.id));
+    const stored = await inTenant(tenant.id.value, () =>
+      memberships.get(membershipIdFrom(created.id)),
+    );
     expect(stored?.aggregate.status.value).toBe('inactive');
     expect(stored?.aggregate.userId.value).toBe(user.id.value);
 
     // The user and tenant are untouched by deactivation.
     expect((await users.get(user.id))?.aggregate.status.value).toBe('active');
-    expect((await tenants.get(tenant.id))?.aggregate.status.value).toBe('active');
+    expect(
+      (await inTenant(tenant.id.value, () => tenants.get(tenant.id)))?.aggregate.status.value,
+    ).toBe('active');
   });
 
   it('refuses the second of two lifecycle writes that read the same revision', async () => {
@@ -265,14 +274,18 @@ describe.skipIf(!integrationEnabled)('membership persistence (integration)', () 
     ).valueOrThrow();
     const id = membershipIdFrom(created.id);
 
-    const observed = await memberships.get(id);
+    const observed = await inTenant(tenant.id.value, () => memberships.get(id));
     expect(observed?.revision.value).toBe(1);
 
-    await boundary.execute(() => memberships.update(observed!.aggregate, Revision.initial()));
+    await inTenant(tenant.id.value, () =>
+      boundary.execute(() => memberships.update(observed!.aggregate, Revision.initial())),
+    );
 
     let failure: unknown;
     try {
-      await boundary.execute(() => memberships.update(observed!.aggregate, Revision.initial()));
+      await inTenant(tenant.id.value, () =>
+        boundary.execute(() => memberships.update(observed!.aggregate, Revision.initial())),
+      );
     } catch (error) {
       failure = error;
     }
@@ -280,7 +293,7 @@ describe.skipIf(!integrationEnabled)('membership persistence (integration)', () 
     const conflict = toConflict(failure);
     expect(conflict).toBeInstanceOf(ConflictError);
     expect(conflict?.details[0]).toMatchObject({ code: 'STALE_REVISION', expected: 1 });
-    expect((await memberships.get(id))?.revision.value).toBe(2);
+    expect((await inTenant(tenant.id.value, () => memberships.get(id)))?.revision.value).toBe(2);
 
     // A stale lifecycle command is reported as the conflict, too.
     const stale = await inTenant(tenant.id.value, () =>
@@ -295,6 +308,57 @@ describe.skipIf(!integrationEnabled)('membership persistence (integration)', () 
     );
     expect(stale.isFail()).toBe(true);
     expect(stale.errorOrThrow()).toBeInstanceOf(ConflictError);
+  });
+
+  it('refuses cross-tenant reads, writes, updates and deletes through the repository', async () => {
+    const first = await seedTenant('First Co.');
+    const second = await seedTenant('Second Co.');
+    const user = await seedUser();
+
+    const created = (
+      await inTenant(first.id.value, () =>
+        create().execute(new CreateMembership({ userId: user.id.value, tenantId: first.id.value })),
+      )
+    ).valueOrThrow();
+    const id = membershipIdFrom(created.id);
+
+    // Read: the row exists, but not for the other tenant.
+    await expect(inTenant(second.id.value, () => memberships.get(id))).resolves.toBeUndefined();
+
+    // Existence criterion and list are refused rather than silently widened.
+    await expect(
+      inTenant(second.id.value, () =>
+        memberships.existsForPair(user.id, tenantIdFrom(first.id.value)),
+      ),
+    ).rejects.toBeInstanceOf(TenantIsolationViolationError);
+    await expect(
+      inTenant(second.id.value, () => memberships.findByTenantId(tenantIdFrom(first.id.value))),
+    ).rejects.toBeInstanceOf(TenantIsolationViolationError);
+
+    // Write: an aggregate owned by the first tenant cannot be updated from the second.
+    const stored = await inTenant(first.id.value, () => memberships.get(id));
+    await inTenant(first.id.value, async () => {
+      stored!.aggregate.deactivate(DateTime.now());
+    });
+    await expect(
+      inTenant(second.id.value, () =>
+        boundary.execute(() => memberships.update(stored!.aggregate, Revision.initial())),
+      ),
+    ).rejects.toBeInstanceOf(TenantIsolationViolationError);
+
+    // Write: a new row owned by the first tenant cannot be inserted from the second.
+    const foreign = Membership.create({
+      userId: user.id,
+      tenantId: tenantIdFrom(first.id.value),
+      now: DateTime.now(),
+    });
+    await expect(inTenant(second.id.value, () => memberships.add(foreign))).rejects.toBeInstanceOf(
+      TenantIsolationViolationError,
+    );
+
+    const storedAfter = await inTenant(first.id.value, () => memberships.get(id));
+    expect(storedAfter?.aggregate.status.value).toBe('inactive');
+    expect(storedAfter?.revision.value).toBe(1);
   });
 
   it('finds a user’s memberships and a tenant’s members from storage', async () => {

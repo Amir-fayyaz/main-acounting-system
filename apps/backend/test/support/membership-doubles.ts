@@ -18,6 +18,12 @@ import type { Loaded, WriteReceipt } from '../../src/shared/persistence/reposito
 import { Revision } from '../../src/shared/persistence/revision.js';
 import { DateTime } from '../../src/shared/time/date-time.js';
 import type { TransactionBoundary } from '../../src/shared/transaction/transaction-boundary.js';
+import {
+  assertTenantCriterion,
+  assertTenantOwnership,
+  requireSystemScope,
+} from '../../src/infrastructure/database/tenant-scoped.js';
+import { TenantScope } from '../../src/shared/tenant/tenant-scope.js';
 
 /**
  * Test doubles for the identity membership feature (IAM-003).
@@ -65,13 +71,18 @@ export class InMemoryMembershipRepository implements MembershipRepository {
   }
 
   public async get(id: MembershipId): Promise<Loaded<Membership> | undefined> {
+    const activeTenantId = TenantScope.requireTenantId();
     const record = this.records.get(id.value);
-    return record === undefined
+
+    // Mirrors the adapter's `WHERE tenant_id = <scope>`: another tenant's id
+    // simply does not match, rather than leaking the record.
+    return record === undefined || record.snapshot.tenantId !== activeTenantId
       ? undefined
       : { aggregate: Membership.rehydrate(record.snapshot), revision: record.revision };
   }
 
   public async add(membership: Membership): Promise<WriteReceipt> {
+    assertTenantOwnership(membership.tenantId.value, 'MembershipRepository.add');
     this.addCalls += 1;
     if (
       this.conflictOnNextAdd ||
@@ -89,6 +100,7 @@ export class InMemoryMembershipRepository implements MembershipRepository {
   }
 
   public async update(membership: Membership, expectedRevision: Revision): Promise<WriteReceipt> {
+    assertTenantOwnership(membership.tenantId.value, 'MembershipRepository.update');
     this.updateCalls += 1;
     const record = this.records.get(membership.id.value);
 
@@ -102,6 +114,8 @@ export class InMemoryMembershipRepository implements MembershipRepository {
   }
 
   public async existsForPair(userId: UserId, tenantId: TenantReference): Promise<boolean> {
+    assertTenantCriterion(tenantId.value, 'MembershipRepository.existsForPair');
+
     return Array.from(this.records.values()).some(
       (record) =>
         record.snapshot.userId === userId.value && record.snapshot.tenantId === tenantId.value,
@@ -112,6 +126,8 @@ export class InMemoryMembershipRepository implements MembershipRepository {
     userId: UserId,
     tenantId: TenantReference,
   ): Promise<Loaded<Membership> | undefined> {
+    assertTenantCriterion(tenantId.value, 'MembershipRepository.findByUserAndTenant');
+
     return this.loaded().find(
       (record) =>
         record.aggregate.userId.value === userId.value &&
@@ -120,10 +136,14 @@ export class InMemoryMembershipRepository implements MembershipRepository {
   }
 
   public async findByUserId(userId: UserId): Promise<readonly Loaded<Membership>[]> {
+    requireSystemScope('MembershipRepository.findByUserId');
+
     return this.loaded().filter((record) => record.aggregate.userId.value === userId.value);
   }
 
   public async findByTenantId(tenantId: TenantReference): Promise<readonly Loaded<Membership>[]> {
+    assertTenantCriterion(tenantId.value, 'MembershipRepository.findByTenantId');
+
     return this.loaded().filter((record) => record.aggregate.tenantId.value === tenantId.value);
   }
 

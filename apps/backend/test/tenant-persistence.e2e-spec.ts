@@ -25,6 +25,7 @@ import { toConflict } from '../src/shared/persistence/optimistic-concurrency.js'
 import { Revision } from '../src/shared/persistence/revision.js';
 import { createTenantContext } from '../src/shared/tenant/tenant-context.js';
 import { TenantScope } from '../src/shared/tenant/tenant-scope.js';
+import { TenantIsolationViolationError } from '../src/shared/tenant/tenant.errors.js';
 import type { TransactionBoundary } from '../src/shared/transaction/transaction-boundary.js';
 import { createTransactionBoundary } from '../src/shared/transaction/transaction-boundary.js';
 import { RecordingTenantEvents } from './support/tenant-doubles.js';
@@ -52,6 +53,16 @@ import { RecordingTenantEvents } from './support/tenant-doubles.js';
 const integrationEnabled = env.MYSQL_INTEGRATION === '1';
 
 const TENANT_TABLE = 'tenants';
+
+/**
+ * Runs `work` inside the scope of one tenant.
+ *
+ * A tenant's own record belongs to that tenant, so reading or changing it is
+ * only possible from inside its scope (IAM-007).
+ */
+function inTenant<T>(tenantId: string, work: () => Promise<T>): Promise<T> {
+  return TenantScope.run(createTenantContext(tenantId), work);
+}
 
 describe.skipIf(!integrationEnabled)('tenant persistence (integration)', () => {
   let pool: Pool;
@@ -146,7 +157,7 @@ describe.skipIf(!integrationEnabled)('tenant persistence (integration)', () => {
     );
 
     expect(updated.valueOrThrow()).toMatchObject({ name: 'After', revision: 2 });
-    const stored = await repository.get(tenantIdFrom(created.id));
+    const stored = await inTenant(created.id, () => repository.get(tenantIdFrom(created.id)));
     expect(stored?.revision.value).toBe(2);
   });
 
@@ -161,8 +172,8 @@ describe.skipIf(!integrationEnabled)('tenant persistence (integration)', () => {
     const id = tenantIdFrom(created.id);
 
     // Both writers observe revision 1.
-    const first = await repository.get(id);
-    const second = await repository.get(id);
+    const first = await inTenant(created.id, () => repository.get(id));
+    const second = await inTenant(created.id, () => repository.get(id));
     expect(first?.revision.value).toBe(1);
     expect(second?.revision.value).toBe(1);
 
@@ -188,7 +199,7 @@ describe.skipIf(!integrationEnabled)('tenant persistence (integration)', () => {
     expect(loser.isFail()).toBe(true);
     expect(loser.errorOrThrow()).toBeInstanceOf(ConflictError);
 
-    const stored = await repository.get(id);
+    const stored = await inTenant(created.id, () => repository.get(id));
     expect(stored?.revision.value).toBe(2);
     expect(stored?.aggregate.name.value).toBe('Winner');
     expect(stored?.aggregate.status.value).toBe('active');
@@ -202,14 +213,18 @@ describe.skipIf(!integrationEnabled)('tenant persistence (integration)', () => {
     ).valueOrThrow();
     const id = tenantIdFrom(created.id);
 
-    const observed = await repository.get(id);
+    const observed = await inTenant(created.id, () => repository.get(id));
     expect(observed).toBeDefined();
 
-    await boundary.execute(() => repository.update(observed!.aggregate, Revision.initial()));
+    await inTenant(created.id, () =>
+      boundary.execute(() => repository.update(observed!.aggregate, Revision.initial())),
+    );
 
     let failure: unknown;
     try {
-      await boundary.execute(() => repository.update(observed!.aggregate, Revision.initial()));
+      await inTenant(created.id, () =>
+        boundary.execute(() => repository.update(observed!.aggregate, Revision.initial())),
+      );
     } catch (error) {
       failure = error;
     }
@@ -217,6 +232,46 @@ describe.skipIf(!integrationEnabled)('tenant persistence (integration)', () => {
     const conflict = toConflict(failure);
     expect(conflict).toBeInstanceOf(ConflictError);
     expect(conflict?.details[0]).toMatchObject({ code: 'STALE_REVISION', expected: 1 });
-    expect((await repository.get(id))?.revision.value).toBe(2);
+    expect((await inTenant(created.id, () => repository.get(id)))?.revision.value).toBe(2);
+  });
+
+  it('refuses to read or change a tenant from another tenant’s scope', async () => {
+    const events = new RecordingTenantEvents();
+    const create = new CreateTenantUseCase(repository, events, boundary);
+    const created = (
+      await TenantScope.runAsSystem(() => create.execute(new CreateTenant({ name: 'Owned Co.' })))
+    ).valueOrThrow();
+    const other = (
+      await TenantScope.runAsSystem(() => create.execute(new CreateTenant({ name: 'Other Co.' })))
+    ).valueOrThrow();
+
+    // The record exists, but not for the other tenant.
+    await expect(
+      inTenant(other.id, () => repository.get(tenantIdFrom(created.id))),
+    ).rejects.toBeInstanceOf(TenantIsolationViolationError);
+
+    // A write of another tenant's aggregate is refused before the statement.
+    const stored = await inTenant(created.id, () => repository.get(tenantIdFrom(created.id)));
+    await expect(
+      inTenant(other.id, () =>
+        boundary.execute(() => repository.update(stored!.aggregate, Revision.initial())),
+      ),
+    ).rejects.toBeInstanceOf(TenantIsolationViolationError);
+
+    // The record is untouched.
+    const unchanged = await inTenant(created.id, () => repository.get(tenantIdFrom(created.id)));
+    expect(unchanged?.revision.value).toBe(1);
+    expect(unchanged?.aggregate.name.value).toBe('Owned Co.');
+  });
+
+  it('refuses to create a tenant from inside a tenant scope', async () => {
+    const events = new RecordingTenantEvents();
+    const create = new CreateTenantUseCase(repository, events, boundary);
+
+    await expect(
+      inTenant('018f0d3c-6d0f-7a4b-9d4e-2b3c4d5e6f70', () =>
+        create.execute(new CreateTenant({ name: 'Escalated Co.' })),
+      ),
+    ).rejects.toBeInstanceOf(TenantIsolationViolationError);
   });
 });
