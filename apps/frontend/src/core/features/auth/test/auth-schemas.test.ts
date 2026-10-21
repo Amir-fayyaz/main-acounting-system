@@ -16,8 +16,8 @@ const errorsOf = (schema: z.ZodMiniType, data: unknown) => {
 const validSignUp = {
   displayName: 'علی رضایی',
   email: 'ali@company.ir',
-  password: '12345678',
-  password2: '12345678',
+  password: '12345678abcd',
+  password2: '12345678abcd',
 };
 
 describe('signInSchema', () => {
@@ -65,14 +65,42 @@ describe('signUpSchema', () => {
     );
   });
 
-  it('رمز عبور کمتر از ۸ کاراکتر را رد می‌کند', () => {
-    const errors = errorsOf(signUpSchema, {
-      ...validSignUp,
-      password: '1234567',
-      password2: '1234567',
-    });
+  it('رمز عبور کمتر از ۱۲ کاراکتر را رد می‌کند (سیاست بک‌اند)', () => {
+    const short = '1'.repeat(11);
+    const errors = errorsOf(signUpSchema, { ...validSignUp, password: short, password2: short });
 
-    expect(errors.password).toBe('رمز عبور باید حداقل ۸ کاراکتر باشد');
+    expect(errors.password).toBe('رمز عبور باید حداقل ۱۲ کاراکتر باشد');
+  });
+
+  it('رمز عبور دقیقاً ۱۲ کاراکتری را می‌پذیرد', () => {
+    const ok = '1'.repeat(12);
+    expect(errorsOf(signUpSchema, { ...validSignUp, password: ok, password2: ok })).toEqual({});
+  });
+
+  it('رمز عبور بیشتر از ۱۲۸ کاراکتر را رد می‌کند', () => {
+    const long = 'a'.repeat(129);
+    const errors = errorsOf(signUpSchema, { ...validSignUp, password: long, password2: long });
+
+    expect(errors.password).toBe('رمز عبور نباید بیشتر از ۱۲۸ کاراکتر باشد');
+  });
+
+  it('رمز عبوری که فقط فاصله است را رد می‌کند', () => {
+    const blank = ' '.repeat(12);
+    const errors = errorsOf(signUpSchema, { ...validSignUp, password: blank, password2: blank });
+
+    expect(errors.password).toBe('رمز عبور نمی‌تواند فقط شامل فاصله باشد');
+  });
+
+  it('نام نمایشی بیشتر از ۲۰۰ کاراکتر را رد می‌کند', () => {
+    expect(
+      errorsOf(signUpSchema, { ...validSignUp, displayName: 'a'.repeat(201) }).displayName,
+    ).toBe('نام نمایشی نباید بیشتر از ۲۰۰ کاراکتر باشد');
+  });
+
+  it('نام نمایشی فقط-فاصله را رد می‌کند', () => {
+    expect(errorsOf(signUpSchema, { ...validSignUp, displayName: '   ' }).displayName).toBe(
+      'نام نمایشی را وارد کنید',
+    );
   });
 
   it('تکرار رمز عبور متفاوت را رد می‌کند', () => {
@@ -103,7 +131,7 @@ describe('forgot schemas', () => {
     expect(
       errorsOf(forgotStep2Schema, {
         otp: '123456',
-        password: '12345678',
+        password: '12345678abcd',
       }),
     ).toEqual({});
 
