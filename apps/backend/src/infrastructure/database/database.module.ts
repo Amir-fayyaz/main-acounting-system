@@ -1,5 +1,5 @@
 import { Inject, Module, type OnApplicationShutdown, type Provider } from '@nestjs/common';
-import { drizzle, type MySql2Database } from 'drizzle-orm/mysql2';
+ import { drizzle } from 'drizzle-orm/mysql2';
 import { createPool, type Pool } from 'mysql2/promise';
 import {
   createTransactionBoundary,
@@ -8,16 +8,10 @@ import {
 import { AppConfigService } from '../config/app-config.service.js';
 import { DrizzleTransactionRunner } from './drizzle-transaction-runner.js';
 import { DATABASE, MYSQL_CONNECTION_POOL, TRANSACTION_BOUNDARY } from './database.tokens.js';
+  import type { Database } from './database.types.js';
 
-/**
- * Drizzle instance shared by the persistence adapters of the domain modules.
- *
- * The schema is intentionally empty: each module owns its tables and migrations
- * inside its own `infrastructure/persistence` layer (TECH-003), so no global
- * schema is registered here.
- */
-export type Database = MySql2Database<Record<string, never>>;
 
+  export type { Database };
 const CONNECTION_LIMIT = 10;
 
 /**
