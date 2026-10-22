@@ -6,7 +6,6 @@ import type {
   SignUpInput,
   SignUpResponse,
 } from '../assets/@types/auth.types';
-import { env } from 'process';
 
 /**
  * آدرس پایه طبق قرارداد infra پروژه:
@@ -15,9 +14,9 @@ import { env } from 'process';
  * NEXT_PUBLIC_BACK_URL (BASE_URL قدیمی) فقط fallback است.
  */
 function authPrefix(): string {
-  const publicBase = env.NEXT_PUBLIC_API_BASE_URL ?? BASE_URL;
+  const publicBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? BASE_URL;
   const base =
-    typeof window === 'undefined' ? (env.INTERNAL_API_BASE_URL ?? publicBase) : publicBase;
+    typeof window === 'undefined' ? (process.env.INTERNAL_API_BASE_URL ?? publicBase) : publicBase;
   return `${base}/v1/auth`;
 }
 
