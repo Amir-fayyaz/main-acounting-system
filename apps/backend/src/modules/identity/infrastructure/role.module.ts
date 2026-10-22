@@ -10,8 +10,7 @@ import { OUTBOX_RECORDER } from '../../../infrastructure/outbox/outbox.tokens.js
 import type { TransactionBoundary } from '../../../shared/transaction/transaction-boundary.js';
 import { AUDIT_RECORDER } from '../../audit/application/audit.tokens.js';
 import type { AuditRecorder } from '../../audit/application/ports/audit-recorder.port.js';
-import { TENANT_DIRECTORY } from '../../tenant/application/tenant.tokens.js';
-import type { TenantDirectory } from '../../tenant/application/ports/tenant-directory.port.js';
+import { TENANT_DIRECTORY, type TenantDirectory } from '../../tenant/public-api.js';
 import { MEMBERSHIP_REPOSITORY } from '../application/membership.tokens.js';
 import { AssignRoleToMembershipUseCase } from '../application/use-cases/assign-role-to-membership.use-case.js';
 import { ChangeRoleStatusUseCase } from '../application/use-cases/change-role-status.use-case.js';

@@ -18,6 +18,7 @@
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "deps:check": "pnpm --filter @accounting-saas/backend deps:check",
     "test": "pnpm -r test",
     "test:backend:e2e": "pnpm --filter @accounting-saas/backend test:e2e",
     "verify": "node tooling/scripts/verify.mjs",
