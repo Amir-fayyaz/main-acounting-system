@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mapAuthError } from '../utils/mapAuthError';
+import { mapAuthError, mapSignUpFieldErrors } from '../utils/mapAuthError';
 
 const body = (message: string, details?: { field: string; code: string; message: string }[]) => ({
   error: {
@@ -20,7 +20,16 @@ describe('mapAuthError', () => {
 
   it('409 پیام ایمیل تکراری می‌دهد', () => {
     expect(mapAuthError({ status: 409 })).toBe('این ایمیل قبلاً ثبت شده است.');
-    expect(mapAuthError({ status: 409, body: body('ایمیل تکراری است') })).toBe('ایمیل تکراری است');
+    // پیام انگلیسی بک‌اند هرگز به کاربر نشان داده نمی‌شود
+    expect(mapAuthError({ status: 409, body: body('A user with this email exists') })).toBe(
+      'این ایمیل قبلاً ثبت شده است.',
+    );
+  });
+
+  it('422 پیام فارسی ثابت می‌دهد', () => {
+    expect(
+      mapAuthError({ status: 422, body: body('password must be at least 12 characters') }),
+    ).toBe('اطلاعات واردشده پذیرفته نشد. ورودی‌ها را بررسی و دوباره تلاش کنید.');
   });
 
   it('400 پیام اولین details را برمی‌گرداند', () => {
@@ -49,5 +58,35 @@ describe('mapAuthError', () => {
     expect(mapAuthError({})).toBe(msg);
     expect(mapAuthError(new TypeError('fetch failed') as never)).toBe(msg);
     expect(mapAuthError(undefined)).toBe(msg);
+  });
+});
+
+describe('mapSignUpFieldErrors', () => {
+  it('409 خطا را روی فیلد ایمیل می‌گذارد', () => {
+    expect(mapSignUpFieldErrors({ status: 409 })).toEqual({
+      email: 'این ایمیل قبلاً ثبت شده است.',
+    });
+  });
+
+  it('400 فقط فیلدهای شناخته‌شده‌ی فرم را برمی‌گرداند', () => {
+    const err = {
+      status: 400,
+      body: body('x', [
+        { field: 'password', code: 'minLength', message: 'password too short' },
+        { field: 'displayName', code: 'isString', message: 'bad' },
+        { field: 'company', code: 'whitelist', message: 'unknown' },
+      ]),
+    };
+
+    expect(mapSignUpFieldErrors(err)).toEqual({
+      password: 'مقدار واردشده معتبر نیست.',
+      displayName: 'مقدار واردشده معتبر نیست.',
+    });
+  });
+
+  it('برای سایر خطاها شیء خالی برمی‌گرداند', () => {
+    expect(mapSignUpFieldErrors({ status: 500 })).toEqual({});
+    expect(mapSignUpFieldErrors({ status: 422 })).toEqual({});
+    expect(mapSignUpFieldErrors(undefined)).toEqual({});
   });
 });

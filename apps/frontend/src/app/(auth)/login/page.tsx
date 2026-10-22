@@ -1,7 +1,11 @@
-import { AuthShell } from "@/core/features/auth/components/block/AuthShell";
-import { LoginForm } from "@/core/features/auth/components/block/LoginForm";
+import { AuthShell } from '@/core/features/auth/components/block/AuthShell';
+import { LoginForm } from '@/core/features/auth/components/block/LoginForm';
+import type { Metadata } from 'next';
 
-export const metadata = { title: "ورود | مین‌حساب" };
+export const metadata: Metadata = {
+  title: 'ورود',
+  description: 'وارد حساب مین‌حساب خود شوید.',
+};
 
 export default function LoginPage() {
   return (

@@ -1,40 +1,38 @@
-"use client";
-import {
-  H1,
-  Muted,
-} from "@/core/components/custom/ui/typography/Typography";
-import { Button } from "@/core/components/shadcn/ui/button/button";
-import { LoaderCircle } from "lucide-react";
-import Link from "next/link";
-import type { FormEvent } from "react";
-import { useAuthForm } from "../../hook/useAuthForm";
-import { useSignIn } from "../../hook/useSignIn";
-import { signInSchema } from "../../lib/auth-schemas";
-import { AuthField } from "../ui/Auth-Field/AuthField";
+'use client';
+
+import type { FormEvent } from 'react';
+import { Span } from '@/core/components/custom/ui/typography/Typography'; // اضافه شد
+import { useAuthForm } from '../../hook/useAuthForm';
+import { useSignIn } from '../../hook/useSignIn';
+import { signInSchema } from '../../lib/auth-schemas';
+import { AuthField } from '../ui/Auth-Field/AuthField';
+import { AuthFooter } from '../ui/Auth-Footer/AuthFooter';
+import { AuthHeader } from '../ui/Auth-Header/AuthHeader';
+import { AuthLink } from '../ui/Auth-Link/AuthLink';
+import { AuthSubmitButton } from '../ui/Auth-Submit-Button/AuthSubmitButton';
+
+type LoginFormValues = { email: string; password: string; remember: boolean };
 
 export function LoginForm() {
   const { signIn, loading } = useSignIn();
-  const { values, errors, setValue, validate } = useAuthForm<{ email: string; password: string; remember: boolean }>(
-    { email: "", password: "", remember: true },
+  const { values, errors, setValue, validate } = useAuthForm<LoginFormValues>(
+    { email: '', password: '', remember: true },
     signInSchema,
   );
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (loading) return;
-    const data = validate() as { email: string; password: string } | null;
-    if (!data) return; // خطا زیر فیلد؛ بدون درخواست شبکه
-    await signIn({ ...data, remember: values.remember });
+
+    const data = validate();
+    if (!data) return;
+
+    await signIn({ email: data.email, password: data.password, remember: values.remember });
   }
 
   return (
     <>
-      <H1 className="text-start text-[1.8rem] leading-[1.6] sm:text-[1.8rem]">
-        ورود به حساب
-      </H1>
-      <Muted className="mb-6 text-base">
-        خوش برگشتید. برای ادامه وارد شوید.
-      </Muted>
+      <AuthHeader title="ورود به حساب" description="خوش برگشتید. برای ادامه وارد شوید." />
 
       <form onSubmit={onSubmit} noValidate className="grid gap-4">
         <AuthField
@@ -46,7 +44,7 @@ export function LoginForm() {
           placeholder="you@company.ir"
           value={values.email}
           error={errors.email}
-          onChange={(e) => setValue("email", e.target.value)}
+          onChange={(e) => setValue('email', e.target.value)}
         />
         <AuthField
           name="password"
@@ -55,37 +53,30 @@ export function LoginForm() {
           autoComplete="current-password"
           value={values.password}
           error={errors.password}
-          onChange={(e) => setValue("password", e.target.value)}
+          onChange={(e) => setValue('password', e.target.value)}
         />
 
-        <div className="flex items-center justify-between gap-4 text-sm">
-          <label className="text-muted-foreground flex items-center gap-2.5">
+        <div className="flex items-center justify-between gap-4">
+          <label className="flex items-center gap-2.5 cursor-pointer">
             <input
               type="checkbox"
               name="remember"
               checked={values.remember}
-              onChange={(e) => setValue("remember", e.target.checked)}
+              onChange={(e) => setValue('remember', e.target.checked)}
               className="accent-primary size-4.5"
             />
-            مرا به خاطر بسپار
+            {/* استفاده از Span برای متن */}
+            <Span className="text-sm text-muted-foreground">مرا به خاطر بسپار</Span>
           </label>
-          <Link href="/forgot" className="font-semibold text-[#b86a00]">
+          <AuthLink href="/forgot" className="text-sm">
             فراموشی رمز؟
-          </Link>
+          </AuthLink>
         </div>
 
-        <Button type="submit" disabled={loading} className="h-12 w-full rounded-xl text-base font-semibold">
-          {loading && <LoaderCircle className="size-5 animate-spin" aria-hidden="true" />}
-          ورود
-        </Button>
+        <AuthSubmitButton loading={loading}>ورود</AuthSubmitButton>
       </form>
 
-      <p className="text-muted-foreground mt-5 text-center text-sm">
-        حساب ندارید؟{" "}
-        <Link href="/register" className="font-bold text-[#b86a00]">
-          ثبت‌نام رایگان
-        </Link>
-      </p>
+      <AuthFooter text="حساب ندارید؟" href="/register" linkLabel="ثبت‌نام رایگان" />
     </>
   );
 }

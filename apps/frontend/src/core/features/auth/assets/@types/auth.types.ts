@@ -6,7 +6,7 @@ export interface Principal {
 
 export interface SignInResponse {
   token: string;
-  tokenType: "Bearer";
+  tokenType: 'Bearer';
   expiresAt: string; // ISO date-time
   principal: Principal;
 }
@@ -59,7 +59,7 @@ export interface SignUpResponse {
   id: string;
   displayName: string;
   email: string;
-  status: "active";
+  status: string;
   createdAt: string;
   updatedAt: string;
   revision: number;
