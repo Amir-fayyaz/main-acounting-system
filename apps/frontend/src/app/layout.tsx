@@ -3,6 +3,8 @@ import type { Metadata } from 'next';
 import NextTopLoader from 'nextjs-toploader';
 import { Toaster } from 'sonner';
 import './globals.css';
+import { SiteHeader } from '@/core/features/landing/components/block/header/SiteHeader';
+import { SiteFooter } from '@/core/features/landing/components/block/footer/SiteFooter';
 
 export const metadata: Metadata = {
   title: 'Create Next App',
@@ -19,7 +21,9 @@ export default function RootLayout({
       <body className={`${rubik.variable} ${rubik.variable} antialiased`}>
         <NextTopLoader color="#ffa00a" />
         <Toaster />
+        <SiteHeader />
         {children}
+        <SiteFooter />
       </body>
     </html>
   );
