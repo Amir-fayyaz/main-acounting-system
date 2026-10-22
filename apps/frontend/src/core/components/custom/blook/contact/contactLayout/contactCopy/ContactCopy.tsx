@@ -17,7 +17,7 @@ function ContactCopy({
 
   return (
     <section>
-      <h2 className="mb-[13px] text-[26px] leading-[1.8] tracking-[-0.7px] max-taraz-xl:text-[25px] sm:text-[28px]">
+      <h2 className="mb-[13px] text-[26px] leading-[1.8] tracking-[-0.7px] max-[900px]:text-[25px] sm:text-[28px]">
         {lead}
         <br />
         {accent}
@@ -27,7 +27,7 @@ function ContactCopy({
         {description}
       </p>
 
-      <div className="mt-5 flex flex-col gap-[15px] max-taraz-sm:mt-[20px] sm:mt-[29px] sm:gap-[17px]">
+      <div className="mt-5 flex flex-col gap-[15px] max-[600px]:mt-[20px] sm:mt-[29px] sm:gap-[17px]">
         {paths.map((path) => (
           <ContactPath {...path} key={path.title} />
         ))}

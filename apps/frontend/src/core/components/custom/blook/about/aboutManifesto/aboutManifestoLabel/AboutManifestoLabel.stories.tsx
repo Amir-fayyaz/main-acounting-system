@@ -1,4 +1,3 @@
-import IconDefs from '@/core/components/custom/ui/icons/IconDefs';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import AboutManifestoLabel from './AboutManifestoLabel';
 
@@ -8,8 +7,7 @@ const meta = {
   tags: ['autodocs'],
   decorators: [
     (Story) => (
-      <div className="tz-container font-taraz" dir="rtl">
-        <IconDefs />
+      <div className="mx-auto w-full px-5 font-[family-name:var(--font-vazirmatn)]" dir="rtl">
         <Story />
       </div>
     ),

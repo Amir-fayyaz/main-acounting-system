@@ -1,5 +1,4 @@
-import IconDefs from '@/core/components/custom/ui/icons/IconDefs';
-import { tarazIconNames } from '@/core/components/custom/ui/icons/TarazIcon';
+import { Check, FileText, Sparkles, Wallet } from 'lucide-react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import AboutIntroStep from './AboutIntroStep';
 
@@ -9,9 +8,8 @@ const meta = {
   tags: ['autodocs'],
   decorators: [
     (Story) => (
-      <div className="tz-container bg-visual p-6 font-taraz" dir="rtl">
-        <IconDefs />
-        <Story />
+      <div className="mx-auto w-full px-5 bg-ink-soft p-6 font-[family-name:var(--font-vazirmatn)]" dir="rtl">
+                <Story />
       </div>
     ),
   ],
@@ -27,17 +25,24 @@ const meta = {
 } satisfies Meta<typeof AboutIntroStep>;
 
 export default meta;
+const iconSamples = [
+  { name: 'file', icon: FileText },
+  { name: 'check', icon: Check },
+  { name: 'spark', icon: Sparkles },
+  { name: 'wallet', icon: Wallet },
+];
+
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    step: { icon: 'file', title: 'اطلاعات و مستندات', note: 'یک‌بار ورود' },
+    step: { icon: FileText, title: 'اطلاعات و مستندات', note: 'یک‌بار ورود' },
   },
 };
 
 export const Highlighted: Story = {
   args: {
-    step: { icon: 'check', title: 'تأیید حسابدار', note: 'اختیار با شما' },
+    step: { icon: Check, title: 'تأیید حسابدار', note: 'اختیار با شما' },
     isLast: true,
   },
   parameters: {
@@ -47,19 +52,19 @@ export const Highlighted: Story = {
 
 export const AllIcons: Story = {
   args: {
-    step: { icon: 'file', title: 'آیکون', note: 'نمونه' },
+    step: { icon: FileText, title: 'آیکون', note: 'نمونه' },
   },
   render: () => (
     <div className="flex flex-col gap-3">
-      {tarazIconNames.map((icon) => (
+      {iconSamples.map(({ name, icon }) => (
         <AboutIntroStep
-          key={icon}
-          step={{ icon, title: `آیکون ${icon}`, note: 'نمونه' }}
+          key={name}
+          step={{ icon, title: `آیکون ${name}`, note: 'نمونه' }}
         />
       ))}
     </div>
   ),
   parameters: {
-    docs: { description: { story: 'نمایش همهٔ آیکون‌های sprite در ردیف مرحله.' } },
+    docs: { description: { story: 'نمایش چند آیکون در ردیف مرحله.' } },
   },
 };

@@ -1,4 +1,4 @@
-import TarazIcon from '@/core/components/custom/ui/icons/TarazIcon';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/shadcn/button/button';
 import Link from 'next/link';
 
@@ -15,7 +15,7 @@ function MiniCtaButton({ label = 'دیدن محیط نمونه', href = '/demo' 
     >
       <Link href={href}>
         {label}
-        <TarazIcon className="size-4 sm:size-[18px]" name="arrow" />
+        <ArrowLeft className="size-4 sm:size-[18px]" />
       </Link>
     </Button>
   );

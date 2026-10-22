@@ -1,19 +1,19 @@
-import TarazIcon from '@/core/components/custom/ui/icons/TarazIcon';
-import type { TarazIconName } from '@/core/components/custom/ui/icons/TarazIcon';
+import { ArrowLeft } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 
 export interface ContactPathProps {
-  icon: TarazIconName;
+  icon: LucideIcon;
   title: string;
   description: string;
   linkLabel: string;
   href: string;
 }
 
-function ContactPath({ icon, title, description, linkLabel, href }: ContactPathProps) {
+function ContactPath({ icon: Icon, title, description, linkLabel, href }: ContactPathProps) {
   return (
-    <div className="flex items-start gap-[11px] border-t border-line pt-4 max-taraz-sm:gap-[11px] sm:gap-3 sm:pt-[18px]">
-      <TarazIcon className="mt-[3px] size-[22px] text-contact-path-icon" name={icon} />
+    <div className="flex items-start gap-[11px] border-t border-border pt-4 max-[600px]:gap-[11px] sm:gap-3 sm:pt-[18px]">
+      <Icon className="mt-[3px] size-[22px] text-brand-link" />
 
       <div>
         <strong className="block text-xs font-semibold sm:text-[13px]">{title}</strong>
@@ -23,11 +23,11 @@ function ContactPath({ icon, title, description, linkLabel, href }: ContactPathP
         </p>
 
         <Link
-          className="mt-[7px] inline-flex items-center gap-[5px] text-[11px] text-contact-path-link"
+          className="mt-[7px] inline-flex items-center gap-[5px] text-[11px] text-brand-link"
           href={href}
         >
           {linkLabel}
-          <TarazIcon className="size-[14px]" name="arrow" />
+          <ArrowLeft className="size-[14px]" />
         </Link>
       </div>
     </div>

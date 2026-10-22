@@ -15,7 +15,7 @@ function FaqHero({
   description,
 }: FaqHeroProps) {
   return (
-    <section className="mx-auto max-w-[800px] pt-[43px] pb-[30px] text-center max-taraz-xl:pt-[53px] sm:pt-[66px] sm:pb-[38px]">
+    <section className="mx-auto max-w-[800px] pt-[43px] pb-[30px] text-center max-[900px]:pt-[53px] sm:pt-[66px] sm:pb-[38px]">
       <FaqHeroTitle
         eyebrow={eyebrow}
         titleAccent={titleAccent}

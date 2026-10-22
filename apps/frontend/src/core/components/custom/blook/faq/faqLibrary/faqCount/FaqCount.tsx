@@ -4,7 +4,7 @@ export interface FaqCountProps {
 
 function FaqCount({ count }: FaqCountProps) {
   return (
-    <p aria-live="polite" className="mb-[15px] text-[10px] text-faq-count" role="status">
+    <p aria-live="polite" className="mb-[15px] text-[10px] text-muted-foreground" role="status">
       {new Intl.NumberFormat('fa-IR').format(count)} پاسخ برای شما
     </p>
   );

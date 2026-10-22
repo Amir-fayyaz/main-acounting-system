@@ -1,7 +1,8 @@
-import type { TarazIconName } from '@/core/components/custom/ui/icons/TarazIcon';
+import type { LucideIcon } from 'lucide-react';
+import { BookOpen, Play, Wallet } from 'lucide-react';
 
 export interface ContactPath {
-  icon: TarazIconName;
+  icon: LucideIcon;
   title: string;
   description: string;
   linkLabel: string;
@@ -10,21 +11,21 @@ export interface ContactPath {
 
 export const contactPaths: ContactPath[] = [
   {
-    icon: 'wallet',
+    icon: Wallet,
     title: 'انتخاب پلن برای شرکت',
     description: 'ظرفیت کاربران و اسناد را کنار هم مقایسه کنید.',
     linkLabel: 'دیدن تعرفه‌ها',
     href: '/pricing',
   },
   {
-    icon: 'play',
+    icon: Play,
     title: 'آشنایی با جریان کار',
     description: 'فروش، بانک و دستیار مالی را در محیط نمونه ببینید.',
     linkLabel: 'تجربه دموی تعاملی',
     href: '/demo',
   },
   {
-    icon: 'book',
+    icon: BookOpen,
     title: 'پاسخ پرسش‌های رایج',
     description: 'درباره ثبت اسناد، تأییدها و داده‌های نمونه بخوانید.',
     linkLabel: 'پرسش‌های متداول',

@@ -1,4 +1,4 @@
-import TarazIcon from '@/core/components/custom/ui/icons/TarazIcon';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/shadcn/button/button';
 import Link from 'next/link';
 
@@ -11,11 +11,11 @@ function AboutIntroCta({ label = 'تراز را در عمل ببینید', href 
   return (
     <Button
       asChild
-      className="mt-[21px] min-h-[42px] gap-2.5 rounded-lg px-[17px] text-[11px] font-semibold max-taraz-xl:mt-[25px] sm:mt-[25px] sm:min-h-12 sm:px-6 sm:text-xs"
+      className="mt-[21px] min-h-[42px] gap-2.5 rounded-lg px-[17px] text-[11px] font-semibold max-[900px]:mt-[25px] sm:mt-[25px] sm:min-h-12 sm:px-6 sm:text-xs"
     >
       <Link href={href}>
         {label}
-        <TarazIcon className="size-4 sm:size-[19px]" name="arrow" />
+        <ArrowLeft className="size-4 sm:size-[19px]" />
       </Link>
     </Button>
   );

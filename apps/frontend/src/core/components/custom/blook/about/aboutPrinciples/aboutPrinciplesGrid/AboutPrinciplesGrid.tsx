@@ -51,7 +51,7 @@ const defaultPrinciples: Principle[] = [
 
 function AboutPrinciplesGrid({ principles = defaultPrinciples }: AboutPrinciplesGridProps) {
   return (
-    <div className="mt-5 grid gap-0 sm:mt-[29px] sm:grid-cols-3 sm:gap-[25px] max-taraz-xl:gap-5">
+    <div className="mt-5 grid gap-0 sm:mt-[29px] sm:grid-cols-3 sm:gap-[25px] max-[900px]:gap-5">
       {principles.map((principle) => (
         <PrincipleCard
           description={principle.description}

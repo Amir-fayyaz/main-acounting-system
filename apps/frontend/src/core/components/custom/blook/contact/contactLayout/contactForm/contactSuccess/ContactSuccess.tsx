@@ -1,5 +1,5 @@
 import { Button } from '@/shadcn/button/button';
-import TarazIcon from '@/core/components/custom/ui/icons/TarazIcon';
+import { Check } from 'lucide-react';
 
 export interface ContactSuccessProps {
   name?: string;
@@ -9,8 +9,8 @@ export interface ContactSuccessProps {
 function ContactSuccess({ name, onReset }: ContactSuccessProps) {
   return (
     <div className="py-[14px]">
-      <span className="mb-[19px] inline-flex size-11 items-center justify-center rounded-xl bg-contact-success-bg text-contact-success-fg">
-        <TarazIcon className="size-[23px]" name="check" />
+      <span className="mb-[19px] inline-flex size-11 items-center justify-center rounded-xl bg-secondary text-secondary-foreground">
+        <Check className="size-[23px]" />
       </span>
 
       <h2
@@ -27,7 +27,7 @@ function ContactSuccess({ name, onReset }: ContactSuccessProps) {
       </p>
 
       <Button
-        className="min-h-12 rounded-lg border-contact-outline! px-6 text-[12px] text-ink! hover:bg-white!"
+        className="min-h-12 rounded-lg border-border! px-6 text-[12px] text-ink! hover:bg-white!"
         type="button"
         variant="outline"
         onClick={onReset}

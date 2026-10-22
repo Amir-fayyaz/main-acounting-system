@@ -1,9 +1,8 @@
-import TarazIcon from '@/core/components/custom/ui/icons/TarazIcon';
-import type { TarazIconName } from '@/core/components/custom/ui/icons/TarazIcon';
+import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/core/utils/shadcn/utils';
 
 export interface CycleStep {
-  icon: TarazIconName;
+  icon: LucideIcon;
   title: string;
   note: string;
 }
@@ -17,17 +16,16 @@ function AboutIntroStep({ step, isLast = false }: AboutIntroStepProps) {
   return (
     <div
       className={cn(
-        'flex items-center gap-3 rounded-[7px] border px-3 py-3 text-xs max-taraz-xl:px-[11px] max-taraz-xl:py-[11px] max-taraz-xl:text-[11px] sm:px-[15px] sm:py-[13px] sm:text-xs',
-        isLast ? 'border-brand bg-brand text-ink' : 'border-cycle-line bg-cycle-card',
+        'flex items-center gap-3 rounded-[7px] border px-3 py-3 text-xs max-[900px]:px-[11px] max-[900px]:py-[11px] max-[900px]:text-[11px] sm:px-[15px] sm:py-[13px] sm:text-xs',
+        isLast ? 'border-brand bg-brand text-ink' : 'border-sand/20 bg-ink-soft',
       )}
     >
-      <TarazIcon
-        className={cn('size-5', isLast ? 'text-cycle-accent' : 'text-brand')}
-        name={step.icon}
+      <step.icon
+        className={cn('size-5', isLast ? 'text-ink-soft' : 'text-brand')}
       />
       <strong className="font-semibold">{step.title}</strong>
       <small
-        className={cn('ms-auto text-[10px]', isLast ? 'text-cycle-accent' : 'text-cycle-note')}
+        className={cn('ms-auto text-[10px]', isLast ? 'text-ink-soft' : 'text-sand/75')}
       >
         {step.note}
       </small>

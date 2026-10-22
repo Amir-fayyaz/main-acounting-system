@@ -1,3 +1,4 @@
+import { Check, FileText, Sparkles } from 'lucide-react';
 import AboutIntroStep from '../aboutIntroStep/AboutIntroStep';
 import type { CycleStep } from '../aboutIntroStep/AboutIntroStep';
 
@@ -8,9 +9,9 @@ export interface AboutIntroVisualProps {
 }
 
 const defaultSteps: CycleStep[] = [
-  { icon: 'file', title: 'اطلاعات و مستندات', note: 'یک‌بار ورود' },
-  { icon: 'spark', title: 'پیشنهاد آماده بررسی', note: 'همراه با دلیل' },
-  { icon: 'check', title: 'تأیید حسابدار', note: 'اختیار با شما' },
+  { icon: FileText, title: 'اطلاعات و مستندات', note: 'یک‌بار ورود' },
+  { icon: Sparkles, title: 'پیشنهاد آماده بررسی', note: 'همراه با دلیل' },
+  { icon: Check, title: 'تأیید حسابدار', note: 'اختیار با شما' },
 ];
 
 function AboutIntroVisual({
@@ -21,14 +22,14 @@ function AboutIntroVisual({
   const [visualLead, visualAccent] = title.split('\n');
 
   return (
-    <div className="relative overflow-hidden rounded-[15px] bg-visual p-[25px] text-visual-foreground sm:p-[31px]">
-      <h2 className="mb-2 whitespace-pre-line text-2xl leading-[1.8] tracking-[-0.7px] max-taraz-xl:text-[22px] sm:text-[24px]">
+    <div className="relative overflow-hidden rounded-[15px] bg-ink-soft p-[25px] text-sand-soft sm:p-[31px]">
+      <h2 className="mb-2 whitespace-pre-line text-2xl leading-[1.8] tracking-[-0.7px] max-[900px]:text-[22px] sm:text-[24px]">
         {visualLead}
         {'\n'}
         {visualAccent}
       </h2>
 
-      <p className="text-[11px] leading-5 text-visual-muted">{note}</p>
+      <p className="text-[11px] leading-5 text-brand-soft/70">{note}</p>
 
       <div className="mt-[22px] flex flex-col gap-3 sm:mt-[25px]">
         {steps.map((step, index) => (

@@ -29,8 +29,8 @@ function FaqFilters({
             className={cn(
               'min-h-[34px] rounded-[30px] border px-3 py-[5px] text-[11px] transition-colors',
               isActive
-                ? 'border-ink bg-ink text-faq-filter-active-text'
-                : 'border-faq-filter-border text-faq-filter-text',
+                ? 'border-ink bg-ink text-brand-link'
+                : 'border-border text-muted-foreground',
             )}
             key={category.id}
             type="button"

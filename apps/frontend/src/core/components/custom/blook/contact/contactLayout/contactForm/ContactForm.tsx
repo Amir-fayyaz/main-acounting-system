@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from '@/shadcn/select/select';
 import { Textarea } from '@/shadcn/Textarea/textarea';
-import TarazIcon from '@/core/components/custom/ui/icons/TarazIcon';
+import { ArrowLeft, Info } from 'lucide-react';
 import ContactSuccess from './contactSuccess/ContactSuccess';
 import { contactTopics } from '../../contactData';
 import type { ContactTopic } from '../../contactData';
@@ -60,19 +60,19 @@ const validate = (values: FieldValues): FieldErrors => {
 };
 
 const fieldClass =
-  'min-h-[45px] rounded-[6px] border-contact-field-border! bg-contact-field-bg! px-3 py-[10px] text-[12px] placeholder:text-contact-placeholder! aria-invalid:border-contact-error-border!';
+  'min-h-[45px] rounded-[6px] border-border! bg-sand-soft! px-3 py-[10px] text-[12px] placeholder:text-muted-foreground! aria-invalid:border-destructive!';
 
 const textareaClass =
-  'mt-0! min-h-[132px]! rounded-[6px] border-contact-field-border! bg-contact-field-bg! px-3 py-[10px]! text-[12px] leading-[2] placeholder:text-contact-placeholder! aria-invalid:border-contact-error-border! [field-sizing:fixed]';
+  'mt-0! min-h-[132px]! rounded-[6px] border-border! bg-sand-soft! px-3 py-[10px]! text-[12px] leading-[2] placeholder:text-muted-foreground! aria-invalid:border-destructive! [field-sizing:fixed]';
 
 const selectClass =
-  'w-full! min-h-[45px] rounded-[6px] border-contact-field-border! bg-contact-field-bg! px-3 py-[10px] text-[12px]';
+  'w-full! min-h-[45px] rounded-[6px] border-border! bg-sand-soft! px-3 py-[10px] text-[12px]';
 
 function FieldError({ id, message }: { id: FieldId; message?: string }) {
   if (!message) return null;
 
   return (
-    <p className="mt-[5px] text-[10px] leading-[1.9] text-contact-error" id={`contact-${id}-error`}>
+    <p className="mt-[5px] text-[10px] leading-[1.9] text-destructive" id={`contact-${id}-error`}>
       {message}
     </p>
   );
@@ -130,13 +130,13 @@ function ContactForm({ topics = contactTopics }: ContactFormProps) {
   return (
     <section
       aria-label="فرم تماس نمایشی"
-      className="rounded-[14px] border border-contact-card-border bg-contact-card-bg p-[25px_22px] max-taraz-3xl:p-[27px] max-taraz-xl:p-6 sm:p-[30px_32px]"
+      className="rounded-[14px] border border-border bg-card p-[25px_22px] max-[1100px]:p-[27px] max-[900px]:p-6 sm:p-[30px_32px]"
     >
       <h2 className="mb-[6px] text-[22px] leading-[1.8] tracking-[-0.4px] sm:text-[21px]">
         همین‌جا برایمان بنویسید.
       </h2>
 
-      <p className="mb-[23px] text-[11px] leading-[2] text-muted-foreground max-taraz-sm:mb-[21px]">
+      <p className="mb-[23px] text-[11px] leading-[2] text-muted-foreground max-[600px]:mb-[21px]">
         فیلدهای نام، ایمیل و پیام برای تکمیل فرم لازم‌اند.
       </p>
 
@@ -144,7 +144,7 @@ function ContactForm({ topics = contactTopics }: ContactFormProps) {
         <ContactSuccess name={successName} onReset={handleReset} />
       ) : (
         <form noValidate onSubmit={handleSubmit}>
-          <div className="grid gap-x-[18px] max-taraz-xl:grid-cols-1 sm:grid-cols-2">
+          <div className="grid gap-x-[18px] max-[900px]:grid-cols-1 sm:grid-cols-2">
             <div className="mb-[17px]">
               <label className="mb-[7px] block text-[11px] font-semibold" htmlFor="contact-name">
                 نام و نام خانوادگی
@@ -250,11 +250,11 @@ function ContactForm({ topics = contactTopics }: ContactFormProps) {
             type="submit"
           >
             بررسی پیام نمونه
-            <TarazIcon className="size-[19px]" name="arrow" />
+            <ArrowLeft className="size-[19px]" />
           </Button>
 
-          <p className="mt-[14px] flex items-start gap-1.5 text-[10px] leading-[2] text-contact-note">
-            <TarazIcon className="mt-[3px] size-[13px]" name="info" />
+          <p className="mt-[14px] flex items-start gap-1.5 text-[10px] leading-[2] text-muted-foreground">
+            <Info className="mt-[3px] size-[13px]" />
             این فرم نمایشی است؛ هیچ پیام یا ایمیلی برای کسی ارسال نمی‌شود.
           </p>
         </form>

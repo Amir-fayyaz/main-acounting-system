@@ -10,7 +10,7 @@ function AboutPrinciplesRibbon({
   const [ribbonLead, ribbonAccent] = title.split('\n');
 
   return (
-    <div className="mt-[15px] rounded-xl border border-line bg-ribbon p-6 sm:mt-[25px] sm:grid sm:grid-cols-[1fr_2fr] sm:items-center sm:gap-10 sm:p-8">
+    <div className="mt-[15px] rounded-xl border border-border bg-card p-6 sm:mt-[25px] sm:grid sm:grid-cols-[1fr_2fr] sm:items-center sm:gap-10 sm:p-8">
       <strong className="text-[22px] leading-[1.8] tracking-[-0.5px] whitespace-pre-line">
         {ribbonLead}
         {'\n'}

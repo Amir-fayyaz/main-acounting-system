@@ -2,13 +2,11 @@ import AboutIntro from '@/core/components/custom/blook/about/aboutIntro/AboutInt
 import AboutManifesto from '@/core/components/custom/blook/about/aboutManifesto/AboutManifesto';
 import AboutPrinciples from '@/core/components/custom/blook/about/aboutPrinciples/AboutPrinciples';
 import MiniCTA from '@/core/components/custom/blook/about/miniCTA/MiniCTA';
-import IconDefs from '@/core/components/custom/ui/icons/IconDefs';
 
 export default function AboutPage() {
   return (
-    <main className="font-taraz">
-      <IconDefs />
-      <div className="tz-container">
+    <main className="font-[family-name:var(--font-vazirmatn)]">
+      <div className="pages-container">
         <AboutIntro />
         <AboutManifesto />
         <AboutPrinciples />

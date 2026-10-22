@@ -1,13 +1,11 @@
 import FaqHero from '@/core/components/custom/blook/faq/faqHero/FaqHero';
 import FaqLibrary from '@/core/components/custom/blook/faq/faqLibrary/FaqLibrary';
 import MiniCTA from '@/core/components/custom/blook/about/miniCTA/MiniCTA';
-import IconDefs from '@/core/components/custom/ui/icons/IconDefs';
 
 export default function FaqPage() {
   return (
-    <main className="font-taraz">
-      <IconDefs />
-      <div className="tz-container">
+    <main className="font-[family-name:var(--font-vazirmatn)]">
+      <div className="pages-container">
         <FaqHero />
         <FaqLibrary />
         <MiniCTA

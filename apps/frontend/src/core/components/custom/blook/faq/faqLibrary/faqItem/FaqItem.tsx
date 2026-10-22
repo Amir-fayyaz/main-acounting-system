@@ -1,4 +1,4 @@
-import TarazIcon from '@/core/components/custom/ui/icons/TarazIcon';
+import { Plus } from 'lucide-react';
 import { cn } from '@/core/utils/shadcn/utils';
 import type { FaqEntry } from '../faqData';
 
@@ -10,18 +10,17 @@ export interface FaqItemProps {
 
 function FaqItem({ entry, categoryLabel, className }: FaqItemProps) {
   return (
-    <details className={cn('group border-b border-faq-line py-5', className)}>
+    <details className={cn('group border-b border-border py-5', className)}>
       <summary className="flex cursor-pointer list-none items-center justify-between gap-[18px] text-[14px] leading-[2] font-semibold [&::-webkit-details-marker]:hidden">
         <span className="min-w-0 pe-[5px]">
           {categoryLabel && (
-            <span className="mb-1.5 block text-[9px] text-faq-category">{categoryLabel}</span>
+            <span className="mb-1.5 block text-[9px] text-brand-link">{categoryLabel}</span>
           )}
           {entry.question}
         </span>
 
-        <TarazIcon
-          className="mx-1 size-[17px] shrink-0 text-faq-summary-icon transition-transform group-open:rotate-45"
-          name="plus"
+        <Plus
+          className="mx-1 size-[17px] shrink-0 text-muted-foreground transition-transform group-open:rotate-45"
         />
       </summary>
 

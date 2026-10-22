@@ -7,7 +7,7 @@ const meta = {
   tags: ['autodocs'],
   decorators: [
     (Story) => (
-      <div className="tz-container font-taraz max-w-[570px]" dir="rtl">
+      <div className="mx-auto w-full px-5 font-[family-name:var(--font-vazirmatn)] max-w-[570px]" dir="rtl">
         <Story />
       </div>
     ),

@@ -1,4 +1,3 @@
-import IconDefs from '@/core/components/custom/ui/icons/IconDefs';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import FaqItem from './FaqItem';
 import { faqEntries } from '../faqData';
@@ -9,8 +8,7 @@ const meta = {
   tags: ['autodocs'],
   decorators: [
     (Story) => (
-      <div className="tz-container max-w-[600px] font-taraz" dir="rtl">
-        <IconDefs />
+      <div className="mx-auto w-full px-5 max-w-[600px] font-[family-name:var(--font-vazirmatn)]" dir="rtl">
         <Story />
       </div>
     ),

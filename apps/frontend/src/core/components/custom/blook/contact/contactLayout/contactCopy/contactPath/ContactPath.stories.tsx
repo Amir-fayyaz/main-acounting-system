@@ -1,4 +1,4 @@
-import IconDefs from '@/core/components/custom/ui/icons/IconDefs';
+import { Sparkles, Wallet } from 'lucide-react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import ContactPath from './ContactPath';
 
@@ -8,9 +8,8 @@ const meta = {
   tags: ['autodocs'],
   decorators: [
     (Story) => (
-      <div className="tz-container font-taraz max-w-[420px]" dir="rtl">
-        <IconDefs />
-        <Story />
+      <div className="mx-auto w-full px-5 font-[family-name:var(--font-vazirmatn)] max-w-[420px]" dir="rtl">
+                <Story />
       </div>
     ),
   ],
@@ -27,7 +26,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    icon: 'wallet',
+    icon: Wallet,
     title: 'انتخاب پلن برای شرکت',
     description: 'ظرفیت کاربران و اسناد را کنار هم مقایسه کنید.',
     linkLabel: 'دیدن تعرفه‌ها',
@@ -37,7 +36,7 @@ export const Default: Story = {
 
 export const Custom: Story = {
   args: {
-    icon: 'spark',
+    icon: Sparkles,
     title: 'دستیار هوشمند',
     description: 'پیشنهاد با تراز، تأیید با شما.',
     linkLabel: 'دیدن نمونه',

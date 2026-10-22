@@ -1,4 +1,4 @@
-import IconDefs from '@/core/components/custom/ui/icons/IconDefs';
+import { BarChart3, Landmark, Receipt, Shield, Sparkles } from 'lucide-react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import AboutIntroVisual from './AboutIntroVisual';
 
@@ -8,9 +8,8 @@ const meta = {
   tags: ['autodocs'],
   decorators: [
     (Story) => (
-      <div className="tz-container font-taraz" dir="rtl">
-        <IconDefs />
-        <Story />
+      <div className="mx-auto w-full px-5 font-[family-name:var(--font-vazirmatn)]" dir="rtl">
+                <Story />
       </div>
     ),
   ],
@@ -30,17 +29,17 @@ export const Custom: Story = {
     title: 'یک رویداد،\nیک مسیر روشن.',
     note: 'توضیح دلخواه برای باکس تاریک.',
     steps: [
-      { icon: 'receipt', title: 'ثبت سند', note: 'خودکار' },
-      { icon: 'bank', title: 'تطبیق بانکی', note: 'پیشنهادی' },
-      { icon: 'chart', title: 'گزارش مالی', note: 'آمیاده' },
-      { icon: 'shield', title: 'تأیید نهایی', note: 'با شما' },
+      { icon: Receipt, title: 'ثبت سند', note: 'خودکار' },
+      { icon: Landmark, title: 'تطبیق بانکی', note: 'پیشنهادی' },
+      { icon: BarChart3, title: 'گزارش مالی', note: 'آمیاده' },
+      { icon: Shield, title: 'تأیید نهایی', note: 'با شما' },
     ],
   },
 };
 
 export const SingleStep: Story = {
   args: {
-    steps: [{ icon: 'spark', title: 'یک مرحله', note: 'ساده' }],
+    steps: [{ icon: Sparkles, title: 'یک مرحله', note: 'ساده' }],
   },
   parameters: {
     docs: { description: { story: 'با یک مرحله، همان ردیف برجسته می‌شود.' } },

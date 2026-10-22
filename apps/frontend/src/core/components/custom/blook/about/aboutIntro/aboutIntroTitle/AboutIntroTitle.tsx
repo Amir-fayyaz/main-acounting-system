@@ -1,4 +1,3 @@
-import Eyebrow from '@/core/components/custom/ui/eyebrow/Eyebrow';
 
 export interface AboutIntroTitleProps {
   eyebrow?: string;
@@ -13,12 +12,12 @@ function AboutIntroTitle({
 }: AboutIntroTitleProps) {
   return (
     <>
-      <Eyebrow>{eyebrow}</Eyebrow>
+      <span className="flex items-center gap-[9px] text-xs font-semibold text-brand-link before:h-1.5 before:w-1.5 before:rounded-full before:bg-brand before:content-['']">{eyebrow}</span>
 
-      <h1 className="my-[18px] text-[33px] leading-[1.75] tracking-[-1px] max-taraz-sm:my-4 max-taraz-xl:text-[34px] max-taraz-3xl:text-[39px] sm:text-[46px] sm:leading-[1.7] sm:tracking-[-1.7px]">
+      <h1 className="my-[18px] text-[33px] leading-[1.75] tracking-[-1px] max-[600px]:my-4 max-[900px]:text-[34px] max-[1100px]:text-[39px] sm:text-[46px] sm:leading-[1.7] sm:tracking-[-1.7px]">
         {titleLead}
         <br />
-        <span className="text-accent-text">{titleAccent}</span>
+        <span className="text-brand-link">{titleAccent}</span>
       </h1>
     </>
   );
