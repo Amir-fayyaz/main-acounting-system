@@ -11,9 +11,7 @@ import type { FiscalYearId } from '../../src/modules/accounting/domain/value-obj
 import type { FiscalYearRepository } from '../../src/modules/accounting/domain/repositories/fiscal-year.repository.js';
 import { FiscalYearLabel } from '../../src/modules/accounting/domain/value-objects/fiscal-year-label.js';
 import { FiscalYearRange } from '../../src/modules/accounting/domain/value-objects/fiscal-year-range.js';
-import type {
-  TenantReference,
-} from '../../src/modules/accounting/domain/value-objects/tenant-reference.js';
+import type { TenantReference } from '../../src/modules/accounting/domain/value-objects/tenant-reference.js';
 import type { DomainEvent } from '../../src/shared/messaging/domain-event.js';
 import { staleRevisionConflict } from '../../src/shared/persistence/optimistic-concurrency.js';
 import {
@@ -41,7 +39,10 @@ import { DateTime } from '../../src/shared/time/date-time.js';
 
 /** In-memory `FiscalYearRepository` with the shared compare-and-swap semantics. */
 export class InMemoryFiscalYearRepository implements FiscalYearRepository {
-  private readonly records = new Map<string, { snapshot: FiscalYearSnapshot; revision: Revision }>();
+  private readonly records = new Map<
+    string,
+    { snapshot: FiscalYearSnapshot; revision: Revision }
+  >();
 
   /** Counts mutations, so a test can prove nothing was written on a decline. */
   public addCalls = 0;
@@ -136,19 +137,15 @@ export class RecordingFiscalYearEvents implements FiscalYearEventRecorder {
  * codes the domain uses.
  */
 export function databaseRefusedOverlap(): PersistenceError {
-  return new PersistenceError(
-    PersistenceFailureKind.CONFLICT,
-    'FiscalYearRepository.add',
-    { cause: new FiscalYearOverlapError() },
-  );
+  return new PersistenceError(PersistenceFailureKind.CONFLICT, 'FiscalYearRepository.add', {
+    cause: new FiscalYearOverlapError(),
+  });
 }
 
 export function databaseRefusedDuplicateLabel(): PersistenceError {
-  return new PersistenceError(
-    PersistenceFailureKind.CONFLICT,
-    'FiscalYearRepository.add',
-    { cause: new FiscalYearLabelDuplicateError() },
-  );
+  return new PersistenceError(PersistenceFailureKind.CONFLICT, 'FiscalYearRepository.add', {
+    cause: new FiscalYearLabelDuplicateError(),
+  });
 }
 
 /** Re-exported so application specs need one import for harness building. */
@@ -171,4 +168,76 @@ export function aFiscalYear(
     range: FiscalYearRange.of(BusinessDate.parse(startDate), BusinessDate.parse(endDate)),
     now,
   });
+}
+
+import type { FiscalPeriodRepository } from '../../src/modules/accounting/domain/repositories/fiscal-period.repository.js';
+import {
+  FiscalPeriod,
+  type FiscalPeriodSnapshot,
+} from '../../src/modules/accounting/domain/aggregates/fiscal-period.js';
+import type { EntityId } from '../../src/shared/id/entity-id.js';
+
+export class InMemoryFiscalPeriodRepository implements FiscalPeriodRepository {
+  private readonly records = new Map<
+    string,
+    { snapshot: FiscalPeriodSnapshot; revision: Revision }
+  >();
+
+  public async get(id: EntityId): Promise<Loaded<FiscalPeriod> | undefined> {
+    const r = this.records.get(id.value);
+    return r === undefined
+      ? undefined
+      : { aggregate: FiscalPeriod.rehydrate(r.snapshot), revision: r.revision };
+  }
+
+  public async findByYear(fiscalYearId: FiscalYearId): Promise<readonly Loaded<FiscalPeriod>[]> {
+    return [...this.records.values()]
+      .filter((r) => r.snapshot.fiscalYearId === fiscalYearId.value)
+      .sort((a, b) => a.snapshot.sequenceNumber - b.snapshot.sequenceNumber)
+      .map((r) => ({ aggregate: FiscalPeriod.rehydrate(r.snapshot), revision: r.revision }));
+  }
+
+  public async findActive(tenantId: TenantReference): Promise<Loaded<FiscalPeriod> | undefined> {
+    const found = [...this.records.values()].find(
+      (r) => r.snapshot.tenantId === tenantId.value && r.snapshot.isActive,
+    );
+    return found === undefined
+      ? undefined
+      : { aggregate: FiscalPeriod.rehydrate(found.snapshot), revision: found.revision };
+  }
+
+  public async addMany(periods: readonly FiscalPeriod[]): Promise<void> {
+    for (const p of periods) {
+      this.records.set(p.id.value, { snapshot: p.snapshot(), revision: Revision.initial() });
+    }
+  }
+
+  public async update(period: FiscalPeriod, expectedRevision: Revision): Promise<WriteReceipt> {
+    const r = this.records.get(period.id.value);
+    if (r === undefined || !r.revision.equals(expectedRevision)) {
+      throw staleRevisionConflict('FiscalPeriodRepository.update', expectedRevision);
+    }
+    const next = expectedRevision.next();
+    this.records.set(period.id.value, { snapshot: period.snapshot(), revision: next });
+    return { revision: next };
+  }
+
+  public async setActive(periodId: EntityId, tenantId: TenantReference): Promise<void> {
+    for (const [id, r] of this.records.entries()) {
+      if (r.snapshot.tenantId === tenantId.value && r.snapshot.isActive) {
+        const deactivated = FiscalPeriod.rehydrate(r.snapshot);
+        deactivated.deactivate(DateTime.now());
+        this.records.set(id, { snapshot: deactivated.snapshot(), revision: r.revision });
+      }
+    }
+    const target = this.records.get(periodId.value);
+    if (target !== undefined) {
+      const activated = FiscalPeriod.rehydrate(target.snapshot);
+      activated.activate(DateTime.now());
+      this.records.set(periodId.value, {
+        snapshot: activated.snapshot(),
+        revision: target.revision,
+      });
+    }
+  }
 }
