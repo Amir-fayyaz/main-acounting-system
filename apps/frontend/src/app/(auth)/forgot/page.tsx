@@ -1,7 +1,11 @@
-import { AuthShell } from "@/core/features/auth/components/block/AuthShell";
-import { ForgotForm } from "@/core/features/auth/components/block/ForgotForm";
+import { AuthShell } from '@/core/features/auth/components/block/AuthShell';
+import { ForgotForm } from '@/core/features/auth/components/block/ForgotForm';
+import type { Metadata } from 'next';
 
-export const metadata = { title: "بازیابی رمز عبور | مین‌حساب" };
+export const metadata: Metadata = {
+  title: 'بازیابی رمز عبور',
+  description: 'رمز عبور حساب مین‌حساب خود را بازیابی کنید.',
+};
 
 export default function ForgotPage() {
   return (

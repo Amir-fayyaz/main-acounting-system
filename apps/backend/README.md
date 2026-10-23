@@ -699,7 +699,7 @@ readiness probe pings it for `/api/health/ready`.
 **Schema ownership follows the module boundaries.** There is no global schema
 file. Each business module owns the tables of its own persistence boundary in
 `<module>/infrastructure/persistence/*.schema.ts` (Drizzle `mysqlTable`
-definitions, foreign keys only *inside* the module), and infrastructure-owned
+definitions, foreign keys only _inside_ the module), and infrastructure-owned
 persistence (the outbox) keeps its schema beside its adapter.
 `src/modules/README.md` states the boundary rules
 (`module-boundaries.spec.ts` enforces them); Drizzle and `mysql2` imports may
@@ -715,13 +715,17 @@ pnpm --filter @accounting-saas/backend build
 cp .env.example .env                     # MySQL credentials for the toolchain
 pnpm --filter @accounting-saas/backend db:generate   # new migration from schema diff
 pnpm --filter @accounting-saas/backend db:check      # fail on migration-history conflicts
-pnpm --filter @accounting-saas/backend db:migrate    # apply pending migrations
+pnpm --filter @accounting-saas/backend db:migrate    # apply pending migrations (drizzle-kit migrate)
 pnpm --filter @accounting-saas/backend db:migrate:status # applied/pending counts
 ```
 
 - **Tracked deterministically** in `__drizzle_migrations`: the same journal
   always produces the same applied set, and re-running an applied folder is a
   verified no-op.
+- **Applied by `db:migrate`** (`drizzle-kit migrate`), which reads the same
+  `drizzle.config.ts` — credentials come from `loadConfiguration()`, no extra
+  environment wiring. From a fresh clone, `pnpm run dev:local` runs this step
+  automatically once the infrastructure is healthy.
 - **Fail-safe**: a migration command fails — with a non-zero exit and no
   continuation — on missing or invalid configuration, an unreachable database,
   an inconsistent journal or a statement that cannot apply. A half-applied

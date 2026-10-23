@@ -1,7 +1,11 @@
-import { AuthShell } from "@/core/features/auth/components/block/AuthShell";
-import { RegisterForm } from "@/core/features/auth/components/block/RegisterForm";
+import { AuthShell } from '@/core/features/auth/components/block/AuthShell';
+import { RegisterForm } from '@/core/features/auth/components/block/RegisterForm';
+import type { Metadata } from 'next';
 
-export const metadata = { title: "ثبت‌نام | مین‌حساب" };
+export const metadata: Metadata = {
+  title: 'ثبت‌نام',
+  description: 'حساب جدید مین‌حساب بسازید.',
+};
 
 export default function RegisterPage() {
   return (
