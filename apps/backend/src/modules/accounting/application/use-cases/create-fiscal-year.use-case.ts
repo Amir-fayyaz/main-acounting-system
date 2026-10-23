@@ -9,13 +9,19 @@ import { DateTime } from '../../../../shared/time/date-time.js';
 import { tenantScopedMessageOptions } from '../../../../shared/tenant/tenant-message-options.js';
 import { TenantScope } from '../../../../shared/tenant/tenant-scope.js';
 import type { TransactionBoundary } from '../../../../shared/transaction/transaction-boundary.js';
+import {
+  businessDateToJalali,
+  jalaliMonthBounds,
+} from '../../../../shared/time/jalali-calendar.js';
 import { FiscalYear } from '../../domain/aggregates/fiscal-year.js';
+import { FiscalPeriod } from '../../domain/aggregates/fiscal-period.js';
 import {
   FiscalYearLabelDuplicateError,
   FiscalYearOverlapError,
 } from '../../domain/errors/fiscal-year.errors.js';
 import { FiscalYearCreated } from '../../domain/events/fiscal-year.events.js';
 import type { FiscalYearRepository } from '../../domain/repositories/fiscal-year.repository.js';
+import type { FiscalPeriodRepository } from '../../domain/repositories/fiscal-period.repository.js';
 import { tenantReferenceFrom } from '../../domain/value-objects/tenant-reference.js';
 import type { CreateFiscalYear } from '../commands/create-fiscal-year.command.js';
 import type { FiscalYearEventRecorder } from '../ports/fiscal-year-event-recorder.port.js';
@@ -23,46 +29,30 @@ import { parseFiscalYearLabel, parseFiscalYearRange } from '../services/fiscal-y
 import { toFiscalYearView } from '../views/fiscal-year.mapper.js';
 import type { FiscalYearView } from '../views/fiscal-year.view.js';
 
-/**
- * Creates a fiscal year — the annual frame a tenant's periods will live in
- * (FIS-002).
- *
- * The use case is deliberately small and explicit:
- *
- * 1. read the tenant scope — `TenantScope.require()` fails closed, so a
- *    tenant-scoped operation with no scope refuses to run (SHR-007). The
- *    domain receives the tenant id as an explicit input; it never reads the
- *    ambient scope;
- * 2. validate the input in business terms (bad input is an expected failure,
- *    returned as a `Result`, not thrown);
- * 3. inside **one** transaction boundary:
- *    a. load the tenant's existing years;
- *    b. refuse a duplicate label (`FISCAL_YEAR_LABEL_DUPLICATE`) before
- *       anything is built;
- *    c. create the aggregate, which consults the **domain** overlap policy
- *       against those years — an overlapping range cannot even be constructed
- *       (`FISCAL_YEAR_OVERLAP`);
- *    d. insert the row and record `FiscalYearCreated` in the outbox, so the
- *       event commits with the state change or not at all (SHR-005, SHR-006);
- * 4. return the created year as a view, carrying the revision the next update
- *    must state.
- *
- * Two conflicts have two sources: the in-memory checks above, and the
- * database's own defences — the overlap triggers and the unique key — which
- * catch a write that raced past the check. The adapter translates both into a
- * `PersistenceError(CONFLICT)` whose cause is the module's own domain error,
- * so the use case maps them to the *same* codes either way and no driver
- * vocabulary leaks upward (design section 6.5).
- */
+const JALALI_MONTH_NAMES = [
+  'فروردین',
+  'اردیبهشت',
+  'خرداد',
+  'تیر',
+  'مرداد',
+  'شهریور',
+  'مهر',
+  'آبان',
+  'آذر',
+  'دی',
+  'بهمن',
+  'اسفند',
+] as const;
+
 export class CreateFiscalYearUseCase {
   public constructor(
     private readonly repository: FiscalYearRepository,
     private readonly events: FiscalYearEventRecorder,
     private readonly boundary: TransactionBoundary,
+    private readonly periodRepository?: FiscalPeriodRepository,
   ) {}
 
   public async execute(command: CreateFiscalYear): Promise<Result<FiscalYearView, DomainError>> {
-    // Fail closed: no available tenant scope means no fiscal year work at all.
     const tenantId = tenantReferenceFrom(TenantScope.requireTenantId());
 
     const label = parseFiscalYearLabel(command.payload.label);
@@ -78,8 +68,6 @@ export class CreateFiscalYearUseCase {
     const fiscalYearLabel = label.valueOrThrow();
     const fiscalYearRange = range.valueOrThrow();
 
-    // A failed `Result` returned from inside the boundary rolls it back, so a
-    // decline after the load leaves no trace (SHR-005).
     return this.boundary.execute(async () => {
       const existing = await this.repository.findByTenant(tenantId);
 
@@ -99,8 +87,6 @@ export class CreateFiscalYearUseCase {
           existing.map((year) => year.aggregate),
         );
       } catch (error) {
-        // The overlap policy declined: an expected business outcome, returned
-        // rather than thrown (SHR-002). Anything else is a bug and propagates.
         if (error instanceof FiscalYearOverlapError) {
           return Result.fail(error);
         }
@@ -116,6 +102,34 @@ export class CreateFiscalYearUseCase {
           return Result.fail(conflict);
         }
         throw error;
+      }
+
+      if (this.periodRepository !== undefined) {
+        const now = DateTime.now();
+        const startJalali = businessDateToJalali(fiscalYear.range.startDate);
+        const jYear = startJalali.jYear;
+
+        const currentActive = await this.periodRepository.findActive(tenantId);
+        const shouldActivateFirst = currentActive === undefined;
+
+        const periods: FiscalPeriod[] = [];
+        for (let m = 1; m <= 12; m++) {
+          const bounds = jalaliMonthBounds(jYear, m);
+          periods.push(
+            FiscalPeriod.create({
+              tenantId,
+              fiscalYearId: fiscalYear.id,
+              sequenceNumber: m,
+              label: JALALI_MONTH_NAMES[m - 1] ?? 'دوره ' + m,
+              startDate: bounds.start,
+              endDate: bounds.end,
+              isActive: m === 1 && shouldActivateFirst,
+              now,
+            }),
+          );
+        }
+
+        await this.periodRepository.addMany(periods);
       }
 
       await this.events.record(
@@ -137,14 +151,6 @@ export class CreateFiscalYearUseCase {
   }
 }
 
-/**
- * Recognises the two conflicts the adapter can report for a fiscal year
- * write — the database's own overlap refusal and the unique-key duplicate —
- * and hands back the module's domain error the adapter attached as the cause.
- *
- * Any other failure stays technical and is rethrown: the boundary must never
- * absorb a dead database or a refused shape into a business answer.
- */
 function asFiscalYearConflict(error: unknown): DomainError | undefined {
   if (error instanceof PersistenceError && error.kind === PersistenceFailureKind.CONFLICT) {
     const cause = error.cause;
