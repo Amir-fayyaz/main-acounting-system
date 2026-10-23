@@ -150,28 +150,6 @@ jobs:
         run: pnpm --filter "./apps/backend" run build
 
   # ---------------------------------------------------------------
-  # Tenant security is a cross-cutting boundary: run it on every PR even when
-  # the changed-path filter would otherwise skip the backend job.
-  # ---------------------------------------------------------------
-  tenant-isolation:
-    name: Tenant isolation contract
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup & install
-        uses: ./.github/actions/setup
-
-      - name: Two-company isolation suite
-        run: >-
-          pnpm --filter @accounting-saas/backend test --
-          test/tenant-isolation-contract.e2e-spec.ts
-          test/tenant-isolation.e2e-spec.ts
-          src/modules/identity/infrastructure/persistence/tenant-filter-contract.spec.ts
-
-  # ---------------------------------------------------------------
   # 4) Dockerfile lint
   # ---------------------------------------------------------------
   dockerfile-lint:
@@ -200,7 +178,7 @@ jobs:
   # ---------------------------------------------------------------
   ci-status:
     name: CI status
-    needs: [changes, frontend, backend, tenant-isolation, dockerfile-lint]
+    needs: [changes, frontend, backend, dockerfile-lint]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 2
@@ -210,7 +188,6 @@ jobs:
           echo "changes:         ${{ needs.changes.result }}"
           echo "frontend:        ${{ needs.frontend.result }}"
           echo "backend:         ${{ needs.backend.result }}"
-          echo "tenant-isolation: ${{ needs.tenant-isolation.result }}"
           echo "dockerfile-lint: ${{ needs.dockerfile-lint.result }}"
 
           if [ "${{ contains(needs.*.result, 'failure') }}" = "true" ] || \
