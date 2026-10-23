@@ -7,6 +7,7 @@ import { ExampleModule } from './infrastructure/presentation/example/example.mod
 import { HealthModule } from './infrastructure/presentation/health/health.module.js';
 import { RedisModule } from './infrastructure/redis/redis.module.js';
 import { StorageModule } from './infrastructure/storage/storage.module.js';
+import { AccountingModule } from './modules/accounting/infrastructure/accounting.module.js';
 import { AuditModule } from './modules/audit/infrastructure/audit.module.js';
 import { TenantModule } from './modules/tenant/public-api.js';
 import { AuthenticationModule } from './modules/identity/infrastructure/authentication.module.js';
@@ -44,6 +45,10 @@ import { RoleModule } from './modules/identity/infrastructure/role.module.js';
  * facts through and exposes the authorization-protected retrieval resource. It
  * is imported after the identity slices because those slices record their
  * security events through the contract it publishes.
+ * `AccountingModule` is the first accounting slice (FIS-002): it owns the
+ * fiscal year — the tenant-owned, non-overlapping annual frame later tickets
+ * will generate periods inside. It exposes no HTTP resource and publishes no
+ * cross-module contract yet, so it is wired but deliberately inert.
  * `ExampleModule` remains the non-business reference endpoint that
  * exercises the REST/OpenAPI baseline (FND-006) and is a working template a new
  * module can copy.
@@ -68,6 +73,7 @@ import { RoleModule } from './modules/identity/infrastructure/role.module.js';
     AuthenticationModule,
     AuthorizationModule,
     AuditModule,
+    AccountingModule,
   ],
   providers: [
     {
