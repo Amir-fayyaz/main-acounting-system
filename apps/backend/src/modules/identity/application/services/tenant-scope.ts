@@ -2,6 +2,7 @@ import { NotFoundError, ValidationError } from '../../../../shared/errors/catego
 import type { DomainError } from '../../../../shared/errors/domain-error.js';
 import { Result } from '../../../../shared/errors/result.js';
 import { TenantScope } from '../../../../shared/tenant/tenant-scope.js';
+import { isSameTenant } from '../../../../shared/tenant/tenant-identity.js';
 import {
   isTenantReference,
   tenantReferenceFrom,
@@ -44,7 +45,7 @@ export function resolveScopedTenant(rawTenantId: string): Result<TenantReference
   const scope = TenantScope.require();
   const tenantId = tenantReferenceFrom(rawTenantId);
 
-  if (scope.tenantId !== tenantId.value) {
+  if (!isSameTenant(scope.tenantId, tenantId.value)) {
     return Result.fail(new NotFoundError('The requested record was not found.'));
   }
 

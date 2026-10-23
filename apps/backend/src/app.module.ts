@@ -8,7 +8,7 @@ import { HealthModule } from './infrastructure/presentation/health/health.module
 import { RedisModule } from './infrastructure/redis/redis.module.js';
 import { StorageModule } from './infrastructure/storage/storage.module.js';
 import { AuditModule } from './modules/audit/infrastructure/audit.module.js';
-import { TenantModule } from './modules/tenant/infrastructure/tenant.module.js';
+import { TenantModule } from './modules/tenant/public-api.js';
 import { AuthenticationModule } from './modules/identity/infrastructure/authentication.module.js';
 import { AuthorizationGuard } from './modules/identity/presentation/guards/authorization.guard.js';
 import { AuthorizationModule } from './modules/identity/infrastructure/authorization.module.js';

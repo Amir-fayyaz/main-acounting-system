@@ -55,6 +55,10 @@ export class InMemoryTenantRepository implements TenantRepository {
       : { aggregate: Tenant.rehydrate(record.snapshot), revision: record.revision };
   }
 
+  public async exists(tenantId: TenantId): Promise<boolean> {
+    return this.records.has(tenantId.value);
+  }
+
   public async add(tenant: Tenant): Promise<WriteReceipt> {
     this.addCalls += 1;
     if (this.records.has(tenant.id.value)) {

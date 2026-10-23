@@ -1,25 +1,31 @@
-"use server";
-import { NextResponse } from "next/server";
-type SameSiteOption = "strict" | "lax" | "none" | false;
-export async function setCoockie(access_token: string) {
-  const cookieOptions = {
-    name: "accessToken",
+'use server';
+
+import { cookies } from 'next/headers';
+import { env } from 'process';
+
+const AUTH_COOKIE_NAME = 'Token';
+const FALLBACK_MAX_AGE = 15 * 60; // ثانیه
+
+/**
+ * ست‌کردن cookie توکن (نام یکدست: `Token`).
+ * اگر maxAge داده نشود، فرصت‌ها به ترتیب: ۱۵ دقیقه (fallback).
+ */
+export async function setCoockie(access_token: string, maxAge?: number) {
+  const cookieStore = await cookies();
+  cookieStore.set({
+    name: AUTH_COOKIE_NAME,
     value: access_token,
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax" as SameSiteOption,
-    path: "/",
-    maxAge: 15 * 60,
-  };
-  const response = NextResponse.json({ success: true });
-  response.cookies.set({
-    name: cookieOptions.name,
-    value: cookieOptions.value,
-    httpOnly: cookieOptions.httpOnly,
-    secure: cookieOptions.secure,
-    sameSite: cookieOptions.sameSite,
-    path: cookieOptions.path,
-    maxAge: cookieOptions.maxAge,
+    secure: env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: maxAge && maxAge > 0 ? maxAge : FALLBACK_MAX_AGE,
   });
-  return response;
+  return { success: true };
+}
+
+export async function removeCoockie() {
+  const cookieStore = await cookies();
+  cookieStore.delete(AUTH_COOKIE_NAME);
+  return { success: true };
 }

@@ -10,8 +10,7 @@ import { OUTBOX_RECORDER } from '../../../infrastructure/outbox/outbox.tokens.js
 import type { TransactionBoundary } from '../../../shared/transaction/transaction-boundary.js';
 import { AUDIT_RECORDER } from '../../audit/application/audit.tokens.js';
 import type { AuditRecorder } from '../../audit/application/ports/audit-recorder.port.js';
-import { TENANT_DIRECTORY } from '../../tenant/application/tenant.tokens.js';
-import type { TenantDirectory } from '../../tenant/application/ports/tenant-directory.port.js';
+import { TENANT_DIRECTORY, type TenantDirectory } from '../../tenant/public-api.js';
 import { ChangeMembershipStatusUseCase } from '../application/use-cases/change-membership-status.use-case.js';
 import { CreateMembershipUseCase } from '../application/use-cases/create-membership.use-case.js';
 import { GetMembershipUseCase } from '../application/use-cases/get-membership.use-case.js';
@@ -20,14 +19,17 @@ import { ListUserMembershipsUseCase } from '../application/use-cases/list-user-m
 import {
   MEMBERSHIP_EVENT_RECORDER,
   MEMBERSHIP_REPOSITORY,
+  TENANT_MEMBERSHIP,
 } from '../application/membership.tokens.js';
 import type { MembershipEventRecorder } from '../application/ports/membership-event-recorder.port.js';
+import type { TenantMembership } from '../application/ports/tenant-membership.port.js';
 import { USER_REPOSITORY } from '../application/user.tokens.js';
 import type { MembershipRepository } from '../domain/repositories/membership.repository.js';
 import type { UserRepository } from '../domain/repositories/user.repository.js';
 import { MembershipsController } from '../presentation/controllers/membership.controller.js';
 import { ActorEventRecorder } from './audit/audit-trail-access-control-event-recorder.js';
 import { DrizzleMembershipRepository } from './persistence/drizzle-membership.repository.js';
+import { MembershipTenantMembershipAdapter } from './authorization/membership-tenant-membership.adapter.js';
 import { UserModule } from './user.module.js';
 
 /**
@@ -61,6 +63,12 @@ import { UserModule } from './user.module.js';
       useFactory: (database: Database): MembershipRepository =>
         new DrizzleMembershipRepository(database),
       inject: [DATABASE],
+    },
+    {
+      provide: TENANT_MEMBERSHIP,
+      useFactory: (repository: MembershipRepository): TenantMembership =>
+        new MembershipTenantMembershipAdapter(repository),
+      inject: [MEMBERSHIP_REPOSITORY],
     },
     {
       // Membership facts reach two homes: the outbox, so the rest of the system
@@ -119,6 +127,6 @@ import { UserModule } from './user.module.js';
   // membership exists and belongs to the tenant before assigning a role. It is
   // not an invitation to other modules: the boundary guard still forbids them
   // from importing this file.
-  exports: [MEMBERSHIP_REPOSITORY],
+  exports: [MEMBERSHIP_REPOSITORY, TENANT_MEMBERSHIP],
 })
 export class MembershipModule {}

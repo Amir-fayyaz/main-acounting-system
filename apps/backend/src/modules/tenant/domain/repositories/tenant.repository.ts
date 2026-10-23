@@ -32,4 +32,16 @@ import type { TenantId } from '../value-objects/tenant-id.js';
  * (enforced by `src/modules/module-boundaries.spec.ts`).
  */
 export interface TenantRepository
-  extends LoadsById<TenantId, Tenant>, AddsAggregate<Tenant>, UpdatesAggregate<Tenant> {}
+  extends LoadsById<TenantId, Tenant>, AddsAggregate<Tenant>, UpdatesAggregate<Tenant> {
+  /**
+   * Whether a tenant with this identity exists.
+   *
+   * Existence is the one question about a tenant that is *not* tenant-scoped:
+   * it answers "does this company exist?" without saying anything about the
+   * company itself. It exists as a separate method — rather than as a
+   * `get` that answers `undefined` — so the scope-free question has its own
+   * name and a caller cannot reach for a full tenant record by accident
+   * (IAM-007).
+   */
+  exists(tenantId: TenantId): Promise<boolean>;
+}

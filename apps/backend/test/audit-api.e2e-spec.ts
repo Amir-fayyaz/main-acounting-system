@@ -30,6 +30,7 @@ import {
 } from '../src/modules/identity/application/role.tokens.js';
 import { USER_REPOSITORY } from '../src/modules/identity/application/user.tokens.js';
 import { AuthorizeActionUseCase } from '../src/modules/identity/application/use-cases/authorize-action.use-case.js';
+import { MembershipTenantMembershipAdapter } from '../src/modules/identity/infrastructure/authorization/membership-tenant-membership.adapter.js';
 import { GetAuthenticatedSessionUseCase } from '../src/modules/identity/application/use-cases/get-authenticated-session.use-case.js';
 import { AuthSession } from '../src/modules/identity/domain/aggregates/auth-session.js';
 import { Membership } from '../src/modules/identity/domain/aggregates/membership.js';
@@ -79,7 +80,7 @@ import { InMemoryUserRepository } from './support/user-doubles.js';
  * - a permitted caller receives one page of *that tenant's* trail only, with the
  *   standard pagination envelope;
  * - a client-supplied tenant cannot become the scope — an unknown query
- *   parameter is refused outright and a header is ignored;
+ *   parameter is refused outright and a conflicting header is rejected;
  * - filters narrow the read, are validated as business input, and the time
  *   window is checked;
  * - the trail is read-only over HTTP: nothing can create, edit or delete a
@@ -142,7 +143,7 @@ async function createHarness(): Promise<Harness> {
           a: InMemoryMembershipRoleRepository,
           r: InMemoryRoleRepository,
           audit: RecordingAuditTrail,
-        ): Authorization => new AuthorizeActionUseCase(u, m, a, r, audit),
+        ): Authorization => new AuthorizeActionUseCase(u, m, new MembershipTenantMembershipAdapter(m), a, r, audit),
         inject: [
           USER_REPOSITORY,
           MEMBERSHIP_REPOSITORY,
@@ -331,7 +332,7 @@ describe('audit trail (e2e)', () => {
 
       const response = await authorized(path(TENANT_B), token).expect(403);
 
-      expect(response.body.error.code).toBe('MEMBERSHIP_REQUIRED');
+      expect(response.body.error.code).toBe('TENANT_ACCESS_DENIED');
     });
 
     it('serves the trail to a caller holding audit.read in that tenant', async () => {
@@ -361,19 +362,17 @@ describe('audit trail (e2e)', () => {
       expect(JSON.stringify(response.body)).not.toContain('maintenance.reindexed');
     });
 
-    it('ignores a tenant header supplied by the client', async () => {
+    it('rejects a conflicting tenant header instead of selecting or ignoring it', async () => {
       const auditor = seedAuditor(TENANT_A);
 
       const response = await request(app.getHttpServer())
         .get(path(TENANT_A))
         .set('authorization', `Bearer ${auditor.token}`)
         .set('x-tenant-id', TENANT_B)
-        .expect(200);
+        .expect(403);
 
-      expect(response.body.meta.total).toBe(2);
-      expect(
-        response.body.data.every((record: { tenantId: string }) => record.tenantId === TENANT_A),
-      ).toBe(true);
+      expect(response.body.error.code).toBe('TENANT_ACCESS_DENIED');
+      expect(JSON.stringify(response.body)).not.toContain(TENANT_B);
     });
 
     it('refuses an unknown tenant query parameter instead of silently ignoring it', async () => {

@@ -11,12 +11,14 @@
   },
   "scripts": {
     "dev": "pnpm -r --parallel dev",
+    "dev:local": "node tooling/scripts/dev.mjs",
     "dev:backend": "pnpm --filter @accounting-saas/backend dev",
     "dev:frontend": "pnpm --filter @accounting-saas/frontend dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "deps:check": "pnpm --filter @accounting-saas/backend deps:check",
     "test": "pnpm -r test",
     "test:backend:e2e": "pnpm --filter @accounting-saas/backend test:e2e",
     "verify": "node tooling/scripts/verify.mjs",
@@ -28,7 +30,9 @@
     "stack:up": "docker compose --profile app up -d --build",
     "stack:down": "docker compose --profile app down",
     "stack:logs": "docker compose --profile app logs -f",
-    "dev:reset": "docker compose --profile app down -v"
+    "dev:reset": "docker compose --profile app down -v",
+    "storybook": "pnpm --filter @repo/storybook dev",
+    "storybook:build": "pnpm --filter @repo/storybook build"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

@@ -302,17 +302,21 @@ describe.skipIf(!integrationEnabled)('audit persistence (integration)', () => {
 
   it('refuses a second fact under an identity that already exists', async () => {
     const id = randomUUID();
-    await boundary.execute(() => repository.add(aRecordWithId(id, { tenantId: TENANT_A })));
+    await TenantScope.run(createTenantContext(TENANT_A), () =>
+      boundary.execute(() => repository.add(aRecordWithId(id, { tenantId: TENANT_A }))),
+    );
 
     let failure: unknown;
     try {
-      await boundary.execute(() =>
-        repository.add(
-          aRecordWithId(id, {
-            tenantId: TENANT_A,
-            action: AuditAction.from('user.signed_out'),
-            occurredAt: DateTime.now(),
-          }),
+      await TenantScope.run(createTenantContext(TENANT_A), () =>
+        boundary.execute(() =>
+          repository.add(
+            aRecordWithId(id, {
+              tenantId: TENANT_A,
+              action: AuditAction.from('user.signed_out'),
+              occurredAt: DateTime.now(),
+            }),
+          ),
         ),
       );
     } catch (error) {
@@ -331,13 +335,17 @@ describe.skipIf(!integrationEnabled)('audit persistence (integration)', () => {
     const committed = randomUUID();
     const rolledBack = randomUUID();
 
-    await boundary.execute(() => repository.add(aRecordWithId(committed, { tenantId: TENANT_A })));
+    await TenantScope.run(createTenantContext(TENANT_A), () =>
+      boundary.execute(() => repository.add(aRecordWithId(committed, { tenantId: TENANT_A }))),
+    );
 
     await expect(
-      boundary.execute(async () => {
-        await repository.add(aRecordWithId(rolledBack, { tenantId: TENANT_A }));
-        throw new Error('the business operation failed after recording');
-      }),
+      TenantScope.run(createTenantContext(TENANT_A), () =>
+        boundary.execute(async () => {
+          await repository.add(aRecordWithId(rolledBack, { tenantId: TENANT_A }));
+          throw new Error('the business operation failed after recording');
+        }),
+      ),
     ).rejects.toThrow('the business operation failed after recording');
 
     const page = (await readTenant(TENANT_A)).valueOrThrow();

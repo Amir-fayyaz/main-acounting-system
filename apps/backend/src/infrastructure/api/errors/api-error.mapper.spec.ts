@@ -1,6 +1,10 @@
 import { InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { describe, expect, it } from 'vitest';
 import { DomainError } from '../../../shared/errors/domain-error.js';
+import {
+  TenantContextMissingError,
+  TenantIsolationViolationError,
+} from '../../../shared/tenant/tenant.errors.js';
 import { ApiErrorException } from './api-error.exception.js';
 import { mapException } from './api-error.mapper.js';
 
@@ -69,5 +73,39 @@ describe('mapException', () => {
       code: 'INTERNAL_ERROR',
       category: 'technical',
     });
+  });
+});
+
+describe('mapException — TENANT_REQUIRED (TNT-002)', () => {
+  it('maps TenantContextMissingError (missing) to TENANT_REQUIRED 400', () => {
+    expect(mapException(new TenantContextMissingError('missing'))).toEqual({
+      status: 400,
+      code: 'TENANT_REQUIRED',
+      category: 'client',
+      message: 'A tenant context is required for this operation.',
+    });
+  });
+
+  it('maps TenantContextMissingError (system) to TENANT_REQUIRED 400', () => {
+    expect(mapException(new TenantContextMissingError('system'))).toMatchObject({
+      status: 400,
+      code: 'TENANT_REQUIRED',
+      category: 'client',
+    });
+  });
+});
+
+describe('mapException — tenant isolation (IAM-007)', () => {
+  it('maps a cross-tenant attempt to a generic FORBIDDEN 403', () => {
+    const mapped = mapException(new TenantIsolationViolationError('MembershipRepository.update'));
+
+    expect(mapped).toEqual({
+      status: 403,
+      code: 'FORBIDDEN',
+      category: 'client',
+      message: 'The request is not allowed.',
+    });
+    // The server-side position stays server-side.
+    expect(JSON.stringify(mapped)).not.toContain('MembershipRepository');
   });
 });

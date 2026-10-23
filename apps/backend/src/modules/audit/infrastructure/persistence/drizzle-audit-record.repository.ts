@@ -1,6 +1,10 @@
 import type { Database } from '../../../../infrastructure/database/database.module.js';
 import { scopedDatabase } from '../../../../infrastructure/database/scoped-database.js';
 import {
+  assertPlatformWrite,
+  assertTenantOwnership,
+} from '../../../../infrastructure/database/tenant-scoped.js';
+import {
   PersistenceError,
   PersistenceFailureKind,
 } from '../../../../shared/persistence/persistence-error.js';
@@ -40,6 +44,15 @@ export class DrizzleAuditRecordRepository implements AuditRecordRepository {
   public constructor(private readonly database: Database) {}
 
   public async add(record: AuditRecord): Promise<WriteReceipt> {
+    // The record's tenant comes from the ambient scope by contract. Tenant-
+    // owned facts must belong to that tenant; platform facts may only be
+    // written outside a tenant scope, never by tenant-scoped work.
+    if (record.tenantId === undefined) {
+      assertPlatformWrite('AuditRecordRepository.add');
+    } else {
+      assertTenantOwnership(record.tenantId, 'AuditRecordRepository.add');
+    }
+
     try {
       await scopedDatabase(this.database).insert(auditRecords).values(toNewAuditRow(record));
     } catch (error) {

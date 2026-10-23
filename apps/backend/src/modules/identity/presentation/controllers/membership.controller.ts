@@ -24,8 +24,6 @@ import type { DomainError } from '../../../../shared/errors/domain-error.js';
 import { ErrorCategory } from '../../../../shared/errors/error-category.js';
 import type { ErrorDetail } from '../../../../shared/errors/error-detail.js';
 import type { Result } from '../../../../shared/errors/result.js';
-import { createTenantContext } from '../../../../shared/tenant/tenant-context.js';
-import { TenantScope } from '../../../../shared/tenant/tenant-scope.js';
 import { ChangeMembershipStatus } from '../../application/commands/change-membership-status.command.js';
 import { CreateMembership } from '../../application/commands/create-membership.command.js';
 import { GetMembership } from '../../application/queries/get-membership.query.js';
@@ -247,21 +245,22 @@ export class MembershipsController {
   }
 
   /**
-   * Runs `work` under the tenant's scope.
+   * Runs `work` under the tenant scope the trusted boundary published.
    *
-   * This is the trusted-entry-point responsibility SHR-007 assigns to the request
-   * path: establishing the scope once, from the target the application resolved,
-   * so use cases can require it and raised events are stamped with the tenant.
-   * Until authentication exists this target comes from the resource path; when it
-   * does, the scope comes from the principal and this becomes a *check* rather
-   * than the source.
+   * The scope is established once, by the global tenant-scope interceptor, from
+   * the tenant the authorization boundary proved for this caller's membership
+   * (IAM-007). This helper therefore does not *establish* anything: it only
+   * checks that the route carries a well-formed tenant identifier and lets the
+   * established scope stand. The use case then compares the requested tenant
+   * with that scope, so a request for another company's record is refused
+   * before any data is read.
    */
   private async inTenantScope<T>(rawId: string, work: () => Promise<T>): Promise<T> {
     if (!isTenantReference(rawId)) {
       throw ApiErrorException.notFound();
     }
 
-    return TenantScope.run(createTenantContext(rawId), work);
+    return work();
   }
 
   /** Maps a use-case outcome to a response, or raises the standard error. */
