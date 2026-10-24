@@ -17,11 +17,16 @@ import { ErrorCategory } from '../../../../shared/errors/error-category.js';
 import type { DomainError } from '../../../../shared/errors/domain-error.js';
 import type { Result } from '../../../../shared/errors/result.js';
 import { TenantScope } from '../../../../shared/tenant/tenant-scope.js';
-import { Authorize } from '../../../../infrastructure/api/authorization/authorization-policy.js';
+import {
+  Authorize,
+  RequiresAuthentication,
+} from '../../../../infrastructure/api/authorization/authorization-policy.js';
 import { API_ERROR_CODES } from '../../../../infrastructure/api/errors/api-error.registry.js';
 import { ApiErrorResponseDto } from '../../../../infrastructure/api/errors/api-error.dto.js';
 import { ApiErrorException } from '../../../../infrastructure/api/errors/api-error.exception.js';
 import type { ApiErrorDetail } from '../../../../infrastructure/api/errors/api-error.types.js';
+import { CurrentPrincipal } from '../../../identity/presentation/decorators/current-principal.decorator.js';
+import type { AuthenticatedPrincipalView } from '../../../identity/application/views/principal.view.js';
 import { ChangeTenantStatusUseCase } from '../../application/use-cases/change-tenant-status.use-case.js';
 import { ChangeTenantStatus } from '../../application/commands/change-tenant-status.command.js';
 import { CreateTenant } from '../../application/commands/create-tenant.command.js';
@@ -48,8 +53,10 @@ import { UpdateTenantDto } from '../dto/update-tenant.dto.js';
  *
  * **Authorization is declared here and decided elsewhere** (IAM-006). Every
  * operation states the capability IAM-004 defines — `company.read` to read a
- * tenant, `company.update` to change one or create one — and the tenant-scoped
- * ones name the route parameter that identifies the target tenant. The
+ * tenant, `company.update` to change one — except creation, which requires
+ * authentication only because the company it would authorize against does not
+ * exist yet. The tenant-scoped ones name the route parameter that identifies
+ * the target tenant. The
  * authorization boundary verifies both against the caller's active membership
  * *before* this controller runs, so the path identifier is a checked claim
  * rather than a grant, and an unauthenticated or unauthorized request never
@@ -77,27 +84,95 @@ export class TenantController {
   ) {}
 
   @Post()
-  @Authorize({ permission: 'company.update' })
+  @RequiresAuthentication()
   @ApiOperation({
-    summary: 'Create a tenant',
+    summary: 'Create a company',
     description:
-      'Creates the root business boundary. Requires an authenticated caller holding "company.update".',
+      'Creates the root business boundary and enrolls the authenticated caller as its first member in the same transaction. Requires authentication only: the creator cannot already hold a permission in a company that does not exist yet.',
   })
-  @ApiCreatedResponse({ type: TenantResponseDto })
-  @ApiBadRequestResponse({ type: ApiErrorResponseDto, description: 'Request validation failed.' })
+  @ApiCreatedResponse({
+    type: TenantResponseDto,
+    description: 'The company was created and the caller was enrolled as its first member.',
+    examples: {
+      created: {
+        summary: 'A newly created company',
+        value: {
+          id: '018f0d3c-6d0f-7a4b-9d4e-2b3c4d5e6f70',
+          name: 'Acme Trading Co.',
+          status: 'active',
+          revision: 1,
+          createdAt: '2026-10-24T09:30:00.000Z',
+          updatedAt: '2026-10-24T09:30:00.000Z',
+        },
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    type: ApiErrorResponseDto,
+    description: 'Request validation failed.',
+    examples: {
+      invalidName: {
+        summary: 'The name is blank',
+        value: {
+          error: {
+            code: 'VALIDATION_FAILED',
+            category: 'validation',
+            message: 'The request contains invalid values.',
+            correlationId: '2f0a4b1c-9c3d-4f2a-8b7e-0d1c2a3b4c5d',
+            details: [
+              { field: 'name', code: 'isLength', message: 'name must be longer than 0 characters' },
+            ],
+          },
+        },
+      },
+      bodyTenantId: {
+        summary: 'A client tries to choose the company id in the body',
+        value: {
+          error: {
+            code: 'VALIDATION_FAILED',
+            category: 'validation',
+            message: 'The request contains invalid values.',
+            correlationId: '2f0a4b1c-9c3d-4f2a-8b7e-0d1c2a3b4c5d',
+            details: [
+              {
+                field: 'tenantId',
+                code: 'whitelistValidation',
+                message: 'property tenantId should not exist',
+              },
+            ],
+          },
+        },
+      },
+    },
+  })
   @ApiUnauthorizedResponse({
     type: ApiErrorResponseDto,
     description: 'Authentication is required.',
+    examples: {
+      unauthenticated: {
+        summary: 'No valid bearer token',
+        value: {
+          error: {
+            code: 'UNAUTHORIZED',
+            category: 'client',
+            message: 'Authentication is required.',
+            correlationId: '2f0a4b1c-9c3d-4f2a-8b7e-0d1c2a3b4c5d',
+          },
+        },
+      },
+    },
   })
-  @ApiForbiddenResponse({
-    type: ApiErrorResponseDto,
-    description: 'The caller does not hold "company.update".',
-  })
-  async create(@Body() body: CreateTenantDto): Promise<TenantResponseDto> {
+  async create(
+    @CurrentPrincipal() principal: AuthenticatedPrincipalView,
+    @Body() body: CreateTenantDto,
+  ): Promise<TenantResponseDto> {
     // A tenant does not exist yet, so creation is the one system-level
     // operation here: it establishes the boundary rather than running in one.
+    // The creator is the verified principal, never a field the client sends.
     const outcome = await TenantScope.runAsSystem(() =>
-      this.createTenant.execute(new CreateTenant({ name: body.name })),
+      this.createTenant.execute(
+        new CreateTenant({ name: body.name, ownerUserId: principal.userId }),
+      ),
     );
 
     return this.response(outcome);

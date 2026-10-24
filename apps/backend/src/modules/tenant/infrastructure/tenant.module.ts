@@ -8,13 +8,17 @@ import {
 import { OutboxModule } from '../../../infrastructure/outbox/outbox.module.js';
 import { OUTBOX_RECORDER } from '../../../infrastructure/outbox/outbox.tokens.js';
 import type { TransactionBoundary } from '../../../shared/transaction/transaction-boundary.js';
+import { AUDIT_RECORDER } from '../../audit/application/audit.tokens.js';
+import type { AuditRecorder } from '../../audit/application/ports/audit-recorder.port.js';
 import { ChangeTenantStatusUseCase } from '../application/use-cases/change-tenant-status.use-case.js';
 import {
   TENANT_DIRECTORY,
   TENANT_EVENT_RECORDER,
+  TENANT_OWNER_ENROLLMENT,
   TENANT_REPOSITORY,
 } from '../application/tenant.tokens.js';
 import type { TenantDirectory } from '../application/ports/tenant-directory.port.js';
+import type { TenantOwnerEnrollment } from '../application/ports/tenant-owner-enrollment.port.js';
 import { CreateTenantUseCase } from '../application/use-cases/create-tenant.use-case.js';
 import { GetTenantUseCase } from '../application/use-cases/get-tenant.use-case.js';
 import { UpdateTenantUseCase } from '../application/use-cases/update-tenant.use-case.js';
@@ -22,6 +26,7 @@ import type { TenantEventRecorder } from '../application/ports/tenant-event-reco
 import type { TenantRepository } from '../domain/repositories/tenant.repository.js';
 import { isTenantId, tenantIdFrom } from '../domain/value-objects/tenant-id.js';
 import { TenantController } from '../presentation/controllers/tenant.controller.js';
+import { TenantAuditEventRecorder } from './audit/tenant-audit-event-recorder.js';
 import { DrizzleTenantRepository } from './persistence/drizzle-tenant.repository.js';
 
 /**
@@ -76,18 +81,24 @@ import { DrizzleTenantRepository } from './persistence/drizzle-tenant.repository
       inject: [TENANT_REPOSITORY],
     },
     {
-      // The outbox recorder already satisfies the application port structurally.
+      // Tenant facts reach two homes: the outbox, so the rest of the system
+      // learns them (SHR-006), and the central audit trail, because creating a
+      // company, renaming it and moving its lifecycle are security-relevant
+      // administrative changes (AUD-001; IAM-009).
       provide: TENANT_EVENT_RECORDER,
-      useExisting: OUTBOX_RECORDER,
+      useFactory: (outbox: TenantEventRecorder, audit: AuditRecorder) =>
+        new TenantAuditEventRecorder(outbox, audit),
+      inject: [OUTBOX_RECORDER, AUDIT_RECORDER],
     },
     {
       provide: CreateTenantUseCase,
       useFactory: (
         repository: TenantRepository,
+        owners: TenantOwnerEnrollment,
         events: TenantEventRecorder,
         boundary: TransactionBoundary,
-      ) => new CreateTenantUseCase(repository, events, boundary),
-      inject: [TENANT_REPOSITORY, TENANT_EVENT_RECORDER, TRANSACTION_BOUNDARY],
+      ) => new CreateTenantUseCase(repository, owners, events, boundary),
+      inject: [TENANT_REPOSITORY, TENANT_OWNER_ENROLLMENT, TENANT_EVENT_RECORDER, TRANSACTION_BOUNDARY],
     },
     {
       provide: GetTenantUseCase,

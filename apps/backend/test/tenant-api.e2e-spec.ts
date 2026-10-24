@@ -21,8 +21,10 @@ import type { TransactionBoundary } from '../src/shared/transaction/transaction-
 import {
   InMemoryTenantRepository,
   PassthroughTransactionBoundary,
+  RecordingOwnerEnrollment,
   RecordingTenantEvents,
 } from './support/tenant-doubles.js';
+import { authenticateAs } from './support/test-principal.js';
 
 /**
  * The tenant resource over the real HTTP boundary (IAM-001; FND-006).
@@ -62,7 +64,7 @@ async function createHarness(): Promise<Harness> {
       {
         provide: CreateTenantUseCase,
         useFactory: (r: TenantRepository, e: TenantEventRecorder, b: TransactionBoundary) =>
-          new CreateTenantUseCase(r, e, b),
+          new CreateTenantUseCase(r, new RecordingOwnerEnrollment(), e, b),
         inject: [TENANT_REPOSITORY, TENANT_EVENT_RECORDER, TRANSACTION_BOUNDARY],
       },
       {
@@ -87,6 +89,7 @@ async function createHarness(): Promise<Harness> {
 
   const app = moduleRef.createNestApplication();
   configureApplication(app);
+  authenticateAs(app);
   await app.init();
 
   return { app, repository, events };
