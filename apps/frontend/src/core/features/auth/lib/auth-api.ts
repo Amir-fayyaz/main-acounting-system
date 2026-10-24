@@ -1,4 +1,3 @@
-import { BASE_URL } from '@/core/lib/basic-link/BackendBasicLink';
 import type {
   SessionResponse,
   SignInInput,
@@ -6,8 +5,8 @@ import type {
   SignUpInput,
   SignUpResponse,
 } from '../assets/@types/auth.types';
-import { env } from 'process';
-
+import { env } from '@/core/lib/basic-link/env';
+import { BASE_URL } from '@/core/lib/basic-link/BackendBasicLink';
 /**
  * آدرس پایه طبق قرارداد infra پروژه:
  * - مرورگر: NEXT_PUBLIC_API_BASE_URL (مثلاً http://localhost:3000/api)
@@ -16,8 +15,16 @@ import { env } from 'process';
  */
 function authPrefix(): string {
   const publicBase = env.NEXT_PUBLIC_API_BASE_URL ?? BASE_URL;
+
   const base =
-    typeof window === 'undefined' ? (env.INTERNAL_API_BASE_URL ?? publicBase) : publicBase;
+    typeof window === 'undefined'
+      ? env.INTERNAL_API_BASE_URL ?? publicBase
+      : publicBase;
+
+  if (!base) {
+    throw new Error('API base URL is not configured');
+  }
+
   return `${base}/v1/auth`;
 }
 
