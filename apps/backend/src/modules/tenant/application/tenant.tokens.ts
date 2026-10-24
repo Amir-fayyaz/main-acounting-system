@@ -10,8 +10,14 @@
 /** The tenant persistence boundary (`TenantRepository`). */
 export const TENANT_REPOSITORY = Symbol('TENANT_REPOSITORY');
 
-/** The outbox boundary (`TenantEventRecorder`). */
+/** The outbox + audit boundary (`TenantEventRecorder`). */
 export const TENANT_EVENT_RECORDER = Symbol('TENANT_EVENT_RECORDER');
+
+/**
+ * The owner-enrollment contract a new company needs (IAM-009). Implemented by
+ * the Identity module, which owns memberships.
+ */
+export const TENANT_OWNER_ENROLLMENT = Symbol('TENANT_OWNER_ENROLLMENT');
 
 /**
  * The published tenant-existence contract (`TenantDirectory`) other modules
