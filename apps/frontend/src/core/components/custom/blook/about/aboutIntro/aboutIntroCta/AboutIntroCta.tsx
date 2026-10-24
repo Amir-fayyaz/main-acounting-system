@@ -6,7 +6,7 @@ export interface AboutIntroCtaProps {
   label?: string;
   href?: string;
 }
-
+console.log("pr");
 function AboutIntroCta({ label = 'تراز را در عمل ببینید', href = '/demo' }: AboutIntroCtaProps) {
   return (
     <Button
