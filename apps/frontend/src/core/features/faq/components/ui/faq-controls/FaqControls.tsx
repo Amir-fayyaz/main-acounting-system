@@ -1,14 +1,14 @@
-import { Search, X } from 'lucide-react';
-import { cn } from '@/core/utils/shadcn/utils';
 import type { FaqCategory, FaqCategoryId } from '@/core/features/faq/assets/@types/faq';
+import { cn } from '@repo/web/ui/utils/cn';
+import { Search, X } from 'lucide-react';
 
 interface FaqControlsProps {
   query: string;
   activeCategory: FaqCategoryId;
   categories: FaqCategory[];
-  // eslint-disable-next-line no-unused-vars
+
   onQueryChange: (_value: string) => void;
-  // eslint-disable-next-line no-unused-vars
+
   onCategoryChange: (_id: FaqCategoryId) => void;
 }
 
