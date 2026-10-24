@@ -145,6 +145,16 @@ class ScopeProbeController {
   }
 }
 
+/** A deliberately malformed tenant-scoped route: the declared tenant claim is absent. */
+@Controller('isolation')
+class MissingTenantProbeController {
+  @Get('missing-tenant')
+  @Authorize({ permission: 'user.read', tenantParam: 'tenantId' })
+  probe(): { readonly reached: true } {
+    return { reached: true };
+  }
+}
+
 interface Harness {
   readonly app: INestApplication;
   readonly users: InMemoryUserRepository;
@@ -179,6 +189,7 @@ async function createHarness(): Promise<Harness> {
       RolesController,
       SystemEscalationProbeController,
       ScopeProbeController,
+      MissingTenantProbeController,
     ],
     providers: [
       { provide: USER_REPOSITORY, useValue: users },
@@ -440,6 +451,33 @@ describe('tenant isolation (adversarial, e2e)', () => {
 
       expect(response.body.tenantId).toBe(TENANT_A);
     });
+
+    it('keeps concurrent authenticated requests isolated across both tenants', async () => {
+      const memberA = seedUser();
+      const memberB = seedUser();
+      seedMembership(memberA, { tenantId: TENANT_A, permissions: ['user.read'] });
+      seedMembership(memberB, { tenantId: TENANT_B, permissions: ['user.read'] });
+      const tokenA = seedSession(memberA);
+      const tokenB = seedSession(memberB);
+
+      const [responseA, responseB] = await Promise.all([
+        request(server())
+          .get(`/api/v1/tenants/${TENANT_A}/memberships`)
+          .set('authorization', `Bearer ${tokenA}`)
+          .expect(200),
+        request(server())
+          .get(`/api/v1/tenants/${TENANT_B}/memberships`)
+          .set('authorization', `Bearer ${tokenB}`)
+          .expect(200),
+      ]);
+
+      const membersA = responseA.body.data as { readonly userId: string }[];
+      const membersB = responseB.body.data as { readonly userId: string }[];
+      expect(membersA.some((member) => member.userId === memberB.id.value)).toBe(false);
+      expect(membersB.some((member) => member.userId === memberA.id.value)).toBe(false);
+      expect(membersA.some((member) => member.userId === memberA.id.value)).toBe(true);
+      expect(membersB.some((member) => member.userId === memberB.id.value)).toBe(true);
+    });
   });
 
   describe('a tenant-scoped write', () => {
@@ -457,6 +495,24 @@ describe('tenant isolation (adversarial, e2e)', () => {
 
       expect(response.body.error.code).toBe('TENANT_ACCESS_DENIED');
       expect(JSON.stringify(response.body)).not.toContain(TENANT_B);
+    });
+
+
+    it('does not let a body-supplied tenant id choose the owner of a new record', async () => {
+      const creator = seedUser();
+      const newcomer = seedUser();
+      seedMembership(creator, { tenantId: TENANT_A, permissions: ['user.manage'] });
+      const token = seedSession(creator);
+      const writesBefore = harness.memberships.addCalls;
+
+      await request(server())
+        .post(`/api/v1/tenants/${TENANT_A}/memberships`)
+        .set('authorization', `Bearer ${token}`)
+        .send({ userId: newcomer.id.value, tenantId: TENANT_B })
+        .expect(400);
+
+      // The body is rejected by the DTO boundary; it cannot redirect a write to B.
+      expect(harness.memberships.addCalls).toBe(writesBefore);
     });
 
     it('refuses to update a record that belongs to another tenant, and changes nothing', async () => {
@@ -547,6 +603,19 @@ describe('tenant isolation (adversarial, e2e)', () => {
 
       expect(response.body.error.code).toBe('TENANT_ACCESS_DENIED');
       expect(JSON.stringify(response.body)).not.toContain(TENANT_B);
+    });
+
+    it('refuses a tenant-scoped route whose tenant parameter is missing', async () => {
+      const reader = seedUser();
+      seedMembership(reader, { tenantId: TENANT_A, permissions: ['user.read'] });
+      const token = seedSession(reader);
+
+      const response = await request(server())
+        .get('/api/v1/isolation/missing-tenant')
+        .set('authorization', `Bearer ${token}`)
+        .expect(403);
+
+      expect(response.body.error.code).toBe('TENANT_CONTEXT_REQUIRED');
     });
 
     it('is refused outright when the caller holds no membership at all', async () => {
