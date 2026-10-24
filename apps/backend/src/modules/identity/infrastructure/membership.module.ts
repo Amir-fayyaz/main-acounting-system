@@ -13,9 +13,9 @@ import type { AuditRecorder } from '../../audit/application/ports/audit-recorder
 import {
   TENANT_DIRECTORY,
   TENANT_OWNER_ENROLLMENT,
-} from '../../tenant/application/tenant.tokens.js';
-import type { TenantDirectory } from '../../tenant/application/ports/tenant-directory.port.js';
-import type { TenantOwnerEnrollment } from '../../tenant/application/ports/tenant-owner-enrollment.port.js';
+  type TenantDirectory,
+  type TenantOwnerEnrollment,
+} from '../../tenant/public-api.js';
 import { ChangeMembershipStatusUseCase } from '../application/use-cases/change-membership-status.use-case.js';
 import { CreateMembershipUseCase } from '../application/use-cases/create-membership.use-case.js';
 import { GetMembershipUseCase } from '../application/use-cases/get-membership.use-case.js';

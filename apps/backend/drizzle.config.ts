@@ -13,9 +13,10 @@ import { loadDotEnvFiles } from './src/infrastructure/config/dotenv.js';
  * deliberately no global schema file to grow uncontrolled.
  *
  * `db:generate` diffs these schema files against `drizzle/` and appends a
- * versioned, reviewable migration; nothing here ever runs a migration against
- * a database (`generate` never inspects the real schema, so `dbCredentials`
- * below are only consumed by drizzle-kit commands that need a connection).
+ * versioned, reviewable migration. `db:migrate` is the command that applies
+ * pending migrations to a running database (`dbCredentials` below are consumed
+ * by every drizzle-kit command that needs a connection; `generate` alone never
+ * inspects the real schema).
  */
 loadDotEnvFiles();
 const configuration = loadConfiguration();

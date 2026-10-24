@@ -54,6 +54,27 @@ src/
 test/                           HTTP-level (e2e) tests, incl. job integration tests
 ```
 
+## Business dates
+
+A **business date** is the civil day an instant falls on in the company's
+timezone — never its UTC day. Stored dates are always Gregorian `YYYY-MM-DD`
+(`src/shared/time/business-date.ts`); Jalali (`src/shared/time/jalali-calendar.ts`)
+is a conversion and period-bounds helper over them, not a separate storage
+format.
+
+The default timezone is `Asia/Tehran` (`DEFAULT_BUSINESS_TIME_ZONE`); a domain
+with a different one passes the IANA name explicitly. Nothing consults the
+server's `TZ` or locale, so the same instant is the same business date on every
+host. Because Tehran is UTC+03:30 (no daylight saving since 2022), midinstants
+straddle days:
+
+```ts
+businessDateFromMillis(Date.parse('2026-03-20T20:30:00.000Z')).toIsoString();
+// => '2026-03-21'  — midnight that ends 1404 and begins Nawruz 1405-01-01
+// One millisecond earlier is '2026-03-20' (1404-12-29), and the same instant
+// is '2026-03-20' under an explicit 'America/Los_Angeles' timezone.
+```
+
 ## Commands
 
 ```bash
@@ -69,6 +90,7 @@ pnpm --filter @accounting-saas/backend lint
 pnpm --filter @accounting-saas/backend test       # all tests (unit + HTTP)
 pnpm --filter @accounting-saas/backend test:e2e   # HTTP-level tests only
 pnpm --filter @accounting-saas/backend test:cov   # coverage
+pnpm --filter @accounting-saas/backend test:timezones  # Jalali suite under UTC/Tehran/LA server TZ
 
 # Background jobs (FND-007)
 pnpm --filter @accounting-saas/backend job:enqueue <type> [payload-json]
@@ -699,7 +721,7 @@ readiness probe pings it for `/api/health/ready`.
 **Schema ownership follows the module boundaries.** There is no global schema
 file. Each business module owns the tables of its own persistence boundary in
 `<module>/infrastructure/persistence/*.schema.ts` (Drizzle `mysqlTable`
-definitions, foreign keys only *inside* the module), and infrastructure-owned
+definitions, foreign keys only _inside_ the module), and infrastructure-owned
 persistence (the outbox) keeps its schema beside its adapter.
 `src/modules/README.md` states the boundary rules
 (`module-boundaries.spec.ts` enforces them); Drizzle and `mysql2` imports may
@@ -715,13 +737,17 @@ pnpm --filter @accounting-saas/backend build
 cp .env.example .env                     # MySQL credentials for the toolchain
 pnpm --filter @accounting-saas/backend db:generate   # new migration from schema diff
 pnpm --filter @accounting-saas/backend db:check      # fail on migration-history conflicts
-pnpm --filter @accounting-saas/backend db:migrate    # apply pending migrations
+pnpm --filter @accounting-saas/backend db:migrate    # apply pending migrations (drizzle-kit migrate)
 pnpm --filter @accounting-saas/backend db:migrate:status # applied/pending counts
 ```
 
 - **Tracked deterministically** in `__drizzle_migrations`: the same journal
   always produces the same applied set, and re-running an applied folder is a
   verified no-op.
+- **Applied by `db:migrate`** (`drizzle-kit migrate`), which reads the same
+  `drizzle.config.ts` — credentials come from `loadConfiguration()`, no extra
+  environment wiring. From a fresh clone, `pnpm run dev:local` runs this step
+  automatically once the infrastructure is healthy.
 - **Fail-safe**: a migration command fails — with a non-zero exit and no
   continuation — on missing or invalid configuration, an unreachable database,
   an inconsistent journal or a statement that cannot apply. A half-applied

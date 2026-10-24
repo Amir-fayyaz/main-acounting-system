@@ -46,20 +46,55 @@ Stop environment            pnpm infra:down / pnpm stack:down
 
 ### Commands
 
-| Command           | Effect                                                          |
-| ----------------- | --------------------------------------------------------------- |
-| `pnpm infra:up`   | Start MySQL, Redis, MinIO (healthchecks gate readiness)         |
-| `pnpm infra:down` | Stop them; **keeps** the named volumes                          |
-| `pnpm infra:logs` | Follow infrastructure logs                                      |
-| `pnpm dev`        | Backend (:3000) + Frontend (:3001) on the host, watching source |
-| `dev:worker`      | Worker process on the host (consumes the job queue, FND-007)    |
-| `dev:scheduler`   | Scheduler process on the host (promotes retries, enqueues work) |
-| `pnpm stack:up`   | Build the dev image and start infrastructure + all processes    |
-| `pnpm stack:down` | Stop the containerised environment; **keeps** the named volumes |
-| `pnpm stack:logs` | Follow all container logs                                       |
-| `pnpm dev:reset`  | Stop everything **and delete** the volumes (clean local state)  |
+| Command           | Effect                                                                                                                                                                                       |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm infra:up`   | Start MySQL, Redis, MinIO (healthchecks gate readiness)                                                                                                                                      |
+| `pnpm infra:down` | Stop them; **keeps** the named volumes                                                                                                                                                       |
+| `pnpm infra:logs` | Follow infrastructure logs                                                                                                                                                                   |
+| `pnpm dev:local`  | **One command:** preflight → `.env` → infrastructure healthy → `db:migrate` → API + Worker + Scheduler with `[api]`/`[worker]`/`[scheduler]` log prefixes; waits for `GET /api/health/ready` |
+| `pnpm dev`        | Backend (:3000) + Frontend (:3001) on the host, watching source                                                                                                                              |
+| `dev:worker`      | Worker process on the host (consumes the job queue, FND-007)                                                                                                                                 |
+| `dev:scheduler`   | Scheduler process on the host (promotes retries, enqueues work)                                                                                                                              |
+| `pnpm stack:up`   | Build the dev image and start infrastructure + all processes                                                                                                                                 |
+| `pnpm stack:down` | Stop the containerised environment; **keeps** the named volumes                                                                                                                              |
+| `pnpm stack:logs` | Follow all container logs                                                                                                                                                                    |
+| `pnpm dev:reset`  | Stop everything **and delete** the volumes (clean local state)                                                                                                                               |
 
 First-time setup is `cp .env.example .env` followed by `pnpm install`.
+
+## One-command local bootstrap
+
+From a fresh clone with Docker running, `pnpm run dev:local`
+(`tooling/scripts/dev.mjs`) performs the whole startup of section 21 above in a
+guaranteed, fail-fast order — infrastructure only, no `app` profile:
+
+```text
+preflight   Node ≥ 22, pnpm ≥ 10, docker CLI + daemon, host ports free
+            (MYSQL_PORT, REDIS_PORT, MINIO_PORT, MINIO_CONSOLE_PORT, BACKEND_PORT —
+            a port held by this project's own Compose stack is not an error)
+.env        created from .env.example when missing — an existing .env is never
+            touched; required secrets are checked by name only (MYSQL_PASSWORD,
+            MYSQL_ROOT_PASSWORD, MINIO_ACCESS_KEY, MINIO_SECRET_KEY)
+infra       docker compose up -d --wait mysql redis minio (health-gated;
+            on timeout it names the unhealthy service; minio-data-init is a
+            one-shot and exiting 0 is normal)
+migrations  pnpm --filter @accounting-saas/backend db:migrate (idempotent)
+processes   api (built + run), worker and scheduler (watch), logs prefixed
+            and colored, never printing a secret value
+ready       waits for GET /api/health/ready (default 120 s, configurable
+            via DEV_LOCAL_READY_TIMEOUT_MS), then prints the API URL and the
+            MinIO console URL
+```
+
+SIGINT/SIGTERM stop all backend processes (and their children) and exit; the
+Docker services keep running — `pnpm infra:down` stops them and `pnpm
+dev:reset` resets the data. Any failing step or crashed process shuts the rest
+down and exits non-zero. Rerunning `dev:local` is expected and idempotent.
+
+Troubleshooting: a stopped Docker daemon and a non-project process holding one
+of the ports (the message names the port and the variable, e.g. `MYSQL_PORT`)
+fail the preflight before anything starts; a failed migration stops the script
+before any backend process is started.
 
 ## Networking
 

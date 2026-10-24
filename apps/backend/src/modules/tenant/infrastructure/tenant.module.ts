@@ -12,6 +12,7 @@ import { AUDIT_RECORDER } from '../../audit/application/audit.tokens.js';
 import type { AuditRecorder } from '../../audit/application/ports/audit-recorder.port.js';
 import { ChangeTenantStatusUseCase } from '../application/use-cases/change-tenant-status.use-case.js';
 import {
+  TENANT_CONTEXT,
   TENANT_DIRECTORY,
   TENANT_EVENT_RECORDER,
   TENANT_OWNER_ENROLLMENT,
@@ -28,6 +29,9 @@ import { isTenantId, tenantIdFrom } from '../domain/value-objects/tenant-id.js';
 import { TenantController } from '../presentation/controllers/tenant.controller.js';
 import { TenantAuditEventRecorder } from './audit/tenant-audit-event-recorder.js';
 import { DrizzleTenantRepository } from './persistence/drizzle-tenant.repository.js';
+import type { TenantContextAccessor } from '../application/ports/tenant-context.port.js';
+import { ScopedTenantContext } from './scoped-tenant-context.js';
+
 
 /**
  * The tenant module (IAM-001).
@@ -45,11 +49,11 @@ import { DrizzleTenantRepository } from './persistence/drizzle-tenant.repository
  * Drizzle table and adapter to no one else (ADR-002 sections 8 and 12).
  *
  * The module is `@Global` for one reason only: it publishes the
- * `TENANT_DIRECTORY` contract (IAM-003), a read-only existence question other
- * modules may depend on. A consumer inside `src/modules/` may not import
- * another module's `infrastructure/` — including this module file — so the
- * published contract is made available application-wide instead; nothing else
- * becomes visible, because only `TENANT_DIRECTORY` is exported.
+ * `TENANT_DIRECTORY` and `TENANT_CONTEXT` contracts, which other modules may
+ * depend on. A consumer inside `src/modules/` may not import another module's
+ * `infrastructure/` — including this module file — so the published contracts
+ * are made available application-wide instead; nothing else becomes visible,
+ * because only those two are exported.
  */
 @Global()
 @Module({
@@ -79,6 +83,12 @@ import { DrizzleTenantRepository } from './persistence/drizzle-tenant.repository
         },
       }),
       inject: [TENANT_REPOSITORY],
+    },
+    {
+      // The published ambient-tenant contract: reads the scope a trusted
+      // boundary established and fails closed without one (SHR-007).
+      provide: TENANT_CONTEXT,
+      useFactory: (): TenantContextAccessor => new ScopedTenantContext(),
     },
     {
       // Tenant facts reach two homes: the outbox, so the rest of the system
@@ -124,8 +134,8 @@ import { DrizzleTenantRepository } from './persistence/drizzle-tenant.repository
       inject: [TENANT_REPOSITORY, TENANT_EVENT_RECORDER, TRANSACTION_BOUNDARY],
     },
   ],
-  // Only the published cross-module contract is visible; the repository, the
-  // event recorder and the use cases stay private to the module.
-  exports: [TENANT_DIRECTORY],
+  // Only the published cross-module contracts are visible; the repository,
+  // the event recorder and the use cases stay private to the module.
+  exports: [TENANT_DIRECTORY, TENANT_CONTEXT],
 })
 export class TenantModule {}

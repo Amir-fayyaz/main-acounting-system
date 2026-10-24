@@ -1,10 +1,9 @@
-import { Span } from "@/core/components/custom/ui/typography/Typography";
-import { ArrowRight } from "lucide-react";
-import Link from "next/link";
-import type { ReactNode } from "react";
-import { LedgerPanel } from "../ui/Ledger-Panel/LedgerPanel";
+import { Span } from '@repo/web/ui';
+import { ArrowRight, House } from 'lucide-react';
+import Link from 'next/link';
+import type { ReactNode } from 'react';
+import { LedgerPanel } from '../ui/Ledger-Panel/LedgerPanel';
 
-/** layout دو ستونه: ستون فرم (brand + بازگشت + کارت) و پنل ledger */
 export function AuthShell({
   title,
   subtitle,
@@ -15,38 +14,29 @@ export function AuthShell({
   children: ReactNode;
 }) {
   return (
-    <div className="bg-background text-foreground grid min-h-screen lg:grid-cols-2">
-      <div className="flex flex-col px-5 py-5 sm:px-10 sm:py-7">
+    <main className="bg-background text-foreground grid min-h-screen lg:grid-cols-2">
+      <section className="flex flex-col px-5 py-5 sm:px-10 sm:py-7">
         <header className="flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5 text-xl font-extrabold">
-            <span className="bg-primary grid size-9.5 place-items-center rounded-[11px] shadow-[0_6px_16px_-6px_#ef8f00]">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#1a120a"
-                strokeWidth="2.4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="size-5.5"
-                aria-hidden="true"
-              >
-                <path d="M4 19V9l8-5 8 5v10" />
-                <path d="M9 19v-6h6v6" />
-              </svg>
-            </span>
-            مین‌حساب
+          <Link href="/" className="flex items-center gap-2.5">
+            <Span className="bg-primary text-ink shadow-brand-dark/40 grid size-9.5 place-items-center rounded-xl shadow-lg text-xl font-extrabold">
+              <House className="size-5.5" strokeWidth={2.4} aria-hidden="true" />
+            </Span>
+            <Span className="text-xl font-extrabold">مین‌حساب</Span>
           </Link>
+
           <Link
             href="/"
-            className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-sm"
+            className="text-muted-foreground hover:text-foreground flex items-center gap-1"
           >
             <Span className="text-sm">بازگشت به سایت</Span>
             <ArrowRight className="size-4 rotate-180" aria-hidden="true" />
           </Link>
         </header>
-        <main className="m-auto w-full max-w-105 py-8">{children}</main>
-      </div>
+
+        <div className="m-auto w-full max-w-105 py-8">{children}</div>
+      </section>
+
       <LedgerPanel title={title} subtitle={subtitle} />
-    </div>
+    </main>
   );
 }

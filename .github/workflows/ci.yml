@@ -140,6 +140,9 @@ jobs:
       - name: Type check
         run: pnpm --filter "./apps/backend" exec tsc --noEmit
 
+      - name: Dependency check (cycles and module boundaries)
+        run: pnpm --filter "./apps/backend" run deps:check
+
       - name: Unit test
         run: pnpm --filter "./apps/backend" run test
 

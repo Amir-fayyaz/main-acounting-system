@@ -12,8 +12,15 @@
     {
       "idx": 1,
       "version": "5",
-      "when": 1792875308589,
-      "tag": "0001_white_serpent_society",
+      "when": 1792675163708,
+      "tag": "0001_equal_captain_flint",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1792675268412,
+      "tag": "0002_fiscal_year_overlap_triggers",
       "breakpoints": true
     }
   ]
