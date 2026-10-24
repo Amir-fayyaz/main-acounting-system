@@ -1,13 +1,13 @@
-import { Input } from "@/core/components/shadcn/ui/input/input";
-import { InputErrorMassage } from "@/core/components/custom/ui/typography/Typography";
-import { cn } from "@/core/utils/shadcn/utils";
-import type { ComponentProps } from "react";
-import { PasswordInput } from "../Password-Input/PasswordInput";
+import { Input } from '@/core/components/shadcn/ui/input/input';
+import { InputErrorMassage } from '@repo/web/ui';
+import { cn } from '@repo/web/ui/utils/cn';
+import type { ComponentProps } from 'react';
+import { PasswordInput } from '../Password-Input/PasswordInput';
 
 export const authInputClass =
-  "bg-card border-input h-12 rounded-xl px-4 text-base shadow-none md:text-base";
+  'bg-card border-input h-12 rounded-xl px-4 text-base shadow-none md:text-base';
 
-type AuthFieldProps = Omit<ComponentProps<"input">, "name"> & {
+type AuthFieldProps = Omit<ComponentProps<'input'>, 'name'> & {
   name: string;
   label: string;
   error?: string;
@@ -22,7 +22,7 @@ export function AuthField({
   label,
   error,
   ltr,
-  type = "text",
+  type = 'text',
   className,
   wrapperClassName,
   ...props
@@ -31,18 +31,18 @@ export function AuthField({
   const common = {
     id,
     name,
-    "aria-invalid": error ? true : undefined,
-    "aria-describedby": error ? `${id}-error` : undefined,
+    'aria-invalid': error ? true : undefined,
+    'aria-describedby': error ? `${id}-error` : undefined,
     ...props,
   };
-  const cls = cn(authInputClass, ltr && "text-right [direction:ltr]", className);
+  const cls = cn(authInputClass, ltr && 'text-right [direction:ltr]', className);
 
   return (
     <div className={wrapperClassName}>
       <label htmlFor={id} className="mb-1.5 block text-sm font-semibold">
         {label}
       </label>
-      {type === "password" ? (
+      {type === 'password' ? (
         <PasswordInput {...common} className={cls} />
       ) : (
         <Input {...common} type={type} className={cls} />

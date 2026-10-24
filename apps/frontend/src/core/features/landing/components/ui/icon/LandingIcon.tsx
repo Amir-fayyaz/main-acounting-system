@@ -1,4 +1,4 @@
-
+import { cn } from '@repo/web/ui/utils/cn';
 import {
   ArrowLeft,
   Banknote,
@@ -27,8 +27,6 @@ import {
   Wallet,
   type LucideIcon,
 } from 'lucide-react';
-
-import { cn } from '@/core/utils/shadcn/utils';
 
 export type LandingIconName =
   | 'logo'
@@ -100,10 +98,7 @@ export function LandingIcon({ name, className }: LandingIconProps) {
       aria-hidden="true"
       focusable="false"
       strokeWidth={1.7}
-      className={cn(
-        'inline-block size-[22px] shrink-0',
-        className,
-      )}
+      className={cn('inline-block size-[22px] shrink-0', className)}
     />
   );
 }

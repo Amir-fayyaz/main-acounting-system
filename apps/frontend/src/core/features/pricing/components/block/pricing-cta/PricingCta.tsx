@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 import { Button } from '@/core/components/shadcn/ui/button/button';
 import { pricingCta } from '@/core/features/pricing/assets/mock/pricing';
-import { H2, P } from '@/core/components/custom/ui/typography/Typography';
+import { H2, P } from '@repo/web/ui';
 
 export function PricingCta() {
   return (
@@ -18,9 +18,7 @@ export function PricingCta() {
         >
           {pricingCta.title}
         </H2>
-        <P className="text-xs text-[#78674c] max-[600px]:text-[11px]">
-          {pricingCta.description}
-        </P>
+        <P className="text-xs text-[#78674c] max-[600px]:text-[11px]">{pricingCta.description}</P>
       </div>
 
       <Button

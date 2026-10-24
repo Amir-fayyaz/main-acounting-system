@@ -1,4 +1,3 @@
-import { P, Span } from '@/core/components/custom/ui/typography/Typography';
 import { Badge } from '@/core/components/shadcn/ui/badge/badge';
 import type { AssistantPreviewData } from '@/core/features/landing/assets/@types/sections';
 import {
@@ -6,7 +5,8 @@ import {
   reviewLineClass,
 } from '@/core/features/landing/components/block/intelligence/ReviewRows';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { cn } from '@/core/utils/shadcn/utils';
+import { P, Span } from '@repo/web/ui';
+import { cn } from '@repo/web/ui/utils/cn';
 
 export function AssistantReview({
   approved,

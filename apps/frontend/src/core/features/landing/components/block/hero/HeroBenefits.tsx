@@ -1,7 +1,7 @@
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
 import { landingContainerClass } from '@/core/features/landing/lib/landing-classes';
-import { cn } from '@/core/utils/shadcn/utils';
-import { Span } from '@/core/components/custom/ui/typography/Typography';
+import { Span } from '@repo/web/ui';
+import { cn } from '@repo/web/ui/utils/cn';
 
 const benefits = [
   { label: 'طراحی‌شده برای حسابدار', icon: 'book' },
@@ -19,10 +19,7 @@ const HeroBenefits = () => {
             className="!contents !text-[12px] max-[800px]:!text-[11px] max-[600px]:!text-[10px]"
           >
             {index > 0 ? (
-              <i
-                aria-hidden="true"
-                className="h-[17px] w-px bg-[#dcd5c7] max-[600px]:hidden"
-              />
+              <i aria-hidden="true" className="h-[17px] w-px bg-[#dcd5c7] max-[600px]:hidden" />
             ) : null}
 
             <Span
@@ -32,10 +29,7 @@ const HeroBenefits = () => {
                 index === benefits.length - 1 && 'max-[600px]:col-span-2',
               )}
             >
-              <LandingIcon
-                name={benefit.icon}
-                className="size-4 max-[600px]:size-3.5"
-              />
+              <LandingIcon name={benefit.icon} className="size-4 max-[600px]:size-3.5" />
               {benefit.label}
             </Span>
           </Span>

@@ -3,14 +3,8 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { H2, P, Small, Span } from '@/core/components/custom/ui/typography/Typography';
 import { Button } from '@/core/components/shadcn/ui/button/button';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/core/components/shadcn/ui/tabs/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/core/components/shadcn/ui/tabs/tabs';
 import type { WorkflowSectionData } from '@/core/features/landing/assets/@types/sections';
 import { landingWorkflowSectionData } from '@/core/features/landing/assets/mock/sections';
 import { BenefitsList } from '@/core/features/landing/components/ui/benefits/BenefitsList';
@@ -19,7 +13,8 @@ import {
   landingContainerClass,
   landingEyebrowClass,
 } from '@/core/features/landing/lib/landing-classes';
-import { cn } from '@/core/utils/shadcn/utils';
+import { H2, P, Small, Span } from '@repo/web/ui';
+import { cn } from '@repo/web/ui/utils/cn';
 
 const workflowTabClass =
   'h-auto min-w-0 flex-1 rounded-[5px] border-0 bg-transparent p-1.5 text-[11px] font-normal normal-case text-[#756950] shadow-none transition-none group-data-horizontal/tabs:h-auto hover:scale-100 hover:bg-transparent hover:text-[#756950] active:scale-100 data-[state=active]:bg-[#fff1d9] data-[state=active]:font-bold data-[state=active]:text-[#865000] data-[state=active]:hover:bg-[#fff1d9] data-[state=active]:hover:text-[#865000] max-[600px]:text-[10px]';
@@ -118,7 +113,11 @@ export function ConnectedSection({
             <LandingIcon name="link" className="size-4 text-[#8c7a61]" />
           </div>
 
-          <Tabs value={activeTab?.key ?? ''} onValueChange={setFlow} className="gap-0 flex flex-col">
+          <Tabs
+            value={activeTab?.key ?? ''}
+            onValueChange={setFlow}
+            className="gap-0 flex flex-col"
+          >
             <TabsList
               aria-label={data.tabsAriaLabel}
               variant="line"
@@ -130,7 +129,6 @@ export function ConnectedSection({
                 </TabsTrigger>
               ))}
             </TabsList>
-
 
             {data.tabs.map((tab) => (
               <TabsContent
@@ -145,17 +143,14 @@ export function ConnectedSection({
                     className={cn(
                       'relative mt-[13px] flex min-h-[66px] items-center justify-between gap-[13px] rounded-[7px] border border-[#f1ede2] bg-card p-[13px] max-[600px]:min-h-16 max-[600px]:gap-2 max-[600px]:p-2.5 max-[800px]:gap-[9px] max-[800px]:p-2.5',
                       index > 0 &&
-                      "before:absolute before:-top-[14px] before:right-8 before:h-[13px] before:w-px before:bg-[#d4c6ab] before:content-['']",
-                      index === steps.length - 1 &&
-                      'border-[#e5eee1] bg-[#eff5ee]',
+                        "before:absolute before:-top-[14px] before:right-8 before:h-[13px] before:w-px before:bg-[#d4c6ab] before:content-['']",
+                      index === steps.length - 1 && 'border-[#e5eee1] bg-[#eff5ee]',
                     )}
                   >
                     <div className="flex min-w-0 items-center gap-[13px] max-[600px]:gap-2 max-[800px]:gap-[9px]">
                       <Span className="shrink-0 text-left text-[11px] font-[600] whitespace-nowrap max-[600px]:text-[10px] max-[800px]:text-[10px] [&_small]:font-normal">
                         {step.value}
-                        <Small className="block text-[11px]">
-                          {step.unit}
-                        </Small>
+                        <Small className="block text-[11px]">{step.unit}</Small>
                       </Span>
                     </div>
 
@@ -183,7 +178,6 @@ export function ConnectedSection({
                 ))}
               </TabsContent>
             ))}
-
           </Tabs>
 
           <div className="mt-[17px] flex items-center justify-between text-[10px] text-[#746b60] max-[600px]:text-[8px] max-[800px]:text-[9px] [&>span]:flex [&>span]:items-center [&>span]:gap-[5px] [&_svg]:size-3 [&_svg]:text-[#28765b] max-[600px]:[&>span:last-child]:hidden max-[800px]:[&>span:last-child]:hidden">

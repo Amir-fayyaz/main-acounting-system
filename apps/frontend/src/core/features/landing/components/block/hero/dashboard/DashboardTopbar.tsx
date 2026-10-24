@@ -1,6 +1,5 @@
 import type { Dispatch, SetStateAction } from 'react';
 
-import { Span } from '@/core/components/custom/ui/typography/Typography';
 import { Badge } from '@/core/components/shadcn/ui/badge/badge';
 import {
   Select,
@@ -11,6 +10,7 @@ import {
 } from '@/core/components/shadcn/ui/select/select';
 import type { DashboardData, DashboardView } from '@/core/features/landing/assets/@types/dashboard';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
+import { Span } from '@repo/web/ui';
 
 interface DashboardTopbarProps {
   data: DashboardData;

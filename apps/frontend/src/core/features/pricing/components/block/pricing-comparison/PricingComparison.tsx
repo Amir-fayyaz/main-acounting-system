@@ -15,17 +15,13 @@ import {
   comparisonFeatureHeader,
   comparisonRows,
 } from '@/core/features/pricing/assets/mock/pricing';
-import { H2, P, Span } from '@/core/components/custom/ui/typography/Typography';
+import { H2, P, Span } from '@repo/web/ui';
 
 function ComparisonCell({ value }: { value: ComparisonValue }) {
   if (value.kind === 'included') {
     return (
       <div className="inline-flex items-center gap-1">
-        <Check
-          aria-hidden="true"
-          strokeWidth={1.7}
-          className="size-4 shrink-0 text-[#28765b]"
-        />
+        <Check aria-hidden="true" strokeWidth={1.7} className="size-4 shrink-0 text-[#28765b]" />
         <Span className="text-xs">{value.label}</Span>
       </div>
     );
@@ -85,10 +81,7 @@ export function PricingComparison() {
 
           <TableBody className="[&_tr]:border-none">
             {comparisonRows.map((row) => (
-              <TableRow
-                key={row.label}
-                className="border-0 hover:bg-transparent"
-              >
+              <TableRow key={row.label} className="border-0 hover:bg-transparent">
                 <TableHead
                   scope="row"
                   className="h-auto border-t border-[#e4dccd] bg-transparent px-[18px] py-[15px] text-right text-[11px] font-medium whitespace-nowrap text-[#1a120a] max-[600px]:px-[15px] max-[600px]:py-[13px]"

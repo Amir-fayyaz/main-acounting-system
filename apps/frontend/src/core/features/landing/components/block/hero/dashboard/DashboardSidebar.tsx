@@ -1,11 +1,11 @@
 import Link from 'next/link';
 import type { Dispatch, SetStateAction } from 'react';
 
-import { P, Small, Span } from '@/core/components/custom/ui/typography/Typography';
 import { Button } from '@/core/components/shadcn/ui/button/button';
 import type { DashboardData, DashboardView } from '@/core/features/landing/assets/@types/dashboard';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { cn } from '@/core/utils/shadcn/utils';
+import { P, Small, Span } from '@repo/web/ui';
+import { cn } from '@repo/web/ui/utils/cn';
 
 const navItemClass =
   'flex w-full items-center gap-[9px] rounded-[6px] border-0 bg-none p-[9px_10px] text-right text-[11px] max-[800px]:gap-1.5 max-[800px]:p-2 max-[800px]:text-[10px]';

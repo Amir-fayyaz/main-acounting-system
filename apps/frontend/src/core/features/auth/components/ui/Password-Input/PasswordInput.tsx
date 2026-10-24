@@ -2,7 +2,7 @@
 
 import { Button } from '@/core/components/shadcn/ui/button/button';
 import { Input } from '@/core/components/shadcn/ui/input/input';
-import { cn } from '@/core/utils/shadcn/utils';
+import { cn } from '@repo/web/ui/utils/cn';
 import { Eye, EyeOff } from 'lucide-react';
 import { useState, type ComponentProps } from 'react';
 

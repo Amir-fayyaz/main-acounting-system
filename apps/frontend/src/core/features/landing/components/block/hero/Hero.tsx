@@ -1,15 +1,14 @@
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
 import { landingContainerClass } from '@/core/features/landing/lib/landing-classes';
-import { cn } from '@/core/utils/shadcn/utils';
+import { H1, Muted, Span } from '@repo/web/ui';
+import { cn } from '@repo/web/ui/utils/cn';
+import { Check } from 'lucide-react';
 import HeroActions from './HeroActions';
 import HeroBenefits from './HeroBenefits';
 import { HeroDashboard } from './HeroDashboard';
-import { H1, Muted, Span } from '@/core/components/custom/ui/typography/Typography';
-import { Check } from 'lucide-react';
 
 const orbitIconClass =
   'absolute z-[1] grid size-[49px] place-items-center rounded-[13px] border border-[#e7dfd1] bg-[#f7f6ee] text-[#7c6648] shadow-[0_5px_15px_#37240e04] max-[600px]:hidden max-[800px]:size-10 max-[800px]:rounded-[10px]';
-
 
 export function Hero() {
   return (
@@ -75,13 +74,10 @@ export function Hero() {
           <span>برای شرکت‌های ایرانی</span>
         </div>
 
-        <H1
-          id="hero-title"
-          className="mx-auto max-w-4xl mt-10 font-black"
-        >
+        <H1 id="hero-title" className="mx-auto max-w-4xl mt-10 font-black">
           حسابداری یکپارچه.
           <span className="mt-1 block sm:mt-2">
-            خیالِ{" "}
+            خیالِ{' '}
             <span
               className="
     relative z-0 inline-block whitespace-nowrap
@@ -100,7 +96,6 @@ export function Hero() {
             ، آسوده.
           </span>
         </H1>
-
 
         <Muted className="pt-6 sm:text-sm text-[11px]">
           از اولین فاکتور تا بستن حساب‌ها، همه‌چیز در یک جریان.

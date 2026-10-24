@@ -1,11 +1,11 @@
-import { H2, Span, P } from '@/core/components/custom/ui/typography/Typography';
 import { industryTags, outcomeAssurances } from '@/core/features/landing/assets/mock/workspace';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
 import {
   landingContainerClass,
   landingEyebrowClass,
 } from '@/core/features/landing/lib/landing-classes';
-import { cn } from '@/core/utils/shadcn/utils';
+import { H2, P, Span } from '@repo/web/ui';
+import { cn } from '@repo/web/ui/utils/cn';
 
 const cardClass =
   'relative flex min-h-[304px] min-w-0 flex-col overflow-hidden rounded-[13px] border border-[#e7e1d4] p-[27px_24px] max-[1050px]:p-[24px_19px] max-[850px]:min-h-[290px] max-[850px]:p-[22px_17px]';

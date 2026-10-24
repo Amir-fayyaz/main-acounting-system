@@ -1,7 +1,7 @@
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/shadcn/button/button';
-import { cn } from '@/core/utils/shadcn/utils';
+import { cn } from '@repo/web/ui/utils/cn';
+import { ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 import { aboutSteps } from '../../../assets/mock/about';
 
 export function AboutIntro() {

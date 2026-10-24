@@ -2,14 +2,14 @@ import { BankMatchScene } from '@/core/features/landing/components/block/capabil
 import { ReportScene } from '@/core/features/landing/components/block/capabilities/ReportScene';
 import { SalesScene } from '@/core/features/landing/components/block/capabilities/SalesScene';
 import { StockScene } from '@/core/features/landing/components/block/capabilities/StockScene';
+import type { LandingIconName } from '@/core/features/landing/components/ui/icon/LandingIcon';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
 import {
   landingContainerClass,
   landingEyebrowClass,
 } from '@/core/features/landing/lib/landing-classes';
-import { cn } from '@/core/utils/shadcn/utils';
-import type { LandingIconName } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { H2, H3, P, Span } from '@/core/components/custom/ui/typography/Typography';
+import { H2, H3, P, Span } from '@repo/web/ui';
+import { cn } from '@repo/web/ui/utils/cn';
 
 const cardClass =
   'relative min-w-0 overflow-hidden rounded-[16px] border border-[#e7e1d4] max-[680px]:col-auto max-[680px]:rounded-[12px]';
@@ -114,12 +114,7 @@ export function CapabilitiesSection() {
             'col-span-5 min-h-[370px] border-[#ffa00a] bg-[#ffa00a] max-[680px]:min-h-0',
           )}
         >
-          <div
-            className={cn(
-              copyClass,
-              'max-[680px]:p-[26px_27px_0] max-[850px]:p-[23px_22px_0]',
-            )}
-          >
+          <div className={cn(copyClass, 'max-[680px]:p-[26px_27px_0] max-[850px]:p-[23px_22px_0]')}>
             <Span className="!flex items-center gap-2 !text-[11px] !font-[550] text-[#603a08] [&_svg]:size-4 [&_svg]:text-[#67400a] max-[850px]:!text-[10px] max-[680px]:!text-[11px] max-[440px]:!text-[10px]">
               <LandingIcon name="box" />
               کالا و موجودی
@@ -143,17 +138,9 @@ export function CapabilitiesSection() {
         </article>
 
         <article
-          className={cn(
-            cardClass,
-            'col-span-7 min-h-[370px] bg-[#fffdf8] max-[680px]:min-h-0',
-          )}
+          className={cn(cardClass, 'col-span-7 min-h-[370px] bg-[#fffdf8] max-[680px]:min-h-0')}
         >
-          <div
-            className={cn(
-              copyClass,
-              'max-[680px]:p-[26px_27px_0] max-[850px]:p-[23px_22px_0]',
-            )}
-          >
+          <div className={cn(copyClass, 'max-[680px]:p-[26px_27px_0] max-[850px]:p-[23px_22px_0]')}>
             <CapKicker icon="chart" label="گزارش‌های مالی" />
 
             <H3 className={headingClass}>
@@ -162,9 +149,7 @@ export function CapabilitiesSection() {
               تصویر مالی کسب‌وکارتان را ببینید.
             </H3>
 
-            <P className={textClass}>
-              سود و زیان، ترازنامه و نقدینگی؛ قابل پیگیری تا سند اولیه.
-            </P>
+            <P className={textClass}>سود و زیان، ترازنامه و نقدینگی؛ قابل پیگیری تا سند اولیه.</P>
           </div>
 
           <ReportScene />

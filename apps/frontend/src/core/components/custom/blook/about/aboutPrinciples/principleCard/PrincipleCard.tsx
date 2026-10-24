@@ -1,4 +1,4 @@
-import { cn } from '@/core/utils/shadcn/utils';
+import { cn } from '@repo/web/ui/utils/cn';
 import { ComponentPropsWithoutRef } from 'react';
 
 export interface PrincipleCardProps extends ComponentPropsWithoutRef<'article'> {
@@ -7,14 +7,10 @@ export interface PrincipleCardProps extends ComponentPropsWithoutRef<'article'> 
   description: string;
 }
 
-
 function PrincipleCard({ number, title, description, className, ...rest }: PrincipleCardProps) {
   return (
     <article
-      className={cn(
-        'border-t border-border py-[21px] sm:border-t-2 sm:py-[25px]',
-        className,
-      )}
+      className={cn('border-t border-border py-[21px] sm:border-t-2 sm:py-[25px]', className)}
       {...rest}
     >
       <span className="text-[11px] text-brand-link sm:text-xs">{number}</span>

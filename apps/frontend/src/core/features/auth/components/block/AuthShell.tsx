@@ -1,4 +1,4 @@
-import { Span } from '@/core/components/custom/ui/typography/Typography';
+import { Span } from '@repo/web/ui';
 import { ArrowRight, House } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';

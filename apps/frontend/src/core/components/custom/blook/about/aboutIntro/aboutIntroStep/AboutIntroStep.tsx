@@ -1,5 +1,5 @@
+import { cn } from '@repo/web/ui/utils/cn';
 import type { LucideIcon } from 'lucide-react';
-import { cn } from '@/core/utils/shadcn/utils';
 
 export interface CycleStep {
   icon: LucideIcon;
@@ -20,13 +20,9 @@ function AboutIntroStep({ step, isLast = false }: AboutIntroStepProps) {
         isLast ? 'border-brand bg-brand text-ink' : 'border-sand/20 bg-ink-soft',
       )}
     >
-      <step.icon
-        className={cn('size-5', isLast ? 'text-ink-soft' : 'text-brand')}
-      />
+      <step.icon className={cn('size-5', isLast ? 'text-ink-soft' : 'text-brand')} />
       <strong className="font-semibold">{step.title}</strong>
-      <small
-        className={cn('ms-auto text-[10px]', isLast ? 'text-ink-soft' : 'text-sand/75')}
-      >
+      <small className={cn('ms-auto text-[10px]', isLast ? 'text-ink-soft' : 'text-sand/75')}>
         {step.note}
       </small>
     </div>

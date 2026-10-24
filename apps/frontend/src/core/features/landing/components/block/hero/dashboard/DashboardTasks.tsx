@@ -1,8 +1,8 @@
-import { P, Small, Span } from '@/core/components/custom/ui/typography/Typography';
 import { Badge } from '@/core/components/shadcn/ui/badge/badge';
 import { Card } from '@/core/components/shadcn/ui/card/card';
 import type { DashboardData } from '@/core/features/landing/assets/@types/dashboard';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
+import { P, Small, Span } from '@repo/web/ui';
 
 export function DashboardTasks({ data }: { data: DashboardData }) {
   return (

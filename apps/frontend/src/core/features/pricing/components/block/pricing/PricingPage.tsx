@@ -9,7 +9,7 @@ import {
   pricingContainerClass,
   pricingRootClass,
 } from '@/core/features/pricing/lib/pricing-classes';
-import { P } from '@/core/components/custom/ui/typography/Typography';
+import { P } from '@repo/web/ui';
 
 export function PricingPage() {
   return (
@@ -19,11 +19,7 @@ export function PricingPage() {
         <PricingPlans />
 
         <P className="mt-[21px] flex items-start justify-center gap-[7px] text-[10px] leading-[2] text-[#7e6c51] max-[600px]:justify-start max-[600px]:text-[9px]">
-          <Info
-            aria-hidden="true"
-            strokeWidth={1.7}
-            className="mt-[2px] size-[14px] shrink-0"
-          />
+          <Info aria-hidden="true" strokeWidth={1.7} className="mt-[2px] size-[14px] shrink-0" />
           {pricingNote}
         </P>
 
