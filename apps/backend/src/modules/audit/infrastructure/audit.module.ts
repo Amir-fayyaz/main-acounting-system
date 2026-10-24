@@ -5,7 +5,13 @@ import {
   DATABASE,
   TRANSACTION_BOUNDARY,
 } from '../../../infrastructure/database/database.tokens.js';
+import { OutboxModule } from '../../../infrastructure/outbox/outbox.module.js';
+import { OUTBOX_RECORDER } from '../../../infrastructure/outbox/outbox.tokens.js';
 import type { TransactionBoundary } from '../../../shared/transaction/transaction-boundary.js';
+import {
+  TENANT_EVENT_RECORDER,
+  type TenantEventRecorder,
+} from '../../tenant/public-api.js';
 import {
   AUDIT_RECORDER,
   AUDIT_RECORD_QUERY,
@@ -19,6 +25,7 @@ import type { AuditRecordRepository } from '../domain/repositories/audit-record.
 import { AuditRecordsController } from '../presentation/controllers/audit-record.controller.js';
 import { DrizzleAuditRecordQuery } from './persistence/drizzle-audit-record-query.js';
 import { DrizzleAuditRecordRepository } from './persistence/drizzle-audit-record.repository.js';
+import { TenantAuditEventRecorder } from './tenant/tenant-audit-event-recorder.js';
 
 /**
  * The central Audit capability (AUD-001; ADR-003 section 21; ADR-010 section 9).
@@ -40,16 +47,20 @@ import { DrizzleAuditRecordRepository } from './persistence/drizzle-audit-record
  *   the boundary that exposes it.
  * - `ListTenantAuditRecordsUseCase` → the retrieval use case behind the audit
  *   REST resource.
+ * - `TENANT_EVENT_RECORDER` → `TenantAuditEventRecorder`: the tenant module
+ *   publishes one event-recorder contract, and this module decides which of
+ *   those facts are audit-worthy (IAM-009). Publishing it here is what keeps
+ *   tenant a leaf module: tenant states what it needs, audit implements it.
  *
  * The module is `@Global` for the same reason the tenant module is: a consumer
  * inside `src/modules/` may not import another module's `infrastructure/`
- * (including this file), so the published contract is made available
+ * (including this file), so the published contracts are made available
  * application-wide instead — and nothing else becomes visible, because only
- * `AUDIT_RECORDER` is exported.
+ * `AUDIT_RECORDER` and `TENANT_EVENT_RECORDER` are exported.
  */
 @Global()
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, OutboxModule],
   controllers: [AuditRecordsController],
   providers: [
     {
@@ -78,7 +89,17 @@ import { DrizzleAuditRecordRepository } from './persistence/drizzle-audit-record
       useFactory: (records: AuditRecordQuery) => new ListTenantAuditRecordsUseCase(records),
       inject: [AUDIT_RECORD_QUERY],
     },
+    {
+      // Tenant facts reach two homes: the outbox, so the rest of the system
+      // learns them (SHR-006), and this trail, because creating a company,
+      // renaming it and moving its lifecycle are security-relevant
+      // administrative changes (AUD-001; IAM-009).
+      provide: TENANT_EVENT_RECORDER,
+      useFactory: (outbox: TenantEventRecorder, audit: AuditRecorder): TenantEventRecorder =>
+        new TenantAuditEventRecorder(outbox, audit),
+      inject: [OUTBOX_RECORDER, AUDIT_RECORDER],
+    },
   ],
-  exports: [AUDIT_RECORDER],
+  exports: [AUDIT_RECORDER, TENANT_EVENT_RECORDER],
 })
 export class AuditModule {}
