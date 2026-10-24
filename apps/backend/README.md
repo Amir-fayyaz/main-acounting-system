@@ -54,6 +54,27 @@ src/
 test/                           HTTP-level (e2e) tests, incl. job integration tests
 ```
 
+## Business dates
+
+A **business date** is the civil day an instant falls on in the company's
+timezone — never its UTC day. Stored dates are always Gregorian `YYYY-MM-DD`
+(`src/shared/time/business-date.ts`); Jalali (`src/shared/time/jalali-calendar.ts`)
+is a conversion and period-bounds helper over them, not a separate storage
+format.
+
+The default timezone is `Asia/Tehran` (`DEFAULT_BUSINESS_TIME_ZONE`); a domain
+with a different one passes the IANA name explicitly. Nothing consults the
+server's `TZ` or locale, so the same instant is the same business date on every
+host. Because Tehran is UTC+03:30 (no daylight saving since 2022), midinstants
+straddle days:
+
+```ts
+businessDateFromMillis(Date.parse('2026-03-20T20:30:00.000Z')).toIsoString();
+// => '2026-03-21'  — midnight that ends 1404 and begins Nawruz 1405-01-01
+// One millisecond earlier is '2026-03-20' (1404-12-29), and the same instant
+// is '2026-03-20' under an explicit 'America/Los_Angeles' timezone.
+```
+
 ## Commands
 
 ```bash
@@ -69,6 +90,7 @@ pnpm --filter @accounting-saas/backend lint
 pnpm --filter @accounting-saas/backend test       # all tests (unit + HTTP)
 pnpm --filter @accounting-saas/backend test:e2e   # HTTP-level tests only
 pnpm --filter @accounting-saas/backend test:cov   # coverage
+pnpm --filter @accounting-saas/backend test:timezones  # Jalali suite under UTC/Tehran/LA server TZ
 
 # Background jobs (FND-007)
 pnpm --filter @accounting-saas/backend job:enqueue <type> [payload-json]

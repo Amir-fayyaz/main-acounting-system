@@ -143,6 +143,7 @@ shared/
 ├── quantity/quantity.ts       counted amount + opaque unit code
 ├── time/business-date.ts      a calendar day: business/accounting dates
 ├── time/date-time.ts          a UTC instant: created-at/posted-at
+├── time/jalali-calendar.ts    Jalali ↔ Gregorian, period bounds, business-date rule
 └── primitives/                exact decimal, rounding, calendar, validation
 ```
 
@@ -216,6 +217,20 @@ expected, actual?)` is the one way an adapter reports a lost race (a
   malformed amounts all rejected).
 - `quantity/` — `Quantity`: exact decimal amount plus an opaque unit code, with
   no conversion or equivalence rules.
+- `time/jalali-calendar.ts` — the Jalali (Shamsi) calendar as a pure module:
+  `businessDateToJalali` / `businessDateFromJalali`, `isJalaliLeapYear`,
+  `jalaliDaysInMonth` (31/31/.../29-or-30 Esfand), `jalaliMonthBounds`,
+  `jalaliYearBounds` and `businessDateFromMillis(millis, timeZone)`.
+  No framework, database or locale dependency; verified day-for-day for
+  1970–2100.
+  ### The business-date rule
+  An instant is assigned to the civil day it falls on in the **company's
+  timezone** (`Asia/Tehran` by default, an explicit IANA name otherwise), never
+  to its UTC day: the same instant is the same business date on every host,
+  regardless of the server's `TZ` or locale. A transaction at
+  `2026-03-20T20:30:00Z` (midnight Tehran) belongs to Nawruz `1405-01-01`, not
+  to the UTC day it partially overlaps. A domain that owns a different
+  timezone passes the IANA name explicitly; nothing else is ever assumed.
 - `time/` — `BusinessDate` (`YYYY-MM-DD`, timezone-free) and `DateTime` (UTC
   instant). Together they keep the four domain roles — Business Date, Accounting
   Date, Created At, Posted At — from collapsing into one ambiguous type.
