@@ -8,6 +8,13 @@
       "when": 1792521538978,
       "tag": "0000_curly_gwen_stacy",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1792875308589,
+      "tag": "0001_white_serpent_society",
+      "breakpoints": true
     }
   ]
 }
