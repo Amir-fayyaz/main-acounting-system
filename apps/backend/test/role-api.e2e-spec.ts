@@ -109,7 +109,7 @@ async function createHarness(): Promise<Harness> {
 
   const directory: TenantDirectory = {
     async exists(tenantId: string): Promise<boolean> {
-      return isTenantId(tenantId) && (await tenants.get(tenantIdFrom(tenantId))) !== undefined;
+      return isTenantId(tenantId) && (await tenants.exists(tenantIdFrom(tenantId)));
     },
   };
 
@@ -363,9 +363,14 @@ describe('role and permission resources (e2e)', () => {
     it('lists the platform capabilities in the standard envelope', async () => {
       const response = await request(app.getHttpServer()).get('/api/v1/permissions').expect(200);
 
-      expect(response.body.meta).toEqual({ page: 1, limit: 20, total: 6, totalPages: 1 });
+      expect(response.body.meta).toEqual({ page: 1, limit: 20, total: 7, totalPages: 1 });
       expect(response.body.data.map((permission: { key: string }) => permission.key)).toContain(
         'company.read',
+      );
+      // The read capability the audit trail is protected by (AUD-001) is a
+      // catalog entry like any other, so it can be granted to a role.
+      expect(response.body.data.map((permission: { key: string }) => permission.key)).toContain(
+        'audit.read',
       );
       expect(response.body.data[0]).toMatchObject({
         key: expect.any(String),

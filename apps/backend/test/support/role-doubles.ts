@@ -18,6 +18,11 @@ import {
 } from '../../src/shared/persistence/persistence-error.js';
 import type { Loaded, WriteReceipt } from '../../src/shared/persistence/repository-ports.js';
 import { Revision } from '../../src/shared/persistence/revision.js';
+import {
+  assertTenantCriterion,
+  assertTenantOwnership,
+} from '../../src/infrastructure/database/tenant-scoped.js';
+import { TenantScope } from '../../src/shared/tenant/tenant-scope.js';
 
 /**
  * Test doubles for the identity role/permission feature (IAM-004).
@@ -68,13 +73,16 @@ export class InMemoryRoleRepository implements RoleRepository {
   }
 
   public async get(id: RoleId): Promise<Loaded<Role> | undefined> {
+    const activeTenantId = TenantScope.requireTenantId();
     const record = this.records.get(id.value);
-    return record === undefined
+
+    return record === undefined || record.snapshot.tenantId !== activeTenantId
       ? undefined
       : { aggregate: Role.rehydrate(record.snapshot), revision: record.revision };
   }
 
   public async add(role: Role): Promise<WriteReceipt> {
+    assertTenantOwnership(role.tenantId.value, 'RoleRepository.add');
     this.addCalls += 1;
     if (this.conflictOnNextAdd || this.records.has(role.id.value)) {
       this.conflictOnNextAdd = false;
@@ -88,6 +96,7 @@ export class InMemoryRoleRepository implements RoleRepository {
   }
 
   public async update(role: Role, expectedRevision: Revision): Promise<WriteReceipt> {
+    assertTenantOwnership(role.tenantId.value, 'RoleRepository.update');
     this.updateCalls += 1;
     const record = this.records.get(role.id.value);
 
@@ -101,6 +110,8 @@ export class InMemoryRoleRepository implements RoleRepository {
   }
 
   public async findByTenantId(tenantId: TenantReference): Promise<readonly Loaded<Role>[]> {
+    assertTenantCriterion(tenantId.value, 'RoleRepository.findByTenantId');
+
     return this.loaded().filter((record) => record.aggregate.tenantId.value === tenantId.value);
   }
 
@@ -152,13 +163,16 @@ export class InMemoryMembershipRoleRepository implements MembershipRoleRepositor
   }
 
   public async get(id: MembershipRoleId): Promise<Loaded<MembershipRole> | undefined> {
+    const activeTenantId = TenantScope.requireTenantId();
     const record = this.records.get(id.value);
-    return record === undefined
+
+    return record === undefined || record.snapshot.tenantId !== activeTenantId
       ? undefined
       : { aggregate: MembershipRole.rehydrate(record.snapshot), revision: record.revision };
   }
 
   public async add(assignment: MembershipRole): Promise<WriteReceipt> {
+    assertTenantOwnership(assignment.tenantId.value, 'MembershipRoleRepository.add');
     this.addCalls += 1;
     if (this.records.has(assignment.id.value)) {
       throw new PersistenceError(PersistenceFailureKind.CONFLICT, 'MembershipRoleRepository.add');
@@ -179,6 +193,7 @@ export class InMemoryMembershipRoleRepository implements MembershipRoleRepositor
     assignment: MembershipRole,
     expectedRevision: Revision,
   ): Promise<WriteReceipt> {
+    assertTenantOwnership(assignment.tenantId.value, 'MembershipRoleRepository.update');
     this.updateCalls += 1;
     const record = this.records.get(assignment.id.value);
 
@@ -194,8 +209,12 @@ export class InMemoryMembershipRoleRepository implements MembershipRoleRepositor
   public async findByMembershipId(
     membershipId: MembershipId,
   ): Promise<readonly Loaded<MembershipRole>[]> {
+    const activeTenantId = TenantScope.requireTenantId();
+
     return this.loaded().filter(
-      (record) => record.aggregate.membershipId.value === membershipId.value,
+      (record) =>
+        record.aggregate.tenantId.value === activeTenantId &&
+        record.aggregate.membershipId.value === membershipId.value,
     );
   }
 
@@ -203,8 +222,11 @@ export class InMemoryMembershipRoleRepository implements MembershipRoleRepositor
     membershipId: MembershipId,
     roleId: RoleId,
   ): Promise<Loaded<MembershipRole> | undefined> {
+    const activeTenantId = TenantScope.requireTenantId();
+
     return this.loaded().find(
       (record) =>
+        record.aggregate.tenantId.value === activeTenantId &&
         record.aggregate.membershipId.value === membershipId.value &&
         record.aggregate.roleId.value === roleId.value,
     );

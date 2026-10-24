@@ -4,7 +4,9 @@ import { AppConfigService } from '../config/app-config.service.js';
 import type { SecretHolder } from '../config/secrets.js';
 import { createTenantContext } from '../../shared/tenant/tenant-context.js';
 import { TenantScope } from '../../shared/tenant/tenant-scope.js';
+import { isSameTenant } from '../../shared/tenant/tenant-identity.js';
 import { TenantContextMissingError } from '../../shared/tenant/tenant.errors.js';
+import { TenantIsolationViolationError } from '../../shared/tenant/tenant.errors.js';
 import { classifyJobError } from './job.errors.js';
 import type { RegisteredJob } from './job.definition.js';
 import { IDEMPOTENCY_TTL_SECONDS, JOB_STATE_TTL_SECONDS } from './job-keys.js';
@@ -23,6 +25,25 @@ import type {
 } from './job.types.js';
 import { computeBackoffDelayMs, hasAttemptsRemaining, type RetryPolicy } from './retry.policy.js';
 import type { ClaimedJob, JobQueuePort } from './queue/job-queue.port.js';
+
+/**
+ * The tenant a job payload names, when it names one at all.
+ *
+ * A payload is opaque to the queue, so this only *looks* for the two field
+ * names a producer would use for the owner of the work; it never decides
+ * anything. Its sole use is to notice a payload that contradicts the envelope
+ * (IAM-007, section 7).
+ */
+function payloadTenantId(payload: unknown): string | undefined {
+  if (typeof payload !== 'object' || payload === null) {
+    return undefined;
+  }
+
+  const record = payload as Record<string, unknown>;
+  const claimed = record['tenantId'] ?? record['companyId'];
+
+  return typeof claimed === 'string' && claimed.trim() !== '' ? claimed : undefined;
+}
 
 /**
  * Executes one claimed job and records its lifecycle (FND-007, ADR-008).
@@ -160,6 +181,13 @@ export class JobDispatcher {
       throw new TenantContextMissingError('missing');
     }
 
+    // The envelope's owner context is the only tenant a job may run under. A
+    // payload that names a *different* tenant is a contradiction between the
+    // two, and a job that resolves it by believing the payload would be reading
+    // another company's data under a forged scope (IAM-007, section 7). The
+    // payload never selects the tenant — it can only contradict it.
+    this.assertPayloadAgreesWithEnvelope(envelope);
+
     const idempotencyKey = definition.idempotencyKey?.(envelope.payload, envelope);
 
     if (idempotencyKey !== undefined) {
@@ -221,6 +249,32 @@ export class JobDispatcher {
           work,
         )
       : TenantScope.runAsSystem(work);
+  }
+
+  /**
+   * Refuses a job whose payload names a tenant other than the envelope's owner
+   * (IAM-007, section 7).
+   *
+   * The payload is opaque to the queue, so it may legitimately carry a
+   * reference to the company the work is about. It may not *contradict* the
+   * envelope: two different tenants in one job mean the producer and the
+   * payload disagree about who owns the work, and resolving that by believing
+   * the payload would run tenant A's job against tenant B's data. The refusal
+   * is terminal — no attempt can fix a disagreement about ownership.
+   *
+   * @throws TenantIsolationViolationError — the payload and the envelope name
+   * different tenants.
+   */
+  private assertPayloadAgreesWithEnvelope(envelope: JobEnvelope): void {
+    const claimed = payloadTenantId(envelope.payload);
+
+    if (claimed === undefined || envelope.companyId === undefined) {
+      return;
+    }
+
+    if (!isSameTenant(claimed, envelope.companyId)) {
+      throw new TenantIsolationViolationError('JobDispatcher.execute');
+    }
   }
 
   private async failTerminally(

@@ -23,7 +23,7 @@ UI انتخاب Tenant، Middleware احراز هویتِ HTTP، پیاده‌س
 ## 2. مالکیت — مسیرِ Context
 
 ```text
-Client (بدونِ اعتماد)          هیچ‌وقت tenantId نمی‌دهد — Header/Body/Query خوانده نمی‌شود
+Client (بدونِ اعتماد)          Header/Body/Query هرگز Tenant را انتخاب نمی‌کنند
     │
 Trusted entry (آینده: Auth)     TenantScope.run(context, work)  ← تنها نقطهٔ Establish
 Worker (امروز)                  TenantScope.run از envelope.companyId
@@ -120,9 +120,11 @@ await TenantScope.run(principalContext, async () => {
 
 ## 8. مرزِ امنیتی — Client هرگز Tenant را انتخاب نمی‌کند
 
-- **هیچ ورودیِ Client خوانده نمی‌شود:** نه Header (مثلِ `x-tenant-id`)، نه Query، نه
-  Body — e2e این را روی Requestِ واقعی اثبات می‌کند: Header می‌رسد، شنیده می‌شود و
-  نادیده گرفته می‌شود؛ Scope بی‌صدا `missing` می‌ماند.
+- **ورودی Client هویت Tenant را انتخاب نمی‌کند:** `TenantScope` از Header، Query یا Body
+  ساخته نمی‌شود. در مسیرهای API که Tenant از Route حل می‌شود، مرز Authorization یک
+  `x-tenant-id` متعارض/مبهم را نیز رد می‌کند؛ این بررسی فقط سازگاری ادعاها را می‌سنجد و
+  Header را به منبع انتخاب Tenant تبدیل نمی‌کند. تست مستقل `TenantScope` نشان می‌دهد که
+  ارسال Header به‌تنهایی همچنان Scope را `missing` نگه می‌دارد.
 - **فقط نقطهٔ موردِ اعتماد Establish می‌کند:** امروز Worker (از Envelope) و تست؛
   فردا Guardِ احراز هویت (از Principal) — همان `TenantScope.run`، بدونِ بازطراحی.
 - **Fail-Closed:** ناشناخته یا غایب یعنی «بدونِ اجرا»، نه «بدونِ فیلتر» (ADR-010،
@@ -182,7 +184,50 @@ pnpm --filter @accounting-saas/backend test
 MYSQL_INTEGRATION=1 pnpm --filter @accounting-saas/backend test   # کل Suite (شاملِ Outbox/Transaction)
 ```
 
-## 13. معیار پذیرش
+## 13. اجرای ایزولاسیون در مرزهای داده (IAM-007)
+
+مکانیزم Context (بخش‌های ۱–۹) تنها زمانی ایزولاسیون را تضمین می‌کند که هر مرز
+(HTTP، Application، Persistence، Job) آن را *اجبار* کند؛ نه اینکه صرفاً در دسترس
+بگذارد. سند ۲۶ (Tenant Isolation) این اجرا را کامل ثبت می‌کند؛ خلاصهٔ آن:
+
+| مرز | اجرا |
+| --- | --- |
+| HTTP | `resolveTenantRouteParam` تنها منبع مشترک Guard و Interceptor است؛ هر مسیر Tenant-Scoped (صریح، `:tenantId` یا `:id` روی `tenants`) پس از تأیید Membership، Scope را از **Tenantِ اثبات‌شدهٔ همان Membership** می‌سازد — نه از شناسهٔ Route. مسیر Platform بدون Scope می‌ماند و فقط `runAsSystem` صریح اجازهٔ کار سطح سیستم دارد. |
+| Application | عملیات Tenant-Scoped پیش از هر خواندن/نوشتن، Tenant را از Scope حل و Claim را با آن مقایسه می‌کند؛ پرسش‌های Platform (مثل «Membershipهای یک کاربر») صریحاً در `runAsSystem` اجرا می‌شوند. |
+| Persistence | `tenantEq`/`assertTenantOwnership`/`assertTenantCriterion`/`requireSystemScope` در `infrastructure/database/tenant-scoped.ts`؛ هر Adapter مالک ردیف‌های `tenant_id` این‌ها را در `WHERE` و پیش از نوشتن اعمال می‌کند. `get` بدون فیلتر Tenant وجود ندارد. جدولِ ریشهٔ `tenants` کلیدِ اصلیِ خودش مرز است و `get`/`update` آن Scope فعال را تصدیق می‌کنند. |
+| Job | Envelope غیرقابل‌تغییر (`companyId`) Scope را بازسازی می‌کند؛ Job بدون Owner Context اجرا نمی‌شود (بخش ۷) و Payload هرگز مالکیت را تعیین نمی‌کند — تعارضِ Payload با Envelope، اجرای Job را متوقف می‌کند. |
+
+سه امتناع صریح، Fail-Closed را کامل می‌کنند:
+
+- **`TenantIsolationViolationError`** (`TENANT_ISOLATION_VIOLATION`): تلاش برای خواندن/نوشتن
+  دادهٔ Tenant دیگر، یا اجرای عملیات Tenant-Scoped زیر Scope سیستم. پاسخ HTTP آن
+  `403` عمومی است و هیچ شناسه‌ای از Tenant درخواست‌شده یا Tenant واقعی افشا نمی‌کند.
+- **`runAsSystem` از داخل Scope موجود ممنوع است:** یک Endpoint عادی Tenant نمی‌تواند
+  نیمهٔ کار خود را به دسترسی Platform ارتقا دهد.
+- **نوشتن Platform زیر Scope Tenant ممنوع است:** رکورد بدون Owner (مثل رخداد ورود)
+  فقط خارج از Scope Tenant یا در Scope سیستم نوشته می‌شود.
+
+پرسش‌های Cross-Tenant مجاز، فقط از قرارداد صریح `system` عبور می‌کنند:
+`MembershipRepository.findByUserId` زیر Scope Tenant رد می‌شود، و
+`findByUserAndTenant` زیر Scope موجود فقط Tenant همان Scope را می‌پذیرد.
+
+**مقایسهٔ Tenant همیشه Canonical است** (`shared/tenant/tenant-identity.ts`): دو نگارشِ یک
+UUID یک Tenant‌اند، پس نامی که Caller از خودش می‌نویسد هرگز به بهانهٔ «شرکت دیگری» رد
+نمی‌شود.
+
+### تست‌های IAM-007
+
+| سطح | فایل | پوشش |
+| --- | --- | --- |
+| واحد (هویت Tenant) | `src/shared/tenant/tenant-identity.spec.ts` | نگارش Canonical و مقایسهٔ دو Tenant |
+| واحد (گاردهای داده) | `src/infrastructure/database/tenant-scoped.spec.ts` | Ownership، Criterion، System-only، نوشتن Platform، ممنوعیت Escalation |
+| واحد (HTTP) | `src/infrastructure/api/tenant/tenant-scope.interceptor.spec.ts` | انتشارِ Tenant اثبات‌شده، ردِ مسیر بدون اثبات، استنتاج `:tenantId` و `:id` روی `tenants` |
+| واحد/یکپارچه (Application) | `test/authorization-api.e2e-spec.ts` و Doubleهای `test/support/` | خواندن/به‌روزرسانی منبع Tenant دیگر، تلاش Escalation از Endpoint Tenant؛ Doubleها نیز همان مرز Adapter را اعمال می‌کنند |
+| یکپارچه (خصمانه) | `test/tenant-isolation.e2e-spec.ts` | ماتریس کامل خواندن/نوشتن/به‌روزرسانی/حذف بین دو شرکت، Route و Header، Escalation به سیستم، Job، مسیر غیر HTTP |
+| یکپارچه (Persistence) | `test/{tenant,membership,role}-persistence.e2e-spec.ts` | Read/Add/Update/List بین دو Tenant، فیلتر Assignment، ردِ ساخت شرکت از Scope Tenant |
+| Job | `src/infrastructure/jobs/job-{dispatcher,enqueuer}.spec.ts` | بازسازی Scope از Envelope، رد Job بدون Context، رد تعارض Payload با Envelope |
+
+## 14. معیار پذیرش
 
 - Abstractionِ مشترکِ Tenant Context وجود دارد و شناسهٔ پایدار + Stateِ در دسترس
   بودن را نگه می‌دارد؛ بدونِ Scope، عملیاتِ Tenant-Scoped رد می‌شود (Fail-Closed) و

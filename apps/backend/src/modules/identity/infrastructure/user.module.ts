@@ -8,6 +8,8 @@ import {
 import { OutboxModule } from '../../../infrastructure/outbox/outbox.module.js';
 import { OUTBOX_RECORDER } from '../../../infrastructure/outbox/outbox.tokens.js';
 import type { TransactionBoundary } from '../../../shared/transaction/transaction-boundary.js';
+import { AUDIT_RECORDER } from '../../audit/application/audit.tokens.js';
+import type { AuditRecorder } from '../../audit/application/ports/audit-recorder.port.js';
 import { CreateUserUseCase } from '../application/use-cases/create-user.use-case.js';
 import { ChangeUserStatusUseCase } from '../application/use-cases/change-user-status.use-case.js';
 import { GetUserUseCase } from '../application/use-cases/get-user.use-case.js';
@@ -16,6 +18,7 @@ import { USER_EVENT_RECORDER, USER_REPOSITORY } from '../application/user.tokens
 import type { UserEventRecorder } from '../application/ports/user-event-recorder.port.js';
 import type { UserRepository } from '../domain/repositories/user.repository.js';
 import { UsersController } from '../presentation/controllers/user.controller.js';
+import { ActorEventRecorder } from './audit/audit-trail-access-control-event-recorder.js';
 import { DrizzleUserRepository } from './persistence/drizzle-user.repository.js';
 
 /**
@@ -43,9 +46,12 @@ import { DrizzleUserRepository } from './persistence/drizzle-user.repository.js'
       inject: [DATABASE],
     },
     {
-      // The outbox recorder already satisfies the application port structurally.
+      // User facts reach two homes: the outbox (SHR-006) and — for the sensitive
+      // status changes — the central audit trail (AUD-001).
       provide: USER_EVENT_RECORDER,
-      useExisting: OUTBOX_RECORDER,
+      useFactory: (outbox: UserEventRecorder, audit: AuditRecorder) =>
+        new ActorEventRecorder(outbox, audit),
+      inject: [OUTBOX_RECORDER, AUDIT_RECORDER],
     },
     {
       provide: CreateUserUseCase,
@@ -81,9 +87,11 @@ import { DrizzleUserRepository } from './persistence/drizzle-user.repository.js'
     },
   ],
   // The user repository is exported to this module's own membership feature
-  // (IAM-003) so it can confirm a membership references an existing user. It is
-  // not an invitation to other modules: the boundary guard still forbids them
-  // from importing this file.
-  exports: [USER_REPOSITORY],
+  // (IAM-003) so it can confirm a membership references an existing user, and
+  // to this module's sign-up feature (IAM-008), which composes
+  // `CreateUserUseCase` with credential establishment in one transaction. The
+  // user feature is not an invitation to other modules: the boundary guard
+  // still forbids them from importing this file.
+  exports: [USER_REPOSITORY, CreateUserUseCase],
 })
 export class UserModule {}

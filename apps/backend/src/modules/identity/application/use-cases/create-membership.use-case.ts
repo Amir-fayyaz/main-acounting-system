@@ -6,7 +6,7 @@ import type { WriteReceipt } from '../../../../shared/persistence/repository-por
 import { DateTime } from '../../../../shared/time/date-time.js';
 import { tenantScopedMessageOptions } from '../../../../shared/tenant/tenant-message-options.js';
 import type { TransactionBoundary } from '../../../../shared/transaction/transaction-boundary.js';
-import type { TenantDirectory } from '../../../tenant/application/ports/tenant-directory.port.js';
+import type { TenantDirectory } from '../../../tenant/public-api.js';
 import { Membership } from '../../domain/aggregates/membership.js';
 import {
   DuplicateMembershipError,

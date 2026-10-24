@@ -8,8 +8,9 @@ import {
 import { OutboxModule } from '../../../infrastructure/outbox/outbox.module.js';
 import { OUTBOX_RECORDER } from '../../../infrastructure/outbox/outbox.tokens.js';
 import type { TransactionBoundary } from '../../../shared/transaction/transaction-boundary.js';
-import { TENANT_DIRECTORY } from '../../tenant/application/tenant.tokens.js';
-import type { TenantDirectory } from '../../tenant/application/ports/tenant-directory.port.js';
+import { AUDIT_RECORDER } from '../../audit/application/audit.tokens.js';
+import type { AuditRecorder } from '../../audit/application/ports/audit-recorder.port.js';
+import { TENANT_DIRECTORY, type TenantDirectory } from '../../tenant/public-api.js';
 import { MEMBERSHIP_REPOSITORY } from '../application/membership.tokens.js';
 import { AssignRoleToMembershipUseCase } from '../application/use-cases/assign-role-to-membership.use-case.js';
 import { ChangeRoleStatusUseCase } from '../application/use-cases/change-role-status.use-case.js';
@@ -35,6 +36,7 @@ import type { RoleRepository } from '../domain/repositories/role.repository.js';
 import { MembershipRolesController } from '../presentation/controllers/membership-role.controller.js';
 import { PermissionsController } from '../presentation/controllers/permission.controller.js';
 import { RolesController } from '../presentation/controllers/role.controller.js';
+import { ActorEventRecorder } from './audit/audit-trail-access-control-event-recorder.js';
 import { DrizzleMembershipRoleRepository } from './persistence/drizzle-membership-role.repository.js';
 import { DrizzleRoleRepository } from './persistence/drizzle-role.repository.js';
 import { MembershipModule } from './membership.module.js';
@@ -78,9 +80,13 @@ import { MembershipModule } from './membership.module.js';
       inject: [DATABASE],
     },
     {
-      // The outbox recorder already satisfies the application port structurally.
+      // Role and assignment facts reach two homes: the outbox (SHR-006) and —
+      // for the sensitive access-control changes — the central audit trail
+      // through the published contract (AUD-001).
       provide: ROLE_EVENT_RECORDER,
-      useExisting: OUTBOX_RECORDER,
+      useFactory: (outbox: RoleEventRecorder, audit: AuditRecorder) =>
+        new ActorEventRecorder(outbox, audit),
+      inject: [OUTBOX_RECORDER, AUDIT_RECORDER],
     },
     {
       provide: CreateRoleUseCase,

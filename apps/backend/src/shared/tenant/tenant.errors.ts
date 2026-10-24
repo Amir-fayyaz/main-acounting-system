@@ -1,4 +1,33 @@
 /**
+ * The refusal raised when code tries to leave, widen or sidestep the tenant
+ * boundary of the current execution (IAM-007).
+ *
+ * This is a *security* failure, not a business outcome: it means an operation
+ * asked for data or a mutation that belongs to a tenant other than the
+ * established one — a forged resource id, a stale scope, a cross-tenant write,
+ * or an explicit attempt to run ordinary tenant work under the system scope.
+ * It fails closed and is never softened into "all data" or a silent tenant
+ * switch.
+ *
+ * The message is deliberately stable and carries no identifiers: an error body
+ * must not reveal which tenant was requested or which one the caller actually
+ * belongs to (ADR-010; 06-security-engineering). `operation` stays on the
+ * server side for logs and diagnostics.
+ */
+export class TenantIsolationViolationError extends Error {
+  /** Stable identifier of this failure, mirroring the `DomainError` code shape. */
+  public readonly code = 'TENANT_ISOLATION_VIOLATION';
+  /** The server-side position that refused; never serialized to a client. */
+  public readonly operation: string;
+
+  constructor(operation: string) {
+    super('The operation crossed the tenant boundary.');
+    this.name = new.target.name;
+    this.operation = operation;
+  }
+}
+
+/**
  * The refusal raised when a tenant-scoped operation finds no tenant context
  * (SHR-007; ADR-001 section 13, ADR-008 section 14, ADR-010 section 13).
  *

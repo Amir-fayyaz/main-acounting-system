@@ -6,6 +6,10 @@ import {
   TenantContextRequiredError,
 } from '../../domain/errors/authorization.errors.js';
 import { PermissionKey } from '../../domain/value-objects/permission-key.js';
+import {
+  isTenantReference,
+  tenantReferenceFrom,
+} from '../../domain/value-objects/tenant-reference.js';
 import { GetAuthenticatedSession } from '../../application/queries/get-authenticated-session.query.js';
 import { GetAuthenticatedSessionUseCase } from '../../application/use-cases/get-authenticated-session.use-case.js';
 import { AUTHORIZATION } from '../../application/authorization/authorization.tokens.js';
@@ -16,6 +20,10 @@ import {
   PUBLIC_ENDPOINT_METADATA,
   type AuthorizationPolicy,
 } from '../../../../infrastructure/api/authorization/authorization-policy.js';
+import {
+  claimedTenantId,
+  resolveTenantRouteParam,
+} from '../../../../infrastructure/api/tenant/tenant-route.js';
 import type { AuthenticatedRequest } from '../http/authenticated-request.js';
 import { readBearerToken } from '../http/authenticated-request.js';
 import { raiseAuthenticationFailure } from '../http/authentication-error.mapper.js';
@@ -70,26 +78,44 @@ export class AuthorizationGuard implements CanActivate {
     const handler = context.getHandler();
     const controller = context.getClass();
 
-    if (this.declared<boolean>(PUBLIC_ENDPOINT_METADATA, [handler, controller]) === true) {
-      return true;
-    }
-
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+    const publicEndpoint =
+      this.declared<boolean>(PUBLIC_ENDPOINT_METADATA, [handler, controller]) === true;
     const policy = this.declared<AuthorizationPolicy>(AUTHORIZATION_POLICY_METADATA, [
       handler,
       controller,
     ]);
     const authenticatedOnly =
       this.declared<boolean>(AUTHENTICATED_ENDPOINT_METADATA, [handler, controller]) === true;
+    // One resolution, shared with the interceptor that publishes the ambient
+    // scope: a route cannot be authorized as tenant-scoped while executing
+    // without a tenant scope (IAM-007).
+    const tenantParam = resolveTenantRouteParam(request, controller, policy);
+    const hasTenantRouteParameter = tenantParam !== undefined;
+
+    if (publicEndpoint) {
+      // A tenant-nested route cannot turn off the boundary by declaring itself
+      // public. Tenant routes must go through an explicit, reviewed policy.
+      if (hasTenantRouteParameter) {
+        return raiseAuthorizationFailure(new AuthorizationPolicyMissingError());
+      }
+      return true;
+    }
 
     if (policy === undefined && !authenticatedOnly) {
       // Deny by default: nothing declared what this operation requires.
       return raiseAuthorizationFailure(new AuthorizationPolicyMissingError());
     }
 
-    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const principal = await this.resolvePrincipal(request);
 
     if (policy === undefined) {
+      // Authentication-only is valid for session endpoints, but not for a
+      // tenant-nested route. Such a route must declare a capability policy so
+      // membership is checked before the controller can execute.
+      if (hasTenantRouteParameter) {
+        return raiseAuthorizationFailure(new AuthorizationPolicyMissingError());
+      }
       return true;
     }
 
@@ -99,12 +125,15 @@ export class AuthorizationGuard implements CanActivate {
       return raiseAuthorizationFailure(new AuthorizationPolicyMissingError());
     }
 
-    const targetTenantId = this.targetTenant(request, policy);
+    const targetTenantId = this.targetTenant(request, tenantParam);
+    const tenantClaimConflict = this.tenantClaimConflicts(request, targetTenantId);
 
     const outcome = await this.authorization.authorize({
       principal,
       requiredPermission: PermissionKey.from(policy.permission),
-      targetTenantId,
+      ...(targetTenantId === undefined ? {} : { targetTenantId }),
+      ...(tenantClaimConflict ? { tenantClaimConflict: true } : {}),
+      ...(request.correlationId === undefined ? {} : { correlationId: request.correlationId }),
     });
 
     return outcome.match<boolean>({
@@ -168,18 +197,61 @@ export class AuthorizationGuard implements CanActivate {
    */
   private targetTenant(
     request: AuthenticatedRequest,
-    policy: AuthorizationPolicy,
+    tenantParam: string | undefined,
   ): string | undefined {
-    if (policy.tenantParam === undefined) {
+    if (tenantParam === undefined) {
       return undefined;
     }
 
-    const claimed = request.params?.[policy.tenantParam];
+    const claimed = claimedTenantId(request, tenantParam);
 
-    if (claimed === undefined || claimed.trim() === '') {
+    if (claimed === undefined) {
+      // A tenant-scoped policy whose claim is absent is invalid tenant
+      // context, never a platform operation by accident.
       return raiseAuthorizationFailure(new TenantContextRequiredError());
     }
 
     return claimed;
+  }
+
+  /**
+   * A client-supplied tenant header never selects the tenant. When a route has
+   * already resolved its target, a conflicting or ambiguous header is treated
+   * as a failed claim-consistency check and denied with the same public tenant
+   * access error as any other membership refusal.
+   */
+  private tenantClaimConflicts(
+    request: AuthenticatedRequest,
+    targetTenantId: string | undefined,
+  ): boolean {
+    const header = request.headers['x-tenant-id'];
+
+    if (targetTenantId === undefined || header === undefined) {
+      return false;
+    }
+
+    if (Array.isArray(header)) {
+      return header.length !== 1 || this.tenantIdentifiersConflict(header[0], targetTenantId);
+    }
+
+    return this.tenantIdentifiersConflict(header, targetTenantId);
+  }
+
+  /** UUID text is case-insensitive; compare valid ids in their canonical form. */
+  private tenantIdentifiersConflict(
+    headerTenantId: string | undefined,
+    targetTenantId: string,
+  ): boolean {
+    if (headerTenantId === undefined) {
+      return true;
+    }
+
+    if (isTenantReference(headerTenantId) && isTenantReference(targetTenantId)) {
+      return (
+        tenantReferenceFrom(headerTenantId).value !== tenantReferenceFrom(targetTenantId).value
+      );
+    }
+
+    return headerTenantId !== targetTenantId;
   }
 }

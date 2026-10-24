@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { PasswordHash } from '../../domain/value-objects/password-hash.js';
 import { PlainPassword } from '../../domain/value-objects/plain-password.js';
@@ -17,6 +17,19 @@ import { SCRYPT_PARAMETERS, ScryptPasswordHasher } from './scrypt-password-hashe
  */
 const SECRET = 'correct horse battery staple';
 const OTHER_SECRET = 'correct horse battery stapl3';
+
+/**
+ * The derivation is deliberately expensive — that is what makes it a password
+ * hash — so a single assertion can take the better part of a second of CPU.
+ * Under a loaded machine (the whole workspace's suites running at once) the
+ * default five-second budget can expire on a *slow* machine rather than on a
+ * broken one, and the gate would report a failure that says nothing about the
+ * code under test.
+ *
+ * The budget is therefore raised for this file only. No assertion changes: the
+ * derivation still has to finish, and it still has to produce the same bytes.
+ */
+vi.setConfig({ testTimeout: 60_000 });
 
 describe('ScryptPasswordHasher', () => {
   const hasher = new ScryptPasswordHasher();

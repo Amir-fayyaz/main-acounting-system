@@ -9,11 +9,12 @@ import { OutboxModule } from '../../../infrastructure/outbox/outbox.module.js';
 import { OUTBOX_RECORDER } from '../../../infrastructure/outbox/outbox.tokens.js';
 import type { TransactionBoundary } from '../../../shared/transaction/transaction-boundary.js';
 import { ChangeTenantStatusUseCase } from '../application/use-cases/change-tenant-status.use-case.js';
-import {
-  TENANT_DIRECTORY,
-  TENANT_EVENT_RECORDER,
-  TENANT_REPOSITORY,
-} from '../application/tenant.tokens.js';
+  import {
+    TENANT_CONTEXT,
+    TENANT_DIRECTORY,
+    TENANT_EVENT_RECORDER,
+    TENANT_REPOSITORY,
+  } from '../application/tenant.tokens.js';
 import type { TenantDirectory } from '../application/ports/tenant-directory.port.js';
 import { CreateTenantUseCase } from '../application/use-cases/create-tenant.use-case.js';
 import { GetTenantUseCase } from '../application/use-cases/get-tenant.use-case.js';
@@ -23,6 +24,9 @@ import type { TenantRepository } from '../domain/repositories/tenant.repository.
 import { isTenantId, tenantIdFrom } from '../domain/value-objects/tenant-id.js';
 import { TenantController } from '../presentation/controllers/tenant.controller.js';
 import { DrizzleTenantRepository } from './persistence/drizzle-tenant.repository.js';
+    import type { TenantContextAccessor } from '../application/ports/tenant-context.port.js';
+  import { ScopedTenantContext } from '../infrastructure/scoped-tenant-context.js';
+
 
 /**
  * The tenant module (IAM-001).
@@ -60,16 +64,27 @@ import { DrizzleTenantRepository } from './persistence/drizzle-tenant.repository
       // The published tenant contract (IAM-003): existence over the stable
       // tenant identity, answered through the module's own port so no caller
       // ever touches tenant storage. A malformed id is not a tenant.
+      //
+      // Existence is the one question about a tenant that is *not*
+      // tenant-scoped: it says whether the identity is taken and nothing about
+      // the company itself. The registry read it needs is therefore the
+      // repository's explicit `exists`, never the tenant-scoped `get` — so a
+      // caller can never reach a tenant's record through this contract
+      // (IAM-007, section 6).
       provide: TENANT_DIRECTORY,
       useFactory: (repository: TenantRepository): TenantDirectory => ({
         async exists(tenantId: string): Promise<boolean> {
-          return (
-            isTenantId(tenantId) && (await repository.get(tenantIdFrom(tenantId))) !== undefined
-          );
+          return isTenantId(tenantId) && (await repository.exists(tenantIdFrom(tenantId)));
         },
       }),
       inject: [TENANT_REPOSITORY],
     },
+          {
+        // The published ambient-tenant contract: reads the scope a trusted
+        // boundary established and fails closed without one (SHR-007).
+        provide: TENANT_CONTEXT,
+        useFactory: (): TenantContextAccessor => new ScopedTenantContext(),
+      },
     {
       // The outbox recorder already satisfies the application port structurally.
       provide: TENANT_EVENT_RECORDER,
@@ -108,8 +123,8 @@ import { DrizzleTenantRepository } from './persistence/drizzle-tenant.repository
       inject: [TENANT_REPOSITORY, TENANT_EVENT_RECORDER, TRANSACTION_BOUNDARY],
     },
   ],
-  // Only the published cross-module contract is visible; the repository, the
-  // event recorder and the use cases stay private to the module.
-  exports: [TENANT_DIRECTORY],
+    // Only the published cross-module contracts are visible; the repository,
+    // the event recorder and the use cases stay private to the module.
+    exports: [TENANT_DIRECTORY, TENANT_CONTEXT],
 })
 export class TenantModule {}
