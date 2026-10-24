@@ -6,7 +6,8 @@ import type { ComponentProps } from 'react';
 export function AuthLink({ className, ...props }: ComponentProps<typeof Link>) {
   return (
     <Link
-      className={cn('text-brand-link font-semibold underline-offset-4 hover:underline', className)}
+    //  هرکار کردم text-brand-dark توی خروجی کلاس ها ایجاد نمیشد
+      className={cn('font-semibold text-brand-dark', className)}
       {...props}
     />
   );
