@@ -2,6 +2,10 @@ import { and, eq } from 'drizzle-orm';
 
 import type { Database } from '../../../../infrastructure/database/database.module.js';
 import { scopedDatabase } from '../../../../infrastructure/database/scoped-database.js';
+import {
+  assertTenantOwnership,
+  tenantEq,
+} from '../../../../infrastructure/database/tenant-scoped.js';
 import { staleRevisionConflict } from '../../../../shared/persistence/optimistic-concurrency.js';
 import {
   PersistenceError,
@@ -40,7 +44,7 @@ export class DrizzleMembershipRoleRepository implements MembershipRoleRepository
     const rows = await scopedDatabase(this.database)
       .select()
       .from(membershipRoles)
-      .where(eq(membershipRoles.id, id.value))
+      .where(and(eq(membershipRoles.id, id.value), tenantEq(membershipRoles.tenantId)))
       .limit(1);
 
     const row = rows[0];
@@ -50,6 +54,8 @@ export class DrizzleMembershipRoleRepository implements MembershipRoleRepository
   }
 
   public async add(assignment: MembershipRole): Promise<WriteReceipt> {
+    assertTenantOwnership(assignment.tenantId.value, 'MembershipRoleRepository.add');
+
     try {
       await scopedDatabase(this.database).insert(membershipRoles).values({
         id: assignment.id.value,
@@ -81,6 +87,8 @@ export class DrizzleMembershipRoleRepository implements MembershipRoleRepository
     assignment: MembershipRole,
     expectedRevision: Revision,
   ): Promise<WriteReceipt> {
+    assertTenantOwnership(assignment.tenantId.value, 'MembershipRoleRepository.update');
+
     const [header] = await scopedDatabase(this.database)
       .update(membershipRoles)
       .set({
@@ -92,6 +100,7 @@ export class DrizzleMembershipRoleRepository implements MembershipRoleRepository
         and(
           eq(membershipRoles.id, assignment.id.value),
           eq(membershipRoles.revision, expectedRevision.value),
+          tenantEq(membershipRoles.tenantId),
         ),
       );
 
@@ -108,7 +117,12 @@ export class DrizzleMembershipRoleRepository implements MembershipRoleRepository
     const rows = await scopedDatabase(this.database)
       .select()
       .from(membershipRoles)
-      .where(eq(membershipRoles.membershipId, membershipId.value));
+      .where(
+        and(
+          eq(membershipRoles.membershipId, membershipId.value),
+          tenantEq(membershipRoles.tenantId),
+        ),
+      );
 
     return rows.map(toLoadedMembershipRole);
   }
@@ -124,6 +138,7 @@ export class DrizzleMembershipRoleRepository implements MembershipRoleRepository
         and(
           eq(membershipRoles.membershipId, membershipId.value),
           eq(membershipRoles.roleId, roleId.value),
+          tenantEq(membershipRoles.tenantId),
         ),
       )
       .limit(1);

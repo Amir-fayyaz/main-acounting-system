@@ -18,3 +18,8 @@ export const TENANT_EVENT_RECORDER = Symbol('TENANT_EVENT_RECORDER');
  * depend on instead of reaching into tenant storage (IAM-003; ADR-002 §12).
  */
 export const TENANT_DIRECTORY = Symbol('TENANT_DIRECTORY');
+/**
+ * The published ambient tenant-context contract (`TenantContextAccessor`) other
+ * modules read the current company boundary through (TNT-004; SHR-007).
+ */
+export const TENANT_CONTEXT = Symbol('TENANT_CONTEXT');

@@ -1,17 +1,11 @@
-import AboutIntro from '@/core/components/custom/blook/about/aboutIntro/AboutIntro';
-import AboutManifesto from '@/core/components/custom/blook/about/aboutManifesto/AboutManifesto';
-import AboutPrinciples from '@/core/components/custom/blook/about/aboutPrinciples/AboutPrinciples';
-import MiniCTA from '@/core/components/custom/blook/about/miniCTA/MiniCTA';
+import type { Metadata } from 'next';
+import { AboutPage } from '@/core/features/about/components/block/about-page/AboutPage';
 
-export default function AboutPage() {
-  return (
-    <main className="font-[family-name:var(--font-vazirmatn)]">
-      <div className="pages-container">
-        <AboutIntro />
-        <AboutManifesto />
-        <AboutPrinciples />
-        <MiniCTA />
-      </div>
-    </main>
-  );
+export const metadata: Metadata = {
+  title: 'درباره تراز',
+  description: 'با نگاه تراز به حسابداری و اصول ساخت این سامانه آشنا شوید.',
+};
+
+export default function AboutRoute() {
+  return <AboutPage />;
 }

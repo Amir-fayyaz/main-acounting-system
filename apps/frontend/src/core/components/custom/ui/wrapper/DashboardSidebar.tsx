@@ -3,13 +3,12 @@
 import { defaultNavItems } from "@/core/assets/mock/navItems";
 import { Button } from "@/core/components/shadcn/ui/button/button";
 import { useIsMobile } from "@/core/hooks/useIsMobile";
-import { BASE_URL } from "@/core/lib/basic-link/BackendBasicLink";
+import { useSignOut } from "@/core/features/auth/hook/useSignOut";
 import { X } from "lucide-react";
 import { Route } from "next";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useMemo } from "react";
-import { toast } from "sonner";
 import Logo from "../logo/Logo";
 
 export function DashboardSidebar({
@@ -27,28 +26,7 @@ export function DashboardSidebar({
     return defaultNavItems;
   }, []);
 
-  async function logOut() {
-    try {
-      const res = await fetch(`${BASE_URL}/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        toast.error(data.message || "مشکل در خروج از حساب");
-        return;
-      }
-
-      toast.success("با موفقیت خارج شدید");
-
-      router.refresh();
-      router.replace("/");
-    } catch {
-      toast.error("خطا در ارتباط با سرور");
-    }
-  }
+  const { signOut: logOut, loading: loggingOut } = useSignOut();
   if (pathname.includes("/auth")) {
     return "";
   }
@@ -130,6 +108,7 @@ export function DashboardSidebar({
             size="sm"
             className="w-full mt-1 text-white rounded"
             onClick={logOut}
+            disabled={loggingOut}
           >
             خروج از حساب
           </Button>

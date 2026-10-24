@@ -1,17 +1,11 @@
-import { Suspense } from 'react';
-import ContactHero from '@/core/components/custom/blook/contact/contactHero/ContactHero';
-import ContactLayout from '@/core/components/custom/blook/contact/contactLayout/ContactLayout';
+import type { Metadata } from 'next';
+import { ContactPage } from '@/core/features/contact/components/block/contact-page/ContactPage';
 
-export default function ContactPage() {
-  return (
-    <main className="font-[family-name:var(--font-vazirmatn)]">
-      <div className="pages-container">
-        <ContactHero />
-        
-        <Suspense fallback={null}>
-          <ContactLayout />
-        </Suspense>
-      </div>
-    </main>
-  );
+export const metadata: Metadata = {
+  title: 'تماس با تراز',
+  description: 'برای پرسش درباره محصول، انتخاب پلن یا شروع همکاری با تراز تماس بگیرید.',
+};
+
+export default function ContactRoute() {
+  return <ContactPage />;
 }

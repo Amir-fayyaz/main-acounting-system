@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1792521538978,
+      "tag": "0000_curly_gwen_stacy",
+      "breakpoints": true
+    }
+  ]
+}

@@ -1,7 +1,6 @@
 import type { TransactionRunner } from '../../shared/transaction/transaction-boundary.js';
 import type { ActiveTransaction } from '../../shared/transaction/transaction-context.js';
-import type { Database } from './database.module.js';
-
+import type { Database } from './database.types.js';
 /**
  * Drizzle/MySQL mechanics behind the shared transaction boundary (SHR-005;
  * ADR-004 sections 4–6, 9 and 26).

@@ -1,51 +1,198 @@
-# Baseline development quality gates (FND-005).
-#
-# Single source of truth: this workflow deliberately contains no check of its
-# own. It installs the locked dependencies and runs `pnpm verify`, which is the
-# same command a developer runs locally, so local and CI can never drift apart.
-#
-# Out of scope for now (per 09-ci-cd-and-development-workflow): deployment,
-# dependency/security scanning and release gates — they are added when their own
-# tasks land.
-
 name: CI
 
 on:
+  pull_request:
   push:
     branches: [main]
-  pull_request:
 
+# runهای قدیمی‌ترِ همون PR/branch کنسل میشن
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# حداقل دسترسی
 permissions:
   contents: read
 
+env:
+  CI: true
+  NEXT_TELEMETRY_DISABLED: 1
+
 jobs:
-  quality-gates:
-    name: pnpm verify
+  # ---------------------------------------------------------------
+  # 1) تشخیص اینکه کدوم اپ‌ها تغییر کردن
+  # ---------------------------------------------------------------
+  changes:
+    name: Detect changes
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 5
+    outputs:
+      frontends: ${{ steps.matrix.outputs.frontends }}
+      has_frontends: ${{ steps.matrix.outputs.has_frontends }}
+      backend: ${{ steps.matrix.outputs.backend }}
+      docker: ${{ steps.filter.outputs.docker }}
     steps:
-      - name: Check out the repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # The pnpm version comes from the `packageManager` field in package.json,
-      # so CI and local development use the same release.
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
-
-      # Node 24 matches infrastructure/docker/Dockerfile.dev and the local
-      # development environment (engines require >= 22).
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Filter changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
         with:
-          node-version: 24
-          cache: pnpm
+          filters: |
+            shared:
+              - 'packages/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig*.json'
+              - '.nvmrc'
+              - '.github/workflows/ci.yml'
+              - '.github/actions/**'
+            frontend:
+              - 'apps/frontend/**'
+            web-admin:
+              - 'apps/web-admin/**'
+            web-business:
+              - 'apps/web-business/**'
+            backend:
+              - 'apps/backend/**'
+            docker:
+              - '**/Dockerfile'
+              - '**/.dockerignore'
 
-      - name: Install the locked dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Build job matrix
+        id: matrix
+        env:
+          FILTER: ${{ toJSON(steps.filter.outputs) }}
+        run: |
+          shared=$(jq -r '.shared' <<< "$FILTER")
 
-      - name: Run the baseline quality gates
-        run: pnpm verify
+          # اگه کد مشترک تغییر کرده، همه‌ی اپ‌ها اجرا میشن
+          frontends=$(
+            for app in frontend web-admin web-business; do
+              changed=$(jq -r --arg a "$app" '.[$a]' <<< "$FILTER")
+              if [ "$shared" = "true" ] || [ "$changed" = "true" ]; then echo "$app"; fi
+            done | jq -R . | jq -sc .
+          )
+          backend=$(jq -r '.backend' <<< "$FILTER")
+          [ "$shared" = "true" ] && backend=true
+
+          echo "frontends=$frontends" >> "$GITHUB_OUTPUT"
+          echo "has_frontends=$([ "$frontends" != "[]" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "backend=$backend" >> "$GITHUB_OUTPUT"
+
+          echo "Frontends to run: $frontends"
+          echo "Backend: $backend"
+
+  # ---------------------------------------------------------------
+  # 2) Frontendها (Next.js) - هر اپ یه job جدا
+  # ---------------------------------------------------------------
+  frontend:
+    name: Frontend / ${{ matrix.app }}
+    needs: changes
+    if: needs.changes.outputs.has_frontends == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJSON(needs.changes.outputs.frontends) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup & install
+        uses: ./.github/actions/setup
+
+      - name: Lint
+        run: pnpm --filter "./apps/${{ matrix.app }}" run lint
+
+      - name: Type check
+        run: pnpm --filter "./apps/${{ matrix.app }}" exec tsc --noEmit
+
+      - name: Unit test
+        run: pnpm --filter "./apps/${{ matrix.app }}" run test
+
+      - name: Build
+        run: pnpm --filter "./apps/${{ matrix.app }}" run build
+
+  # ---------------------------------------------------------------
+  # 3) Backend (NestJS)
+  # ---------------------------------------------------------------
+  backend:
+    name: Backend
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup & install
+        uses: ./.github/actions/setup
+
+      - name: Lint
+        run: pnpm --filter "./apps/backend" run lint
+
+      - name: Type check
+        run: pnpm --filter "./apps/backend" exec tsc --noEmit
+
+              - name: Dependency check (cycles and module boundaries)
+        run: pnpm --filter "./apps/backend" run deps:check
+
+      - name: Unit test
+        run: pnpm --filter "./apps/backend" run test
+
+      - name: Build
+        run: pnpm --filter "./apps/backend" run build
+
+  # ---------------------------------------------------------------
+  # 4) Dockerfile lint
+  # ---------------------------------------------------------------
+  dockerfile-lint:
+    name: Dockerfile lint
+    needs: changes
+    if: needs.changes.outputs.docker == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run hadolint
+        run: |
+          status=0
+          while IFS= read -r file; do
+            echo "::group::hadolint $file"
+            docker run --rm -i hadolint/hadolint:v2.12.0 hadolint - < "$file" || status=1
+            echo "::endgroup::"
+          done < <(find . -name Dockerfile -not -path '*/node_modules/*')
+          exit $status
+
+  # ---------------------------------------------------------------
+  # 5) یه چک نهایی که توی branch protection به‌عنوان required ست کن
+  #    (چون jobهای شرطی ممکنه skip بشن)
+  # ---------------------------------------------------------------
+  ci-status:
+    name: CI status
+    needs: [changes, frontend, backend, dockerfile-lint]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Verify all jobs
+        run: |
+          echo "changes:         ${{ needs.changes.result }}"
+          echo "frontend:        ${{ needs.frontend.result }}"
+          echo "backend:         ${{ needs.backend.result }}"
+          echo "dockerfile-lint: ${{ needs.dockerfile-lint.result }}"
+
+          if [ "${{ contains(needs.*.result, 'failure') }}" = "true" ] || \
+             [ "${{ contains(needs.*.result, 'cancelled') }}" = "true" ]; then
+            echo "::error::One or more jobs failed"
+            exit 1
+          fi
+          echo "All good"

@@ -2,6 +2,11 @@ import { and, eq } from 'drizzle-orm';
 
 import type { Database } from '../../../../infrastructure/database/database.module.js';
 import { scopedDatabase } from '../../../../infrastructure/database/scoped-database.js';
+import {
+  assertTenantCriterion,
+  assertTenantOwnership,
+  tenantEq,
+} from '../../../../infrastructure/database/tenant-scoped.js';
 import { staleRevisionConflict } from '../../../../shared/persistence/optimistic-concurrency.js';
 import {
   PersistenceError,
@@ -41,7 +46,7 @@ export class DrizzleRoleRepository implements RoleRepository {
     const rows = await scopedDatabase(this.database)
       .select()
       .from(roles)
-      .where(eq(roles.id, id.value))
+      .where(and(eq(roles.id, id.value), tenantEq(roles.tenantId)))
       .limit(1);
 
     const row = rows[0];
@@ -56,6 +61,8 @@ export class DrizzleRoleRepository implements RoleRepository {
   }
 
   public async add(role: Role): Promise<WriteReceipt> {
+    assertTenantOwnership(role.tenantId.value, 'RoleRepository.add');
+
     const database = scopedDatabase(this.database);
 
     try {
@@ -83,6 +90,8 @@ export class DrizzleRoleRepository implements RoleRepository {
   }
 
   public async update(role: Role, expectedRevision: Revision): Promise<WriteReceipt> {
+    assertTenantOwnership(role.tenantId.value, 'RoleRepository.update');
+
     const database = scopedDatabase(this.database);
 
     const [header] = await database
@@ -93,7 +102,13 @@ export class DrizzleRoleRepository implements RoleRepository {
         revision: expectedRevision.value + 1,
         updatedAt: role.updatedAt.toDate(),
       })
-      .where(and(eq(roles.id, role.id.value), eq(roles.revision, expectedRevision.value)));
+      .where(
+        and(
+          eq(roles.id, role.id.value),
+          eq(roles.revision, expectedRevision.value),
+          tenantEq(roles.tenantId),
+        ),
+      );
 
     if (header.affectedRows === 0) {
       // The store answers "nothing matched" without naming what is stored
@@ -107,6 +122,8 @@ export class DrizzleRoleRepository implements RoleRepository {
   }
 
   public async findByTenantId(tenantId: TenantReference): Promise<readonly Loaded<Role>[]> {
+    assertTenantCriterion(tenantId.value, 'RoleRepository.findByTenantId');
+
     const rows = await scopedDatabase(this.database)
       .select()
       .from(roles)

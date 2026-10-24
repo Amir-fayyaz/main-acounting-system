@@ -20,11 +20,12 @@ future package resolve it without extra wiring:
 The baseline checks required before review/merge are orchestrated by one script
 and executed by CI through the same command:
 
-| Asset                        | Purpose                                                                               |
-| ---------------------------- | ------------------------------------------------------------------------------------- |
-| root `package.json` `verify` | `pnpm verify` — the single local entry point for the baseline verification            |
-| `tooling/scripts/verify.mjs` | Runs the checks in order, stops at the first failure, reports check/scope/reproduce   |
-| `.github/workflows/ci.yml`   | Runs `pnpm verify` after `pnpm install --frozen-lockfile`; no check is re-implemented |
+| Asset                        | Purpose                                                                                                            |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| root `package.json` `verify` | `pnpm verify` — the single local entry point for the baseline verification                                         |
+| `tooling/scripts/verify.mjs` | Runs the checks in order, stops at the first failure, reports check/scope/reproduce                                |
+| `tooling/scripts/dev.mjs`    | `pnpm run dev:local` — local dev bootstrap (helpers in `tooling/scripts/dev/`, unit tests on the Node test runner) |
+| `.github/workflows/ci.yml`   | Runs `pnpm verify` after `pnpm install --frozen-lockfile`; no check is re-implemented                              |
 
 Required checks, in order: **Typecheck → Lint → Format check → Tests → Build**.
 Every check also stays runnable on its own (`pnpm typecheck`, `pnpm lint`,
@@ -51,7 +52,9 @@ app, for example:
 - shared build/test configuration that outgrows the root files.
 
 Anything added here must stay free of business logic and must not become a hidden
-gateway between modules.
+gateway between modules. `tooling/scripts/dev/` keeps the `dev:local` helpers as
+pure, dependency-free modules (Node built-ins only) so they stay unit-testable
+without Docker and add no runtime dependency.
 
 ## Pinned versions and the module system
 
