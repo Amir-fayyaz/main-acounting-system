@@ -1,10 +1,10 @@
-import { FileText, Plus } from 'lucide-react';
-import { Button } from '@/shadcn/button/button';
 import type { FaqCategoryId, FaqEntry } from '@/core/features/faq/assets/@types/faq';
+import { Button } from '@repo/web/ui';
+import { FileText, Plus } from 'lucide-react';
 
 interface FaqResultsProps {
   entries: FaqEntry[];
-  // eslint-disable-next-line no-unused-vars
+
   labelOf: (_id: FaqCategoryId) => string;
   onReset: () => void;
 }

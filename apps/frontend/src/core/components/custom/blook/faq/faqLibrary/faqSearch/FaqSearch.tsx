@@ -1,5 +1,5 @@
+import { cn } from '@repo/web/ui/utils/cn';
 import { Search, X } from 'lucide-react';
-import { cn } from '@/core/utils/shadcn/utils';
 
 export interface FaqSearchProps {
   value: string;

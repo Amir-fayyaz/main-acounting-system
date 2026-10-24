@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { cn } from '@/core/utils/shadcn/utils';
+import { cn } from '@repo/web/ui/utils/cn';
 
 type SiteBrandSize = 'header' | 'footer';
 

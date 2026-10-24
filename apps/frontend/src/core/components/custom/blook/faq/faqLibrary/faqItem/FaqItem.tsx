@@ -1,5 +1,5 @@
+import { cn } from '@repo/web/ui/utils/cn';
 import { Plus } from 'lucide-react';
-import { cn } from '@/core/utils/shadcn/utils';
 import type { FaqEntry } from '../faqData';
 
 export interface FaqItemProps {
@@ -19,9 +19,7 @@ function FaqItem({ entry, categoryLabel, className }: FaqItemProps) {
           {entry.question}
         </span>
 
-        <Plus
-          className="mx-1 size-[17px] shrink-0 text-muted-foreground transition-transform group-open:rotate-45"
-        />
+        <Plus className="mx-1 size-[17px] shrink-0 text-muted-foreground transition-transform group-open:rotate-45" />
       </summary>
 
       <p className="mt-[13px] max-w-[790px] text-[12px] leading-[2.2] text-muted-foreground">

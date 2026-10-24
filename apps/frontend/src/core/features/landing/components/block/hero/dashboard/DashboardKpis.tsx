@@ -1,11 +1,10 @@
-import { Small, Span } from '@/core/components/custom/ui/typography/Typography';
-import { Card } from '@/core/components/shadcn/ui/card/card';
 import type {
   DashboardData,
   DashboardPeriod,
   DashboardReport,
 } from '@/core/features/landing/assets/@types/dashboard';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
+import { Card, Small, Span } from '@repo/web/ui';
 
 interface DashboardKpisProps {
   data: DashboardData;

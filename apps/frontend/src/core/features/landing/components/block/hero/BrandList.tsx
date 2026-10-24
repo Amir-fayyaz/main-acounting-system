@@ -1,5 +1,5 @@
-import { ShoppingBag, Wallet, PlayCircle, CarFront, Store, type LucideIcon } from 'lucide-react';
-import { Span } from '@/core/components/custom/ui/typography/Typography';
+import { Span } from '@repo/web/ui';
+import { CarFront, PlayCircle, ShoppingBag, Store, Wallet, type LucideIcon } from 'lucide-react';
 
 type Brand = {
   name: string;

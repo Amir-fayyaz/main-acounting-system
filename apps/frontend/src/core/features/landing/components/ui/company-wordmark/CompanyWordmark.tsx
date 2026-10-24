@@ -1,6 +1,6 @@
-import { Span } from '@/core/components/custom/ui/typography/Typography';
 import type { CompanyBrand, CompanyBrandKey } from '@/core/features/landing/assets/@types/company';
-import { cn } from '@/core/utils/shadcn/utils';
+import { Span } from '@repo/web/ui';
+import { cn } from '@repo/web/ui/utils/cn';
 import type { ReactNode } from 'react';
 
 const symbolClassName =

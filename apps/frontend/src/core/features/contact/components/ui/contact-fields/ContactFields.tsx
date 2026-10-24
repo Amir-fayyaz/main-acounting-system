@@ -1,19 +1,19 @@
-import type { Ref } from 'react';
-import { Input } from '@/shadcn/input/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shadcn/select/select';
-import { Textarea } from '@/shadcn/Textarea/textarea';
 import type {
   ContactFieldErrors,
   ContactFieldId,
   ContactFieldValues,
   ContactTopic,
 } from '@/core/features/contact/assets/@types/contact';
+import {
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Textarea,
+} from '@repo/web/ui';
+import type { Ref } from 'react';
 
 interface ContactFieldsProps {
   values: ContactFieldValues;
@@ -21,9 +21,9 @@ interface ContactFieldsProps {
   topic: string;
   topics: ContactTopic[];
   nameRef: Ref<HTMLInputElement>;
-  // eslint-disable-next-line no-unused-vars
+
   onChange: (_id: ContactFieldId, _value: string) => void;
-  // eslint-disable-next-line no-unused-vars
+
   onTopicChange: (_topic: string) => void;
 }
 

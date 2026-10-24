@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
-import { Button } from '@/core/components/shadcn/ui/button/button';
-import { Separator } from '@/core/components/shadcn/ui/separator/separator';
+import { Button } from '@repo/web/ui';
+import { Separator } from '@repo/web/ui';
 import {
   footerCaption,
   footerColumns,
@@ -13,7 +13,7 @@ import {
 import { SiteBrand } from '@/core/features/landing/components/ui/brand/SiteBrand';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
 import { landingContainerClass } from '@/core/features/landing/lib/landing-classes';
-import { H2, P, Span } from '@/core/components/custom/ui/typography/Typography';
+import { H2, P, Span } from '@repo/web/ui';
 
 const footerSeparatorClass = 'bg-[#57442c]';
 
@@ -51,7 +51,10 @@ export function SiteFooter() {
             </P>
 
             <Span className="mt-[21px] flex items-center gap-[7px] text-[10px] text-[#dfc198] max-[680px]:mt-[14px] max-[850px]:col-start-2 max-[850px]:mt-1.5">
-              <span aria-hidden="true" className="block size-[5px] shrink-0 rounded-full bg-[#ffa00a]" />
+              <span
+                aria-hidden="true"
+                className="block size-[5px] shrink-0 rounded-full bg-[#ffa00a]"
+              />
               {footerIdentity.origin}
             </Span>
           </div>

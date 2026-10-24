@@ -1,9 +1,9 @@
-import { H2, P, Span } from '@/core/components/custom/ui/typography/Typography';
 import type { AssistantSectionData } from '@/core/features/landing/assets/@types/sections';
 import { BenefitsList } from '@/core/features/landing/components/ui/benefits/BenefitsList';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
 import { landingEyebrowClass } from '@/core/features/landing/lib/landing-classes';
-import { cn } from '@/core/utils/shadcn/utils';
+import { H2, P, Span } from '@repo/web/ui';
+import { cn } from '@repo/web/ui/utils/cn';
 
 interface IntelligenceCopyProps {
   data: AssistantSectionData;

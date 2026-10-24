@@ -1,5 +1,5 @@
+import { Button } from '@repo/web/ui';
 import { FileText } from 'lucide-react';
-import { Button } from '@/shadcn/button/button';
 
 export interface FaqEmptyProps {
   title?: string;

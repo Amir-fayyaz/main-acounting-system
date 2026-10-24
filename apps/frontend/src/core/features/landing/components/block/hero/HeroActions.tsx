@@ -1,5 +1,5 @@
-import { Button } from '@/core/components/shadcn/ui/button/button'
-import { ArrowLeft, Play } from 'lucide-react'
+import { Button } from '@repo/web/ui';
+import { ArrowLeft, Play } from 'lucide-react';
 
 const HeroActions = () => {
   return (
@@ -17,7 +17,7 @@ const HeroActions = () => {
         ببینید چطور کار می‌کند
       </Button>
     </div>
-  )
-}
+  );
+};
 
-export default HeroActions
+export default HeroActions;

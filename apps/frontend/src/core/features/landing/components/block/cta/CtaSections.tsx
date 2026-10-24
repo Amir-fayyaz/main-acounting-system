@@ -1,7 +1,5 @@
 import Link from 'next/link';
 
-import { H2, P, Small, Span } from '@/core/components/custom/ui/typography/Typography';
-import { Button } from '@/core/components/shadcn/ui/button/button';
 import type { MiniCtaData } from '@/core/features/landing/assets/@types/sections';
 import { landingMiniCtaData } from '@/core/features/landing/assets/mock/sections';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
@@ -9,7 +7,8 @@ import {
   landingContainerClass,
   landingEyebrowClass,
 } from '@/core/features/landing/lib/landing-classes';
-import { cn } from '@/core/utils/shadcn/utils';
+import { Button, H2, P, Small, Span } from '@repo/web/ui';
+import { cn } from '@repo/web/ui/utils/cn';
 
 interface MiniCtaProps {
   data?: MiniCtaData;
@@ -34,9 +33,7 @@ export function MiniCta({ data = landingMiniCtaData, className }: MiniCtaProps) 
             {data.title}
           </H2>
 
-          <P className="text-[12px] text-[#78674c] max-[600px]:text-[11px]">
-            {data.description}
-          </P>
+          <P className="text-[12px] text-[#78674c] max-[600px]:text-[11px]">{data.description}</P>
         </div>
 
         <Button
@@ -62,12 +59,7 @@ export function FinalCta() {
         className="relative flex items-center justify-between gap-10 overflow-hidden rounded-[14px] bg-[#ffa00a] p-[48px_54px] after:absolute after:inset-auto after:-bottom-[170px] after:-left-[70px] after:size-[420px] after:rounded-full after:border after:border-[#b8710033] after:content-[''] max-[1050px]:p-[38px] max-[600px]:block max-[600px]:rounded-[10px] max-[600px]:p-[29px_25px] max-[800px]:p-[33px] [&>div]:relative [&>div]:z-[1]"
       >
         <div>
-          <Span
-            className={cn(
-              landingEyebrowClass,
-              'text-[#5f3909] before:bg-[#1a120a]',
-            )}
-          >
+          <Span className={cn(landingEyebrowClass, 'text-[#5f3909] before:bg-[#1a120a]')}>
             وقت حساب‌های روشن‌تر است.
           </Span>
 

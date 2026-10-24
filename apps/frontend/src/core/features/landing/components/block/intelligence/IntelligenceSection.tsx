@@ -8,7 +8,7 @@ import { landingAssistantSectionData } from '@/core/features/landing/assets/mock
 import { AssistantPreview } from '@/core/features/landing/components/block/intelligence/AssistantPreview';
 import { IntelligenceCopy } from '@/core/features/landing/components/block/intelligence/IntelligenceCopy';
 import { landingContainerClass } from '@/core/features/landing/lib/landing-classes';
-import { cn } from '@/core/utils/shadcn/utils';
+import { cn } from '@repo/web/ui/utils/cn';
 
 interface IntelligenceSectionProps {
   data?: AssistantSectionData;

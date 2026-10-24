@@ -7,7 +7,7 @@ import { plans } from '@/core/features/pricing/assets/mock/pricing';
 import { BillingToggle } from '@/core/features/pricing/components/ui/billing-toggle/BillingToggle';
 import { PlanCard } from '@/core/features/pricing/components/ui/plan-card/PlanCard';
 import { getBillingSummary } from '@/core/features/pricing/lib/pricing';
-import { P } from '@/core/components/custom/ui/typography/Typography';
+import { P } from '@repo/web/ui';
 
 export function PricingPlans() {
   const [period, setPeriod] = useState<BillingPeriod>('month');
@@ -16,10 +16,7 @@ export function PricingPlans() {
     <>
       <BillingToggle period={period} onPeriodChange={setPeriod} />
 
-      <P
-        aria-live="polite"
-        className="mb-5 text-center text-xs text-[#746b60]"
-      >
+      <P aria-live="polite" className="mb-5 text-center text-xs text-[#746b60]">
         {getBillingSummary(period)}
       </P>
 

@@ -1,12 +1,13 @@
 'use client';
 
-import { InputErrorMassage, Span } from '@/core/components/custom/ui/typography/Typography';
-import { Button } from '@/core/components/shadcn/ui/button/button';
 import {
+  Button,
+  InputErrorMassage,
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
-} from '@/core/components/shadcn/ui/input-otp/input-otp';
+  Span,
+} from '@repo/web/ui';
 import { RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';

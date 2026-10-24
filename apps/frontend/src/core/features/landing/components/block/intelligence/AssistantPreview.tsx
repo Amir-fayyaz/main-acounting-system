@@ -1,14 +1,14 @@
 import type { MouseEventHandler } from 'react';
 
-import { P, Span } from '@/core/components/custom/ui/typography/Typography';
-import { Badge } from '@/core/components/shadcn/ui/badge/badge';
-import { Button } from '@/core/components/shadcn/ui/button/button';
-import { Card } from '@/core/components/shadcn/ui/card/card';
+import { Badge } from '@repo/web/ui';
+import { Button } from '@repo/web/ui';
+import { Card } from '@repo/web/ui';
 import type { AssistantPreviewData } from '@/core/features/landing/assets/@types/sections';
 import { AssistantReview } from '@/core/features/landing/components/block/intelligence/AssistantReview';
 import { ReviewRows } from '@/core/features/landing/components/block/intelligence/ReviewRows';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { cn } from '@/core/utils/shadcn/utils';
+import { P, Span } from '@repo/web/ui';
+import { cn } from '@repo/web/ui/utils/cn';
 
 const actionClass =
   'min-h-[35px] flex-1 rounded-[5px] p-[7px_13px] text-[10px] max-[600px]:min-h-[39px] max-[600px]:text-[11px] max-[800px]:px-[7px] max-[800px]:text-[9px]';

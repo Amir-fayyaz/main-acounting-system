@@ -1,6 +1,5 @@
-import { Small, Span } from '@/core/components/custom/ui/typography/Typography';
-import { Card, CardContent, CardFooter, CardHeader } from '@/core/components/shadcn/ui/card/card';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
+import { Card, CardContent, CardFooter, CardHeader, Small, Span } from '@repo/web/ui';
 import Link from 'next/link';
 
 export function BankMatchScene() {
@@ -22,9 +21,7 @@ export function BankMatchScene() {
           <CardContent className="p-0">
             <strong className="mt-1 block text-[20px] leading-[1.9] tracking-[-0.4px] max-[440px]:text-[21px] max-[680px]:text-[22px] max-[850px]:text-[17px]">
               ۳۲٬۰۰۰٬۰۰۰
-              <Small className="text-[9px] font-normal tracking-normal text-[#796a54]">
-                تومان
-              </Small>
+              <Small className="text-[9px] font-normal tracking-normal text-[#796a54]">تومان</Small>
             </strong>
           </CardContent>
 
@@ -55,9 +52,7 @@ export function BankMatchScene() {
           <CardContent className="p-0">
             <strong className="mt-1 block text-[20px] leading-[1.9] tracking-[-0.4px] max-[440px]:text-[21px] max-[680px]:text-[22px] max-[850px]:text-[17px]">
               ۳۲٬۰۰۰٬۰۰۰
-              <Small className="text-[9px] font-normal tracking-normal text-[#796a54]">
-                تومان
-              </Small>
+              <Small className="text-[9px] font-normal tracking-normal text-[#796a54]">تومان</Small>
             </strong>
           </CardContent>
 
@@ -67,7 +62,6 @@ export function BankMatchScene() {
           </CardFooter>
         </Card>
       </div>
-
       <Link
         href="#intelligence"
         className="mx-0 mt-5 mb-[23px] flex items-center justify-center gap-[7px] text-[10px] text-[#b8d5b6] max-[440px]:text-[10px] max-[680px]:m-[20px_0_27px] max-[680px]:text-[11px] max-[850px]:my-[17px_21px] max-[850px]:text-[9px] [&_svg]:size-[15px]"
@@ -75,7 +69,8 @@ export function BankMatchScene() {
         <LandingIcon name="check" />
         مبلغ و شناسه یکسان · آماده بررسی
         <LandingIcon name="arrow" />
-      </Link>کامپوننت هاش + قسمتایی ک فونتش خوب نیست خوب کن
+      </Link>
+      کامپوننت هاش + قسمتایی ک فونتش خوب نیست خوب کن
     </>
   );
 }

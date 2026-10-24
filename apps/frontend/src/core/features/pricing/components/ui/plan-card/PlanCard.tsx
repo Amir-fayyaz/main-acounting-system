@@ -1,21 +1,11 @@
 import { ArrowLeft, Check, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
-import { Badge } from '@/core/components/shadcn/ui/badge/badge';
-import { Button } from '@/core/components/shadcn/ui/button/button';
-import { Card, CardContent, CardHeader } from '@/core/components/shadcn/ui/card/card';
-import type {
-  BillingPeriod,
-  Plan,
-} from '@/core/features/pricing/assets/@types/pricing';
-import {
-  getBilledLabel,
-  getMonthlyPrice,
-  getPlanHref,
-} from '@/core/features/pricing/lib/pricing';
+import type { BillingPeriod, Plan } from '@/core/features/pricing/assets/@types/pricing';
+import { getBilledLabel, getMonthlyPrice, getPlanHref } from '@/core/features/pricing/lib/pricing';
 import { formatPersianNumber } from '@/core/features/pricing/utils/formatPersianNumber';
-import { cn } from '@/core/utils/shadcn/utils';
-import { H2, P } from '@/core/components/custom/ui/typography/Typography';
+import { Badge, Button, Card, CardContent, CardHeader, H2, P } from '@repo/web/ui';
+import { cn } from '@repo/web/ui/utils/cn';
 
 const ctaVariantClass: Record<Plan['id'], string> = {
   starter:
@@ -36,8 +26,7 @@ export function PlanCard({ plan, period }: { plan: Plan; period: BillingPeriod }
       : formatPersianNumber(getMonthlyPrice(plan.monthlyPrice, period));
   const billedLabel =
     plan.kind === 'custom' ? plan.billedLabel : getBilledLabel(plan.monthlyPrice, period);
-  const href =
-    plan.kind === 'custom' ? '/contact?topic=sales' : getPlanHref(plan.id, period);
+  const href = plan.kind === 'custom' ? '/contact?topic=sales' : getPlanHref(plan.id, period);
 
   return (
     <Card

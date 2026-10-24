@@ -1,4 +1,4 @@
-import { Small, Span, P } from '@/core/components/custom/ui/typography/Typography';
+import { P, Small, Span } from '@repo/web/ui';
 import type { CSSProperties } from 'react';
 
 const breakdown = [

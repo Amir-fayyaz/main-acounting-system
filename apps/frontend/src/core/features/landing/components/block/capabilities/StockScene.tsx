@@ -1,6 +1,5 @@
-import { Card } from '@/core/components/shadcn/ui/card/card';
-import { Small, Span } from '@/core/components/custom/ui/typography/Typography';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
+import { Card, Small, Span } from '@repo/web/ui';
 import type { CSSProperties } from 'react';
 
 const stockLines = [

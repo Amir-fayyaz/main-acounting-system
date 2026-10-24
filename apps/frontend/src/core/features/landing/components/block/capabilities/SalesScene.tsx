@@ -1,7 +1,7 @@
-import { Small, Span } from '@/core/components/custom/ui/typography/Typography';
-import { Badge } from '@/core/components/shadcn/ui/badge/badge';
-import { Card } from '@/core/components/shadcn/ui/card/card';
+import { Badge } from '@repo/web/ui';
+import { Card } from '@repo/web/ui';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
+import { Small, Span } from '@repo/web/ui';
 
 const invoiceItems = [
   { label: 'قطعه صنعتی A', quantity: '۱۲ واحد', value: '۲۴٬۰۰۰٬۰۰۰', icon: 'box' },
@@ -21,9 +21,7 @@ export function SalesScene() {
             فاکتور فروش ۱۰۴۲
           </Span>
 
-          <Badge
-            className="px-1.5 py-0.5 text-[10px] bg-[#e7f4ed] max-[440px]:text-[9px] max-[680px]:text-[10px] max-[850px]:text-[9px]"
-          >
+          <Badge className="px-1.5 py-0.5 text-[10px] bg-[#e7f4ed] max-[440px]:text-[9px] max-[680px]:text-[10px] max-[850px]:text-[9px]">
             فاکتور تأییدشده
           </Badge>
         </div>

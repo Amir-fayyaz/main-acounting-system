@@ -1,4 +1,4 @@
-import { cn } from '@/core/utils/shadcn/utils';
+import { cn } from '@repo/web/ui/utils/cn';
 import type { FaqCategory, FaqCategoryId } from '../faqData';
 
 export interface FaqFiltersProps {
@@ -8,12 +8,7 @@ export interface FaqFiltersProps {
   className?: string;
 }
 
-function FaqFilters({
-  categories,
-  active = 'all',
-  onSelect,
-  className,
-}: FaqFiltersProps) {
+function FaqFilters({ categories, active = 'all', onSelect, className }: FaqFiltersProps) {
   return (
     <div
       aria-label="دسته پرسش‌ها"

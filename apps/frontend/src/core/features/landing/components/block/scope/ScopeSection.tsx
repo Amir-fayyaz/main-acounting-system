@@ -1,11 +1,11 @@
-import { H2, H3, P, Small, Span } from '@/core/components/custom/ui/typography/Typography';
 import { scopeModules } from '@/core/features/landing/assets/mock/workspace';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
 import {
   landingContainerClass,
   landingEyebrowClass,
 } from '@/core/features/landing/lib/landing-classes';
-import { cn } from '@/core/utils/shadcn/utils';
+import { H2, H3, P, Small, Span } from '@repo/web/ui';
+import { cn } from '@repo/web/ui/utils/cn';
 import Link from 'next/link';
 
 export function ScopeSection() {
@@ -91,7 +91,7 @@ export function ScopeSection() {
       </div>
 
       <div className="mt-4 flex justify-between gap-5 text-[10px] text-[#746b60] max-[600px]:flex-col max-[600px]:gap-[7px] max-[600px]:text-[9px] [&>span:first-child]:flex [&>span:first-child]:items-center [&>span:first-child]:gap-[6px] [&_svg]:size-[13px]">
-        <Span className='text-[10px]'>
+        <Span className="text-[10px]">
           <LandingIcon name="link" />
           طرف‌حساب‌ها، فایل‌ها و برنامه‌های عملیاتی، مشترک بین همه بخش‌ها
         </Span>

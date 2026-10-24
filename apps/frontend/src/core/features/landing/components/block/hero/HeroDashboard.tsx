@@ -11,7 +11,7 @@ import { landingDashboardData } from '@/core/features/landing/assets/mock/dashbo
 import { DashboardMain } from '@/core/features/landing/components/block/hero/dashboard/DashboardMain';
 import { DashboardSidebar } from '@/core/features/landing/components/block/hero/dashboard/DashboardSidebar';
 import { landingContainerClass } from '@/core/features/landing/lib/landing-classes';
-import { cn } from '@/core/utils/shadcn/utils';
+import { cn } from '@repo/web/ui/utils/cn';
 
 const dashboardBaseClass =
   "relative mx-auto rounded-t-[15px] border border-[#ded9cb] bg-[#e9e6dc] p-[8px_8px_0] shadow-[0_20px_60px_#4735180d] before:absolute before:inset-[-7px_22px_auto] before:-z-10 before:h-2 before:rounded-t-[13px] before:border before:border-b-0 before:border-[#e4dece] before:content-[''] max-[1050px]:mx-[18px] max-[600px]:rounded-t-[10px] max-[600px]:p-[5px_5px_0] max-[600px]:shadow-[0_10px_30px_#49391908] max-[800px]:mx-0";
