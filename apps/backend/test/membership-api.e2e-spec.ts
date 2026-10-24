@@ -12,6 +12,7 @@ import { GetMembershipUseCase } from '../src/modules/identity/application/use-ca
 import { ListTenantMembersUseCase } from '../src/modules/identity/application/use-cases/list-tenant-members.use-case.js';
 import { ListUserMembershipsUseCase } from '../src/modules/identity/application/use-cases/list-user-memberships.use-case.js';
 import { SelectActiveCompanyUseCase } from '../src/modules/identity/application/use-cases/select-active-company.use-case.js';
+import { MembershipActiveCompanySelection } from '../src/modules/identity/infrastructure/membership/membership-active-company-selection.adapter.js';
 import {
   MEMBERSHIP_EVENT_RECORDER,
   MEMBERSHIP_REPOSITORY,
@@ -31,6 +32,7 @@ import type { UserRepository } from '../src/modules/identity/domain/repositories
 import { MembershipsController } from '../src/modules/identity/presentation/controllers/membership.controller.js';
 import { UsersController } from '../src/modules/identity/presentation/controllers/user.controller.js';
 import {
+  ACTIVE_COMPANY_SELECTION,
   TENANT_DIRECTORY,
   TENANT_EVENT_RECORDER,
   TENANT_REPOSITORY,
@@ -157,9 +159,11 @@ async function createHarness(): Promise<Harness> {
         inject: [TENANT_REPOSITORY, TENANT_EVENT_RECORDER, TRANSACTION_BOUNDARY],
       },
       {
-        provide: SelectActiveCompanyUseCase,
+        provide: ACTIVE_COMPANY_SELECTION,
         useFactory: () =>
-          new SelectActiveCompanyUseCase(activeMemberships, preferences, audit, boundary),
+          new MembershipActiveCompanySelection(
+            new SelectActiveCompanyUseCase(activeMemberships, preferences, audit, boundary),
+          ),
       },
       {
         provide: CreateMembershipUseCase,

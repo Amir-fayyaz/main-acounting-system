@@ -2,7 +2,7 @@ import type { DomainError } from '../../../../shared/errors/domain-error.js';
 import { Result } from '../../../../shared/errors/result.js';
 import { createTenantContext } from '../../../../shared/tenant/tenant-context.js';
 import { TenantScope } from '../../../../shared/tenant/tenant-scope.js';
-import type { TenantOwnerEnrollment } from '../../../tenant/application/ports/tenant-owner-enrollment.port.js';
+import type { TenantOwnerEnrollment } from '../../../tenant/public-api.js';
 import { CreateMembership } from '../../application/commands/create-membership.command.js';
 import type { CreateMembershipUseCase } from '../../application/use-cases/create-membership.use-case.js';
 

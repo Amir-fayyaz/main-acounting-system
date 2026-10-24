@@ -11,8 +11,10 @@ import type { TransactionBoundary } from '../../../shared/transaction/transactio
 import { AUDIT_RECORDER } from '../../audit/application/audit.tokens.js';
 import type { AuditRecorder } from '../../audit/application/ports/audit-recorder.port.js';
 import {
+  ACTIVE_COMPANY_SELECTION,
   TENANT_DIRECTORY,
   TENANT_OWNER_ENROLLMENT,
+  type ActiveCompanySelectionPort,
   type TenantDirectory,
   type TenantOwnerEnrollment,
 } from '../../tenant/public-api.js';
@@ -39,6 +41,7 @@ import { ActorEventRecorder } from './audit/audit-trail-access-control-event-rec
 import { DrizzleActiveCompanyPreferenceRepository } from './persistence/drizzle-active-company-preference.repository.js';
 import { DrizzleMembershipRepository } from './persistence/drizzle-membership.repository.js';
 import { MembershipTenantMembershipAdapter } from './authorization/membership-tenant-membership.adapter.js';
+import { MembershipActiveCompanySelection } from './membership/membership-active-company-selection.adapter.js';
 import { MembershipTenantOwnerEnrollment } from './membership/membership-tenant-owner-enrollment.adapter.js';
 import { UserModule } from './user.module.js';
 
@@ -69,7 +72,7 @@ import { UserModule } from './user.module.js';
  * inside `src/modules/` may not import another module's `infrastructure/` to
  * reach them. Only the three published contracts are exported — the owner
  * enrollment port implementation, the narrow membership lookup and the
- * selection use case — so nothing else becomes visible.
+ * active-company selection port — so nothing else becomes visible.
  */
 @Global()
 @Module({
@@ -175,6 +178,15 @@ import { UserModule } from './user.module.js';
         TRANSACTION_BOUNDARY,
       ],
     },
+    {
+      // The tenant module's contract (IAM-009) over the use case above. Published
+      // so the tenant REST resource can offer selection without importing
+      // Identity's application layer.
+      provide: ACTIVE_COMPANY_SELECTION,
+      useFactory: (selectActiveCompany: SelectActiveCompanyUseCase): ActiveCompanySelectionPort =>
+        new MembershipActiveCompanySelection(selectActiveCompany),
+      inject: [SelectActiveCompanyUseCase],
+    },
   ],
   // Exported to this module's own role feature (IAM-004), which must confirm a
   // membership exists and belongs to the tenant before assigning a role — and
@@ -183,7 +195,7 @@ import { UserModule } from './user.module.js';
     MEMBERSHIP_REPOSITORY,
     TENANT_MEMBERSHIP,
     TENANT_OWNER_ENROLLMENT,
-    SelectActiveCompanyUseCase,
+    ACTIVE_COMPANY_SELECTION,
   ],
 })
 export class MembershipModule {}

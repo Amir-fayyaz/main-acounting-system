@@ -7,8 +7,10 @@ import { configureApplication } from '../src/bootstrap.js';
 import { AppConfigModule } from '../src/infrastructure/config/app-config.module.js';
 import { TRANSACTION_BOUNDARY } from '../src/infrastructure/database/database.tokens.js';
 import { SelectActiveCompanyUseCase } from '../src/modules/identity/application/use-cases/select-active-company.use-case.js';
+import { MembershipActiveCompanySelection } from '../src/modules/identity/infrastructure/membership/membership-active-company-selection.adapter.js';
 import { ChangeTenantStatusUseCase } from '../src/modules/tenant/application/use-cases/change-tenant-status.use-case.js';
 import {
+  ACTIVE_COMPANY_SELECTION,
   TENANT_EVENT_RECORDER,
   TENANT_REPOSITORY,
 } from '../src/modules/tenant/application/tenant.tokens.js';
@@ -18,7 +20,7 @@ import { GetTenantUseCase } from '../src/modules/tenant/application/use-cases/ge
 import { UpdateTenantUseCase } from '../src/modules/tenant/application/use-cases/update-tenant.use-case.js';
 import { TenantController } from '../src/modules/tenant/presentation/controllers/tenant.controller.js';
 import type { TenantRepository } from '../src/modules/tenant/domain/repositories/tenant.repository.js';
-import { TenantAuditEventRecorder } from '../src/modules/tenant/infrastructure/audit/tenant-audit-event-recorder.js';
+import { TenantAuditEventRecorder } from '../src/modules/audit/infrastructure/tenant/tenant-audit-event-recorder.js';
 import type { TransactionBoundary } from '../src/shared/transaction/transaction-boundary.js';
 import { RecordingAuditTrail } from './support/audit-doubles.js';
 import {
@@ -100,9 +102,11 @@ async function createHarness(): Promise<Harness> {
         inject: [TENANT_REPOSITORY, TENANT_EVENT_RECORDER, TRANSACTION_BOUNDARY],
       },
       {
-        provide: SelectActiveCompanyUseCase,
+        provide: ACTIVE_COMPANY_SELECTION,
         useFactory: () =>
-          new SelectActiveCompanyUseCase(memberships, preferences, audit, boundary),
+          new MembershipActiveCompanySelection(
+            new SelectActiveCompanyUseCase(memberships, preferences, audit, boundary),
+          ),
       },
     ],
   }).compile();

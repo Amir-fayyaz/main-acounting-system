@@ -1,4 +1,14 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Inject,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -25,13 +35,13 @@ import { API_ERROR_CODES } from '../../../../infrastructure/api/errors/api-error
 import { ApiErrorResponseDto } from '../../../../infrastructure/api/errors/api-error.dto.js';
 import { ApiErrorException } from '../../../../infrastructure/api/errors/api-error.exception.js';
 import type { ApiErrorDetail } from '../../../../infrastructure/api/errors/api-error.types.js';
-import { SelectActiveCompany } from '../../../identity/application/commands/select-active-company.command.js';
-import type { ActiveCompanyView } from '../../../identity/application/views/active-company.view.js';
-import { SelectActiveCompanyUseCase } from '../../../identity/application/use-cases/select-active-company.use-case.js';
-import { CurrentPrincipal } from '../../../identity/presentation/decorators/current-principal.decorator.js';
-import type { AuthenticatedPrincipalView } from '../../../identity/application/views/principal.view.js';
+import { CurrentPrincipal } from '../../../../infrastructure/api/principal/current-principal.decorator.js';
+import type { AuthenticatedPrincipal } from '../../../../infrastructure/api/principal/current-principal.decorator.js';
 import { ChangeTenantStatusUseCase } from '../../application/use-cases/change-tenant-status.use-case.js';
 import { ChangeTenantStatus } from '../../application/commands/change-tenant-status.command.js';
+import { ACTIVE_COMPANY_SELECTION } from '../../application/tenant.tokens.js';
+import type { ActiveCompanySelectionPort } from '../../application/ports/active-company-selection.port.js';
+import type { ActiveCompanySelection } from '../../application/views/active-company-selection.view.js';
 import { CreateTenant } from '../../application/commands/create-tenant.command.js';
 import { UpdateTenant } from '../../application/commands/update-tenant.command.js';
 import { CreateTenantUseCase } from '../../application/use-cases/create-tenant.use-case.js';
@@ -85,7 +95,8 @@ export class TenantController {
     private readonly getTenant: GetTenantUseCase,
     private readonly updateTenant: UpdateTenantUseCase,
     private readonly changeTenantStatus: ChangeTenantStatusUseCase,
-    private readonly selectActiveCompany: SelectActiveCompanyUseCase,
+    @Inject(ACTIVE_COMPANY_SELECTION)
+    private readonly activeCompany: ActiveCompanySelectionPort,
   ) {}
 
   @Post()
@@ -168,7 +179,7 @@ export class TenantController {
     },
   })
   async create(
-    @CurrentPrincipal() principal: AuthenticatedPrincipalView,
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
     @Body() body: CreateTenantDto,
   ): Promise<TenantResponseDto> {
     // A tenant does not exist yet, so creation is the one system-level
@@ -651,13 +662,11 @@ export class TenantController {
     },
   })
   async select(
-    @CurrentPrincipal() principal: AuthenticatedPrincipalView,
+    @CurrentPrincipal() principal: AuthenticatedPrincipal,
     @Param('id') id: string,
   ): Promise<ActiveCompanyResponseDto> {
     const outcome = await this.inTenantScope(id, () =>
-      this.selectActiveCompany.execute(
-        new SelectActiveCompany({ userId: principal.userId, tenantId: id }),
-      ),
+      this.activeCompany.select({ userId: principal.userId, tenantId: id }),
     );
 
     return this.activeCompanyResponse(outcome);
@@ -692,7 +701,7 @@ export class TenantController {
 
   /** Maps a selection outcome to a response, or raises the standard error. */
   private activeCompanyResponse(
-    outcome: Result<ActiveCompanyView, DomainError>,
+    outcome: Result<ActiveCompanySelection, DomainError>,
   ): ActiveCompanyResponseDto {
     return outcome.match<ActiveCompanyResponseDto>({
       ok: (view) => ({ tenantId: view.tenantId, selectedAt: view.selectedAt }),

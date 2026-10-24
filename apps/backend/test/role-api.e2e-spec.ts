@@ -23,6 +23,7 @@ import { RemoveRoleFromMembershipUseCase } from '../src/modules/identity/applica
 import { ResolveEffectivePermissionsUseCase } from '../src/modules/identity/application/use-cases/resolve-effective-permissions.use-case.js';
 import { RevokeRolePermissionUseCase } from '../src/modules/identity/application/use-cases/revoke-role-permission.use-case.js';
 import { SelectActiveCompanyUseCase } from '../src/modules/identity/application/use-cases/select-active-company.use-case.js';
+import { MembershipActiveCompanySelection } from '../src/modules/identity/infrastructure/membership/membership-active-company-selection.adapter.js';
 import { UpdateRoleUseCase } from '../src/modules/identity/application/use-cases/update-role.use-case.js';
 import {
   MEMBERSHIP_EVENT_RECORDER,
@@ -45,6 +46,7 @@ import { MembershipsController } from '../src/modules/identity/presentation/cont
 import { PermissionsController } from '../src/modules/identity/presentation/controllers/permission.controller.js';
 import { RolesController } from '../src/modules/identity/presentation/controllers/role.controller.js';
 import {
+  ACTIVE_COMPANY_SELECTION,
   TENANT_DIRECTORY,
   TENANT_EVENT_RECORDER,
   TENANT_REPOSITORY,
@@ -167,9 +169,11 @@ async function createHarness(): Promise<Harness> {
         inject: [TENANT_REPOSITORY, TENANT_EVENT_RECORDER, TRANSACTION_BOUNDARY],
       },
       {
-        provide: SelectActiveCompanyUseCase,
+        provide: ACTIVE_COMPANY_SELECTION,
         useFactory: () =>
-          new SelectActiveCompanyUseCase(activeMemberships, preferences, audit, boundary),
+          new MembershipActiveCompanySelection(
+            new SelectActiveCompanyUseCase(activeMemberships, preferences, audit, boundary),
+          ),
       },
       {
         provide: CreateMembershipUseCase,

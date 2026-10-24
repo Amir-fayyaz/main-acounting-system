@@ -1,14 +1,21 @@
 import { ActorScope } from '../../../../shared/actor/actor-scope.js';
 import type { DomainEvent } from '../../../../shared/messaging/domain-event.js';
+import type { TenantEventRecorder } from '../../../tenant/public-api.js';
 import type {
   AuditEntry,
   AuditRecorder,
-} from '../../../audit/application/ports/audit-recorder.port.js';
-import type { TenantEventRecorder } from '../../application/ports/tenant-event-recorder.port.js';
+} from '../../application/ports/audit-recorder.port.js';
 
 /**
  * Sends the tenant module's facts to the outbox **and** to the central audit
  * trail (IAM-009; AUD-001; ADR-003 section 21; ADR-010 section 9).
+ *
+ * The adapter lives in the audit module, not in tenant, because the decision
+ * made here is an audit decision: tenant publishes one recorder contract for its
+ * events, and the module that owns the audit trail decides which of those facts
+ * are security-relevant. That keeps tenant a leaf — it never imports the audit
+ * module — while the audit module consumes only tenant's published contract
+ * (ADR-002 section 12).
  *
  * The module keeps one recorder port for its events. This adapter is the one
  * place that decides which of those facts are security-relevant:

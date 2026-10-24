@@ -5,11 +5,7 @@ import {
   DATABASE,
   TRANSACTION_BOUNDARY,
 } from '../../../infrastructure/database/database.tokens.js';
-import { OutboxModule } from '../../../infrastructure/outbox/outbox.module.js';
-import { OUTBOX_RECORDER } from '../../../infrastructure/outbox/outbox.tokens.js';
 import type { TransactionBoundary } from '../../../shared/transaction/transaction-boundary.js';
-import { AUDIT_RECORDER } from '../../audit/application/audit.tokens.js';
-import type { AuditRecorder } from '../../audit/application/ports/audit-recorder.port.js';
 import { ChangeTenantStatusUseCase } from '../application/use-cases/change-tenant-status.use-case.js';
 import {
   TENANT_CONTEXT,
@@ -27,7 +23,6 @@ import type { TenantEventRecorder } from '../application/ports/tenant-event-reco
 import type { TenantRepository } from '../domain/repositories/tenant.repository.js';
 import { isTenantId, tenantIdFrom } from '../domain/value-objects/tenant-id.js';
 import { TenantController } from '../presentation/controllers/tenant.controller.js';
-import { TenantAuditEventRecorder } from './audit/tenant-audit-event-recorder.js';
 import { DrizzleTenantRepository } from './persistence/drizzle-tenant.repository.js';
 import type { TenantContextAccessor } from '../application/ports/tenant-context.port.js';
 import { ScopedTenantContext } from './scoped-tenant-context.js';
@@ -40,8 +35,10 @@ import { ScopedTenantContext } from './scoped-tenant-context.js';
  * shared infrastructure they need:
  *
  * - `TENANT_REPOSITORY` → `DrizzleTenantRepository` (this module's table);
- * - `TENANT_EVENT_RECORDER` → the shared outbox recorder, so tenant events
- *   commit with the state change that raised them (SHR-006);
+ * - `TENANT_EVENT_RECORDER` → the recorder the audit module publishes, so tenant
+ *   events reach the outbox and the central audit trail and commit with the
+ *   state change that raised them (SHR-006; AUD-001). Tenant states what it
+ *   needs and never imports the audit module (ADR-002 section 12);
  * - `TRANSACTION_BOUNDARY` → the shared boundary the use cases open (SHR-005).
  *
  * The adapters stay behind their tokens, so the controller and use cases never
@@ -57,7 +54,7 @@ import { ScopedTenantContext } from './scoped-tenant-context.js';
  */
 @Global()
 @Module({
-  imports: [DatabaseModule, OutboxModule],
+  imports: [DatabaseModule],
   controllers: [TenantController],
   providers: [
     {
@@ -89,16 +86,6 @@ import { ScopedTenantContext } from './scoped-tenant-context.js';
       // boundary established and fails closed without one (SHR-007).
       provide: TENANT_CONTEXT,
       useFactory: (): TenantContextAccessor => new ScopedTenantContext(),
-    },
-    {
-      // Tenant facts reach two homes: the outbox, so the rest of the system
-      // learns them (SHR-006), and the central audit trail, because creating a
-      // company, renaming it and moving its lifecycle are security-relevant
-      // administrative changes (AUD-001; IAM-009).
-      provide: TENANT_EVENT_RECORDER,
-      useFactory: (outbox: TenantEventRecorder, audit: AuditRecorder) =>
-        new TenantAuditEventRecorder(outbox, audit),
-      inject: [OUTBOX_RECORDER, AUDIT_RECORDER],
     },
     {
       provide: CreateTenantUseCase,

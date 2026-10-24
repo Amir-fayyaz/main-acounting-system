@@ -20,6 +20,12 @@ export const TENANT_EVENT_RECORDER = Symbol('TENANT_EVENT_RECORDER');
 export const TENANT_OWNER_ENROLLMENT = Symbol('TENANT_OWNER_ENROLLMENT');
 
 /**
+ * The active-company selection contract (IAM-009). Implemented by the Identity
+ * module, which owns the user preference behind it.
+ */
+export const ACTIVE_COMPANY_SELECTION = Symbol('ACTIVE_COMPANY_SELECTION');
+
+/**
  * The published tenant-existence contract (`TenantDirectory`) other modules
  * depend on instead of reaching into tenant storage (IAM-003; ADR-002 §12).
  */
