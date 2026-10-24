@@ -1,12 +1,12 @@
+import { Button } from '@repo/web/ui';
 import { ArrowLeft } from 'lucide-react';
-import { Button } from '@/shadcn/button/button';
 import Link from 'next/link';
 
 export interface AboutIntroCtaProps {
   label?: string;
   href?: string;
 }
-console.log("pr");
+console.log('pr');
 
 function AboutIntroCta({ label = 'تراز را در عمل ببینید', href = '/demo' }: AboutIntroCtaProps) {
   return (

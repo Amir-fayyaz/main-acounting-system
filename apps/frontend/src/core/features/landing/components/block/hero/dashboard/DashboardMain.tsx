@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import type { Dispatch, SetStateAction } from 'react';
 
-import { Button } from '@/core/components/shadcn/ui/button/button';
 import type {
   DashboardData,
   DashboardPeriod,
@@ -13,7 +12,7 @@ import { DashboardKpis } from '@/core/features/landing/components/block/hero/das
 import { DashboardTasks } from '@/core/features/landing/components/block/hero/dashboard/DashboardTasks';
 import { DashboardTopbar } from '@/core/features/landing/components/block/hero/dashboard/DashboardTopbar';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { H2, P, Span } from '@repo/web/ui';
+import { Button, H2, P, Span } from '@repo/web/ui';
 import { cn } from '@repo/web/ui/utils/cn';
 
 interface DashboardMainProps {

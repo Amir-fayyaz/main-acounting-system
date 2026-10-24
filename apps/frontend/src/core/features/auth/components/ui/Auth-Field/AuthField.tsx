@@ -1,5 +1,4 @@
-import { Input } from '@/core/components/shadcn/ui/input/input';
-import { InputErrorMassage } from '@repo/web/ui';
+import { Input, InputErrorMassage } from '@repo/web/ui';
 import { cn } from '@repo/web/ui/utils/cn';
 import type { ComponentProps } from 'react';
 import { PasswordInput } from '../Password-Input/PasswordInput';

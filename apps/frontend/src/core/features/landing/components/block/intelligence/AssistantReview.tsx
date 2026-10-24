@@ -1,4 +1,4 @@
-import { Badge } from '@/core/components/shadcn/ui/badge/badge';
+import { Badge } from '@repo/web/ui';
 import type { AssistantPreviewData } from '@/core/features/landing/assets/@types/sections';
 import {
   ReviewRows,

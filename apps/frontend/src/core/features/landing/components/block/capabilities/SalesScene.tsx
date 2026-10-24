@@ -1,5 +1,5 @@
-import { Badge } from '@/core/components/shadcn/ui/badge/badge';
-import { Card } from '@/core/components/shadcn/ui/card/card';
+import { Badge } from '@repo/web/ui';
+import { Card } from '@repo/web/ui';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
 import { Small, Span } from '@repo/web/ui';
 

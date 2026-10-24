@@ -3,8 +3,6 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { Button } from '@/core/components/shadcn/ui/button/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/core/components/shadcn/ui/tabs/tabs';
 import type { WorkflowSectionData } from '@/core/features/landing/assets/@types/sections';
 import { landingWorkflowSectionData } from '@/core/features/landing/assets/mock/sections';
 import { BenefitsList } from '@/core/features/landing/components/ui/benefits/BenefitsList';
@@ -13,7 +11,7 @@ import {
   landingContainerClass,
   landingEyebrowClass,
 } from '@/core/features/landing/lib/landing-classes';
-import { H2, P, Small, Span } from '@repo/web/ui';
+import { Button, H2, P, Small, Span, Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/web/ui';
 import { cn } from '@repo/web/ui/utils/cn';
 
 const workflowTabClass =

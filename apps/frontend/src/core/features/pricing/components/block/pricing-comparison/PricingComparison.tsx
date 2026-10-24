@@ -1,6 +1,15 @@
 import { Check } from 'lucide-react';
 
+import type { ComparisonValue } from '@/core/features/pricing/assets/@types/pricing';
 import {
+  comparisonColumns,
+  comparisonFeatureHeader,
+  comparisonRows,
+} from '@/core/features/pricing/assets/mock/pricing';
+import {
+  H2,
+  P,
+  Span,
   Table,
   TableBody,
   TableCaption,
@@ -8,14 +17,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/core/components/shadcn/ui/table/table';
-import type { ComparisonValue } from '@/core/features/pricing/assets/@types/pricing';
-import {
-  comparisonColumns,
-  comparisonFeatureHeader,
-  comparisonRows,
-} from '@/core/features/pricing/assets/mock/pricing';
-import { H2, P, Span } from '@repo/web/ui';
+} from '@repo/web/ui';
 
 function ComparisonCell({ value }: { value: ComparisonValue }) {
   if (value.kind === 'included') {

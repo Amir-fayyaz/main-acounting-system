@@ -1,8 +1,8 @@
 import type { MouseEventHandler } from 'react';
 
-import { Badge } from '@/core/components/shadcn/ui/badge/badge';
-import { Button } from '@/core/components/shadcn/ui/button/button';
-import { Card } from '@/core/components/shadcn/ui/card/card';
+import { Badge } from '@repo/web/ui';
+import { Button } from '@repo/web/ui';
+import { Card } from '@repo/web/ui';
 import type { AssistantPreviewData } from '@/core/features/landing/assets/@types/sections';
 import { AssistantReview } from '@/core/features/landing/components/block/intelligence/AssistantReview';
 import { ReviewRows } from '@/core/features/landing/components/block/intelligence/ReviewRows';

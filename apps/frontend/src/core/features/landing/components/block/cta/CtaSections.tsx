@@ -1,6 +1,5 @@
 import Link from 'next/link';
 
-import { Button } from '@/core/components/shadcn/ui/button/button';
 import type { MiniCtaData } from '@/core/features/landing/assets/@types/sections';
 import { landingMiniCtaData } from '@/core/features/landing/assets/mock/sections';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
@@ -8,7 +7,7 @@ import {
   landingContainerClass,
   landingEyebrowClass,
 } from '@/core/features/landing/lib/landing-classes';
-import { H2, P, Small, Span } from '@repo/web/ui';
+import { Button, H2, P, Small, Span } from '@repo/web/ui';
 import { cn } from '@repo/web/ui/utils/cn';
 
 interface MiniCtaProps {

@@ -1,4 +1,4 @@
-import { Button } from '@/shadcn/button/button';
+import { Button } from '@repo/web/ui';
 import { cn } from '@repo/web/ui/utils/cn';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
-import { Button } from '@/core/components/shadcn/ui/button/button';
-import { Separator } from '@/core/components/shadcn/ui/separator/separator';
+import { Button } from '@repo/web/ui';
+import { Separator } from '@repo/web/ui';
 import {
   footerCaption,
   footerColumns,

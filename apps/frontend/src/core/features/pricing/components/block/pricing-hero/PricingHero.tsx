@@ -1,9 +1,8 @@
-import { Badge } from '@/core/components/shadcn/ui/badge/badge';
 import {
   pricingEyebrowClass,
   pricingMutedTextClass,
 } from '@/core/features/pricing/lib/pricing-classes';
-import { H1, P, Span } from '@repo/web/ui';
+import { Badge, H1, P, Span } from '@repo/web/ui';
 import { cn } from '@repo/web/ui/utils/cn';
 
 export function PricingHero() {

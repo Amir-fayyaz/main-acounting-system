@@ -1,10 +1,9 @@
 import Link from 'next/link';
 import type { Dispatch, SetStateAction } from 'react';
 
-import { Button } from '@/core/components/shadcn/ui/button/button';
 import type { DashboardData, DashboardView } from '@/core/features/landing/assets/@types/dashboard';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { P, Small, Span } from '@repo/web/ui';
+import { Button, P, Small, Span } from '@repo/web/ui';
 import { cn } from '@repo/web/ui/utils/cn';
 
 const navItemClass =

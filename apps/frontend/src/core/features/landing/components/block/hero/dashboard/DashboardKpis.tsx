@@ -1,11 +1,10 @@
-import { Card } from '@/core/components/shadcn/ui/card/card';
 import type {
   DashboardData,
   DashboardPeriod,
   DashboardReport,
 } from '@/core/features/landing/assets/@types/dashboard';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { Small, Span } from '@repo/web/ui';
+import { Card, Small, Span } from '@repo/web/ui';
 
 interface DashboardKpisProps {
   data: DashboardData;

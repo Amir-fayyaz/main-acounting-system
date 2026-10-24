@@ -1,6 +1,5 @@
-import { Card, CardContent, CardFooter, CardHeader } from '@/core/components/shadcn/ui/card/card';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { Small, Span } from '@repo/web/ui';
+import { Card, CardContent, CardFooter, CardHeader, Small, Span } from '@repo/web/ui';
 import Link from 'next/link';
 
 export function BankMatchScene() {

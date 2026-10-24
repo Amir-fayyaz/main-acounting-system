@@ -1,5 +1,5 @@
-import { Badge } from '@/core/components/shadcn/ui/badge/badge';
-import { Button } from '@/core/components/shadcn/ui/button/button';
+import { Badge } from '@repo/web/ui';
+import { Button } from '@repo/web/ui';
 import type { BillingPeriod } from '@/core/features/pricing/assets/@types/pricing';
 import { cn } from '@repo/web/ui/utils/cn';
 

@@ -1,4 +1,4 @@
-import { Button } from '@/core/components/shadcn/ui/button/button';
+import { Button } from '@repo/web/ui';
 import { LoaderCircle } from 'lucide-react';
 import type { ReactNode } from 'react';
 

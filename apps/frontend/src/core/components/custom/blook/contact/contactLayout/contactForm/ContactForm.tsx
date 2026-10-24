@@ -1,21 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { Button } from '@/shadcn/button/button';
-import { Input } from '@/shadcn/input/input';
 import {
+  Button,
+  Input,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/shadcn/select/select';
-import { Textarea } from '@/shadcn/Textarea/textarea';
+  Textarea,
+} from '@repo/web/ui';
 import { ArrowLeft, Info } from 'lucide-react';
-import ContactSuccess from './contactSuccess/ContactSuccess';
-import { contactTopics } from '../../contactData';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import type { ContactTopic } from '../../contactData';
+import { contactTopics } from '../../contactData';
+import ContactSuccess from './contactSuccess/ContactSuccess';
 
 export interface ContactFormProps {
   topics?: ContactTopic[];
@@ -245,10 +245,7 @@ function ContactForm({ topics = contactTopics }: ContactFormProps) {
             <FieldError id="message" message={errors.message} />
           </div>
 
-          <Button
-            className="min-h-12 w-full rounded-lg text-[12px] font-semibold"
-            type="submit"
-          >
+          <Button className="min-h-12 w-full rounded-lg text-[12px] font-semibold" type="submit">
             بررسی پیام نمونه
             <ArrowLeft className="size-[19px]" />
           </Button>

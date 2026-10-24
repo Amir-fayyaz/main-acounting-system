@@ -1,4 +1,4 @@
-import { Badge } from '@/core/components/shadcn/ui/badge/badge';
+import { Badge } from '@repo/web/ui';
 import { companyBrands } from '@/core/features/landing/assets/mock/companies';
 import { CompanyWordmark } from '@/core/features/landing/components/ui/company-wordmark/CompanyWordmark';
 import { H2, Muted } from '@repo/web/ui';
