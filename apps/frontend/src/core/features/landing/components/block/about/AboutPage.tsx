@@ -5,13 +5,11 @@ import { AboutPrinciples } from '@/core/features/landing/components/block/about/
 
 export function AboutPage() {
   return (
-    <main className="font-[family-name:var(--font-vazirmatn)]">
-      <div className="pages-container">
-        <AboutIntro />
-        <AboutManifesto />
-        <AboutPrinciples />
-        <AboutMiniCta />
-      </div>
+    <main>
+      <AboutIntro />
+      <AboutManifesto />
+      <AboutPrinciples />
+      <AboutMiniCta />
     </main>
   );
 }

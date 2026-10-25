@@ -1,4 +1,5 @@
 'use client';
+import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 
 import { useMemo, useState } from 'react';
 import { faqCategories, faqEntries } from '@/core/features/landing/assets/mock/faq';
@@ -31,15 +32,17 @@ export function FaqLibrary() {
   };
 
   return (
-    <>
-      <FaqControls
-        activeCategory={category}
-        categories={faqCategories}
-        query={query}
-        onCategoryChange={setCategory}
-        onQueryChange={setQuery}
-      />
-      <FaqResults entries={visibleEntries} labelOf={labelOf} onReset={reset} />
-    </>
+    <SectionLayout className="pt-0">
+      <div aria-label="جست‌وجو و پاسخ پرسش‌های متداول">
+        <FaqControls
+          activeCategory={category}
+          categories={faqCategories}
+          query={query}
+          onCategoryChange={setCategory}
+          onQueryChange={setQuery}
+        />
+        <FaqResults entries={visibleEntries} labelOf={labelOf} onReset={reset} />
+      </div>
+    </SectionLayout>
   );
 }
