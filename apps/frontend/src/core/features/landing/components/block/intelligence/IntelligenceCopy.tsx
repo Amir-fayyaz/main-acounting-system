@@ -2,7 +2,6 @@ import { H2, P, Span } from '@/core/components/custom/ui/typography/Typography';
 import type { AssistantSectionData } from '@/core/features/landing/assets/@types/sections';
 import { BenefitsList } from '@/core/features/landing/components/ui/benefits/BenefitsList';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { landingEyebrowClass } from '@/core/features/landing/lib/landing-classes';
 import { cn } from '@/core/utils/shadcn/utils';
 
 interface IntelligenceCopyProps {
@@ -14,7 +13,7 @@ interface IntelligenceCopyProps {
 export function IntelligenceCopy({ data, isDemo, titleId }: IntelligenceCopyProps) {
   return (
     <div className={cn(!isDemo && 'max-[600px]:row-start-1')}>
-      <Span className={cn(landingEyebrowClass, 'mb-2.5')}>{data.eyebrow}</Span>
+      <Span className={cn('landingEyebrowClass mb-2.5')}>{data.eyebrow}</Span>
 
       <H2
         id={titleId}

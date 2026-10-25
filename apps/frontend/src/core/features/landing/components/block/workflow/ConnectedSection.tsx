@@ -15,10 +15,6 @@ import type { WorkflowSectionData } from '@/core/features/landing/assets/@types/
 import { landingWorkflowSectionData } from '@/core/features/landing/assets/mock/sections';
 import { BenefitsList } from '@/core/features/landing/components/ui/benefits/BenefitsList';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import {
-  landingContainerClass,
-  landingEyebrowClass,
-} from '@/core/features/landing/lib/landing-classes';
 import { cn } from '@/core/utils/shadcn/utils';
 
 interface ConnectedSectionProps {
@@ -46,7 +42,7 @@ export function ConnectedSection({
       id={data.id}
       aria-labelledby={titleId}
       className={cn(
-        landingContainerClass,
+        'landingContainerClass',
         isPlain
           ? 'py-[67px] max-[900px]:py-[55px] max-[600px]:py-[43px]'
           : 'pt-[2px] pb-[67px] max-[600px]:pt-0 max-[600px]:pb-[45px]',
@@ -62,7 +58,7 @@ export function ConnectedSection({
         )}
       >
         <div>
-          <Span className={landingEyebrowClass}>{data.eyebrow}</Span>
+          <Span className="landingEyebrowClass">{data.eyebrow}</Span>
 
           <H2
             id={titleId}

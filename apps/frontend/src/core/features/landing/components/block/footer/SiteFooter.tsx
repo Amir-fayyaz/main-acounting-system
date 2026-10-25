@@ -12,7 +12,6 @@ import {
 } from '@/core/features/landing/assets/mock/navigation';
 import { SiteBrand } from '@/core/features/landing/components/ui/brand/SiteBrand';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { landingContainerClass } from '@/core/features/landing/lib/landing-classes';
 import { H2, P, Span } from '@/core/components/custom/ui/typography/Typography';
 
 const footerSeparatorClass = 'bg-[#57442c]';
@@ -23,7 +22,7 @@ export function SiteFooter() {
       aria-label="پایان صفحه تراز"
       className="relative mt-[65px] overflow-hidden bg-[#21190f] text-[#fff6e5] max-[680px]:mt-[47px]"
     >
-      <div className={landingContainerClass}>
+      <div className="landingContainerClass">
         <div className="flex items-center justify-between gap-[30px] py-[34px] max-[440px]:block max-[680px]:gap-5 max-[680px]:py-[27px]">
           <P className="text-[24px] leading-[1.9] font-[600] tracking-[-0.6px] text-[#f9edda] max-[440px]:max-w-none max-[440px]:text-[23px] max-[680px]:max-w-[240px] max-[680px]:text-[21px] max-[680px]:leading-[1.8] max-[850px]:text-[22px]">
             {footerTopline.title}

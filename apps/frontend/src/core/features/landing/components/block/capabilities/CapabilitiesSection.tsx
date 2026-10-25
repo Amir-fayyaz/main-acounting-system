@@ -3,28 +3,9 @@ import { ReportScene } from '@/core/features/landing/components/block/capabiliti
 import { SalesScene } from '@/core/features/landing/components/block/capabilities/SalesScene';
 import { StockScene } from '@/core/features/landing/components/block/capabilities/StockScene';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import {
-  landingContainerClass,
-  landingEyebrowClass,
-} from '@/core/features/landing/lib/landing-classes';
 import { cn } from '@/core/utils/shadcn/utils';
 import type { LandingIconName } from '@/core/features/landing/components/ui/icon/LandingIcon';
 import { H2, H3, P, Span } from '@/core/components/custom/ui/typography/Typography';
-
-const cardClass =
-  'relative min-w-0 overflow-hidden rounded-[16px] border border-[#e7e1d4] max-[680px]:col-auto max-[680px]:rounded-[12px]';
-
-const copyClass =
-  'relative z-[2] px-[32px] pt-[29px] max-[1050px]:px-[26px] max-[350px]:px-[19px] max-[440px]:p-[24px_22px_0] max-[680px]:p-[26px_27px_0] max-[850px]:p-[23px_22px_0]';
-
-const kickerClass =
-  'flex items-center gap-2 text-[11px] font-[550] text-[#7b6d59] [&_svg]:size-4 [&_svg]:text-[#a26a11] max-[440px]:text-[10px] max-[680px]:text-[11px] max-[850px]:text-[10px]';
-
-const headingClass =
-  'my-[13px_10px] text-[27px] leading-[1.65] font-[750] tracking-[-0.7px] max-[1050px]:text-[24px] max-[350px]:text-[23px] max-[440px]:text-[25px] max-[680px]:text-[27px] max-[850px]:text-[23px]';
-
-const textClass =
-  'max-w-[390px] text-[12px] leading-[2.1] text-[#706555] max-[440px]:text-[11px] max-[680px]:text-[12px] max-[850px]:text-[11px]';
 
 export function CapabilitiesSection() {
   return (
@@ -32,13 +13,12 @@ export function CapabilitiesSection() {
       id="features"
       aria-labelledby="features-title"
       className={cn(
-        landingContainerClass,
-        'pt-[76px] pb-[78px] max-[680px]:pt-[53px] max-[680px]:pb-[54px]',
+        'landingContainerClass pt-[76px] pb-[78px] max-[680px]:pt-[53px] max-[680px]:pb-[54px]',
       )}
     >
       <div className="mb-[34px] grid grid-cols-[1.4fr_1fr] items-end gap-[60px] max-[1050px]:gap-[35px] max-[680px]:mb-[25px] max-[680px]:block max-[850px]:grid-cols-[1.4fr_1fr] max-[850px]:gap-[25px]">
         <div>
-          <Span className={landingEyebrowClass}>کمتر ثبت کنید. بیشتر بدانید. / ۰۱</Span>
+          <Span className="landingEyebrowClass">کمتر ثبت کنید. بیشتر بدانید. / ۰۱</Span>
 
           <H2
             id="features-title"
@@ -59,25 +39,23 @@ export function CapabilitiesSection() {
       <div className="grid grid-cols-12 gap-5 max-[680px]:grid-cols-1 max-[680px]:gap-4 max-[850px]:gap-4">
         <article
           className={cn(
-            cardClass,
-            'col-span-7 flex min-h-[525px] flex-col border-[#eeeade] bg-[#eeeade] max-[1050px]:min-h-[490px] max-[680px]:min-h-0 max-[850px]:min-h-[490px]',
+            'cardClass col-span-7 flex min-h-[525px] flex-col border-[#eeeade] bg-[#eeeade] max-[1050px]:min-h-[490px] max-[680px]:min-h-0 max-[850px]:min-h-[490px]',
           )}
         >
           <div
             className={cn(
-              copyClass,
-              'pl-[60px] max-[1050px]:pl-[30px] max-[680px]:p-[26px_27px_0]',
+              'copyClass pl-[60px] max-[1050px]:pl-[30px] max-[680px]:p-[26px_27px_0]',
             )}
           >
             <CapKicker icon="receipt" label="فروش و دریافتنی‌ها" />
 
-            <H3 className={headingClass}>
+            <H3 className="headingClass">
               از اولین فاکتور،
               <br />
               تا آخرین سطر دفتر کل.
             </H3>
 
-            <P className={textClass}>
+            <P className="textClass">
               فاکتور، حواله و پیش‌نویس سند به هم مرتبط‌اند؛ بدون ثبت دوباره اطلاعات.
             </P>
           </div>
@@ -87,20 +65,19 @@ export function CapabilitiesSection() {
 
         <article
           className={cn(
-            cardClass,
-            'col-span-5 flex min-h-[525px] flex-col border-[#231b12] bg-[#231b12] max-[1050px]:min-h-[490px] max-[680px]:min-h-0 max-[850px]:min-h-[490px]',
+            'cardClass col-span-5 flex min-h-[525px] flex-col border-[#231b12] bg-[#231b12] max-[1050px]:min-h-[490px] max-[680px]:min-h-0 max-[850px]:min-h-[490px]',
           )}
         >
-          <div className={copyClass}>
+          <div className="copyClass">
             <CapKicker icon="bank" label="بانک و تطبیق" dark />
 
-            <H3 className={cn(headingClass, '!text-[28px] text-[#fff8ea]')}>
+            <H3 className={cn('headingClass !text-[28px] text-[#fff8ea]')}>
               این واریزی،
               <br />
               برای کدام فاکتور بود؟
             </H3>
 
-            <P className={cn(textClass, 'text-[#ccbea9]')}>
+            <P className={cn('textClass text-[#ccbea9]')}>
               تراز تطبیق را پیشنهاد می‌دهد؛ شما مستندات را بررسی و دریافت را تأیید می‌کنید.
             </P>
           </div>
@@ -110,14 +87,12 @@ export function CapabilitiesSection() {
 
         <article
           className={cn(
-            cardClass,
-            'col-span-5 min-h-[370px] border-[#ffa00a] bg-[#ffa00a] max-[680px]:min-h-0',
+            'cardClass col-span-5 min-h-[370px] border-[#ffa00a] bg-[#ffa00a] max-[680px]:min-h-0',
           )}
         >
           <div
             className={cn(
-              copyClass,
-              'max-[680px]:p-[26px_27px_0] max-[850px]:p-[23px_22px_0]',
+              'copyClass max-[680px]:p-[26px_27px_0] max-[850px]:p-[23px_22px_0]',
             )}
           >
             <Span className="!flex items-center gap-2 !text-[11px] !font-[550] text-[#603a08] [&_svg]:size-4 [&_svg]:text-[#67400a] max-[850px]:!text-[10px] max-[680px]:!text-[11px] max-[440px]:!text-[10px]">
@@ -127,14 +102,13 @@ export function CapabilitiesSection() {
 
             <H3
               className={cn(
-                headingClass,
-                '!text-[26px] max-[1050px]:!text-[24px] max-[850px]:!text-[23px] max-[680px]:!text-[27px] max-[440px]:!text-[25px] max-[350px]:!text-[23px]',
+                'headingClass !text-[26px] max-[1050px]:!text-[24px] max-[850px]:!text-[23px] max-[680px]:!text-[27px] max-[440px]:!text-[25px] max-[350px]:!text-[23px]',
               )}
             >
               خبرِ انبار را، همان لحظه بگیرید.
             </H3>
 
-            <P className={cn(textClass, 'text-[#603a08]')}>
+            <P className={cn('textClass text-[#603a08]')}>
               ورود، خروج و حداقل موجودی؛ همگام با خرید و فروش.
             </P>
           </div>
@@ -144,25 +118,23 @@ export function CapabilitiesSection() {
 
         <article
           className={cn(
-            cardClass,
-            'col-span-7 min-h-[370px] bg-[#fffdf8] max-[680px]:min-h-0',
+            'cardClass col-span-7 min-h-[370px] bg-[#fffdf8] max-[680px]:min-h-0',
           )}
         >
           <div
             className={cn(
-              copyClass,
-              'max-[680px]:p-[26px_27px_0] max-[850px]:p-[23px_22px_0]',
+              'copyClass max-[680px]:p-[26px_27px_0] max-[850px]:p-[23px_22px_0]',
             )}
           >
             <CapKicker icon="chart" label="گزارش‌های مالی" />
 
-            <H3 className={headingClass}>
+            <H3 className="headingClass">
               فقط عدد نبینید.
               <br />
               تصویر مالی کسب‌وکارتان را ببینید.
             </H3>
 
-            <P className={textClass}>
+            <P className="textClass">
               سود و زیان، ترازنامه و نقدینگی؛ قابل پیگیری تا سند اولیه.
             </P>
           </div>
@@ -184,7 +156,7 @@ function CapKicker({
   dark?: boolean;
 }) {
   return (
-    <span className={cn(kickerClass, dark && 'text-[#d6b784] [&_svg]:text-[#ffa00a]')}>
+    <span className={cn(dark && 'kickerClass text-[#d6b784] [&_svg]:text-[#ffa00a]')}>
       <LandingIcon name={icon} />
       {label}
     </span>

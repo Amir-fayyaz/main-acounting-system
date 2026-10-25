@@ -185,6 +185,14 @@
     @apply relative flex min-h-[304px] min-w-0 flex-col overflow-hidden rounded-[13px] border border-[#e7e1d4] p-[27px_24px] max-[1050px]:p-[24px_19px] max-[850px]:min-h-[290px] max-[850px]:p-[22px_17px];
   }
 
+  .kickerClass {
+    @apply flex items-center gap-2 text-[11px] font-[550] text-[#7b6d59] [&_svg]:size-4 [&_svg]:text-[#a26a11] max-[440px]:text-[10px] max-[680px]:text-[11px] max-[850px]:text-[10px];
+  }
+
+  .headingClass {
+    @apply my-[13px_10px] text-[27px] leading-[1.65] font-[750] tracking-[-0.7px] max-[1050px]:text-[24px] max-[850px]:text-[23px] max-[680px]:text-[27px] max-[440px]:text-[25px] max-[350px]:text-[23px];
+  }
+
   .labelClass {
     @apply flex items-center gap-2 text-[12px] font-[600] max-[440px]:gap-[5px] max-[440px]:text-[10px] max-[680px]:gap-[6px] max-[680px]:text-[11px] max-[850px]:text-[11px] [&_svg]:size-[17px] max-[440px]:[&_svg]:size-[15px];
   }
@@ -207,6 +215,14 @@
 
   .symbolClassName {
     @apply h-[26px] w-[26px] fill-none stroke-current stroke-2 max-[1050px]:w-[23px] max-[600px]:h-[22px] max-[600px]:w-[22px] max-[800px]:h-[19px] max-[800px]:w-[19px];
+  }
+
+  .landingContainerClass {
+    @apply mx-auto w-[min(1160px,calc(100%_-_80px))] max-[1050px]:w-[calc(100%_-_48px)] max-[600px]:w-[calc(100%_-_36px)];
+  }
+
+  .landingEyebrowClass {
+    @apply flex items-center gap-[9px] text-[12px] font-[650] text-[#8f5800] before:h-[6px] before:w-[6px] before:rounded-full before:bg-[#ffa00a] before:content-[''] max-[600px]:gap-[7px] max-[600px]:text-[10px];
   }
 }
 

@@ -1,10 +1,6 @@
 import { H2, H3, P, Small, Span } from '@/core/components/custom/ui/typography/Typography';
 import { scopeModules } from '@/core/features/landing/assets/mock/workspace';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import {
-  landingContainerClass,
-  landingEyebrowClass,
-} from '@/core/features/landing/lib/landing-classes';
 import { cn } from '@/core/utils/shadcn/utils';
 import Link from 'next/link';
 
@@ -14,13 +10,12 @@ export function ScopeSection() {
       id="scope"
       aria-labelledby="scope-title"
       className={cn(
-        landingContainerClass,
-        'pt-5 pb-[75px] max-[600px]:pt-0 max-[600px]:pb-[53px] max-[800px]:pt-0 max-[800px]:pb-[65px]',
+        'landingContainerClass pt-5 pb-[75px] max-[600px]:pt-0 max-[600px]:pb-[53px] max-[800px]:pt-0 max-[800px]:pb-[65px]',
       )}
     >
       <div className="mb-[27px] flex items-center justify-between gap-[25px] max-[600px]:mb-[23px] max-[600px]:block">
         <div>
-          <Span className={landingEyebrowClass}>برای جریان کامل کار / ۰۴</Span>
+          <Span className="landingEyebrowClass">برای جریان کامل کار / ۰۴</Span>
 
           <H2
             id="scope-title"

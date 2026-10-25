@@ -5,10 +5,6 @@ import { Button } from '@/core/components/shadcn/ui/button/button';
 import type { MiniCtaData } from '@/core/features/landing/assets/@types/sections';
 import { landingMiniCtaData } from '@/core/features/landing/assets/mock/sections';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import {
-  landingContainerClass,
-  landingEyebrowClass,
-} from '@/core/features/landing/lib/landing-classes';
 import { cn } from '@/core/utils/shadcn/utils';
 
 interface MiniCtaProps {
@@ -18,7 +14,7 @@ interface MiniCtaProps {
 
 export function MiniCta({ data = landingMiniCtaData, className }: MiniCtaProps) {
   return (
-    <div className={landingContainerClass}>
+    <div className="landingContainerClass">
       <section
         aria-labelledby="mini-cta-title"
         className={cn(
@@ -56,7 +52,7 @@ export function MiniCta({ data = landingMiniCtaData, className }: MiniCtaProps) 
 
 export function FinalCta() {
   return (
-    <div className={landingContainerClass}>
+    <div className="landingContainerClass">
       <section
         aria-labelledby="cta-title"
         className="relative flex items-center justify-between gap-10 overflow-hidden rounded-[14px] bg-[#ffa00a] p-[48px_54px] after:absolute after:inset-auto after:-bottom-[170px] after:-left-[70px] after:size-[420px] after:rounded-full after:border after:border-[#b8710033] after:content-[''] max-[1050px]:p-[38px] max-[600px]:block max-[600px]:rounded-[10px] max-[600px]:p-[29px_25px] max-[800px]:p-[33px] [&>div]:relative [&>div]:z-[1]"
@@ -64,8 +60,7 @@ export function FinalCta() {
         <div>
           <Span
             className={cn(
-              landingEyebrowClass,
-              'text-[#5f3909] before:bg-[#1a120a]',
+              'landingEyebrowClass text-[#5f3909] before:bg-[#1a120a]',
             )}
           >
             وقت حساب‌های روشن‌تر است.

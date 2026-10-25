@@ -10,11 +10,10 @@ import { MiniCta } from '@/core/features/landing/components/block/cta/CtaSection
 import { HeroDashboard } from '@/core/features/landing/components/block/hero/HeroDashboard';
 import { IntelligenceSection } from '@/core/features/landing/components/block/intelligence/IntelligenceSection';
 import { ConnectedSection } from '@/core/features/landing/components/block/workflow/ConnectedSection';
-import { landingRootClass } from '@/core/features/landing/lib/landing-classes';
 
 export function DemoPage() {
   return (
-    <div className={landingRootClass}>
+    <div className="landingRootClass">
       <DemoHero />
 
       <HeroDashboard data={demoDashboardData} id="demo" variant="demo" />

@@ -10,7 +10,6 @@ import type {
 import { landingDashboardData } from '@/core/features/landing/assets/mock/dashboard';
 import { DashboardMain } from '@/core/features/landing/components/block/hero/dashboard/DashboardMain';
 import { DashboardSidebar } from '@/core/features/landing/components/block/hero/dashboard/DashboardSidebar';
-import { landingContainerClass } from '@/core/features/landing/lib/landing-classes';
 import { cn } from '@/core/utils/shadcn/utils';
 
 const dashboardBaseClass =
@@ -39,7 +38,7 @@ export function HeroDashboard({
   const isDemo = variant === 'demo';
 
   return (
-    <div className={landingContainerClass}>
+    <div className="landingContainerClass">
       <div
         id={id}
         className={cn(

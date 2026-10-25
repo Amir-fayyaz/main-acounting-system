@@ -1,17 +1,13 @@
 import { H1, P, Span } from '@/core/components/custom/ui/typography/Typography';
 import { demoHeroData } from '@/core/features/demo/assets/mock/page';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import {
-  landingContainerClass,
-  landingEyebrowClass,
-} from '@/core/features/landing/lib/landing-classes';
 import { cn } from '@/core/utils/shadcn/utils';
 
 export function DemoHero() {
   return (
-    <section aria-labelledby="demo-title" className={landingContainerClass}>
+    <section aria-labelledby="demo-title" className="landingContainerClass">
       <div className="mx-auto max-w-[800px] pt-[66px] pb-[29px] text-center max-[600px]:pt-[43px] max-[600px]:pb-6 max-[900px]:pt-[53px]">
-        <Span className={cn(landingEyebrowClass, 'justify-center')}>
+        <Span className={cn('landingEyebrowClass justify-center')}>
           {demoHeroData.eyebrow}
         </Span>
 

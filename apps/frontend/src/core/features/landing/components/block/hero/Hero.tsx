@@ -1,5 +1,4 @@
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { landingContainerClass } from '@/core/features/landing/lib/landing-classes';
 import { cn } from '@/core/utils/shadcn/utils';
 import HeroActions from './HeroActions';
 import HeroBenefits from './HeroBenefits';
@@ -66,7 +65,7 @@ export function Hero() {
         <LandingIcon name="chart" className="size-6" />
       </div>
 
-      <div className={cn(landingContainerClass, 'relative z-[2] max-w-[810px] text-center')}>
+      <div className={cn('landingContainerClass relative z-[2] max-w-[810px] text-center')}>
         <div className="inline-flex items-center gap-[9px] rounded-[30px] border border-[#e5dccb] bg-[#f7f6ee] px-3 py-[5px] text-[12px] text-[#5d5040] max-[600px]:gap-[7px] max-[600px]:px-[9px] max-[600px]:py-1 max-[600px]:text-[10px]">
           <span className="inline-flex items-center gap-[5px] rounded-[20px] bg-[#fff1d9] px-2 py-px text-[#875100] max-[600px]:px-[5px] max-[600px]:text-[9px]">
             <LandingIcon name="spark" className="size-[13px] shrink-0" />

@@ -7,7 +7,6 @@ import type { AssistantSectionData } from '@/core/features/landing/assets/@types
 import { landingAssistantSectionData } from '@/core/features/landing/assets/mock/sections';
 import { AssistantPreview } from '@/core/features/landing/components/block/intelligence/AssistantPreview';
 import { IntelligenceCopy } from '@/core/features/landing/components/block/intelligence/IntelligenceCopy';
-import { landingContainerClass } from '@/core/features/landing/lib/landing-classes';
 import { cn } from '@/core/utils/shadcn/utils';
 
 interface IntelligenceSectionProps {
@@ -56,7 +55,7 @@ export function IntelligenceSection({
       id={data.id}
       aria-labelledby={titleId}
       className={cn(
-        landingContainerClass,
+        'landingContainerClass',
         isDemo
           ? 'border-t border-[#e4dfd2] pt-[55px] pb-[30px] max-[600px]:py-[43px]'
           : 'pt-[92px] pb-[94px] max-[600px]:pt-[60px] max-[600px]:pb-[58px] max-[800px]:pb-[65px]',

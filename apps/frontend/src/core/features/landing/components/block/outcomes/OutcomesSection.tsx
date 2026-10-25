@@ -1,15 +1,11 @@
 import { H2, Span, P } from '@/core/components/custom/ui/typography/Typography';
 import { industryTags, outcomeAssurances } from '@/core/features/landing/assets/mock/workspace';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import {
-  landingContainerClass,
-  landingEyebrowClass,
-} from '@/core/features/landing/lib/landing-classes';
 import { cn } from '@/core/utils/shadcn/utils';
 
 export function OutcomesSection() {
   return (
-    <div className={landingContainerClass}>
+    <div className="landingContainerClass">
       <section
         id="results"
         aria-labelledby="proof-title"
@@ -17,7 +13,7 @@ export function OutcomesSection() {
       >
         <div className="mb-[27px] flex items-end justify-between gap-10 max-[680px]:mb-6 max-[680px]:block max-[850px]:gap-[30px]">
           <div>
-            <Span className={landingEyebrowClass}>برای روزهای پرکار، برای مسیر بلندمدت.</Span>
+            <Span className="landingEyebrowClass">برای روزهای پرکار، برای مسیر بلندمدت.</Span>
 
             <H2
               id="proof-title"

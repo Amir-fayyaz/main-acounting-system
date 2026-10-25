@@ -1,5 +1,4 @@
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { landingContainerClass } from '@/core/features/landing/lib/landing-classes';
 import { cn } from '@/core/utils/shadcn/utils';
 import { Span } from '@/core/components/custom/ui/typography/Typography';
 
@@ -11,7 +10,7 @@ const benefits = [
 
 const HeroBenefits = () => {
   return (
-    <div className={landingContainerClass}>
+    <div className="landingContainerClass">
       <div className="flex items-center justify-center gap-[35px] text-[12px] text-[#7b7061] max-[600px]:grid max-[600px]:grid-cols-2 max-[600px]:justify-items-center max-[600px]:gap-[11px] max-[600px]:text-[10px] max-[800px]:gap-5 max-[800px]:text-[11px]">
         {benefits.map((benefit, index) => (
           <Span

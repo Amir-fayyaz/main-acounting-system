@@ -2,11 +2,10 @@ import Link from 'next/link';
 
 import { demoScenarioLinks } from '@/core/features/demo/assets/mock/page';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { landingContainerClass } from '@/core/features/landing/lib/landing-classes';
 
 export function DemoScenarioNav() {
   return (
-    <nav aria-label="بخش‌های دمو" className={landingContainerClass}>
+    <nav aria-label="بخش‌های دمو" className="landingContainerClass">
       <div className="mt-[25px] flex flex-wrap justify-center gap-[11px] max-[600px]:mt-5 max-[600px]:gap-[7px]">
         {demoScenarioLinks.map((scenario) => (
           <Link
