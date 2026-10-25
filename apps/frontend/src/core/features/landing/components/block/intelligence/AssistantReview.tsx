@@ -3,7 +3,6 @@ import { Badge } from '@/core/components/shadcn/ui/badge/badge';
 import type { AssistantPreviewData } from '@/core/features/landing/assets/@types/sections';
 import {
   ReviewRows,
-  reviewLineClass,
 } from '@/core/features/landing/components/block/intelligence/ReviewRows';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
 import { cn } from '@/core/utils/shadcn/utils';
@@ -32,7 +31,7 @@ export function AssistantReview({
       <div className="rounded-[6px] border border-[#e8e2d6] bg-white p-3">
         <ReviewRows lines={preview.reviewLines} />
 
-        <div className={reviewLineClass}>
+        <div className="review-line">
           <Span className="text-[10px]">{preview.statusLabel}</Span>
           <Badge
             className={cn(
