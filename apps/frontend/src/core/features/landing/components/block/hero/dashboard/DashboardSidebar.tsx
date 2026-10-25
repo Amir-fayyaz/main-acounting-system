@@ -7,9 +7,6 @@ import type { DashboardData, DashboardView } from '@/core/features/landing/asset
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
 import { cn } from '@/core/utils/shadcn/utils';
 
-const navItemClass =
-  'flex w-full items-center gap-[9px] rounded-[6px] border-0 bg-none p-[9px_10px] text-right text-[11px] max-[800px]:gap-1.5 max-[800px]:p-2 max-[800px]:text-[10px]';
-
 interface DashboardSidebarProps {
   data: DashboardData;
   view: DashboardView;
@@ -57,7 +54,7 @@ export function DashboardSidebar({ data, view, onViewChange }: DashboardSidebarP
               variant="ghost"
               size="sm"
               className={cn(
-                navItemClass,
+                'navItemClass',
                 'h-auto !justify-start rounded-none shadow-none hover:scale-100 active:scale-100',
                 selected
                   ? 'bg-[#fff0ce] font-bold text-[#754300] hover:bg-[#fff0ce]'
@@ -77,7 +74,7 @@ export function DashboardSidebar({ data, view, onViewChange }: DashboardSidebarP
         })}
 
         {data.staticItems.map((item) => (
-          <Span key={item.label} className={cn(navItemClass, 'text-[#1a120a]')}>
+          <Span key={item.label} className={cn('navItemClass text-[#1a120a]')}>
             <LandingIcon name={item.icon} className="size-4 text-[#817667] max-[800px]:size-3.5" />
             {item.label}
           </Span>
@@ -88,7 +85,7 @@ export function DashboardSidebar({ data, view, onViewChange }: DashboardSidebarP
 
       <div className="flex flex-col gap-1">
         {data.reportLinks.map((item) => (
-          <Link key={item.label} href={item.href} className={navItemClass}>
+          <Link key={item.label} href={item.href} className="navItemClass">
             <LandingIcon name={item.icon} className="size-4 text-[#817667] max-[800px]:size-3.5" />
             {item.label}
             {item.count ? (

@@ -224,6 +224,26 @@
   .landingEyebrowClass {
     @apply flex items-center gap-[9px] text-[12px] font-[650] text-[#8f5800] before:h-[6px] before:w-[6px] before:rounded-full before:bg-[#ffa00a] before:content-[''] max-[600px]:gap-[7px] max-[600px]:text-[10px];
   }
+
+  .navItemClass {
+    @apply flex w-full items-center gap-[9px] rounded-[6px] border-0 bg-none p-[9px_10px] text-right text-[11px] max-[800px]:gap-1.5 max-[800px]:p-2 max-[800px]:text-[10px];
+  }
+
+  .orbitIconClass {
+    @apply absolute z-[1] grid size-[49px] place-items-center rounded-[13px] border border-[#e7dfd1] bg-[#f7f6ee] text-[#7c6648] shadow-[0_5px_15px_#37240e04] max-[600px]:hidden max-[800px]:size-10 max-[800px]:rounded-[10px];
+  }
+
+  .dashboardBaseClass {
+    @apply relative mx-auto rounded-t-[15px] border border-[#ded9cb] bg-[#e9e6dc] p-[8px_8px_0] shadow-[0_20px_60px_#4735180d] before:absolute before:inset-[-7px_22px_auto] before:-z-10 before:h-2 before:rounded-t-[13px] before:border before:border-b-0 before:border-[#e4dece] before:content-[''] max-[1050px]:mx-[18px] max-[800px]:mx-0 max-[600px]:rounded-t-[10px] max-[600px]:p-[5px_5px_0] max-[600px]:shadow-[0_10px_30px_#49391908];
+  }
+
+  .dashboardInnerClass {
+    @apply relative grid min-h-[470px] grid-cols-[174px_1fr] overflow-hidden rounded-t-[9px] border border-[#dfdbd1] bg-[#fcfcf8] leading-[1.7] max-[800px]:min-h-[438px] max-[800px]:grid-cols-[132px_1fr] max-[600px]:min-h-0 max-[600px]:grid-cols-1 max-[600px]:rounded-t-[6px];
+  }
+
+  .actionClass {
+    @apply min-h-[35px] flex-1 rounded-[5px] p-[7px_13px] text-[10px] max-[800px]:px-[7px] max-[800px]:text-[9px] max-[600px]:min-h-[39px] max-[600px]:text-[11px];
+  }
 }
 
 .pages-container {

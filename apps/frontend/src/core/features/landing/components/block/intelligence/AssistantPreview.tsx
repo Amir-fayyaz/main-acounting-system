@@ -10,9 +10,6 @@ import { ReviewRows } from '@/core/features/landing/components/block/intelligenc
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
 import { cn } from '@/core/utils/shadcn/utils';
 
-const actionClass =
-  'min-h-[35px] flex-1 rounded-[5px] p-[7px_13px] text-[10px] max-[600px]:min-h-[39px] max-[600px]:text-[11px] max-[800px]:px-[7px] max-[800px]:text-[9px]';
-
 interface AssistantPreviewProps {
   approved: boolean;
   manualOpen: boolean;
@@ -48,7 +45,7 @@ export function AssistantPreview({
               type="button"
               onClick={onApprovalToggle}
               className={cn(
-                actionClass,
+                'actionClass',
                 'text-[12px] font-bold [&_svg]:size-4',
                 approved && 'border border-border bg-card text-[#1a120a] hover:bg-[#f8f4ea]',
               )}
@@ -64,7 +61,7 @@ export function AssistantPreview({
               aria-controls={manualReviewId}
               onClick={onManualToggle}
               className={cn(
-                actionClass,
+                'actionClass',
                 'border border-border bg-card font-bold text-[#1a120a] hover:bg-[#f8f4ea]',
               )}
             >

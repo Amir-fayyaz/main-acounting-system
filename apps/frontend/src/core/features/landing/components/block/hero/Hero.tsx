@@ -6,10 +6,6 @@ import { HeroDashboard } from './HeroDashboard';
 import { H1, Muted, Span } from '@/core/components/custom/ui/typography/Typography';
 import { Check } from 'lucide-react';
 
-const orbitIconClass =
-  'absolute z-[1] grid size-[49px] place-items-center rounded-[13px] border border-[#e7dfd1] bg-[#f7f6ee] text-[#7c6648] shadow-[0_5px_15px_#37240e04] max-[600px]:hidden max-[800px]:size-10 max-[800px]:rounded-[10px]';
-
-
 export function Hero() {
   return (
     <section
@@ -28,7 +24,7 @@ export function Hero() {
       <div
         aria-hidden="true"
         className={cn(
-          orbitIconClass,
+          'orbitIconClass',
           'top-[170px] left-[10%] -rotate-[11deg] text-[#a86800] max-[1050px]:left-[4%] max-[800px]:top-[132px] max-[800px]:left-[1%]',
         )}
       >
@@ -38,7 +34,7 @@ export function Hero() {
       <div
         aria-hidden="true"
         className={cn(
-          orbitIconClass,
+          'orbitIconClass',
           'top-[215px] right-[10%] rotate-[10deg] max-[1050px]:right-[4%] max-[800px]:top-[164px] max-[800px]:right-[1%]',
         )}
       >
@@ -48,7 +44,7 @@ export function Hero() {
       <div
         aria-hidden="true"
         className={cn(
-          orbitIconClass,
+          'orbitIconClass',
           'top-[360px] left-[16%] rotate-[8deg] max-[1050px]:left-[7%] max-[800px]:hidden',
         )}
       >
@@ -58,7 +54,7 @@ export function Hero() {
       <div
         aria-hidden="true"
         className={cn(
-          orbitIconClass,
+          'orbitIconClass',
           'top-[383px] right-[17%] -rotate-[8deg] text-[#a86800] max-[1050px]:right-[7%] max-[800px]:hidden',
         )}
       >
