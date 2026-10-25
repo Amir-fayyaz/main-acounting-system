@@ -11,6 +11,11 @@ import {
   PassthroughTransactionBoundary,
   RecordingFiscalYearEvents,
 } from '../../../../../test/support/accounting-doubles.js';
+import {
+  InMemoryActivePeriodRepository,
+  InMemoryFiscalPeriodRepository,
+} from '../../../../../test/support/fiscal-period-doubles.js';
+import { GenerateFiscalPeriodsUseCase } from './generate-fiscal-periods.use-case.js';
 import { fiscalYearIdFrom } from '../../domain/value-objects/fiscal-year-id.js';
 import { tenantReferenceFrom } from '../../domain/value-objects/tenant-reference.js';
 import { CreateFiscalYear } from '../commands/create-fiscal-year.command.js';
@@ -28,6 +33,8 @@ const TENANT_B = '018f0d3d-6d0f-7a4b-9d4e-2b3c4d5e6f71';
 
 interface Harness {
   readonly repository: InMemoryFiscalYearRepository;
+  readonly periodRepository: InMemoryFiscalPeriodRepository;
+  readonly activePeriods: InMemoryActivePeriodRepository;
   readonly events: RecordingFiscalYearEvents;
   readonly boundary: PassthroughTransactionBoundary;
   readonly createFiscalYear: CreateFiscalYearUseCase;
@@ -35,14 +42,26 @@ interface Harness {
 
 function harness(): Harness {
   const repository = new InMemoryFiscalYearRepository();
+  const periodRepository = new InMemoryFiscalPeriodRepository();
+  const activePeriods = new InMemoryActivePeriodRepository();
   const events = new RecordingFiscalYearEvents();
   const boundary = new PassthroughTransactionBoundary();
 
-  return {
+  const generatePeriods = new GenerateFiscalPeriodsUseCase(
     repository,
+    periodRepository,
+    activePeriods,
     events,
     boundary,
-    createFiscalYear: new CreateFiscalYearUseCase(repository, events, boundary),
+  );
+
+  return {
+    repository,
+    periodRepository,
+    activePeriods,
+    events,
+    boundary,
+    createFiscalYear: new CreateFiscalYearUseCase(repository, events, boundary, generatePeriods),
   };
 }
 
@@ -53,9 +72,9 @@ function inTenant<T>(tenantId: string, work: () => Promise<T>): Promise<T> {
 
 function command(
   payload: { label: string; startDate: string; endDate: string } = {
-    label: 'FY2024',
-    startDate: '2024-01-01',
-    endDate: '2024-12-31',
+    label: 'FY1405',
+    startDate: '2026-03-21',
+    endDate: '2027-03-20',
   },
 ): CreateFiscalYear {
   return new CreateFiscalYear(payload);
@@ -72,9 +91,9 @@ describe('CreateFiscalYearUseCase', () => {
       const view = outcome.valueOrThrow();
       expect(view).toMatchObject({
         tenantId: TENANT_A,
-        label: 'FY2024',
-        startDate: '2024-01-01',
-        endDate: '2024-12-31',
+        label: 'FY1405',
+        startDate: '2026-03-21',
+        endDate: '2027-03-20',
         status: 'open',
         revision: 1,
       });
@@ -83,26 +102,71 @@ describe('CreateFiscalYearUseCase', () => {
       expect(app.repository.addCalls).toBe(1);
       expect(app.repository.revisionOf(fiscalYearIdFrom(view.id))?.value).toBe(1);
 
-      expect(app.events.recorded).toHaveLength(1);
+      // Creating a year generates its periods in the same boundary: the year
+      // event first, then the periods, then the seeded active pointer (FIS-004).
+      expect(app.events.recorded.map((event) => event.name)).toEqual([
+        'FiscalYearCreated',
+        'FiscalPeriodsGenerated',
+        'ActivePeriodSelected',
+      ]);
       const event = app.events.recorded[0];
       expect(event?.name).toBe('FiscalYearCreated');
       expect(event?.metadata.tenantId).toBe(TENANT_A);
       expect(event?.data).toMatchObject({
         tenantId: TENANT_A,
         fiscalYearId: view.id,
-        label: 'FY2024',
-        startDate: '2024-01-01',
-        endDate: '2024-12-31',
+        label: 'FY1405',
+        startDate: '2026-03-21',
+        endDate: '2027-03-20',
         status: 'open',
       });
     });
 
-    it('opens exactly one transaction boundary for the whole operation', async () => {
+    it('generates the twelve contiguous monthly periods of the year', async () => {
+      const app = harness();
+
+      const outcome = await inTenant(TENANT_A, () => app.createFiscalYear.execute(command()));
+
+      expect(outcome.isOk()).toBe(true);
+      const yearId = fiscalYearIdFrom(outcome.valueOrThrow().id);
+      const periods = app.periodRepository.storedBySequence(tenantReferenceFrom(TENANT_A), yearId);
+
+      expect(periods).toHaveLength(12);
+      expect(
+        periods.map((period) => [period.sequence, period.range.startDate.toIsoString(), period.range.endDate.toIsoString()]),
+      ).toEqual([
+        // Months 1-6 have 31 days, months 7-11 have 30, Esfand has 29 in
+        // the non-leap 1405 (FIS-003).
+        [1, '2026-03-21', '2026-04-20'],
+        [2, '2026-04-21', '2026-05-21'],
+        [3, '2026-05-22', '2026-06-21'],
+        [4, '2026-06-22', '2026-07-22'],
+        [5, '2026-07-23', '2026-08-22'],
+        [6, '2026-08-23', '2026-09-22'],
+        [7, '2026-09-23', '2026-10-22'],
+        [8, '2026-10-23', '2026-11-21'],
+        [9, '2026-11-22', '2026-12-21'],
+        [10, '2026-12-22', '2027-01-20'],
+        [11, '2027-01-21', '2027-02-19'],
+        [12, '2027-02-20', '2027-03-20'],
+      ]);
+      for (const period of periods) {
+        expect(period.state.value).toBe('open');
+      }
+      // The tenant has never selected one before, so the first period becomes
+      // the active one and stays the only one.
+      expect(app.activePeriods.pointerOf(TENANT_A)?.value).toBe(periods[0]?.id.value);
+    });
+
+    it('runs the whole operation in one transaction — the generation call joins the open boundary', async () => {
       const app = harness();
 
       await inTenant(TENANT_A, () => app.createFiscalYear.execute(command()));
 
-      expect(app.boundary.executions).toBe(1);
+      // One `execute` for the creation itself, plus the generation's nested
+      // call — which *joins* that transaction instead of opening a second one
+      // (transaction-boundary nesting rule): no inner begin, no inner commit.
+      expect(app.boundary.executions).toBe(2);
     });
 
     it('trims the label, so stored and given names cannot diverge', async () => {
@@ -110,11 +174,10 @@ describe('CreateFiscalYearUseCase', () => {
 
       const outcome = await inTenant(TENANT_A, () =>
         app.createFiscalYear.execute(
-          command({ label: '  FY2024  ', startDate: '2024-01-01', endDate: '2024-12-31' }),
+          command({ label: '  FY1405  ', startDate: '2026-03-21', endDate: '2027-03-20' }),
         ),
       );
-
-      expect(outcome.valueOrThrow().label).toBe('FY2024');
+      expect(outcome.valueOrThrow().label).toBe('FY1405');
     });
 
     it('accepts the same range for another tenant — the rule is per company', async () => {
@@ -129,11 +192,11 @@ describe('CreateFiscalYearUseCase', () => {
 
     it('accepts a year adjacent to the tenant’s existing one', async () => {
       const app = harness();
-      app.repository.seed(aFiscalYear(tenantReferenceFrom(TENANT_A), 'FY2024'));
+      app.repository.seed(aFiscalYear(tenantReferenceFrom(TENANT_A), 'FY1405'));
 
       const outcome = await inTenant(TENANT_A, () =>
         app.createFiscalYear.execute(
-          command({ label: 'FY2025', startDate: '2025-01-01', endDate: '2025-12-31' }),
+          command({ label: 'FY1406', startDate: '2027-03-21', endDate: '2028-03-19' }),
         ),
       );
 
@@ -144,11 +207,11 @@ describe('CreateFiscalYearUseCase', () => {
   describe('declines — nothing is written', () => {
     it('reports an overlapping year as FISCAL_YEAR_OVERLAP without persisting', async () => {
       const app = harness();
-      app.repository.seed(aFiscalYear(tenantReferenceFrom(TENANT_A), 'FY2024'));
+      app.repository.seed(aFiscalYear(tenantReferenceFrom(TENANT_A), 'FY1405'));
 
       const outcome = await inTenant(TENANT_A, () =>
         app.createFiscalYear.execute(
-          command({ label: 'H2', startDate: '2024-06-01', endDate: '2025-06-30' }),
+          command({ label: 'H2', startDate: '2026-10-01', endDate: '2027-10-01' }),
         ),
       );
 
@@ -161,11 +224,11 @@ describe('CreateFiscalYearUseCase', () => {
 
     it('reports a duplicate label as FISCAL_YEAR_LABEL_DUPLICATE without persisting', async () => {
       const app = harness();
-      app.repository.seed(aFiscalYear(tenantReferenceFrom(TENANT_A), 'FY2024'));
+      app.repository.seed(aFiscalYear(tenantReferenceFrom(TENANT_A), 'FY1405'));
 
       const outcome = await inTenant(TENANT_A, () =>
         app.createFiscalYear.execute(
-          command({ label: 'FY2024', startDate: '2025-01-01', endDate: '2025-12-31' }),
+          command({ label: 'FY1405', startDate: '2027-03-21', endDate: '2028-03-19' }),
         ),
       );
 
@@ -180,12 +243,12 @@ describe('CreateFiscalYearUseCase', () => {
 
       const reversed = await inTenant(TENANT_A, () =>
         app.createFiscalYear.execute(
-          command({ label: 'Backwards', startDate: '2025-01-01', endDate: '2024-12-31' }),
+          command({ label: 'Backwards', startDate: '2027-03-21', endDate: '2026-03-21' }),
         ),
       );
       const zeroLength = await inTenant(TENANT_A, () =>
         app.createFiscalYear.execute(
-          command({ label: 'One day', startDate: '2024-01-01', endDate: '2024-01-01' }),
+          command({ label: 'One day', startDate: '2026-03-21', endDate: '2026-03-21' }),
         ),
       );
 
@@ -199,12 +262,12 @@ describe('CreateFiscalYearUseCase', () => {
 
       const blank = await inTenant(TENANT_A, () =>
         app.createFiscalYear.execute(
-          command({ label: '   ', startDate: '2024-01-01', endDate: '2024-12-31' }),
+          command({ label: '   ', startDate: '2026-03-21', endDate: '2027-03-20' }),
         ),
       );
       const tooLong = await inTenant(TENANT_A, () =>
         app.createFiscalYear.execute(
-          command({ label: 'x'.repeat(101), startDate: '2024-01-01', endDate: '2024-12-31' }),
+          command({ label: 'x'.repeat(101), startDate: '2026-03-21', endDate: '2027-03-20' }),
         ),
       );
 
@@ -220,7 +283,7 @@ describe('CreateFiscalYearUseCase', () => {
 
       const outcome = await inTenant(TENANT_A, () =>
         app.createFiscalYear.execute(
-          command({ label: 'FY2024', startDate: '01-01-2024', endDate: '2024-12-31' }),
+          command({ label: 'FY1405', startDate: '01-01-2024', endDate: '2027-03-20' }),
         ),
       );
 
@@ -247,6 +310,24 @@ describe('CreateFiscalYearUseCase', () => {
       await expect(
         TenantScope.runAsSystem(() => app.createFiscalYear.execute(command())),
       ).rejects.toBeInstanceOf(TenantContextMissingError);
+    });
+  });
+
+  describe('creating a year whose range is not one Jalali year is refused', () => {
+    it('reports FISCAL_PERIOD_STRUCTURE and writes nothing', async () => {
+      const app = harness();
+
+      const outcome = await inTenant(TENANT_A, () =>
+        app.createFiscalYear.execute(
+          command({ label: 'Calendar', startDate: '2024-01-01', endDate: '2024-12-31' }),
+        ),
+      );
+
+      expect(outcome.isFail()).toBe(true);
+      expect(outcome.errorOrThrow()?.code).toBe('FISCAL_PERIOD_STRUCTURE');
+      expect(app.repository.addCalls).toBe(0);
+      expect(app.periodRepository.addCalls).toBe(0);
+      expect(app.events.recorded).toHaveLength(0);
     });
   });
 
