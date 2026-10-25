@@ -176,6 +176,38 @@
   .pricing-eyebrow {
     @apply inline-flex items-center gap-[9px] text-[12px] font-[650] text-[#8f5800] before:size-[6px] before:rounded-full before:bg-[#ffa00a] before:content-[''] max-[600px]:gap-[7px] max-[600px]:text-[10px];
   }
+
+  .review-line {
+    @apply flex justify-between gap-[10px] py-[6px] text-[10px] text-[#766a59] [&+&]:border-t [&+&]:border-[#f0ede5] [&_strong]:font-[600] [&_strong]:text-ink;
+  }
+
+  .cardClass {
+    @apply relative flex min-h-[304px] min-w-0 flex-col overflow-hidden rounded-[13px] border border-[#e7e1d4] p-[27px_24px] max-[1050px]:p-[24px_19px] max-[850px]:min-h-[290px] max-[850px]:p-[22px_17px];
+  }
+
+  .labelClass {
+    @apply flex items-center gap-2 text-[12px] font-[600] max-[440px]:gap-[5px] max-[440px]:text-[10px] max-[680px]:gap-[6px] max-[680px]:text-[11px] max-[850px]:text-[11px] [&_svg]:size-[17px] max-[440px]:[&_svg]:size-[15px];
+  }
+
+  .numberClass {
+    @apply mt-[15px] block text-[51px] leading-[1.6] font-[800] tracking-[-1.6px] whitespace-nowrap max-[1050px]:text-[44px] max-[350px]:text-[26px] max-[440px]:text-[29px] max-[440px]:tracking-[-1.1px] max-[680px]:text-[34px] max-[850px]:mt-[18px] max-[850px]:text-[36px] max-[850px]:tracking-[-1px];
+  }
+
+  .textClass {
+    @apply mt-[2px] text-[11px] leading-[2] max-[440px]:text-[9px] max-[680px]:text-[10px] max-[850px]:text-[10px];
+  }
+
+  .sampleLabelClass {
+    @apply inline-flex items-center gap-[5px] rounded-[5px] border border-[#d8d0c0] px-2 py-[2px] text-[9px] leading-[1.8] font-[500] whitespace-nowrap text-[#6e6251] max-[680px]:mt-2.5 [&_svg]:size-3;
+  }
+
+  .workflowTabClass {
+    @apply h-auto min-w-0 flex-1 rounded-[5px] border-0 bg-transparent p-1.5 text-[11px] font-normal normal-case text-[#756950] shadow-none transition-none hover:scale-100 hover:bg-transparent hover:text-[#756950] active:scale-100 data-[state=active]:bg-[#fff1d9] data-[state=active]:font-bold data-[state=active]:text-[#865000] data-[state=active]:hover:bg-[#fff1d9] data-[state=active]:hover:text-[#865000] max-[600px]:text-[10px] group-data-horizontal/tabs:h-auto;
+  }
+
+  .symbolClassName {
+    @apply h-[26px] w-[26px] fill-none stroke-current stroke-2 max-[1050px]:w-[23px] max-[600px]:h-[22px] max-[600px]:w-[22px] max-[800px]:h-[19px] max-[800px]:w-[19px];
+  }
 }
 
 .pages-container {

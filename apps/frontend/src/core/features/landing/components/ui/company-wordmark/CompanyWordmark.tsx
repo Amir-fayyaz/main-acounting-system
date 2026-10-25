@@ -3,17 +3,14 @@ import type { CompanyBrand, CompanyBrandKey } from '@/core/features/landing/asse
 import { cn } from '@/core/utils/shadcn/utils';
 import type { ReactNode } from 'react';
 
-const symbolClassName =
-  'h-[26px] w-[26px] fill-none stroke-current stroke-2 max-[1050px]:w-[23px] max-[600px]:h-[22px] max-[600px]:w-[22px] max-[800px]:h-[19px] max-[800px]:w-[19px]';
-
 const symbolByBrand: Partial<Record<CompanyBrandKey, ReactNode>> = {
   tapsi: (
-    <svg viewBox="0 0 28 28" className={symbolClassName} aria-hidden="true">
+    <svg viewBox="0 0 28 28" className="symbolClassName" aria-hidden="true">
       <path d="M3 9h22M3 18h22" strokeWidth={4} />
     </svg>
   ),
   aparat: (
-    <svg viewBox="0 0 28 28" className={symbolClassName} aria-hidden="true">
+    <svg viewBox="0 0 28 28" className="symbolClassName" aria-hidden="true">
       <circle cx="14" cy="14" r="10" />
       <circle cx="10" cy="10" r="1.8" />
       <circle cx="18" cy="10" r="1.8" />
@@ -22,12 +19,12 @@ const symbolByBrand: Partial<Record<CompanyBrandKey, ReactNode>> = {
     </svg>
   ),
   bazaar: (
-    <svg viewBox="0 0 28 28" className={symbolClassName} aria-hidden="true">
+    <svg viewBox="0 0 28 28" className="symbolClassName" aria-hidden="true">
       <path d="M5 10h18l-2 14H7L5 10Zm5 0V7a4 4 0 0 1 8 0v3" />
     </svg>
   ),
   zarinpal: (
-    <svg viewBox="0 0 28 28" className={symbolClassName} aria-hidden="true">
+    <svg viewBox="0 0 28 28" className="symbolClassName" aria-hidden="true">
       <path d="m15 3-9 13h7l-1 9 10-14h-8l1-8Z" />
     </svg>
   ),

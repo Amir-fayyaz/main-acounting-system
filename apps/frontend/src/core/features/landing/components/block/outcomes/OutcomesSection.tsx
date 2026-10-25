@@ -7,21 +7,6 @@ import {
 } from '@/core/features/landing/lib/landing-classes';
 import { cn } from '@/core/utils/shadcn/utils';
 
-const cardClass =
-  'relative flex min-h-[304px] min-w-0 flex-col overflow-hidden rounded-[13px] border border-[#e7e1d4] p-[27px_24px] max-[1050px]:p-[24px_19px] max-[850px]:min-h-[290px] max-[850px]:p-[22px_17px]';
-
-const labelClass =
-  'flex items-center gap-2 text-[12px] font-[600] max-[440px]:gap-[5px] max-[440px]:text-[10px] max-[680px]:gap-[6px] max-[680px]:text-[11px] max-[850px]:text-[11px] [&_svg]:size-[17px] max-[440px]:[&_svg]:size-[15px]';
-
-const numberClass =
-  'mt-[15px] block text-[51px] leading-[1.6] font-[800] tracking-[-1.6px] whitespace-nowrap max-[1050px]:text-[44px] max-[350px]:text-[26px] max-[440px]:text-[29px] max-[440px]:tracking-[-1.1px] max-[680px]:text-[34px] max-[850px]:mt-[18px] max-[850px]:text-[36px] max-[850px]:tracking-[-1px]';
-
-const textClass =
-  'mt-[2px] text-[11px] leading-[2] max-[440px]:text-[9px] max-[680px]:text-[10px] max-[850px]:text-[10px]';
-
-const sampleLabelClass =
-  'inline-flex items-center gap-[5px] rounded-[5px] border border-[#d8d0c0] px-2 py-[2px] text-[9px] leading-[1.8] font-[500] whitespace-nowrap text-[#6e6251] max-[680px]:mt-2.5 [&_svg]:size-3';
-
 export function OutcomesSection() {
   return (
     <div className={landingContainerClass}>
@@ -49,7 +34,7 @@ export function OutcomesSection() {
               از یک تیم کوچک تا هزاران رویداد مالی؛ تمرکز روی تداوم کار، ثبات اطلاعات و حساب‌های
               قابل اتکا.
             </P>
-            <Span className={cn(sampleLabelClass, 'mt-[11px] max-[680px]:mt-2.5')}>
+            <Span className={cn('sampleLabelClass mt-[11px] max-[680px]:mt-2.5')}>
               <LandingIcon name="info" />
               آمار نمایشی · پیش‌نمایش طراحی
             </Span>
@@ -59,14 +44,12 @@ export function OutcomesSection() {
         <div className="grid grid-cols-[1.05fr_1fr_1fr] gap-[17px] max-[440px]:gap-[11px] max-[680px]:grid-cols-2 max-[680px]:gap-[13px] max-[850px]:gap-3">
           <article
             className={cn(
-              cardClass,
-              'border-[#ffa00a] bg-[#ffa00a] text-[#1a120a] max-[440px]:min-h-[220px] max-[440px]:p-[24px_22px] max-[350px]:gap-x-[13px] max-[350px]:px-[18px] max-[680px]:col-span-2 max-[680px]:grid max-[680px]:min-h-[230px] max-[680px]:grid-cols-[1fr_1.1fr] max-[680px]:content-center max-[680px]:gap-x-[22px] max-[680px]:p-[25px_28px]',
+              'cardClass border-[#ffa00a] bg-[#ffa00a] text-[#1a120a] max-[440px]:min-h-[220px] max-[440px]:p-[24px_22px] max-[350px]:gap-x-[13px] max-[350px]:px-[18px] max-[680px]:col-span-2 max-[680px]:grid max-[680px]:min-h-[230px] max-[680px]:grid-cols-[1fr_1.1fr] max-[680px]:content-center max-[680px]:gap-x-[22px] max-[680px]:p-[25px_28px]',
             )}
           >
             <Span
               className={cn(
-                labelClass,
-                'max-[680px]:col-start-2 max-[680px]:row-start-1 max-[680px]:mt-1.5 max-[680px]:text-[13px] max-[440px]:text-[11px]',
+                'labelClass max-[680px]:col-start-2 max-[680px]:row-start-1 max-[680px]:mt-1.5 max-[680px]:text-[13px] max-[440px]:text-[11px]',
               )}
             >
               <LandingIcon name="users" />
@@ -75,8 +58,7 @@ export function OutcomesSection() {
 
             <Span
               className={cn(
-                numberClass,
-                'max-[680px]:col-start-1 max-[680px]:row-[1/3] max-[680px]:mt-0 max-[680px]:self-center max-[680px]:text-[51px] max-[680px]:tracking-[-1.7px] max-[440px]:text-[43px] max-[350px]:text-[36px]',
+                'numberClass max-[680px]:col-start-1 max-[680px]:row-[1/3] max-[680px]:mt-0 max-[680px]:self-center max-[680px]:text-[51px] max-[680px]:tracking-[-1.7px] max-[440px]:text-[43px] max-[350px]:text-[36px]',
               )}
             >
               <bdi dir="ltr">۲٬۴۰۰+</bdi>
@@ -84,8 +66,7 @@ export function OutcomesSection() {
 
             <P
               className={cn(
-                textClass,
-                'text-[#603b08] max-[680px]:col-start-2 max-[680px]:row-start-2 max-[680px]:mt-2 max-[680px]:text-[11px] max-[440px]:text-[10px]',
+                'textClass text-[#603b08] max-[680px]:col-start-2 max-[680px]:row-start-2 max-[680px]:mt-2 max-[680px]:text-[11px] max-[440px]:text-[10px]',
               )}
             >
               تیم‌های مالی، با یک زبان مشترک.
@@ -103,18 +84,17 @@ export function OutcomesSection() {
 
           <article
             className={cn(
-              cardClass,
-              'bg-[#fffdf8] max-[440px]:p-[20px_14px] max-[680px]:min-h-[266px] max-[680px]:p-[23px_18px]',
+              'cardClass bg-[#fffdf8] max-[440px]:p-[20px_14px] max-[680px]:min-h-[266px] max-[680px]:p-[23px_18px]',
             )}
           >
-            <Span className={cn(labelClass, '[&_svg]:text-[#52836a]')}>
+            <Span className={cn('labelClass [&_svg]:text-[#52836a]')}>
               <LandingIcon name="clock" />
               دسترس‌پذیری سرویس
             </Span>
 
-            <Span className={numberClass}>۹۹٫۹٪</Span>
+            <Span className="numberClass">۹۹٫۹٪</Span>
 
-            <P className={cn(textClass, 'text-[#756953]')}>
+            <P className={cn('textClass text-[#756953]')}>
               برای روزهایی که حساب‌ها منتظر نمی‌مانند.
             </P>
 
@@ -140,25 +120,23 @@ export function OutcomesSection() {
 
           <article
             className={cn(
-              cardClass,
-              'border-[#231b12] bg-[#231b12] text-[#fff7e8] max-[440px]:p-[20px_14px] max-[680px]:min-h-[266px] max-[680px]:p-[23px_18px]',
+              'cardClass border-[#231b12] bg-[#231b12] text-[#fff7e8] max-[440px]:p-[20px_14px] max-[680px]:min-h-[266px] max-[680px]:p-[23px_18px]',
             )}
           >
-            <Span className={cn(labelClass, 'text-[#dcc39b] [&_svg]:text-[#ffa00a]')}>
+            <Span className={cn('labelClass text-[#dcc39b] [&_svg]:text-[#ffa00a]')}>
               <LandingIcon name="receipt" />
               فاکتور ثبت‌شده
             </Span>
 
             <Span
               className={cn(
-                numberClass,
-                'max-[1050px]:text-[36px] max-[350px]:text-[21px] max-[440px]:text-[23px] max-[440px]:tracking-[-0.7px] max-[680px]:text-[28px] max-[850px]:text-[30px]',
+                'numberClass max-[1050px]:text-[36px] max-[350px]:text-[21px] max-[440px]:text-[23px] max-[440px]:tracking-[-0.7px] max-[680px]:text-[28px] max-[850px]:text-[30px]',
               )}
             >
               ۱۲ میلیون
             </Span>
 
-            <P className={cn(textClass, 'text-[#c8b89d]')}>هر فاکتور، بخشی از یک تصویر بزرگ‌تر.</P>
+            <P className={cn('textClass text-[#c8b89d]')}>هر فاکتور، بخشی از یک تصویر بزرگ‌تر.</P>
 
             <svg
               role="img"

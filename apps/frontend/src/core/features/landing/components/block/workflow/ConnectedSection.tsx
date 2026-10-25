@@ -21,9 +21,6 @@ import {
 } from '@/core/features/landing/lib/landing-classes';
 import { cn } from '@/core/utils/shadcn/utils';
 
-const workflowTabClass =
-  'h-auto min-w-0 flex-1 rounded-[5px] border-0 bg-transparent p-1.5 text-[11px] font-normal normal-case text-[#756950] shadow-none transition-none group-data-horizontal/tabs:h-auto hover:scale-100 hover:bg-transparent hover:text-[#756950] active:scale-100 data-[state=active]:bg-[#fff1d9] data-[state=active]:font-bold data-[state=active]:text-[#865000] data-[state=active]:hover:bg-[#fff1d9] data-[state=active]:hover:text-[#865000] max-[600px]:text-[10px]';
-
 interface ConnectedSectionProps {
   data?: WorkflowSectionData;
   /**
@@ -125,7 +122,7 @@ export function ConnectedSection({
               className="mb-[17px] flex !h-auto w-full justify-start gap-[5px] rounded-none border-b border-[#eee8dc] bg-transparent p-0 pb-3 max-[600px]:gap-[2px]"
             >
               {data.tabs.map((tab) => (
-                <TabsTrigger key={tab.key} value={tab.key} className={workflowTabClass}>
+                <TabsTrigger key={tab.key} value={tab.key} className="workflowTabClass">
                   {tab.label}
                 </TabsTrigger>
               ))}
