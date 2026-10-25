@@ -1,5 +1,9 @@
 'use client';
 
+import { Info } from 'lucide-react';
+import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
+import { pricingNote } from '@/core/features/landing/assets/mock/pricing';
+
 import { useState } from 'react';
 
 import type { BillingPeriod } from '@/core/features/landing/assets/@types/pricing';
@@ -13,25 +17,26 @@ export function PricingPlans() {
   const [period, setPeriod] = useState<BillingPeriod>('month');
 
   return (
-    <>
-      <BillingToggle period={period} onPeriodChange={setPeriod} />
+    <SectionLayout className="pt-0">
+      <div aria-label="پلن‌های نمونه">
+        <BillingToggle period={period} onPeriodChange={setPeriod} />
 
-      <P
-        aria-live="polite"
-        className="mb-5 text-center text-xs text-[#746b60]"
-      >
-        {getBillingSummary(period)}
-      </P>
+        <P aria-live="polite" className="mb-5 text-center text-xs text-[#746b60]">
+          {getBillingSummary(period)}
+        </P>
 
-      <section aria-label="پلن‌های نمونه">
-        <ul className="m-0 grid list-none grid-cols-4 items-stretch gap-[15px] p-0 max-[1100px]:gap-3 max-[600px]:grid-cols-1 max-[600px]:gap-[17px] max-[900px]:grid-cols-2 max-[900px]:gap-[18px]">
+        <ul className="m-0 grid list-none grid-cols-4 items-stretch gap-3.5 p-0 max-xl:gap-3 max-sm:grid-cols-1 max-sm:gap-4 max-lg:grid-cols-2 max-lg:gap-4">
           {plans.map((plan) => (
             <li key={plan.id} className="flex min-w-0">
               <PlanCard plan={plan} period={period} />
             </li>
           ))}
         </ul>
-      </section>
-    </>
+        <P className="mt-5 flex items-start justify-start gap-2 text-xs leading-loose text-muted-foreground sm:justify-center">
+          <Info aria-hidden="true" strokeWidth={1.7} className="mt-0.5 size-3.5 shrink-0" />
+          {pricingNote}
+        </P>
+      </div>
+    </SectionLayout>
   );
 }

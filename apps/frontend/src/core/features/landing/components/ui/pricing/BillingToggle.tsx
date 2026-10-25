@@ -1,3 +1,4 @@
+import { Span } from '@/core/components/custom/ui/typography/Typography';
 import type { BillingPeriod } from '@/core/features/landing/assets/@types/pricing';
 import { Badge } from '@/core/components/shadcn/ui/badge/badge';
 import { Button } from '@/core/components/shadcn/ui/button/button';
@@ -16,11 +17,11 @@ export function BillingToggle({
   onPeriodChange: (period: BillingPeriod) => void;
 }) {
   return (
-    <div className="mb-[31px] flex items-center justify-center gap-3 max-[600px]:mb-[25px] max-[600px]:gap-[9px]">
+    <div className="mb-8 flex items-center justify-center gap-3 max-sm:mb-6 max-sm:gap-2">
       <div
         role="group"
         aria-label="دوره پرداخت"
-        className="flex gap-1 rounded-[30px] border border-[#dfd6c5] bg-[#eeeadf] p-1"
+        className="flex gap-1 rounded-full border border-[#dfd6c5] bg-[#eeeadf] p-1"
       >
         {periods.map((item) => {
           const selected = period === item.value;
@@ -33,12 +34,12 @@ export function BillingToggle({
               aria-pressed={selected}
               onClick={() => onPeriodChange(item.value)}
               className={cn(
-                'h-auto min-h-0 rounded-[25px] bg-transparent px-[19px] py-[7px] text-xs leading-[1.8] font-normal tracking-normal text-[#706147] shadow-none hover:scale-100 hover:bg-transparent hover:text-[#706147] active:scale-100 max-[600px]:px-4 max-[600px]:text-[11px]',
+                'h-auto min-h-0 rounded-3xl bg-transparent px-5 py-1.5 text-xs leading-relaxed font-normal tracking-normal text-[#706147] shadow-none hover:scale-100 hover:bg-transparent hover:text-[#706147] active:scale-100 max-sm:px-4',
                 selected &&
-                  'bg-[#fffdf6] font-[650] text-[#1a120a] shadow-[0_1px_5px_#5b39140c] hover:bg-[#fffdf6] hover:text-[#1a120a]',
+                  'bg-[#fffdf6] font-semibold text-[#1a120a] shadow-[0_1px_5px_#5b39140c] hover:bg-[#fffdf6] hover:text-[#1a120a]',
               )}
             >
-              {item.label}
+              <Span className="text-[length:inherit]">{item.label}</Span>
             </Button>
           );
         })}
@@ -46,9 +47,9 @@ export function BillingToggle({
 
       <Badge
         variant="outline"
-        className="rounded-[5px] border-0 bg-[#fff1d9] px-2 py-[3px] text-[10px] leading-[1.8] font-normal text-[#76501c] max-[600px]:px-1.5 max-[600px]:text-[9px]"
+        className="rounded-sm border-0 bg-[#fff1d9] px-2 py-0.5 text-xs leading-relaxed font-normal text-[#76501c] max-sm:px-1.5"
       >
-        ۲۰٪ تخفیف سالانه نمونه
+        <Span className="text-[length:inherit]">۲۰٪ تخفیف سالانه نمونه</Span>
       </Badge>
     </div>
   );

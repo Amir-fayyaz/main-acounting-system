@@ -165,18 +165,6 @@
 }
 
 @layer components {
-  .pricing-root {
-    @apply bg-[#f7f6ee] text-[15px] leading-[1.9] text-[#1a120a];
-  }
-
-  .pricing-container {
-    @apply mx-auto w-[min(1160px,calc(100%_-_80px))] max-[1050px]:w-[calc(100%_-_48px)] max-[600px]:w-[calc(100%_-_36px)];
-  }
-
-  .landingContainerClass {
-    @apply mx-auto w-[min(1160px,calc(100%_-_80px))] max-[1050px]:w-[calc(100%_-_48px)] max-[600px]:w-[calc(100%_-_36px)];
-  }
-
   .pricing-eyebrow {
     @apply inline-flex items-center gap-2 text-xs font-semibold text-[#8f5800] before:size-1.5 before:rounded-full before:bg-[#ffa00a] before:content-[''] max-sm:gap-1.5 max-sm:text-xs;
   }

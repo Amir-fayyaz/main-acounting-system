@@ -1,39 +1,41 @@
+import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 import { H1, P, Span } from '@/core/components/custom/ui/typography/Typography';
 import { Badge } from '@/core/components/shadcn/ui/badge/badge';
 import { cn } from '@/core/utils/shadcn/utils';
 
 export function PricingHero() {
   return (
-    <section
-      aria-labelledby="pricing-title"
-      className="mx-auto max-w-[800px] pt-[66px] pb-[38px] text-center max-[600px]:pt-[43px] max-[600px]:pb-[30px] max-[900px]:pt-[53px]"
-    >
-      <Span className="pricing-eyebrow">تعرفه‌ها</Span>
+    <SectionLayout className="py-8 sm:py-12">
+      <div aria-labelledby="pricing-title" className="mx-auto max-w-200 text-center">
+        <Span className="pricing-eyebrow">تعرفه‌ها</Span>
 
-      <H1
-        id="pricing-title"
-        className="mt-[17px] mb-[15px] text-[48px] leading-[1.65] font-extrabold tracking-[-1.8px] max-[600px]:mt-[13px] max-[600px]:mb-3 max-[600px]:text-[32px] max-[600px]:leading-[1.7] max-[600px]:tracking-[-1px] max-[900px]:text-[41px]"
-      >
-        به اندازه تیم‌تان،
-        <br />
-        <span className="text-[#a86400]">برای مسیر رشدتان.</span>
-      </H1>
+        <H1
+          id="pricing-title"
+          className="mt-4 mb-3.5 leading-relaxed font-extrabold tracking-tighter max-sm:mt-3 max-sm:mb-3 text-3xl sm:text-5xl"
+        >
+          به اندازه تیم‌تان،
+          <br />
+          <Span className="text-[length:inherit] text-[#a86400]">برای مسیر رشدتان.</Span>
+        </H1>
 
-      <P
-        className={cn(
-          'text-[#746b60] mx-auto max-w-[570px] text-sm leading-[2.1] max-[600px]:max-w-[345px] max-[600px]:text-xs',
-        )}
-      >
-        همه پلن‌ها روی یک جریان مالی یکپارچه بنا شده‌اند. ظرفیت و همراهی مناسب تیم خودتان را
-        انتخاب کنید.
-      </P>
+        <P
+          className={cn(
+            'text-[#746b60] mx-auto max-w-144 text-sm leading-loose max-sm:max-w-80 max-sm:text-xs',
+          )}
+        >
+          همه پلن‌ها روی یک جریان مالی یکپارچه بنا شده‌اند. ظرفیت و همراهی مناسب تیم خودتان را
+          انتخاب کنید.
+        </P>
 
-      <Badge
-        variant="outline"
-        className="mt-4 inline-flex min-h-0 items-center gap-[5px] rounded-[5px] border border-[#d8d0c0] bg-transparent px-2 py-[2px] text-[10px] leading-[1.8] font-medium whitespace-nowrap text-[#6e6251] max-[600px]:mt-[14px] max-[600px]:text-[9px]"
-      >
-        تمام قیمت‌ها، ظرفیت‌ها و پلن‌ها در این صفحه نمونه‌اند.
-      </Badge>
-    </section>
+        <Badge
+          variant="outline"
+          className="mt-4 inline-flex min-h-0 items-center gap-1 rounded-sm border border-[#d8d0c0] bg-transparent px-2 py-0.5 text-xs leading-relaxed font-medium whitespace-nowrap text-[#6e6251] max-sm:mt-3.5"
+        >
+          <Span className="text-[length:inherit]">
+            تمام قیمت‌ها، ظرفیت‌ها و پلن‌ها در این صفحه نمونه‌اند.
+          </Span>
+        </Badge>
+      </div>
+    </SectionLayout>
   );
 }
