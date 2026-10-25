@@ -13,23 +13,6 @@ export const accountingPanelConfig = {
       items: [{ label: 'میز کار', href: '/panel', icon: 'CiGrid41' }],
     },
     {
-      id: 'store',
-      label: 'مدیریت',
-      items: [
-        {
-          id: 'store',
-          label: 'فروشگاه',
-          icon: 'CiShop',
-          defaultOpen: true,
-          children: [
-            { label: 'سفارش‌ها', href: '/panel/store/orders' },
-            { label: 'مرجوعی‌ها', href: '/panel/store/returns' },
-            { label: 'تخفیف‌ها', href: '/panel/store/discounts' },
-          ],
-        },
-      ],
-    },
-    {
       id: 'daily',
       label: 'عملیات روزانه',
       items: [

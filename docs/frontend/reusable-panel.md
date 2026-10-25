@@ -1,6 +1,6 @@
 # Reusable panel
 
-The panel is a static UI preview at `/panel`, accessible without login or a token. All 16 destinations have their own placeholder page. No business data or backend integration is included.
+The panel is a static UI preview at `/panel`, accessible without login or a token. The default sidebar matches the reference: 13 links in four groups (workspace, daily operations, finance, and support). Each destination has its own placeholder page. No business data or backend integration is included.
 
 ## Structure
 
@@ -52,4 +52,4 @@ A navigation item can be either a destination (`label`, `href`, `icon`) or a col
 }
 ```
 
-The three store routes are static placeholders. Search includes child destinations even when their submenu is closed. Keyboard activation, active child and parent states, and mobile drawer behavior are handled by the shared sidebar.
+The store group is an optional configuration example, excluded from the default accounting menu. Its three routes remain available as static placeholders. Search includes child destinations even when their submenu is closed. Keyboard activation, active child and parent states, and mobile drawer behavior are handled by the shared sidebar.

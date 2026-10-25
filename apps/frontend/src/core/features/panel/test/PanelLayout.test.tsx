@@ -39,9 +39,37 @@ beforeEach(() => {
   );
 });
 
-function renderPanel(defaultSidebarOpen = true) {
+// Submenus remain available to consumers, independently of the accounting menu.
+const panelWithSublinks: PanelConfiguration = {
+  ...accountingPanelConfig,
+  navigation: [
+    ...accountingPanelConfig.navigation,
+    {
+      id: 'store',
+      label: 'مدیریت',
+      items: [
+        {
+          id: 'store',
+          label: 'فروشگاه',
+          icon: 'CiShop',
+          defaultOpen: true,
+          children: [
+            { label: 'سفارش‌ها', href: '/panel/store/orders' },
+            { label: 'مرجوعی‌ها', href: '/panel/store/returns' },
+            { label: 'تخفیف‌ها', href: '/panel/store/discounts' },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+function renderPanel(
+  defaultSidebarOpen = true,
+  config: PanelConfiguration = accountingPanelConfig,
+) {
   return render(
-    <PanelLayout config={accountingPanelConfig} defaultSidebarOpen={defaultSidebarOpen}>
+    <PanelLayout config={config} defaultSidebarOpen={defaultSidebarOpen}>
       <PanelPlaceholder title="میز کار" />
     </PanelLayout>,
   );
@@ -56,7 +84,7 @@ describe('Reusable panel shell', () => {
     state.pathname = '/panel/sales';
     renderPanel();
     const nav = screen.getByRole('navigation', { name: 'منوی پنل' });
-    expect(within(nav).getAllByRole('link')).toHaveLength(16);
+    expect(within(nav).getAllByRole('link')).toHaveLength(13);
     for (const item of getSidebarLinks(accountingPanelConfig.navigation)) {
       expect(within(nav).getByRole('link', { name: item.label })).toHaveAttribute(
         'href',
@@ -195,7 +223,7 @@ describe('Panel route matching', () => {
 describe('Configurable sidebar sublinks', () => {
   it('opens and closes a submenu using pointer and keyboard controls', async () => {
     const user = userEvent.setup();
-    renderPanel();
+    renderPanel(true, panelWithSublinks);
     const store = screen.getByRole('button', { name: 'فروشگاه' });
     expect(store).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByRole('link', { name: 'سفارش‌ها' })).toHaveAttribute(
@@ -214,7 +242,7 @@ describe('Configurable sidebar sublinks', () => {
   it('opens a matching submenu when the current child route changes and marks its parent', async () => {
     const user = userEvent.setup();
     state.pathname = '/panel/store/orders/123';
-    const { rerender } = renderPanel();
+    const { rerender } = renderPanel(true, panelWithSublinks);
     const store = screen.getByRole('button', { name: 'فروشگاه' });
     expect(store).toHaveAttribute('data-active', 'true');
     expect(screen.getByRole('link', { name: 'سفارش‌ها' })).toHaveAttribute('aria-current', 'page');
@@ -222,7 +250,7 @@ describe('Configurable sidebar sublinks', () => {
     expect(store).toHaveAttribute('aria-expanded', 'false');
     state.pathname = '/panel/store/returns';
     rerender(
-      <PanelLayout config={accountingPanelConfig}>
+      <PanelLayout config={panelWithSublinks}>
         <PanelPlaceholder title="مرجوعی‌ها" />
       </PanelLayout>,
     );
@@ -233,7 +261,7 @@ describe('Configurable sidebar sublinks', () => {
 
   it('expands the desktop icon rail when a submenu icon is clicked', async () => {
     const user = userEvent.setup();
-    const { container } = renderPanel(false);
+    const { container } = renderPanel(false, panelWithSublinks);
     const store = screen.getByRole('button', { name: 'فروشگاه' });
     expect(store).toHaveAttribute('aria-expanded', 'false');
     await user.click(store);
@@ -247,7 +275,7 @@ describe('Configurable sidebar sublinks', () => {
   it('closes the mobile drawer when a sublink is selected', async () => {
     state.mobile = true;
     const user = userEvent.setup();
-    renderPanel();
+    renderPanel(true, panelWithSublinks);
     await user.click(screen.getByRole('button', { name: 'باز کردن منو' }));
     await user.click(screen.getByRole('link', { name: 'مرجوعی‌ها' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -255,7 +283,7 @@ describe('Configurable sidebar sublinks', () => {
 
   it('finds and navigates to sublinks through search, including when the submenu is closed', async () => {
     const user = userEvent.setup();
-    renderPanel();
+    renderPanel(true, panelWithSublinks);
     await user.click(screen.getByRole('button', { name: 'فروشگاه' }));
     const input = screen.getByRole('searchbox', { name: 'جستجو در پنل' });
     await user.type(input, 'تخفیف');
