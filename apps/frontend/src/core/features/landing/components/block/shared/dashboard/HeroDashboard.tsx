@@ -32,14 +32,14 @@ export function HeroDashboard({
   const isDemo = variant === 'demo';
 
   return (
-    <div className="landingContainerClass">
+    <div>
       <div
         id={id}
         className={cn(
           'dashboardBaseClass',
           isDemo
-            ? 'mt-[25px] max-w-[1160px] rounded-[15px] pb-2 max-[600px]:mt-8'
-            : 'mt-12 max-w-[1080px] min-[1500px]:mt-[54px] max-[600px]:mt-8',
+            ? 'mt-6 max-w-280 rounded-2xl pb-2 max-sm:mt-8'
+            : 'mt-12 max-w-280 2xl:mt-14 max-sm:mt-8',
           className,
         )}
       >
@@ -48,7 +48,7 @@ export function HeroDashboard({
           aria-label={data.previewAriaLabel}
           className={cn(
             'dashboardInnerClass',
-            isDemo && 'min-h-[480px] rounded-[9px] max-[600px]:min-h-0 max-[600px]:rounded-[6px]',
+            isDemo && 'min-h-112 rounded-lg max-sm:min-h-0 max-sm:rounded-md',
           )}
         >
           <DashboardSidebar data={data} view={view} onViewChange={setView} />

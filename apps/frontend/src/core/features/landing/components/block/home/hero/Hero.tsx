@@ -1,3 +1,4 @@
+import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
 import { cn } from '@/core/utils/shadcn/utils';
 import HeroActions from '@/core/features/landing/components/ui/hero/HeroActions';
@@ -8,125 +9,104 @@ import { Check } from 'lucide-react';
 
 export function Hero() {
   return (
-    <section
-      aria-labelledby="hero-title"
-      className="relative overflow-hidden pt-[62px] max-[600px]:pt-[38px]"
-    >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute top-[83px] left-1/2 h-[750px] w-[1120px] -translate-x-1/2 rounded-full border border-[#e7dfce] opacity-[0.65] max-[600px]:top-[100px] max-[600px]:h-[550px] max-[600px]:w-[660px] max-[800px]:top-[60px] max-[800px]:w-[920px]"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute top-[4px] left-1/2 h-[950px] w-[1380px] -translate-x-1/2 rounded-full border border-dashed border-[#e7dfce] opacity-[0.45] max-[600px]:top-[50px] max-[600px]:h-[700px] max-[600px]:w-[800px]"
-      />
+    <SectionLayout className="relative overflow-hidden pt-10 pb-0 sm:pt-16">
+      <div aria-labelledby="hero-title">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute top-20 left-1/2 h-180 w-280 -translate-x-1/2 rounded-full border border-[#e7dfce] opacity-65 max-sm:top-24 max-sm:h-144 max-sm:w-160 max-md:top-14 max-md:w-240"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute top-1 left-1/2 h-240 w-360 -translate-x-1/2 rounded-full border border-dashed border-[#e7dfce] opacity-45 max-sm:top-12 max-sm:h-180 max-sm:w-200"
+        />
 
-      <div
-        aria-hidden="true"
-        className={cn(
-          'orbitIconClass',
-          'top-[170px] left-[10%] -rotate-[11deg] text-[#a86800] max-[1050px]:left-[4%] max-[800px]:top-[132px] max-[800px]:left-[1%]',
-        )}
-      >
-        <LandingIcon name="receipt" className="size-6" />
-      </div>
-
-      <div
-        aria-hidden="true"
-        className={cn(
-          'orbitIconClass',
-          'top-[215px] right-[10%] rotate-[10deg] max-[1050px]:right-[4%] max-[800px]:top-[164px] max-[800px]:right-[1%]',
-        )}
-      >
-        <LandingIcon name="bank" className="size-6" />
-      </div>
-
-      <div
-        aria-hidden="true"
-        className={cn(
-          'orbitIconClass',
-          'top-[360px] left-[16%] rotate-[8deg] max-[1050px]:left-[7%] max-[800px]:hidden',
-        )}
-      >
-        <LandingIcon name="box" className="size-6" />
-      </div>
-
-      <div
-        aria-hidden="true"
-        className={cn(
-          'orbitIconClass',
-          'top-[383px] right-[17%] -rotate-[8deg] text-[#a86800] max-[1050px]:right-[7%] max-[800px]:hidden',
-        )}
-      >
-        <LandingIcon name="chart" className="size-6" />
-      </div>
-
-      <div className={cn('landingContainerClass relative z-[2] max-w-[810px] text-center')}>
-        <div className="inline-flex items-center gap-[9px] rounded-[30px] border border-[#e5dccb] bg-[#f7f6ee] px-3 py-[5px] text-[12px] text-[#5d5040] max-[600px]:gap-[7px] max-[600px]:px-[9px] max-[600px]:py-1 max-[600px]:text-[10px]">
-          <span className="inline-flex items-center gap-[5px] rounded-[20px] bg-[#fff1d9] px-2 py-px text-[#875100] max-[600px]:px-[5px] max-[600px]:text-[9px]">
-            <LandingIcon name="spark" className="size-[13px] shrink-0" />
-            هوشمند، با اختیار شما
-          </span>
-          <span>برای شرکت‌های ایرانی</span>
-        </div>
-
-        <H1
-          id="hero-title"
-          className="mx-auto max-w-4xl mt-10 font-black"
+        <div
+          aria-hidden="true"
+          className={cn(
+            'orbitIconClass',
+            'top-44 left-[10%] -rotate-[11deg] text-[#a86800] max-xl:left-[4%] max-md:top-32 max-md:left-[1%]',
+          )}
         >
-          حسابداری یکپارچه.
-          <span className="mt-1 block sm:mt-2">
-            خیالِ{" "}
-            <span
-              className="
-    relative z-0 inline-block whitespace-nowrap
-    after:absolute after:-z-10 after:content-['']
-    after:inset-x-[-3px] after:bottom-[0.02em]
-    after:h-[0.22em]
-    after:rotate-[-1.5deg]
-    after:rounded-[60%_15%_45%_20%]
-    after:bg-primary
-    sm:after:inset-x-[-5px]
-    sm:after:h-[0.24em]
-  "
-            >
-              حسابدار
-            </span>
-            ، آسوده.
-          </span>
-        </H1>
+          <LandingIcon name="receipt" className="size-6" />
+        </div>
 
+        <div
+          aria-hidden="true"
+          className={cn(
+            'orbitIconClass',
+            'top-52 right-[10%] rotate-[10deg] max-xl:right-[4%] max-md:top-40 max-md:right-[1%]',
+          )}
+        >
+          <LandingIcon name="bank" className="size-6" />
+        </div>
 
-        <Muted className="pt-6 sm:text-sm text-[11px]">
-          از اولین فاکتور تا بستن حساب‌ها، همه‌چیز در یک جریان.
-          <br />
-          کارهای تکراری با تراز؛ بررسی و تصمیم نهایی با شما.
-        </Muted>
+        <div
+          aria-hidden="true"
+          className={cn(
+            'orbitIconClass',
+            'top-96 left-[16%] rotate-[8deg] max-xl:left-[7%] max-md:hidden',
+          )}
+        >
+          <LandingIcon name="box" className="size-6" />
+        </div>
 
-        <HeroActions />
+        <div
+          aria-hidden="true"
+          className={cn(
+            'orbitIconClass',
+            'top-96 right-[17%] -rotate-[8deg] text-[#a86800] max-xl:right-[7%] max-md:hidden',
+          )}
+        >
+          <LandingIcon name="chart" className="size-6" />
+        </div>
 
-        <div className="mx-auto mt-5 flex w-fit items-center justify-center gap-2 sm:gap-5">
-          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-            <Check aria-hidden="true" className="shrink-0 text-[#28765b]" size={14} />
-            <Span className="text-[10px] text-muted-foreground sm:text-xs">
-              بدون نیاز به ثبت‌نام
+        <div className={cn('relative z-2 mx-auto max-w-4xl text-center')}>
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#e5dccb] bg-[#f7f6ee] px-3 py-1 text-xs text-[#5d5040] max-sm:gap-1.5 max-sm:px-2">
+            <Span className="inline-flex items-center gap-1 rounded-2xl bg-[#fff1d9] px-2 py-px text-[#875100] max-sm:px-1 max-sm:text-xs">
+              <LandingIcon name="spark" className="size-3 shrink-0" />
+              هوشمند، با اختیار شما
             </Span>
+            <Span className="text-[length:inherit]">برای شرکت‌های ایرانی</Span>
           </div>
 
-          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-            <Check aria-hidden="true" className="shrink-0 text-[#28765b]" size={14} />
-            <Span className="text-[10px] text-muted-foreground sm:text-xs">
-              داده‌های نمونه، تجربه واقعی
+          <H1 id="hero-title" className="mx-auto max-w-4xl mt-10 font-black text-3xl sm:text-5xl">
+            حسابداری یکپارچه.
+            <Span className="text-[length:inherit] mt-1 block sm:mt-2">
+              خیالِ{' '}
+              <Span className="text-[length:inherit] relative z-0 inline-block whitespace-nowrap after:absolute after:-z-10 after:content-[''] after:-inset-x-0.5 after:bottom-[0.02em] after:h-[0.22em] after:rotate-[-1.5deg] after:rounded-[60%_15%_45%_20%] after:bg-primary sm:after:-inset-x-1 sm:after:h-[0.24em]">
+                حسابدار
+              </Span>
+              ، آسوده.
             </Span>
+          </H1>
+
+          <Muted className="pt-6 sm:text-sm text-xs">
+            از اولین فاکتور تا بستن حساب‌ها، همه‌چیز در یک جریان.
+            <br />
+            کارهای تکراری با تراز؛ بررسی و تصمیم نهایی با شما.
+          </Muted>
+
+          <HeroActions />
+
+          <div className="mx-auto mt-5 flex w-fit items-center justify-center gap-2 sm:gap-5">
+            <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+              <Check aria-hidden="true" className="shrink-0 text-[#28765b]" size={14} />
+              <Span className="text-xs text-muted-foreground">بدون نیاز به ثبت‌نام</Span>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+              <Check aria-hidden="true" className="shrink-0 text-[#28765b]" size={14} />
+              <Span className="text-xs text-muted-foreground">داده‌های نمونه، تجربه واقعی</Span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <HeroDashboard />
+        <HeroDashboard />
 
-      <div className="relative z-[2] border-t border-[#e4dfd3] bg-[#f7f6ee] pt-[22px] max-[600px]:pt-[18px]">
-        <HeroBenefits />
+        <div className="relative z-2 border-t border-[#e4dfd3] bg-[#f7f6ee] pt-5 max-sm:pt-4">
+          <HeroBenefits />
+        </div>
       </div>
-    </section>
+    </SectionLayout>
   );
 }

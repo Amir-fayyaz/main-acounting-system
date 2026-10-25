@@ -28,30 +28,28 @@ export function AssistantPreview({
   onManualToggle,
 }: AssistantPreviewProps) {
   return (
-    <Card className="relative gap-0 rounded-[14px] border border-[#e4dece] bg-[#ece9dc] p-[22px] shadow-none max-[600px]:p-[17px] max-[800px]:p-[13px]">
-      <div className="overflow-hidden rounded-[9px] border border-[#dfd8c8] bg-[#fffef9] shadow-[0_8px_22px_#49391907]">
+    <Card className="relative gap-0 rounded-xl border border-[#e4dece] bg-[#ece9dc] p-5 shadow-none max-sm:p-4 max-md:p-3">
+      <div className="overflow-hidden rounded-lg border border-[#dfd8c8] bg-[#fffef9] shadow-[0_8px_22px_#49391907]">
         <PreviewHeader preview={preview} />
 
-        <div
-          role="region"
-          aria-label={preview.ariaLabel}
-          className="p-[18px] max-[600px]:p-4 max-[800px]:p-[13px]"
-        >
+        <div role="region" aria-label={preview.ariaLabel} className="p-4 max-sm:p-4 max-md:p-3">
           <UserRequest preview={preview} />
           <AssistantReview approved={approved} preview={preview} />
 
-          <div className="flex gap-[7px]">
+          <div className="flex gap-1.5">
             <Button
               type="button"
               onClick={onApprovalToggle}
               className={cn(
-                'actionClass',
-                'text-[12px] font-bold [&_svg]:size-4',
+                'h-auto min-h-10 min-w-0 flex-1 whitespace-normal rounded-sm px-3 py-1.5 text-xs',
+                'text-xs font-bold [&_svg]:size-4',
                 approved && 'border border-border bg-card text-[#1a120a] hover:bg-[#f8f4ea]',
               )}
             >
               <LandingIcon name={approved ? 'refresh' : 'check'} />
-              {approved ? preview.actions.restart : preview.actions.approve}
+              <Span className="text-[length:inherit]">
+                {approved ? preview.actions.restart : preview.actions.approve}
+              </Span>
             </Button>
 
             <Button
@@ -61,21 +59,23 @@ export function AssistantPreview({
               aria-controls={manualReviewId}
               onClick={onManualToggle}
               className={cn(
-                'actionClass',
+                'h-auto min-h-10 min-w-0 flex-1 whitespace-normal rounded-sm px-3 py-1.5 text-xs',
                 'border border-border bg-card font-bold text-[#1a120a] hover:bg-[#f8f4ea]',
               )}
             >
-              {manualOpen ? preview.actions.closeManual : preview.actions.manual}
+              <Span className="text-[length:inherit]">
+                {manualOpen ? preview.actions.closeManual : preview.actions.manual}
+              </Span>
             </Button>
           </div>
 
           <div id={manualReviewId} hidden={!manualOpen} className="mt-3">
-            <Card className="gap-0 rounded-[6px] border border-[#e8e2d6] bg-white p-3 shadow-none">
-              <P className="mb-[7px] text-[11px] leading-[2] font-[650]">
+            <Card className="gap-0 rounded-md border border-[#e8e2d6] bg-white p-3 shadow-none">
+              <P className="mb-1.5 text-xs leading-loose font-semibold">
                 {preview.manualReview.title}
               </P>
               <ReviewRows lines={preview.manualReview.lines} />
-              <P className="mt-[7px] text-[10px] leading-[2] text-[#746b60]">
+              <P className="mt-1.5 text-xs leading-loose text-[#746b60]">
                 {preview.manualReview.note}
               </P>
             </Card>
@@ -83,24 +83,20 @@ export function AssistantPreview({
         </div>
       </div>
 
-      <P className="mt-[13px] text-center text-[10px] text-[#6b6256] max-[600px]:text-[9px]">
-        {preview.disclaimer}
-      </P>
+      <P className="mt-3 text-center text-xs text-[#6b6256]">{preview.disclaimer}</P>
     </Card>
   );
 }
 
 function PreviewHeader({ preview }: { preview: AssistantPreviewData }) {
   return (
-    <div className="flex items-center gap-[9px] border-b border-[#ece7db] p-[14px_17px] text-[12px] font-bold max-[600px]:p-[13px_15px] max-[600px]:text-[12px] max-[800px]:gap-[6px] max-[800px]:p-3 max-[800px]:text-[11px]">
-      <Span className="grid size-[29px] place-items-center rounded-[7px] bg-[#fff1d9] text-[#a46100] [&_svg]:size-[17px]">
+    <div className="flex items-center gap-2 border-b border-[#ece7db] py-3.5 px-4 text-xs font-bold max-sm:py-3 max-sm:px-3.5 max-md:gap-1.5 max-md:p-3">
+      <Span className="text-[length:inherit] grid size-7 place-items-center rounded-md bg-[#fff1d9] text-[#a46100] [&_svg]:size-4">
         <LandingIcon name="spark" />
       </Span>
-      <Span className="text-[12px] font-bold max-[600px]:text-[12px] max-[800px]:text-[11px]">
-        {preview.title}
-      </Span>
-      <Badge className="mr-auto bg-[#f4eedf] text-[#76603c] max-[600px]:text-[9px] max-[800px]:text-[8px]">
-        {preview.badge}
+      <Span className="text-xs font-bold">{preview.title}</Span>
+      <Badge className="mr-auto bg-[#f4eedf] text-[#76603c] max-sm:text-xs max-md:text-xs">
+        <Span className="text-[length:inherit]">{preview.badge}</Span>
       </Badge>
     </div>
   );
@@ -108,11 +104,11 @@ function PreviewHeader({ preview }: { preview: AssistantPreviewData }) {
 
 function UserRequest({ preview }: { preview: AssistantPreviewData }) {
   return (
-    <div className="mr-[30px] rounded-[7px_7px_0_7px] bg-[#f4f3e7] p-[10px_12px] text-[11px] leading-[1.9] max-[600px]:mr-[15px] max-[600px]:text-[11px] max-[800px]:mr-[10px]">
-      {preview.userMessage}
-      <div className="mt-[7px] flex items-center gap-2 text-[10px] text-[#75654d] [&_svg]:size-4">
+    <div className="mr-7 rounded-lg rounded-ee-none bg-[#f4f3e7] py-2.5 px-3 text-xs leading-loose max-sm:mr-3.5 max-md:mr-2.5">
+      <Span className="text-[length:inherit]">{preview.userMessage}</Span>
+      <div className="mt-1.5 flex items-center gap-2 text-xs text-[#75654d] [&_svg]:size-4">
         <LandingIcon name="file" />
-        {preview.attachment}
+        <Span className="text-[length:inherit]">{preview.attachment}</Span>
       </div>
     </div>
   );

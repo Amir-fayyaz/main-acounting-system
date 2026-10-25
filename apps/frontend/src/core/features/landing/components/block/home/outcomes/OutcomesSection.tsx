@@ -1,23 +1,20 @@
-import { H2, Span, P } from '@/core/components/custom/ui/typography/Typography';
+import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
+import { H2, P, Small, Span } from '@/core/components/custom/ui/typography/Typography';
 import { industryTags, outcomeAssurances } from '@/core/features/landing/assets/mock/workspace';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
 import { cn } from '@/core/utils/shadcn/utils';
 
 export function OutcomesSection() {
   return (
-    <div className="landingContainerClass">
-      <section
-        id="results"
-        aria-labelledby="proof-title"
-        className="pt-[10px] pb-0 max-[680px]:pt-0"
-      >
-        <div className="mb-[27px] flex items-end justify-between gap-10 max-[680px]:mb-6 max-[680px]:block max-[850px]:gap-[30px]">
+    <SectionLayout className="py-8 sm:py-12">
+      <div id="results" aria-labelledby="proof-title">
+        <div className="mb-7 flex items-end justify-between gap-10 max-md:mb-6 max-md:block max-lg:gap-7">
           <div>
             <Span className="landingEyebrowClass">برای روزهای پرکار، برای مسیر بلندمدت.</Span>
 
             <H2
               id="proof-title"
-              className="mt-3 text-[36px] leading-[1.7] font-[800] tracking-[-1.1px] max-[440px]:text-[27px] max-[680px]:text-[29px] max-[680px]:leading-[1.75] max-[850px]:text-[30px]"
+              className="mt-3 text-4xl leading-relaxed font-extrabold tracking-tighter max-md:text-3xl max-lg:text-3xl"
             >
               اعتماد،
               <br />
@@ -25,27 +22,27 @@ export function OutcomesSection() {
             </H2>
           </div>
 
-          <div className="max-w-[300px] max-[680px]:mt-[15px] max-[680px]:max-w-[400px] max-[850px]:max-w-[230px]">
-            <P className="text-[12px] leading-[2.1] text-[#746b60] max-[680px]:text-[11px]">
+          <div className="max-w-72 max-md:mt-3.5 max-md:max-w-96 max-lg:max-w-56">
+            <P className="text-xs leading-loose text-[#746b60]">
               از یک تیم کوچک تا هزاران رویداد مالی؛ تمرکز روی تداوم کار، ثبات اطلاعات و حساب‌های
               قابل اتکا.
             </P>
-            <Span className={cn('sampleLabelClass mt-[11px] max-[680px]:mt-2.5')}>
+            <Span className={cn('sampleLabelClass mt-2.5 max-md:mt-2.5')}>
               <LandingIcon name="info" />
               آمار نمایشی · پیش‌نمایش طراحی
             </Span>
           </div>
         </div>
 
-        <div className="grid grid-cols-[1.05fr_1fr_1fr] gap-[17px] max-[440px]:gap-[11px] max-[680px]:grid-cols-2 max-[680px]:gap-[13px] max-[850px]:gap-3">
+        <div className="grid grid-cols-[1.05fr_1fr_1fr] gap-4 max-md:grid-cols-2 max-md:gap-3 max-lg:gap-3">
           <article
             className={cn(
-              'cardClass border-[#ffa00a] bg-[#ffa00a] text-[#1a120a] max-[440px]:min-h-[220px] max-[440px]:p-[24px_22px] max-[350px]:gap-x-[13px] max-[350px]:px-[18px] max-[680px]:col-span-2 max-[680px]:grid max-[680px]:min-h-[230px] max-[680px]:grid-cols-[1fr_1.1fr] max-[680px]:content-center max-[680px]:gap-x-[22px] max-[680px]:p-[25px_28px]',
+              'cardClass border-[#ffa00a] bg-[#ffa00a] text-[#1a120a] max-md:col-span-2 max-md:grid max-md:min-h-56 max-md:grid-cols-[1fr_1.1fr] max-md:content-center max-md:gap-x-5 max-md:py-6 max-md:px-7',
             )}
           >
             <Span
               className={cn(
-                'labelClass max-[680px]:col-start-2 max-[680px]:row-start-1 max-[680px]:mt-1.5 max-[680px]:text-[13px] max-[440px]:text-[11px]',
+                'labelClass max-md:col-start-2 max-md:row-start-1 max-md:mt-1.5 max-md:text-xs',
               )}
             >
               <LandingIcon name="users" />
@@ -54,23 +51,25 @@ export function OutcomesSection() {
 
             <Span
               className={cn(
-                'numberClass max-[680px]:col-start-1 max-[680px]:row-[1/3] max-[680px]:mt-0 max-[680px]:self-center max-[680px]:text-[51px] max-[680px]:tracking-[-1.7px] max-[440px]:text-[43px] max-[350px]:text-[36px]',
+                'numberClass max-md:col-start-1 max-md:row-span-2 max-md:mt-0 max-md:self-center max-md:text-5xl max-md:tracking-tighter',
               )}
             >
-              <bdi dir="ltr">۲٬۴۰۰+</bdi>
+              <bdi dir="ltr">
+                <Span className="text-[length:inherit]">۲٬۴۰۰+</Span>
+              </bdi>
             </Span>
 
             <P
               className={cn(
-                'textClass text-[#603b08] max-[680px]:col-start-2 max-[680px]:row-start-2 max-[680px]:mt-2 max-[680px]:text-[11px] max-[440px]:text-[10px]',
+                'textClass text-[#603b08] max-md:col-start-2 max-md:row-start-2 max-md:mt-2 max-md:text-xs',
               )}
             >
               تیم‌های مالی، با یک زبان مشترک.
             </P>
 
-            <div className="mt-auto flex flex-wrap gap-[6px] pt-[29px] max-[440px]:gap-1.5 max-[680px]:col-span-2 max-[680px]:gap-2 max-[680px]:pt-[23px] max-[850px]:gap-[5px] [&_span]:flex [&_span]:items-center [&_span]:gap-[5px] [&_span]:rounded-[5px] [&_span]:border [&_span]:border-[#b775124d] [&_span]:bg-[#ffb333] [&_span]:px-2 [&_span]:py-[5px] [&_span]:text-[10px] [&_svg]:size-[13px] max-[440px]:[&_span]:p-[4px_7px] max-[440px]:[&_span]:text-[9px] max-[680px]:[&_span]:px-[9px] max-[680px]:[&_span]:py-[5px] max-[680px]:[&_span]:text-[10px] max-[850px]:[&_span]:p-[4px_6px] max-[850px]:[&_span]:text-[9px]">
+            <div className="mt-auto flex flex-wrap gap-1.5 pt-7 max-md:col-span-2 max-md:gap-2 max-md:pt-6 max-lg:gap-1 [&_span]:flex [&_span]:items-center [&_span]:gap-1 [&_span]:rounded-sm [&_span]:border [&_span]:border-[#b775124d] [&_span]:bg-[#ffb333] [&_span]:px-2 [&_span]:py-1 [&_span]:text-xs [&_svg]:size-3 max-md:[&_span]:px-2 max-md:[&_span]:py-1 max-md:[&_span]:text-xs max-lg:[&_span]:py-1 max-lg:[&_span]:px-1.5 max-lg:[&_span]:text-xs">
               {industryTags.map((tag) => (
-                <Span key={tag.label}>
+                <Span className="text-[length:inherit]" key={tag.label}>
                   <LandingIcon name={tag.icon} />
                   {tag.label}
                 </Span>
@@ -78,11 +77,7 @@ export function OutcomesSection() {
             </div>
           </article>
 
-          <article
-            className={cn(
-              'cardClass bg-[#fffdf8] max-[440px]:p-[20px_14px] max-[680px]:min-h-[266px] max-[680px]:p-[23px_18px]',
-            )}
-          >
+          <article className={cn('cardClass bg-[#fffdf8] max-md:min-h-64 max-md:py-6 max-md:px-4')}>
             <Span className={cn('labelClass [&_svg]:text-[#52836a]')}>
               <LandingIcon name="clock" />
               دسترس‌پذیری سرویس
@@ -97,26 +92,22 @@ export function OutcomesSection() {
             <div
               role="img"
               aria-label="نمای نمونه دسترس‌پذیری در ۳۰ روز"
-              className="mt-auto flex gap-[3px] pt-7 [direction:ltr] max-[440px]:[&>i]:h-[25px] max-[680px]:pt-[27px] max-[680px]:[&>i]:h-[30px] max-[850px]:gap-[2px] [&>i]:h-8 [&>i]:min-w-0 [&>i]:flex-1 [&>i]:rounded-[2px] [&>i]:bg-[#5f8a70] [&>i:nth-child(11)]:h-6 [&>i:nth-child(11)]:self-end [&>i:nth-child(9n)]:bg-[#acc3a9]"
+              className="mt-auto flex gap-0.5 pt-7 [direction:ltr] max-md:[&>i]:h-7 [&>i]:h-8 [&>i]:min-w-0 [&>i]:flex-1 [&>i]:rounded-sm [&>i]:bg-[#5f8a70] [&>i:nth-child(11)]:h-6 [&>i:nth-child(11)]:self-end [&>i:nth-child(9n)]:bg-[#acc3a9]"
             >
               {Array.from({ length: 30 }, (_, index) => (
                 <i key={index} />
               ))}
             </div>
 
-            <div className="mt-[7px] flex justify-between">
-              <Span className="text-[9px] text-[#7d705c] max-[440px]:text-[7px] max-[680px]:text-[8px] max-[850px]:text-[8px]">
-                ۳۰ روز گذشته · نمونه
-              </Span>
-              <Span className="text-[9px] text-[#7d705c] max-[440px]:text-[7px] max-[680px]:text-[8px] max-[850px]:text-[8px]">
-                امروز
-              </Span>
+            <div className="mt-1.5 flex justify-between">
+              <Span className="text-xs text-[#7d705c]">۳۰ روز گذشته · نمونه</Span>
+              <Span className="text-xs text-[#7d705c]">امروز</Span>
             </div>
           </article>
 
           <article
             className={cn(
-              'cardClass border-[#231b12] bg-[#231b12] text-[#fff7e8] max-[440px]:p-[20px_14px] max-[680px]:min-h-[266px] max-[680px]:p-[23px_18px]',
+              'cardClass border-[#231b12] bg-[#231b12] text-[#fff7e8] max-md:min-h-64 max-md:py-6 max-md:px-4',
             )}
           >
             <Span className={cn('labelClass text-[#dcc39b] [&_svg]:text-[#ffa00a]')}>
@@ -124,11 +115,7 @@ export function OutcomesSection() {
               فاکتور ثبت‌شده
             </Span>
 
-            <Span
-              className={cn(
-                'numberClass max-[1050px]:text-[36px] max-[350px]:text-[21px] max-[440px]:text-[23px] max-[440px]:tracking-[-0.7px] max-[680px]:text-[28px] max-[850px]:text-[30px]',
-              )}
-            >
+            <Span className={cn('numberClass max-xl:text-4xl max-md:text-3xl max-lg:text-3xl')}>
               ۱۲ میلیون
             </Span>
 
@@ -139,7 +126,7 @@ export function OutcomesSection() {
               aria-label="نمودار نمونه افزایش تعداد اسناد"
               viewBox="0 0 260 60"
               preserveAspectRatio="none"
-              className="mt-auto block h-[66px] w-full overflow-visible pt-3.5 max-[680px]:h-[65px]"
+              className="mt-auto block h-16 w-full overflow-visible pt-3.5 max-md:h-16"
             >
               <path d="M0 48H260M0 25H260" stroke="#58442b" strokeWidth=".6" />
               <path
@@ -150,34 +137,32 @@ export function OutcomesSection() {
               <circle cx="258" cy="2" r="3" fill="#ffa00a" stroke="none" />
             </svg>
 
-            <div className="mt-[5px] flex justify-between">
-              <Span className="text-[9px] text-[#c4ad88] max-[440px]:text-[7px] max-[680px]:text-[8px] max-[850px]:text-[8px]">
-                یک مسیر پیوسته
-              </Span>
-              <Span className="text-[9px] text-[#c4ad88] max-[440px]:text-[7px] max-[680px]:text-[8px] max-[850px]:text-[8px]">
-                تا دفتر کل
-              </Span>
+            <div className="mt-1 flex justify-between">
+              <Span className="text-xs text-[#c4ad88]">یک مسیر پیوسته</Span>
+              <Span className="text-xs text-[#c4ad88]">تا دفتر کل</Span>
             </div>
           </article>
         </div>
 
-        <P className="mt-[13px] flex items-center gap-[5px] text-[10px] text-[#796e5d] max-[440px]:text-[8px] max-[680px]:mt-3 max-[680px]:items-start max-[680px]:text-[9px] max-[680px]:leading-[2] [&_svg]:size-3 max-[680px]:[&_svg]:mt-[3px] max-[680px]:[&_svg]:shrink-0">
+        <P className="mt-3 flex items-center gap-1 text-xs text-[#796e5d] max-md:items-start max-md:leading-loose [&_svg]:size-3 max-md:[&_svg]:mt-0.5 max-md:[&_svg]:shrink-0">
           <LandingIcon name="info" />
           اعداد این بخش نمونه‌اند و آمار واقعی عملکرد یا مشتریان تراز نیستند.
         </P>
 
-        <div className="mt-[29px] grid grid-cols-3 gap-5 border-y border-[#e7e1d4] py-5 max-[1050px]:gap-[15px] max-[680px]:mt-[23px] max-[680px]:grid-cols-1 max-[680px]:gap-0 max-[680px]:border-b-0 max-[680px]:p-0 max-[850px]:[&>div]:gap-2 max-[850px]:[&>div]:pl-3 max-[850px]:[&_small]:text-[9px] max-[850px]:[&_strong]:text-[10px] max-[850px]:[&_svg]:size-[19px] [&>div]:flex [&>div]:items-center [&>div]:gap-3 [&>div]:border-l [&>div]:border-[#e0d8c7] [&>div]:pl-5 [&>div:last-child]:border-0 [&>div:last-child]:pl-0 max-[1050px]:[&>div]:gap-[9px] max-[1050px]:[&>div]:pl-[15px] max-[1050px]:[&_strong]:text-[11px] max-[680px]:[&>div]:gap-3 max-[680px]:[&>div]:border-0 max-[680px]:[&>div]:border-b max-[680px]:[&>div]:border-[#e7e1d4] max-[680px]:[&>div]:py-[17px] max-[680px]:[&>div:last-child]:border-b max-[680px]:[&>div:last-child]:pb-[17px] max-[680px]:[&_small]:text-[10px] max-[680px]:[&_strong]:text-[12px] max-[680px]:[&_svg]:size-[22px] max-[850px]:[&>div]:gap-2 max-[850px]:[&>div]:pl-3 [&_svg]:size-[22px] [&_svg]:text-[#9a6c25] [&_small]:mt-[3px] [&_small]:block [&_small]:text-[10px] [&_small]:leading-[1.8] [&_small]:text-[#746b60] [&_strong]:block [&_strong]:text-[12px] [&_strong]:font-[650]">
+        <div className="mt-7 grid grid-cols-3 gap-5 border-y border-[#e7e1d4] py-5 max-xl:gap-3.5 max-md:mt-6 max-md:grid-cols-1 max-md:gap-0 max-md:border-b-0 max-md:p-0 max-lg:[&_small]:text-xs max-lg:[&_strong]:text-xs max-lg:[&_svg]:size-5 [&>div]:flex [&>div]:items-center [&>div]:gap-3 [&>div]:border-l [&>div]:border-[#e0d8c7] [&>div]:pl-5 [&>div:last-child]:border-0 [&>div:last-child]:pl-0 max-xl:[&>div]:gap-2 max-xl:[&>div]:pl-3.5 max-xl:[&_strong]:text-xs max-md:[&>div]:gap-3 max-md:[&>div]:border-0 max-md:[&>div]:border-b max-md:[&>div]:border-[#e7e1d4] max-md:[&>div]:py-4 max-md:[&>div:last-child]:border-b max-md:[&>div:last-child]:pb-4 max-md:[&_small]:text-xs max-md:[&_strong]:text-xs max-md:[&_svg]:size-5 max-lg:[&>div]:gap-2 max-lg:[&>div]:pl-3 [&_svg]:size-5 [&_svg]:text-[#9a6c25] [&_small]:mt-0.5 [&_small]:block [&_small]:text-xs [&_small]:leading-relaxed [&_small]:text-[#746b60] [&_strong]:block [&_strong]:text-xs [&_strong]:font-semibold">
           {outcomeAssurances.map((assurance) => (
             <div key={assurance.title}>
               <LandingIcon name={assurance.icon} />
-              <Span>
-                <strong>{assurance.title}</strong>
-                <small>{assurance.description}</small>
+              <Span className="text-[length:inherit]">
+                <strong>
+                  <Span className="text-[length:inherit]">{assurance.title}</Span>
+                </strong>
+                <Small>{assurance.description}</Small>
               </Span>
             </div>
           ))}
         </div>
-      </section>
-    </div>
+      </div>
+    </SectionLayout>
   );
 }

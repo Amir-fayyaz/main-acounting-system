@@ -42,7 +42,7 @@ export function DashboardMain({
         onViewChange={onViewChange}
       />
 
-      <div className="p-[21px_23px_22px] max-[600px]:p-[15px_12px_18px] max-[800px]:p-[17px_15px]">
+      <div className="pt-5 px-6 pb-5 max-sm:pt-3.5 max-sm:px-3 max-sm:pb-4 max-md:py-4 max-md:px-3.5">
         <DashboardHeading
           data={data}
           period={period}
@@ -51,7 +51,7 @@ export function DashboardMain({
         />
         <DashboardKpis data={data} period={period} report={report} />
 
-        <div className="mt-[13px] grid grid-cols-[1.4fr_1fr] gap-3 max-[600px]:mt-[9px] max-[600px]:grid-cols-1 max-[800px]:grid-cols-[1.2fr_1fr] max-[800px]:gap-2">
+        <div className="mt-3 grid grid-cols-[1.4fr_1fr] gap-3 max-sm:mt-2 max-sm:grid-cols-1 max-md:grid-cols-[1.2fr_1fr] max-md:gap-2">
           <DashboardChart data={data} period={period} report={report} />
           <DashboardTasks data={data} />
         </div>
@@ -60,8 +60,8 @@ export function DashboardMain({
       </div>
 
       {data.footerNote ? (
-        <div className="m-2 flex justify-end max-[600px]:hidden">
-          <Span className="rounded-[4px] bg-[#f7f6eedb] p-[2px_8px] !text-[9px] text-[#827866]">
+        <div className="m-2 flex justify-end max-sm:hidden">
+          <Span className="rounded-sm bg-[#f7f6eedb] py-0.5 px-2 text-xs! text-[#827866]">
             {data.footerNote}
           </Span>
         </div>
@@ -77,15 +77,15 @@ function DashboardHeading({
   onPeriodChange,
 }: Pick<DashboardMainProps, 'data' | 'period' | 'report' | 'onPeriodChange'>) {
   return (
-    <div className="mb-[17px] flex items-center justify-between gap-3 max-[360px]:items-start max-[600px]:mb-[13px] max-[600px]:gap-[7px] max-[360px]:[&>div:first-child]:min-w-0">
+    <div className="mb-4 flex items-center justify-between gap-3 max-sm:mb-3 max-sm:gap-1.5">
       <div aria-live="polite" aria-atomic="true">
         <H2
           id="dash-greeting"
-          className="mb-1 text-[17px] tracking-[-0.4px] max-[600px]:text-[14px] max-[800px]:text-[15px]"
+          className="mb-1 text-base tracking-tight max-sm:text-sm max-md:text-sm"
         >
           {report.title}
         </H2>
-        <P id="dash-subtitle" className="text-[10px] text-[#746b60] max-[600px]:text-[8px]">
+        <P id="dash-subtitle" className="text-xs text-[#746b60]">
           {report.subtitle}
         </P>
       </div>
@@ -93,7 +93,7 @@ function DashboardHeading({
       <div
         role="group"
         aria-label={data.periodAriaLabel}
-        className="flex gap-[3px] rounded-[5px] border border-[#dfdbd1] bg-white p-[3px] max-[360px]:shrink-0 max-[600px]:p-[2px]"
+        className="flex gap-0.5 rounded-sm border border-[#dfdbd1] bg-white p-0.5"
       >
         {data.periodOptions.map((option) => {
           const selected = period === option.value;
@@ -107,11 +107,11 @@ function DashboardHeading({
               variant="ghost"
               size="sm"
               className={cn(
-                'h-auto rounded-[3px] border-0 bg-transparent p-[4px_10px] text-[10px] font-normal text-[#746b60] shadow-none hover:scale-100 hover:bg-transparent active:scale-100 max-[360px]:px-[5px] max-[360px]:whitespace-nowrap max-[600px]:p-[3px_7px] max-[600px]:text-[9px]',
+                'h-auto rounded-sm border-0 bg-transparent py-1 px-2.5 text-xs font-normal text-[#746b60] shadow-none hover:scale-100 hover:bg-transparent active:scale-100 max-sm:py-0.5 max-sm:px-1.5',
                 selected && 'bg-[#f4f3e7] font-bold text-[#1a120a] hover:bg-[#f4f3e7]',
               )}
             >
-              {option.label}
+              <Span className="text-[length:inherit]">{option.label}</Span>
             </Button>
           );
         })}
@@ -122,19 +122,14 @@ function DashboardHeading({
 
 function DashboardInsight({ data, message }: { data: DashboardData; message: string }) {
   return (
-    <div className="mt-3 flex items-center justify-between gap-[10px] rounded-[6px] border border-[#e6e2d4] bg-[#f5f3e9] p-[10px_12px] text-[10px] max-[600px]:mt-[9px] max-[600px]:gap-1 max-[600px]:p-2 max-[600px]:text-[8px] max-[800px]:text-[9px]">
-      <div className="flex items-center gap-[8px] max-[600px]:gap-[5px]">
-        <LandingIcon name="spark" className="size-[17px] text-[#a46700] max-[600px]:size-3.5" />
-        <Span className="!text-[10px] max-[800px]:!text-[9px] max-[600px]:!text-[8px]">
-          {message}
-        </Span>
+    <div className="mt-3 flex items-center justify-between gap-2.5 rounded-md border border-[#e6e2d4] bg-[#f5f3e9] py-2.5 px-3 text-xs max-sm:mt-2 max-sm:gap-1 max-sm:p-2">
+      <div className="flex items-center gap-2 max-sm:gap-1">
+        <LandingIcon name="spark" className="size-4 text-[#a46700] max-sm:size-3.5" />
+        <Span className="text-xs!">{message}</Span>
       </div>
 
-      <Link
-        href={data.insightHref}
-        className="whitespace-nowrap text-[9px] text-[#885300] max-[600px]:text-[8px]"
-      >
-        {data.insightLinkLabel}
+      <Link href={data.insightHref} className="whitespace-nowrap text-xs text-[#885300]">
+        <Span className="text-[length:inherit]">{data.insightLinkLabel}</Span>
       </Link>
     </div>
   );

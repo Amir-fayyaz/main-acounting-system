@@ -5,10 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/core/components/shadcn/ui/button/button';
-import {
-  navigationLinks,
-  productMenuItems,
-} from '@/core/features/landing/assets/mock/navigation';
+import { navigationLinks, productMenuItems } from '@/core/features/landing/assets/mock/navigation';
 import { SiteBrand } from '@/core/features/landing/components/ui/brand/SiteBrand';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
 import { cn } from '@/core/utils/shadcn/utils';
@@ -18,18 +15,18 @@ const PRIMARY_NAV_ID = 'primary-navigation';
 const PRODUCT_MENU_ID = 'product-menu';
 
 const navLinkClass =
-  'relative inline-flex min-h-[38px] items-center p-0 whitespace-nowrap max-[900px]:flex max-[900px]:min-h-[44px] max-[900px]:px-0 max-[900px]:py-[9px]';
+  'relative inline-flex min-h-9 items-center p-0 whitespace-nowrap max-lg:flex max-lg:min-h-11 max-lg:px-0 max-lg:py-2';
 
 const activeNavLinkClass =
-  "font-bold text-[#925704] after:absolute after:right-1/2 after:bottom-[2px] after:h-[3px] after:w-[13px] after:translate-x-1/2 after:rounded-[3px] after:bg-[#ffa00a] after:content-[''] max-[900px]:after:hidden";
+  "font-bold text-[#925704] after:absolute after:right-1/2 after:bottom-0.5 after:h-0.5 after:w-3 after:translate-x-1/2 after:rounded-sm after:bg-[#ffa00a] after:content-[''] max-lg:after:hidden";
 
 const inactiveNavLinkClass = 'transition-colors duration-200 hover:text-[#a45f00]';
 
 const productTriggerClass =
-  'min-h-[38px] gap-[5px] rounded-none bg-transparent px-0 py-0 text-[12px] font-[500] shadow-none hover:scale-100 hover:bg-transparent hover:shadow-none active:scale-100 max-[1100px]:text-[11px] max-[900px]:w-full max-[900px]:min-h-[44px] max-[900px]:justify-between max-[900px]:py-[9px] max-[900px]:text-[13px]';
+  'min-h-9 gap-1 rounded-none bg-transparent px-0 py-0 text-xs font-medium shadow-none hover:scale-100 hover:bg-transparent hover:shadow-none active:scale-100 max-lg:w-full max-lg:min-h-11 max-lg:justify-between max-lg:py-2';
 
 const mobileTriggerClass =
-  'hidden size-[37px] shrink-0 rounded-full border border-[#e2d9c8] bg-[#f8f5eb] p-0 text-[#1a120a] shadow-none hover:scale-100 hover:bg-[#f8f5eb] hover:shadow-none active:scale-100 max-[600px]:size-[34px] max-[900px]:flex';
+  'hidden size-9 shrink-0 rounded-full border border-[#e2d9c8] bg-[#f8f5eb] p-0 text-[#1a120a] shadow-none hover:scale-100 hover:bg-[#f8f5eb] hover:shadow-none active:scale-100 max-sm:size-8 max-lg:flex';
 
 function isActiveLink(pathname: string, href: string): boolean {
   const [path] = href.split('#');
@@ -61,7 +58,7 @@ export function SiteHeader() {
       }
     };
 
-    const desktopQuery = window.matchMedia('(min-width: 900px)');
+    const desktopQuery = window.matchMedia('(min-width: 1024px)');
 
     const handleDesktopChange = (event: MediaQueryListEvent) => {
       if (event.matches) {
@@ -91,22 +88,22 @@ export function SiteHeader() {
     <header
       id="top"
       ref={headerRef}
-      className="sticky top-[14px] z-40 mx-auto mt-[18px] w-[min(1280px,calc(100%_-_48px))] bg-transparent max-[600px]:top-[9px] max-[600px]:mt-[11px] max-[600px]:w-[calc(100%_-_24px)] max-[900px]:top-[11px] max-[900px]:mt-[13px] max-[900px]:w-[calc(100%_-_32px)]"
+      className="sticky top-3 z-40 mx-5 mt-4 max-w-7xl bg-transparent sm:mx-8 xl:mx-auto"
     >
       <nav
         aria-label="منوی اصلی"
-        className="relative grid h-[72px] w-full grid-cols-[132px_1fr_auto] items-center gap-5 rounded-full border border-white bg-[#fffefaf5] px-[22px] shadow-[0_5px_22px_#4937130b] backdrop-blur-[16px] max-[1100px]:grid-cols-[110px_1fr_auto] max-[1100px]:gap-[15px] max-[1100px]:px-[19px] max-[600px]:h-[61px] max-[600px]:gap-2.5 max-[600px]:px-3 max-[900px]:h-16 max-[900px]:grid-cols-[1fr_auto] max-[900px]:gap-4 max-[900px]:px-[15px]"
+        className="relative grid h-16 w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-5 rounded-full border border-white bg-[#fffefaf5] px-5 shadow-[0_5px_22px_#4937130b] backdrop-blur-lg max-xl:gap-3.5 max-sm:gap-2.5 max-sm:px-3 max-lg:grid-cols-[1fr_auto] max-lg:gap-4 max-lg:px-3.5"
       >
         <SiteBrand />
 
         <div
           id={PRIMARY_NAV_ID}
           className={cn(
-            'items-center justify-center gap-[22px] p-0 text-[12px] font-[500] max-[1100px]:gap-[17px] max-[1100px]:text-[11px]',
-            'max-[900px]:absolute max-[900px]:top-[calc(100%_+_11px)] max-[900px]:right-0 max-[900px]:left-0 max-[900px]:items-stretch max-[900px]:justify-start max-[900px]:gap-0 max-[900px]:rounded-[17px] max-[900px]:border max-[900px]:border-[#e2d6c0] max-[900px]:bg-[#fffefa] max-[900px]:px-5 max-[900px]:py-[13px] max-[900px]:text-[13px] max-[900px]:shadow-[0_12px_28px_#503a1312] max-[600px]:px-[18px]',
+            'items-center justify-center gap-5 p-0 text-xs font-medium max-xl:gap-4',
+            'max-lg:absolute max-lg:top-full max-lg:mt-3 max-lg:right-0 max-lg:left-0 max-lg:items-stretch max-lg:justify-start max-lg:gap-0 max-lg:rounded-2xl max-lg:border max-lg:border-[#e2d6c0] max-lg:bg-[#fffefa] max-lg:px-5 max-lg:py-3 max-lg:text-xs max-lg:shadow-[0_12px_28px_#503a1312] max-sm:px-4',
             mobileOpen
-              ? 'flex max-[900px]:max-h-[calc(100svh_-_100px)] max-[900px]:flex-col max-[900px]:overflow-y-auto max-[900px]:overscroll-contain'
-              : 'hidden min-[900px]:flex',
+              ? 'flex max-lg:max-h-[calc(100svh-6rem)] max-lg:flex-col max-lg:overflow-y-auto max-lg:overscroll-contain'
+              : 'hidden lg:flex',
           )}
         >
           {homeLink ? (
@@ -119,11 +116,11 @@ export function SiteHeader() {
                 isActiveLink(pathname, homeLink.href) ? activeNavLinkClass : inactiveNavLinkClass,
               )}
             >
-              {homeLink.label}
+              <Span className="text-[length:inherit]">{homeLink.label}</Span>
             </Link>
           ) : null}
 
-          <div className="relative max-[900px]:w-full">
+          <div className="relative max-lg:w-full">
             <Button
               type="button"
               variant="ghost"
@@ -132,11 +129,11 @@ export function SiteHeader() {
               onClick={() => setProductOpen((open) => !open)}
               className={productTriggerClass}
             >
-              محصول
+              <Span className="text-[length:inherit]">محصول</Span>
               <LandingIcon
                 name="chevron"
                 className={cn(
-                  'h-[13px] w-[13px] transition-transform duration-[180ms]',
+                  'h-3 w-3 transition-transform duration-200',
                   productOpen && 'rotate-180',
                 )}
               />
@@ -145,8 +142,8 @@ export function SiteHeader() {
             <div
               id={PRODUCT_MENU_ID}
               className={cn(
-                'absolute top-[calc(100%_+_15px)] right-[-20px] z-[45] w-[250px] rounded-[13px] border border-[#e4dccd] bg-[#fffefa] p-[9px] shadow-[0_14px_30px_#49351515]',
-                'max-[900px]:static max-[900px]:my-[3px] max-[900px]:mb-2 max-[900px]:w-full max-[900px]:rounded-none max-[900px]:border-0 max-[900px]:bg-[#f5f0e5] max-[900px]:p-[5px] max-[900px]:shadow-none',
+                'absolute top-full mt-4 -right-5 z-45 w-64 rounded-xl border border-[#e4dccd] bg-[#fffefa] p-2 shadow-[0_14px_30px_#49351515]',
+                'max-lg:static max-lg:my-0.5 max-lg:mb-2 max-lg:w-full max-lg:rounded-none max-lg:border-0 max-lg:bg-[#f5f0e5] max-lg:p-1 max-lg:shadow-none',
                 productOpen ? 'flex flex-col' : 'hidden',
               )}
             >
@@ -155,15 +152,15 @@ export function SiteHeader() {
                   key={item.label}
                   href={item.href}
                   onClick={closeMenus}
-                  className="flex min-h-12 items-center gap-[11px] rounded-[7px] p-[10px] text-[11px] hover:bg-[#f6f2e7]"
+                  className="flex min-h-12 items-center gap-2.5 rounded-md p-2.5 text-xs hover:bg-[#f6f2e7]"
                 >
                   <LandingIcon name={item.icon} className="size-5 text-[#a36b16]" />
 
-                  <Span>
-                    <strong className="block text-[11px] leading-[1.8] font-[600] max-[900px]:text-[12px]">
-                      {item.label}
+                  <Span className="text-[length:inherit]">
+                    <strong className="block text-xs leading-relaxed font-semibold">
+                      <Span className="text-[length:inherit]">{item.label}</Span>
                     </strong>
-                    <Small className="block text-[9px] leading-[1.8] font-normal text-[#746b60] max-[900px]:text-[10px]">
+                    <Small className="block text-xs leading-relaxed font-normal text-[#746b60]">
                       {item.description}
                     </Small>
                   </Span>
@@ -183,25 +180,22 @@ export function SiteHeader() {
                 isActiveLink(pathname, link.href) ? activeNavLinkClass : inactiveNavLinkClass,
               )}
             >
-              {link.label}
+              <Span className="text-[length:inherit]">{link.label}</Span>
             </Link>
           ))}
         </div>
 
-        <div className="m-0 flex items-center gap-[17px] max-[1100px]:gap-[13px] max-[600px]:gap-2 max-[900px]:gap-3">
-          <Link
-            href="/demo"
-            className="text-[11px] whitespace-nowrap text-[#7a6341] max-[1100px]:text-[10px] max-[900px]:hidden"
-          >
-            مشاهده دمو
+        <div className="m-0 flex items-center gap-4 max-xl:gap-3 max-sm:gap-2 max-lg:gap-3">
+          <Link href="/demo" className="text-xs whitespace-nowrap text-[#7a6341] max-lg:hidden">
+            <Span className="text-[length:inherit]">مشاهده دمو</Span>
           </Link>
 
           <Button
             asChild
-            className="min-h-[42px] gap-[7px] rounded-[30px] px-4 py-[9px] text-[11px] [&_svg]:size-[17px] max-[1100px]:px-[13px] max-[1100px]:text-[10px] max-[600px]:min-h-[37px] max-[600px]:gap-[5px] max-[600px]:px-3 max-[600px]:text-[10px] max-[600px]:[&_svg]:size-[15px] max-[900px]:min-h-[39px] max-[900px]:px-[14px] max-[900px]:py-2 max-[900px]:text-[11px]"
+            className="min-h-10 gap-1.5 rounded-full px-4 py-2 text-xs [&_svg]:size-4 max-xl:px-3 max-sm:min-h-9 max-sm:gap-1 max-sm:px-3 max-sm:[&_svg]:size-3.5 max-lg:px-3.5"
           >
             <Link href="/auth">
-              ورود یا ثبت‌نام
+              <Span className="text-[length:inherit]">ورود یا ثبت‌نام</Span>
               <LandingIcon name="users" />
             </Link>
           </Button>
@@ -215,7 +209,7 @@ export function SiteHeader() {
             onClick={() => setMobileOpen((open) => !open)}
             className={mobileTriggerClass}
           >
-            <LandingIcon name="menu" className="h-[17px] w-[17px]" />
+            <LandingIcon name="menu" className="h-4 w-4" />
           </Button>
         </div>
       </nav>

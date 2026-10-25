@@ -1,4 +1,5 @@
 'use client';
+import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -51,37 +52,33 @@ export function IntelligenceSection({
   );
 
   return (
-    <section
-      id={data.id}
-      aria-labelledby={titleId}
-      className={cn(
-        'landingContainerClass',
-        isDemo
-          ? 'border-t border-[#e4dfd2] pt-[55px] pb-[30px] max-[600px]:py-[43px]'
-          : 'pt-[92px] pb-[94px] max-[600px]:pt-[60px] max-[600px]:pb-[58px] max-[800px]:pb-[65px]',
-        className,
-      )}
-    >
+    <SectionLayout className="py-8 sm:py-12">
       <div
-        className={cn(
-          'grid grid-cols-2 items-center',
-          isDemo
-            ? 'gap-[75px] max-[1100px]:gap-[45px] max-[900px]:gap-[30px] max-[600px]:grid-cols-1 max-[600px]:gap-[25px]'
-            : 'gap-20 max-[1050px]:gap-[38px] max-[600px]:grid-cols-1 max-[600px]:gap-[26px] max-[800px]:gap-[30px]',
-        )}
+        id={data.id}
+        aria-labelledby={titleId}
+        className={cn(isDemo && 'border-t border-[#e4dfd2]', className)}
       >
-        {isDemo ? (
-          <>
-            {copy}
-            {preview}
-          </>
-        ) : (
-          <>
-            {preview}
-            {copy}
-          </>
-        )}
+        <div
+          className={cn(
+            'grid grid-cols-2 items-center',
+            isDemo
+              ? 'gap-20 max-xl:gap-11 max-lg:gap-7 max-sm:grid-cols-1 max-sm:gap-6'
+              : 'gap-20 max-xl:gap-9 max-sm:grid-cols-1 max-sm:gap-6 max-md:gap-7',
+          )}
+        >
+          {isDemo ? (
+            <>
+              {copy}
+              {preview}
+            </>
+          ) : (
+            <>
+              {preview}
+              {copy}
+            </>
+          )}
+        </div>
       </div>
-    </section>
+    </SectionLayout>
   );
 }

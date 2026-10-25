@@ -1,3 +1,4 @@
+import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 import Link from 'next/link';
 
 import { H2, P, Small, Span } from '@/core/components/custom/ui/typography/Typography';
@@ -14,88 +15,82 @@ interface MiniCtaProps {
 
 export function MiniCta({ data = landingMiniCtaData, className }: MiniCtaProps) {
   return (
-    <div className="landingContainerClass">
-      <section
+    <SectionLayout className="py-8 sm:py-12">
+      <div
         aria-labelledby="mini-cta-title"
         className={cn(
-          'mt-[35px] mb-[65px] flex items-center justify-between gap-[35px] rounded-[13px] border border-[#e1d7c3] bg-[#efe9d9] p-[29px_34px] max-[600px]:mt-[28px] max-[600px]:mb-[43px] max-[600px]:block max-[600px]:rounded-[10px] max-[600px]:p-6 max-[900px]:p-[26px]',
+          'flex items-center justify-between gap-9 rounded-xl border border-[#e1d7c3] bg-[#efe9d9] py-7 px-8 max-sm:block max-sm:rounded-lg max-sm:p-6 max-lg:p-6',
           className,
         )}
       >
         <div>
           <H2
             id="mini-cta-title"
-            className="mt-0 mr-0 mb-[5px] ml-0 text-[23px] leading-[1.8] tracking-[-0.5px] max-[600px]:text-[22px] max-[900px]:text-[21px]"
+            className="mt-0 mr-0 mb-1 ml-0 text-2xl leading-relaxed tracking-tight max-sm:text-xl max-lg:text-xl"
           >
             {data.title}
           </H2>
 
-          <P className="text-[12px] text-[#78674c] max-[600px]:text-[11px]">
-            {data.description}
-          </P>
+          <P className="text-xs text-[#78674c]">{data.description}</P>
         </div>
 
         <Button
           asChild
           variant="default"
-          className="bg-[#1a120a] text-white max-[600px]:min-h-[46px] max-[600px]:text-[12px] max-[800px]:text-[12px] sm:mt-0 mt-5"
+          className="bg-[#1a120a] text-white max-sm:min-h-11 max-sm:text-xs max-md:text-xs sm:mt-0 mt-5"
         >
           <Link href={data.href}>
-            {data.actionLabel}
+            <Span className="text-[length:inherit]">{data.actionLabel}</Span>
             <LandingIcon name="arrow" />
           </Link>
         </Button>
-      </section>
-    </div>
+      </div>
+    </SectionLayout>
   );
 }
 
 export function FinalCta() {
   return (
-    <div className="landingContainerClass">
-      <section
+    <SectionLayout className="py-8 sm:py-12">
+      <div
         aria-labelledby="cta-title"
-        className="relative flex items-center justify-between gap-10 overflow-hidden rounded-[14px] bg-[#ffa00a] p-[48px_54px] after:absolute after:inset-auto after:-bottom-[170px] after:-left-[70px] after:size-[420px] after:rounded-full after:border after:border-[#b8710033] after:content-[''] max-[1050px]:p-[38px] max-[600px]:block max-[600px]:rounded-[10px] max-[600px]:p-[29px_25px] max-[800px]:p-[33px] [&>div]:relative [&>div]:z-[1]"
+        className="relative flex items-center justify-between gap-10 overflow-hidden rounded-xl bg-[#ffa00a] py-12 px-14 after:absolute after:inset-auto after:-bottom-44 after:-left-16 after:size-112 after:rounded-full after:border after:border-[#b8710033] after:content-[''] max-xl:p-9 max-sm:block max-sm:rounded-lg max-sm:px-6 max-md:p-8 [&>div]:relative [&>div]:z-1"
       >
         <div>
-          <Span
-            className={cn(
-              'landingEyebrowClass text-[#5f3909] before:bg-[#1a120a]',
-            )}
-          >
+          <Span className={cn('landingEyebrowClass text-[#5f3909] before:bg-[#1a120a]')}>
             وقت حساب‌های روشن‌تر است.
           </Span>
 
           <H2
             id="cta-title"
-            className="my-[10px_8px] text-[38px] leading-[1.65] tracking-[-1.2px] max-[1050px]:text-[29px] max-[600px]:max-w-[260px] max-[600px]:text-[31px] max-[600px]:leading-[1.8] max-[800px]:text-[29px]"
+            className="my-2.5 mb-2 text-4xl leading-relaxed tracking-tighter max-xl:text-3xl max-sm:max-w-64 max-sm:text-3xl max-md:text-3xl"
           >
             دوباره‌کاری کمتر.
             <br />
             تسلط بیشتر.
           </H2>
 
-          <P className="text-[12px] text-[#5f3909] max-[600px]:text-[11px]">
+          <P className="text-xs text-[#5f3909]">
             یک جریان مالی یکپارچه، از اولین فاکتور تا آخرین تراز.
           </P>
         </div>
 
-        <div className="text-center max-[600px]:mt-[22px] max-[600px]:text-right">
+        <div className="text-center max-sm:mt-5 max-sm:text-right">
           <Button
             asChild
-            className="bg-[#1a120a] text-white max-[600px]:min-h-[46px] max-[600px]:text-[12px] max-[800px]:text-[12px]"
+            className="bg-[#1a120a] text-white max-sm:min-h-11 max-sm:text-xs max-md:text-xs"
           >
             <Link href="/demo">
-              تراز را از نزدیک ببینید
+              <Span className="text-[length:inherit]">تراز را از نزدیک ببینید</Span>
               <LandingIcon name="arrow" />
             </Link>
           </Button>
 
-          <Small className="mt-2.5 block text-[10px] text-[#5f3909] max-[600px]:pr-[3px] max-[600px]:text-[9px]">
+          <Small className="mt-2.5 block text-xs text-[#5f3909] max-sm:pr-0.5">
             محیط نمونه · بدون نیاز به ثبت‌نام
           </Small>
         </div>
-      </section>
-    </div>
+      </div>
+    </SectionLayout>
   );
 }

@@ -29,7 +29,7 @@ export function BrandList() {
                 />
               )}
 
-              <Span className="whitespace-nowrap text-[22px] font-medium transition-colors duration-200 group-hover:text-black sm:text-[27px]">
+              <Span className="whitespace-nowrap text-xl font-medium transition-colors duration-200 group-hover:text-black sm:text-2xl">
                 {name}
               </Span>
             </div>

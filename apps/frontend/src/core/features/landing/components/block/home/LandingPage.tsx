@@ -9,7 +9,7 @@ import { ConnectedSection } from '@/core/features/landing/components/block/share
 
 export function LandingPage() {
   return (
-    <div>
+    <main>
       <Hero />
       <CompaniesSection />
       <CapabilitiesSection />
@@ -19,6 +19,6 @@ export function LandingPage() {
       <ScopeSection />
       <MiniCta />
       <FinalCta />
-    </div>
+    </main>
   );
 }

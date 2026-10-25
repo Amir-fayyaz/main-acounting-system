@@ -1,4 +1,3 @@
-
 import {
   ArrowLeft,
   Banknote,
@@ -100,10 +99,7 @@ export function LandingIcon({ name, className }: LandingIconProps) {
       aria-hidden="true"
       focusable="false"
       strokeWidth={1.7}
-      className={cn(
-        'inline-block size-[22px] shrink-0',
-        className,
-      )}
+      className={cn('inline-block size-5 shrink-0', className)}
     />
   );
 }

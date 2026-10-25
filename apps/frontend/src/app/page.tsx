@@ -1,4 +1,3 @@
-import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 import { LandingPage } from '@/core/features/landing/components/block/home/LandingPage';
 import type { Metadata } from 'next';
 
@@ -8,9 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
-  return (
-    <SectionLayout>
-      <LandingPage />
-    </SectionLayout>
-  );
+  return <LandingPage />;
 }

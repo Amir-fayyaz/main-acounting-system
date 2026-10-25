@@ -11,35 +11,31 @@ const stockLines = [
 
 export function StockScene() {
   return (
-    <div className="relative mx-[30px] mt-[22px] mb-[28px] max-w-[390px] max-[1050px]:mx-6 max-[440px]:mx-[22px] max-[680px]:m-[24px_27px_28px] max-[680px]:max-w-none max-[850px]:mx-[19px]">
+    <div className="relative mx-7 mt-5 mb-7 max-w-96 max-xl:mx-6 max-md:mt-6 max-md:mx-7 max-md:mb-7 max-md:max-w-none max-lg:mx-5">
       {stockLines.map((line) => (
         <Card
           key={line.code}
-          className="relative !flex !flex-row !items-center !gap-[10px] !rounded-[7px] !border-[#d98b10] !bg-[#fff9e9] !p-[11px_13px] !text-inherit !shadow-[0_3px_0_#b96c0640] text-[10px] max-[440px]:!gap-2 max-[440px]:!p-[11px] max-[680px]:!gap-[11px] max-[680px]:!p-[12px_14px] max-[850px]:!gap-[7px] max-[850px]:!p-[10px] [&+&]:mr-[15px] [&+&]:mt-[9px] [&:last-child]:mr-[30px] max-[440px]:[&+&]:mr-[10px] max-[440px]:[&:last-child]:mr-[20px] max-[680px]:[&+&]:mr-[15px] max-[680px]:[&:last-child]:mr-[30px] max-[850px]:[&+&]:mr-[9px] max-[850px]:[&:last-child]:mr-[18px] [&>svg]:size-[22px] [&>svg]:text-[#98702c] max-[440px]:[&>svg]:size-5 max-[680px]:[&>svg]:size-[22px] max-[850px]:[&>svg]:size-[17px]"
+          className="relative flex! flex-row! items-center! gap-2.5! rounded-md! border-[#d98b10]! bg-[#fff9e9]! py-2.5! px-3! text-[length:inherit]! shadow-[0_3px_0_#b96c0640]! text-xs max-md:py-3! max-md:px-3.5! max-lg:gap-1.5! max-lg:p-2.5! [&+&]:mr-3.5 [&+&]:mt-2 [&:last-child]:mr-7 max-md:[&+&]:mr-3.5 max-md:[&:last-child]:mr-7 max-lg:[&+&]:mr-2 max-lg:[&:last-child]:mr-4 [&>svg]:size-5 [&>svg]:text-[#98702c] max-md:[&>svg]:size-5 max-lg:[&>svg]:size-4"
         >
           <LandingIcon name="box" />
 
           <div>
-            <Span className="block text-[11px] font-[650] max-[440px]:text-[10px] max-[680px]:text-[12px] max-[850px]:text-[10px]">
-              {line.name}
-            </Span>
+            <Span className="block text-xs font-semibold">{line.name}</Span>
 
-            <Small className="!block !text-[9px] !font-normal !leading-[1.7] !text-[#7b6c50] max-[440px]:!text-[8px] max-[680px]:!text-[9px] max-[850px]:!text-[8px]">
+            <Small className="block! text-xs! font-normal! leading-relaxed! text-[#7b6c50]!">
               انبار مرکزی · کد {line.code}
             </Small>
 
             <div
-              className="mt-[6px] h-1 w-[50px] overflow-hidden rounded-[3px] bg-[#eee1c4] before:block before:h-1 before:w-[var(--fill)] before:rounded-[3px] before:bg-[#7d9568] before:content-[''] max-[440px]:w-[58px] max-[680px]:w-[75px]"
+              className="mt-1.5 h-1 w-12 overflow-hidden rounded-sm bg-[#eee1c4] before:block before:h-1 before:w-(--fill) before:rounded-sm before:bg-[#7d9568] before:content-[''] max-md:w-20"
               style={{ '--fill': line.fill } as CSSProperties}
             />
           </div>
 
-          <Span className="!mr-auto !text-[14px] !font-bold !whitespace-nowrap max-[440px]:!text-[13px] max-[680px]:!text-[15px] max-[850px]:!text-[12px]">
+          <Span className="mr-auto! text-sm! font-bold! whitespace-nowrap! max-lg:text-xs!">
             {line.quantity}
 
-            <Small className="!block !text-left !text-[8px] !font-normal max-[680px]:!text-[9px] max-[850px]:!text-[8px]">
-              واحد موجود
-            </Small>
+            <Small className="block! text-left! text-xs! font-normal!">واحد موجود</Small>
           </Span>
         </Card>
       ))}

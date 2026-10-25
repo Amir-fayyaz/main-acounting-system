@@ -1,23 +1,24 @@
-import { Button } from '@/core/components/shadcn/ui/button/button'
-import { ArrowLeft, Play } from 'lucide-react'
+import { Span } from '@/core/components/custom/ui/typography/Typography';
+import { Button } from '@/core/components/shadcn/ui/button/button';
+import { ArrowLeft, Play } from 'lucide-react';
 
 const HeroActions = () => {
   return (
-    <div className="mx-auto mt-8 flex w-full max-w-xl flex-col items-center justify-center gap-3 min-[321px]:flex-row">
-      <Button className="w-full min-w-0 px-2 py-4 text-[clamp(11px,2.5vw,16px)] font-medium min-[321px]:flex-1 sm:px-4 sm:py-6.5">
-        تجربه محیط نمونه
+    <div className="mx-auto mt-8 flex w-full max-w-xl flex-col items-center justify-center gap-3 sm:flex-row">
+      <Button className="w-full min-w-0 px-2 py-4 text-base font-medium sm:flex-1 sm:px-4 sm:py-6.5">
+        <Span className="text-[length:inherit]">تجربه محیط نمونه</Span>
         <ArrowLeft aria-hidden="true" size={18} className="shrink-0" />
       </Button>
 
       <Button
         variant="outline"
-        className="w-full min-w-0 border-border px-2 py-4 text-[clamp(11px,2.5vw,16px)] font-medium text-foreground hover:bg-card min-[321px]:flex-1 min-[321px]:px-3 sm:px-4 sm:py-6.5"
+        className="w-full min-w-0 border-border px-2 py-4 text-base font-medium text-foreground hover:bg-card sm:flex-1 sm:px-4 sm:py-6.5"
       >
         <Play aria-hidden="true" size={18} className="shrink-0" />
-        ببینید چطور کار می‌کند
+        <Span className="text-[length:inherit]">ببینید چطور کار می‌کند</Span>
       </Button>
     </div>
-  )
-}
+  );
+};
 
-export default HeroActions
+export default HeroActions;

@@ -20,25 +20,23 @@ export function DashboardChart({ data, period, report }: DashboardChartProps) {
   const labels = annual ? data.labelsYear : data.labelsMonth;
 
   return (
-    <Card className="gap-0 rounded-[8px] border border-[#e8e4db] bg-white p-[14px] shadow-none max-[600px]:p-[11px] max-[800px]:p-[11px]">
-      <div className="flex justify-between gap-[7px] text-[11px] font-[650] max-[600px]:text-[10px]">
-        <Span className="!text-[11px] !font-[650] max-[600px]:!text-[10px]">{report.chart}</Span>
-        <Small className="!text-[9px] !font-normal text-[#746b60] max-[600px]:!text-[8px]">
-          {data.chartUnits[period]}
-        </Small>
+    <Card className="gap-0 rounded-lg border border-[#e8e4db] bg-white p-3.5 shadow-none max-sm:p-2.5 max-md:p-2.5">
+      <div className="flex justify-between gap-1.5 text-xs font-semibold">
+        <Span className="text-xs! font-semibold!">{report.chart}</Span>
+        <Small className="text-xs! font-normal! text-[#746b60]">{data.chartUnits[period]}</Small>
       </div>
 
-      <div className="mt-3 flex gap-3 text-[9px] text-[#746b60] max-[600px]:mt-[7px] max-[600px]:text-[8px]">
+      <div className="mt-3 flex gap-3 text-xs text-[#746b60] max-sm:mt-1.5">
         {report.legend.map((item, index) => (
-          <Span key={item} className="!flex items-center gap-1 !text-[9px] max-[600px]:!text-[8px]">
+          <Span key={item} className="flex! items-center gap-1 text-xs!">
             <i
               aria-hidden="true"
               className={cn(
-                'block size-1.5 rounded-[2px] bg-[#ffa00a]',
+                'block size-1.5 rounded-sm bg-[#ffa00a]',
                 index === 1 && 'bg-[#e8e4d8]',
               )}
             />
-            <Span className="!text-[9px] max-[600px]:!text-[8px]">{item}</Span>
+            <Span className="text-xs!">{item}</Span>
           </Span>
         ))}
       </div>
@@ -48,12 +46,12 @@ export function DashboardChart({ data, period, report }: DashboardChartProps) {
         aria-label={`${data.chartAriaLabelPrefix} ${report.chart}، ${
           annual ? 'نیمه نخست سال' : 'شش ماه اخیر'
         }`}
-        className="relative mt-[7px] flex h-[130px] items-end justify-around gap-[clamp(4px,1.5vw,15px)] border-b border-[#ece8dd] px-[clamp(3px,1vw,9px)] pt-[10px] [background:repeating-linear-gradient(to_top,transparent_0,transparent_36px,#f0ede6_37px,transparent_38px)] [direction:rtl] sm:h-[150px] md:gap-[10px] md:px-[6px] lg:h-[170px] lg:gap-[15px] lg:px-[9px] max-[600px]:h-[100px] max-[600px]:pt-[7px] max-[400px]:h-[85px] max-[400px]:gap-[3px] max-[400px]:px-[2px]"
+        className="relative mt-1.5 flex h-32 items-end justify-around gap-1 sm:gap-3 border-b border-[#ece8dd] px-1 sm:px-2 pt-2.5 [background:repeating-linear-gradient(to_top,transparent_0,transparent_36px,#f0ede6_37px,transparent_38px)] [direction:rtl] sm:h-36 md:gap-2.5 md:px-1.5 lg:h-44 lg:gap-3.5 lg:px-2 max-sm:h-24 max-sm:pt-1.5"
       >
         {Array.from({ length: 6 }, (_, group) => (
           <div
             key={group}
-            className="flex h-full min-w-0 flex-1 items-end justify-center gap-[clamp(2px,0.5vw,5px)]"
+            className="flex h-full min-w-0 flex-1 items-end justify-center gap-0.5 sm:gap-1"
           >
             <ChartBar height={barHeight(report.bars, group * 2, period)} tone="primary" />
             <ChartBar height={barHeight(report.bars, group * 2 + 1, period)} tone="muted" />
@@ -61,9 +59,9 @@ export function DashboardChart({ data, period, report }: DashboardChartProps) {
         ))}
       </div>
 
-      <div className="flex justify-around pt-[5px] text-[9px] text-[#746b60] max-[600px]:text-[8px]">
+      <div className="flex justify-around pt-1 text-xs text-[#746b60]">
         {labels.map((label) => (
-          <Span key={label} className="!text-[9px] max-[600px]:!text-[8px]">
+          <Span key={label} className="text-xs!">
             {label}
           </Span>
         ))}
@@ -77,7 +75,7 @@ function ChartBar({ height, tone }: { height: string; tone: 'primary' | 'muted' 
     <i
       aria-hidden="true"
       className={cn(
-        'h-[var(--height)] w-[18px] max-w-[32%] rounded-t-[3px] transition-[height] duration-500 max-[800px]:w-[14px] max-[600px]:w-[12px] max-[400px]:w-[9px]',
+        'h-(--height) w-4 max-w-[32%] rounded-t-sm transition-[height] duration-500 max-md:w-3.5 max-sm:w-3',
         tone === 'primary' ? 'bg-[#ffa00a]' : 'bg-[#e8e4d8]',
       )}
       style={{ '--height': height } as CSSProperties}

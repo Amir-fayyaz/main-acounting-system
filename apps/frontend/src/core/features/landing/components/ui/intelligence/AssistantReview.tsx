@@ -1,9 +1,7 @@
 import { P, Span } from '@/core/components/custom/ui/typography/Typography';
 import { Badge } from '@/core/components/shadcn/ui/badge/badge';
 import type { AssistantPreviewData } from '@/core/features/landing/assets/@types/sections';
-import {
-  ReviewRows,
-} from '@/core/features/landing/components/ui/intelligence/ReviewRows';
+import { ReviewRows } from '@/core/features/landing/components/ui/intelligence/ReviewRows';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
 import { cn } from '@/core/utils/shadcn/utils';
 
@@ -22,38 +20,40 @@ export function AssistantReview({
 
   return (
     <div aria-live="polite">
-      <P className="mt-[18px] mb-[10px] text-[11px] leading-[2] text-[#625b4e] max-[600px]:text-[11px] [&_strong]:font-[650] [&_strong]:text-[#1a120a]">
-        <strong>{answer.strong}</strong>
+      <P className="mt-4 mb-2.5 text-xs leading-loose text-[#625b4e] [&_strong]:font-semibold [&_strong]:text-[#1a120a]">
+        <strong>
+          <Span className="text-[length:inherit]">{answer.strong}</Span>
+        </strong>
         <br />
         {answer.text}
       </P>
 
-      <div className="rounded-[6px] border border-[#e8e2d6] bg-white p-3">
+      <div className="rounded-md border border-[#e8e2d6] bg-white p-3">
         <ReviewRows lines={preview.reviewLines} />
 
         <div className="review-line">
-          <Span className="text-[10px]">{preview.statusLabel}</Span>
+          <Span className="text-xs">{preview.statusLabel}</Span>
           <Badge
             className={cn(
-              'text-[8px]',
+              'text-xs',
               approved ? 'bg-[#e7f4ed] text-[#28765b]' : 'bg-[#fff7e8] text-[#8a5708]',
             )}
           >
-            {status}
+            <Span className="text-[length:inherit]">{status}</Span>
           </Badge>
         </div>
       </div>
 
       <div
         className={cn(
-          'my-3 flex items-start gap-[6px] rounded-[5px] border p-[9px_10px] text-[10px] [&_svg]:mt-0.5 [&_svg]:size-[15px]',
+          'my-3 flex items-start gap-1.5 rounded-sm border py-2 px-2.5 text-xs [&_svg]:mt-0.5 [&_svg]:size-3.5',
           approved
             ? 'border-[#cfe3d8] bg-[#eef7f1] text-[#28765b]'
             : 'border-[#f2e0b6] bg-[#fff5df] text-[#866016]',
         )}
       >
         <LandingIcon name="shield" />
-        <Span className="text-[10px]">{approvalMessage}</Span>
+        <Span className="text-xs">{approvalMessage}</Span>
       </div>
     </div>
   );
