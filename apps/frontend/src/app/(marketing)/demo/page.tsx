@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 
 import { DemoPage } from '@/core/features/landing/components/block/demo/DemoPage';
-import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 
 export const metadata: Metadata = {
   title: 'دموی تعاملی — تراز',
@@ -10,9 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function DemoRoute() {
-  return (
-    <SectionLayout>
-      <DemoPage />
-    </SectionLayout>
-  );
+  return <DemoPage />;
 }

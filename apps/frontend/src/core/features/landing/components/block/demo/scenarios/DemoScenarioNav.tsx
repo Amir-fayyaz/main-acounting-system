@@ -1,3 +1,6 @@
+import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
+
+import { Span } from '@/core/components/custom/ui/typography/Typography';
 import Link from 'next/link';
 
 import { demoScenarioLinks } from '@/core/features/landing/assets/mock/demo/page';
@@ -5,22 +8,26 @@ import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingI
 
 export function DemoScenarioNav() {
   return (
-    <nav aria-label="بخش‌های دمو" className="landingContainerClass">
-      <div className="mt-[25px] flex flex-wrap justify-center gap-[11px] max-[600px]:mt-5 max-[600px]:gap-[7px]">
-        {demoScenarioLinks.map((scenario) => (
-          <Link
-            key={scenario.href}
-            href={scenario.href}
-            className="flex min-h-[36px] items-center gap-[6px] rounded-[30px] border border-[#e0d2b8] bg-[#f4ecdb] px-[13px] py-[6px] text-[11px] transition-colors duration-200 hover:bg-[#eee2cb] focus-visible:ring-2 focus-visible:ring-[#a95600]/40 focus-visible:ring-offset-2 focus-visible:outline-none max-[600px]:min-h-[33px] max-[600px]:gap-[5px] max-[600px]:px-[10px] max-[600px]:py-[5px] max-[600px]:text-[9px]"
-          >
-            <LandingIcon
-              name={scenario.icon}
-              className="size-[14px] text-[#99661a] max-[600px]:size-3"
-            />
-            {scenario.label}
-          </Link>
-        ))}
+    <SectionLayout className="py-4">
+      <div aria-label="سناریوهای دمو">
+        <nav aria-label="بخش‌های دمو">
+          <div className="mt-6 flex flex-wrap justify-center gap-2.5 max-sm:mt-5 max-sm:gap-1.5">
+            {demoScenarioLinks.map((scenario) => (
+              <Link
+                key={scenario.href}
+                href={scenario.href}
+                className="flex min-h-9 items-center gap-1.5 rounded-full border border-[#e0d2b8] bg-[#f4ecdb] px-3 py-1.5 text-xs transition-colors duration-200 hover:bg-[#eee2cb] focus-visible:ring-2 focus-visible:ring-[#a95600]/40 focus-visible:ring-offset-2 focus-visible:outline-none max-sm:min-h-8 max-sm:gap-1 max-sm:px-2.5 max-sm:py-1"
+              >
+                <LandingIcon
+                  name={scenario.icon}
+                  className="size-3.5 text-[#99661a] max-sm:size-3"
+                />
+                <Span className="text-[length:inherit]">{scenario.label}</Span>
+              </Link>
+            ))}
+          </div>
+        </nav>
       </div>
-    </nav>
+    </SectionLayout>
   );
 }

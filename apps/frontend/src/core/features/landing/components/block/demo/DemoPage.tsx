@@ -1,3 +1,4 @@
+import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 import { demoDashboardData } from '@/core/features/landing/assets/mock/demo/dashboard';
 import {
   demoAssistantSectionData,
@@ -13,10 +14,14 @@ import { ConnectedSection } from '@/core/features/landing/components/block/share
 
 export function DemoPage() {
   return (
-    <div className="landingRootClass">
+    <main>
       <DemoHero />
 
-      <HeroDashboard data={demoDashboardData} id="demo" variant="demo" />
+      <SectionLayout className="pt-0">
+        <div aria-label="پیش‌نمایش تعاملی محصول">
+          <HeroDashboard data={demoDashboardData} id="demo" variant="demo" />
+        </div>
+      </SectionLayout>
 
       <DemoScenarioNav />
 
@@ -25,6 +30,6 @@ export function DemoPage() {
       <IntelligenceSection data={demoAssistantSectionData} variant="demo" />
 
       <MiniCta data={demoMiniCtaData} />
-    </div>
+    </main>
   );
 }
