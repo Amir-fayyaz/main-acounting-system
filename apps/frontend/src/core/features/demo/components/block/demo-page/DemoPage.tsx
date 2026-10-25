@@ -14,7 +14,7 @@ import { landingRootClass } from '@/core/features/landing/lib/landing-classes';
 
 export function DemoPage() {
   return (
-    <main id="main" className={landingRootClass}>
+    <div className={landingRootClass}>
       <DemoHero />
 
       <HeroDashboard data={demoDashboardData} id="demo" variant="demo" />
@@ -26,6 +26,6 @@ export function DemoPage() {
       <IntelligenceSection data={demoAssistantSectionData} variant="demo" />
 
       <MiniCta data={demoMiniCtaData} />
-    </main>
+    </div>
   );
 }
