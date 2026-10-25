@@ -5,6 +5,7 @@ const AUTH_COOKIE_NAME = 'Token';
 
 /** مسیرهای عمومی (مسیر دقیق یا زیرمسیرها؛ "/" فقط دقیق). */
 const PUBLIC_PATHS = [
+  '/panel', // Static panel preview; no sign-in is required.
   '/login',
   '/register',
   '/forgot',

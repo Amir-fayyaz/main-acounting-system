@@ -1,6 +1,9 @@
+'use client';
+
+import Link from 'next/link';
+import { SidebarIcon } from './SidebarIcon';
+import type { ComponentProps, ReactNode } from 'react';
 import {
-  Button,
-  ImgNormalCustom,
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -11,108 +14,77 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
+  Span,
+  useSidebar,
 } from '@repo/web/ui';
-import { MessageCircle, MessageSquarePlus } from 'lucide-react';
-import Link from 'next/link';
-import * as React from 'react';
-import { VersionSwitcher } from './version-switcher';
-const data = {
-  versions: ['1.0.1', '1.1.0-alpha', '2.0.0-beta1'],
-  top: [
-    {
-      title: 'New Chat',
-      url: '#',
-      icon: MessageSquarePlus,
-    },
-    {
-      title: 'Last Chat',
-      url: '#',
-      icon: MessageCircle,
-    },
-  ],
-  recents: [
-    {
-      title: 'React Authentication',
-      url: '#',
-    },
-    {
-      title: 'Generate Landing Page',
-      url: '#',
-    },
-    {
-      title: 'NestJS Clean Architecture',
-      url: '#',
-    },
-    {
-      title: 'Resume Review',
-      url: '#',
-    },
-  ],
-};
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+import { SidebarNavigationBranch } from './SidebarNavigationBranch';
+import type { SidebarNavigationGroup } from './assets/@types/sidebar';
+
+export interface AppSidebarProps extends ComponentProps<typeof Sidebar> {
+  navigation: readonly SidebarNavigationGroup[];
+  activeHref?: string;
+  header?: ReactNode;
+  footer?: ReactNode;
+}
+
+/** Shared navigation renderer; panel identity and destinations belong to its caller. */
+export function AppSidebar({ navigation, activeHref, header, footer, ...props }: AppSidebarProps) {
+  const { setOpenMobile } = useSidebar();
+
   return (
     <Sidebar {...props}>
-      <SidebarHeader>
-        <VersionSwitcher versions={data.versions} defaultVersion={data.versions[0]} />
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {data.top.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    className="hover:bg-primary transition-all duration-200 "
-                  >
-                    <Link href={item.url}>
-                      <item.icon className="size-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Recents</SidebarGroupLabel>
-
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {data.recents.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    className="hover:bg-primary transition-all duration-200 "
-                  >
-                    <Link href={item.url} className="ml-1  rounded-md ">
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+      {header && (
+        <SidebarHeader className="border-b p-3 [--radius:inherit]">{header}</SidebarHeader>
+      )}
+      <SidebarContent className="gap-3 overflow-x-hidden py-3 [--radius:inherit] group-data-[collapsible=icon]:overflow-y-auto">
+        <nav aria-label="منوی پنل">
+          {navigation.map((group) => (
+            <SidebarGroup key={group.id} className="px-3 py-2">
+              <SidebarGroupLabel
+                asChild
+                className="tracking-normal text-muted-foreground normal-case"
+              >
+                <Span className="text-xs font-medium">{group.label}</Span>
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {group.items.map((item) =>
+                    item.children ? (
+                      <SidebarNavigationBranch key={item.id} item={item} activeHref={activeHref} />
+                    ) : (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={activeHref === item.href}
+                          data-active={activeHref === item.href ? true : undefined}
+                          tooltip={{
+                            children: <Span className="text-xs">{item.label}</Span>,
+                            side: 'left',
+                          }}
+                          className="h-auto min-h-11 gap-3 rounded-lg text-start group-data-[collapsible=icon]:mx-auto [&_svg]:size-5 data-[active=true]:[&_svg]:text-brand-dark"
+                        >
+                          <Link
+                            href={item.href}
+                            aria-label={item.label}
+                            aria-current={activeHref === item.href ? 'page' : undefined}
+                            onClick={() => setOpenMobile(false)}
+                          >
+                            <SidebarIcon name={item.icon} />
+                            <Span className="truncate text-sm group-data-[collapsible=icon]:hidden">
+                              {item.label}
+                            </Span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ),
+                  )}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ))}
+        </nav>
       </SidebarContent>
-      <SidebarFooter>
-        <Button className="flex justify-start hover:text-accent bg-background border border-border shadow-none">
-          <ImgNormalCustom
-            src={'/img/profile/avatar-4c776756.svg'}
-            width={35}
-            height={25}
-            alt="profile"
-          />
-          <div className="flex flex-col ">
-            <p className="text-[14px] ">Mahdi Bagheri</p>
-            <p className="text-[12px] text-left">free</p>
-          </div>
-        </Button>
-      </SidebarFooter>
-      <SidebarRail />
+      {footer && <SidebarFooter className="border-t p-3">{footer}</SidebarFooter>}
     </Sidebar>
   );
 }
