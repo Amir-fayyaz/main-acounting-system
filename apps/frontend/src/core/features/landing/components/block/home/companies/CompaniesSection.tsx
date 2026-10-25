@@ -1,5 +1,5 @@
-import { H2, Muted, Span } from '@/core/components/custom/ui/typography/Typography';
-import { Badge } from '@/core/components/shadcn/ui/badge/badge';
+import { Badge, H2, Muted, Span } from '@repo/web/ui';
+
 import { companyBrands } from '@/core/features/landing/assets/mock/companies';
 import { CompanyWordmark } from '@/core/features/landing/components/ui/company-wordmark/CompanyWordmark';
 

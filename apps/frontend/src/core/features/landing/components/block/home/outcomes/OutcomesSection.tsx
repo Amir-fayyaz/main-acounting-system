@@ -1,7 +1,7 @@
-import { H2, P, Small, Span } from '@/core/components/custom/ui/typography/Typography';
+import { H2, P, Small, Span } from '@repo/web/ui';
 import { industryTags, outcomeAssurances } from '@/core/features/landing/assets/mock/workspace';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { cn } from '@/core/utils/shadcn/utils';
+import { cn } from '@repo/web/ui/utils/cn';
 
 export function OutcomesSection() {
   return (

@@ -1,10 +1,10 @@
 'use client';
-import { H2, P, Span } from '@/core/components/custom/ui/typography/Typography';
+import { Button, H2, P, Span } from '@repo/web/ui';
 
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ArrowLeft, Info } from 'lucide-react';
-import { Button } from '@/shadcn/button/button';
+
 import { contactTopics, emptyContactValues } from '@/core/features/landing/assets/mock/contact';
 import type {
   ContactFieldErrors,

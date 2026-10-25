@@ -1,4 +1,4 @@
-import { H2, H3, P, Span } from '@/core/components/custom/ui/typography/Typography';
+import { H2, H3, P, Span } from '@repo/web/ui';
 import { aboutPrinciples } from '@/core/features/landing/assets/mock/about';
 
 export function AboutPrinciples() {

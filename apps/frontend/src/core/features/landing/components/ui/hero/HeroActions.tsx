@@ -1,5 +1,5 @@
-import { Span } from '@/core/components/custom/ui/typography/Typography';
-import { Button } from '@/core/components/shadcn/ui/button/button';
+import { Button, Span } from '@repo/web/ui';
+
 import { ArrowLeft, Play } from 'lucide-react';
 
 const HeroActions = () => {

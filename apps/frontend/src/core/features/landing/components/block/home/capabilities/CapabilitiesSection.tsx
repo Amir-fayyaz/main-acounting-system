@@ -3,9 +3,9 @@ import { ReportScene } from '@/core/features/landing/components/ui/capabilities/
 import { SalesScene } from '@/core/features/landing/components/ui/capabilities/SalesScene';
 import { StockScene } from '@/core/features/landing/components/ui/capabilities/StockScene';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { cn } from '@/core/utils/shadcn/utils';
+import { cn } from '@repo/web/ui/utils/cn';
 import type { LandingIconName } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { H2, H3, P, Span } from '@/core/components/custom/ui/typography/Typography';
+import { H2, H3, P, Span } from '@repo/web/ui';
 
 export function CapabilitiesSection() {
   return (

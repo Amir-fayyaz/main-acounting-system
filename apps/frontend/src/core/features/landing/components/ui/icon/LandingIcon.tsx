@@ -27,7 +27,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
-import { cn } from '@/core/utils/shadcn/utils';
+import { cn } from '@repo/web/ui/utils/cn';
 
 export type LandingIconName =
   | 'logo'

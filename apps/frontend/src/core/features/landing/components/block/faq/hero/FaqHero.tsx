@@ -1,4 +1,4 @@
-import { H1, P, Span } from '@/core/components/custom/ui/typography/Typography';
+import { H1, P, Span } from '@repo/web/ui';
 export function FaqHero() {
   return (
     <section className="py-8 sm:py-12">

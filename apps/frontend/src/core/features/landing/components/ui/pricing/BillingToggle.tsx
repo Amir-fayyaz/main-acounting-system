@@ -1,8 +1,7 @@
-import { Span } from '@/core/components/custom/ui/typography/Typography';
+import { Badge, Button, Span } from '@repo/web/ui';
 import type { BillingPeriod } from '@/core/features/landing/assets/@types/pricing';
-import { Badge } from '@/core/components/shadcn/ui/badge/badge';
-import { Button } from '@/core/components/shadcn/ui/button/button';
-import { cn } from '@/core/utils/shadcn/utils';
+
+import { cn } from '@repo/web/ui/utils/cn';
 
 const periods: readonly { value: BillingPeriod; label: string }[] = [
   { value: 'month', label: 'ماهانه' },

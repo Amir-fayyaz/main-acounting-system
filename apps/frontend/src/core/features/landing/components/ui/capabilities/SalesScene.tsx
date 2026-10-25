@@ -1,6 +1,5 @@
-import { Small, Span } from '@/core/components/custom/ui/typography/Typography';
-import { Badge } from '@/core/components/shadcn/ui/badge/badge';
-import { Card } from '@/core/components/shadcn/ui/card/card';
+import { Badge, Card, Small, Span } from '@repo/web/ui';
+
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
 
 const invoiceItems = [

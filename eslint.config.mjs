@@ -28,6 +28,9 @@ export default [
       '**/.next/**',
       '**/coverage/**',
       '**/next-env.d.ts',
+      // Installed agent skills ship their own scripts (browser automation,
+      // assets, inspectors); they are not workspace source code.
+      '**/.agents/**',
     ],
   },
   {

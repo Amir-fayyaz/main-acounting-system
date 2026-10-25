@@ -1,11 +1,11 @@
 import Link from 'next/link';
 import type { Dispatch, SetStateAction } from 'react';
 
-import { P, Small, Span } from '@/core/components/custom/ui/typography/Typography';
-import { Button } from '@/core/components/shadcn/ui/button/button';
+import { Button, P, Small, Span } from '@repo/web/ui';
+
 import type { DashboardData, DashboardView } from '@/core/features/landing/assets/@types/dashboard';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { cn } from '@/core/utils/shadcn/utils';
+import { cn } from '@repo/web/ui/utils/cn';
 
 interface DashboardSidebarProps {
   data: DashboardData;

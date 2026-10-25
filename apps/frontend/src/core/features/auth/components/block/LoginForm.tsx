@@ -1,7 +1,7 @@
 'use client';
 
+import { Span } from '@repo/web/ui'; // اضافه شد
 import type { FormEvent } from 'react';
-import { Span } from '@/core/components/custom/ui/typography/Typography'; // اضافه شد
 import { useAuthForm } from '../../hook/useAuthForm';
 import { useSignIn } from '../../hook/useSignIn';
 import { signInSchema } from '../../lib/auth-schemas';

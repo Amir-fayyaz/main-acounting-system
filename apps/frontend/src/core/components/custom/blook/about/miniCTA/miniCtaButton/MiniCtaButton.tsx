@@ -1,5 +1,5 @@
+import { Button } from '@repo/web/ui';
 import { ArrowLeft } from 'lucide-react';
-import { Button } from '@/shadcn/button/button';
 import Link from 'next/link';
 
 export interface MiniCtaButtonProps {

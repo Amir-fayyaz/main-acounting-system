@@ -10,7 +10,7 @@ import { plans } from '@/core/features/landing/assets/mock/pricing';
 import { BillingToggle } from '@/core/features/landing/components/ui/pricing/BillingToggle';
 import { PlanCard } from '@/core/features/landing/components/ui/pricing/PlanCard';
 import { getBillingSummary } from '@/core/features/landing/lib/pricing';
-import { P } from '@/core/components/custom/ui/typography/Typography';
+import { P } from '@repo/web/ui';
 
 export function PricingPlans() {
   const [period, setPeriod] = useState<BillingPeriod>('month');

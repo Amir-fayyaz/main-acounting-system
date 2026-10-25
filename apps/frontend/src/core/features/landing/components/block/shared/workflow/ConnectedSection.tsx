@@ -3,14 +3,13 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { H2, P, Small, Span } from '@/core/components/custom/ui/typography/Typography';
-import { Button } from '@/core/components/shadcn/ui/button/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/core/components/shadcn/ui/tabs/tabs';
+import { Button, H2, P, Small, Span, Tabs, TabsContent, TabsList, TabsTrigger } from '@repo/web/ui';
+
 import type { WorkflowSectionData } from '@/core/features/landing/assets/@types/sections';
 import { landingWorkflowSectionData } from '@/core/features/landing/assets/mock/sections';
 import { BenefitsList } from '@/core/features/landing/components/ui/benefits/BenefitsList';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { cn } from '@/core/utils/shadcn/utils';
+import { cn } from '@repo/web/ui/utils/cn';
 
 interface ConnectedSectionProps {
   data?: WorkflowSectionData;

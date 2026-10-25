@@ -1,4 +1,4 @@
-import { H2, P, Span } from '@/core/components/custom/ui/typography/Typography';
+import { H2, P, Span } from '@repo/web/ui';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { contactPaths } from '@/core/features/landing/assets/mock/contact';

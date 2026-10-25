@@ -1,6 +1,6 @@
-import { H1, P, Span } from '@/core/components/custom/ui/typography/Typography';
-import { Badge } from '@/core/components/shadcn/ui/badge/badge';
-import { cn } from '@/core/utils/shadcn/utils';
+import { Badge, H1, P, Span } from '@repo/web/ui';
+
+import { cn } from '@repo/web/ui/utils/cn';
 
 export function PricingHero() {
   return (

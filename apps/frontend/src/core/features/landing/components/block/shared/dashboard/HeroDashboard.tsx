@@ -10,7 +10,7 @@ import type {
 import { landingDashboardData } from '@/core/features/landing/assets/mock/dashboard';
 import { DashboardMain } from '@/core/features/landing/components/ui/dashboard/DashboardMain';
 import { DashboardSidebar } from '@/core/features/landing/components/ui/dashboard/DashboardSidebar';
-import { cn } from '@/core/utils/shadcn/utils';
+import { cn } from '@repo/web/ui/utils/cn';
 
 interface HeroDashboardProps {
   /** Content for the preview. Landing and demo each provide their own mock data. */

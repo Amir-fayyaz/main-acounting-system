@@ -1,4 +1,4 @@
-import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
+import { SectionLayout } from '@repo/web/ui';
 import type { Metadata } from 'next';
 import { AboutPage } from '@/core/features/landing/components/block/about/AboutPage';
 

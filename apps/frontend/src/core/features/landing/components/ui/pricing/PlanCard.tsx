@@ -1,14 +1,12 @@
 import { ArrowLeft, Check, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
-import { Badge } from '@/core/components/shadcn/ui/badge/badge';
-import { Button } from '@/core/components/shadcn/ui/button/button';
-import { Card, CardContent, CardHeader } from '@/core/components/shadcn/ui/card/card';
+import { Badge, Button, Card, CardContent, CardHeader, H2, P, Span } from '@repo/web/ui';
+
 import type { BillingPeriod, Plan } from '@/core/features/landing/assets/@types/pricing';
 import { getBilledLabel, getMonthlyPrice, getPlanHref } from '@/core/features/landing/lib/pricing';
 import { formatPersianNumber } from '@/core/features/landing/utils/formatPersianNumber';
-import { cn } from '@/core/utils/shadcn/utils';
-import { H2, P, Span } from '@/core/components/custom/ui/typography/Typography';
+import { cn } from '@repo/web/ui/utils/cn';
 
 const ctaVariantClass: Record<Plan['id'], string> = {
   starter:

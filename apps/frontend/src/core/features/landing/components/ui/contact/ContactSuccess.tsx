@@ -1,6 +1,5 @@
-import { H2, P, Span } from '@/core/components/custom/ui/typography/Typography';
+import { Button, H2, P, Span } from '@repo/web/ui';
 import { Check } from 'lucide-react';
-import { Button } from '@/shadcn/button/button';
 
 interface ContactSuccessProps {
   name: string;

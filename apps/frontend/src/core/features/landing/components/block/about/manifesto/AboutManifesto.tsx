@@ -1,4 +1,4 @@
-import { P, Span } from '@/core/components/custom/ui/typography/Typography';
+import { P, Span } from '@repo/web/ui';
 import { Sparkles } from 'lucide-react';
 
 export function AboutManifesto() {

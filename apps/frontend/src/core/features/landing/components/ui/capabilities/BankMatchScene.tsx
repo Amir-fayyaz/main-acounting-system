@@ -1,5 +1,5 @@
-import { Small, Span } from '@/core/components/custom/ui/typography/Typography';
-import { Card, CardContent, CardFooter, CardHeader } from '@/core/components/shadcn/ui/card/card';
+import { Card, CardContent, CardFooter, CardHeader, Small, Span } from '@repo/web/ui';
+
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
 import Link from 'next/link';
 

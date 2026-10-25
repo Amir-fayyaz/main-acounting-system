@@ -1,14 +1,16 @@
-import { P, Span } from '@/core/components/custom/ui/typography/Typography';
-import type { Ref } from 'react';
-import { Input } from '@/shadcn/input/input';
 import {
+  Input,
+  P,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/shadcn/select/select';
-import { Textarea } from '@/shadcn/Textarea/textarea';
+  Span,
+  Textarea,
+} from '@repo/web/ui';
+import type { Ref } from 'react';
+
 import type {
   ContactFieldErrors,
   ContactFieldId,

@@ -1,6 +1,6 @@
-import { Span } from '@/core/components/custom/ui/typography/Typography';
+import { Span } from '@repo/web/ui';
 import { Search, X } from 'lucide-react';
-import { cn } from '@/core/utils/shadcn/utils';
+import { cn } from '@repo/web/ui/utils/cn';
 import type { FaqCategory, FaqCategoryId } from '@/core/features/landing/assets/@types/faq';
 
 interface FaqControlsProps {

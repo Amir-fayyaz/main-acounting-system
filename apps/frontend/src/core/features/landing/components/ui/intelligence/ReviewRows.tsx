@@ -1,4 +1,4 @@
-import { Span } from '@/core/components/custom/ui/typography/Typography';
+import { Span } from '@repo/web/ui';
 import type { ReviewLine } from '@/core/features/landing/assets/@types/sections';
 
 export function ReviewRows({ lines }: { lines: readonly ReviewLine[] }) {

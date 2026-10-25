@@ -53,6 +53,11 @@ services:
       - --collation-server=utf8mb4_unicode_ci
       - --default-time-zone=+00:00
       - --transaction-isolation=READ-COMMITTED
+      # FIS-002: the fiscal year migration creates triggers, and MySQL 8.4
+      # enables binary logging by default. Without this flag (or SUPER) the
+      # migration user fails with ERROR 1419 when creating a trigger. Production
+      # must set the same server variable before that release migrates.
+      - --log-bin-trust-function-creators=1
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE:-accounting}
       MYSQL_USER: ${MYSQL_USER:-accounting}

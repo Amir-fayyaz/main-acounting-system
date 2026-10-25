@@ -22,6 +22,7 @@
     "lint": "eslint .",
     "deps:check": "depcruise src --config .dependency-cruiser.cjs",
     "test": "vitest run",
+    "test:timezones": "for tz in UTC Asia/Tehran America/Los_Angeles; do TZ=$tz vitest run src/shared/time/jalali-calendar.spec.ts || exit 1; done",
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
     "test:e2e": "vitest run test"

@@ -1,11 +1,11 @@
 import Link from 'next/link';
 
-import { H2, P, Small, Span } from '@/core/components/custom/ui/typography/Typography';
-import { Button } from '@/core/components/shadcn/ui/button/button';
+import { Button, H2, P, Small, Span } from '@repo/web/ui';
+
 import type { MiniCtaData } from '@/core/features/landing/assets/@types/sections';
 import { landingMiniCtaData } from '@/core/features/landing/assets/mock/sections';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { cn } from '@/core/utils/shadcn/utils';
+import { cn } from '@repo/web/ui/utils/cn';
 
 interface MiniCtaProps {
   data?: MiniCtaData;

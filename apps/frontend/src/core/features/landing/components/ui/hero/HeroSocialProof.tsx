@@ -1,7 +1,6 @@
-import { H2, Muted, Span } from '@/core/components/custom/ui/typography/Typography';
+import { Badge, H2, Muted, Span } from '@repo/web/ui';
 import { BrandList } from './BrandList';
 import HeroBenefits from './HeroBenefits';
-import { Badge } from '@/core/components/shadcn/ui/badge/badge';
 
 export function HeroSocialProof() {
   return (

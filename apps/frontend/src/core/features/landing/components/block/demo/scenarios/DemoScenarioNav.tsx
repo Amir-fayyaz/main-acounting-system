@@ -1,4 +1,4 @@
-import { Span } from '@/core/components/custom/ui/typography/Typography';
+import { Span } from '@repo/web/ui';
 import Link from 'next/link';
 
 import { demoScenarioLinks } from '@/core/features/landing/assets/mock/demo/page';

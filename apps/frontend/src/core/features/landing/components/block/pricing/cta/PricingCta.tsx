@@ -1,9 +1,8 @@
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
-import { Button } from '@/core/components/shadcn/ui/button/button';
+import { Button, H2, P, Span } from '@repo/web/ui';
 import { pricingCta } from '@/core/features/landing/assets/mock/pricing';
-import { H2, P, Span } from '@/core/components/custom/ui/typography/Typography';
 
 export function PricingCta() {
   return (

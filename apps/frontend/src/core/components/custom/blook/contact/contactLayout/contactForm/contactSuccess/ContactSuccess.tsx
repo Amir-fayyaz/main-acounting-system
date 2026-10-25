@@ -1,4 +1,4 @@
-import { Button } from '@/shadcn/button/button';
+import { Button } from '@repo/web/ui';
 import { Check } from 'lucide-react';
 
 export interface ContactSuccessProps {
@@ -22,8 +22,8 @@ function ContactSuccess({ name, onReset }: ContactSuccessProps) {
       </h2>
 
       <p className="mb-[19px] mt-[10px] text-[12px] leading-[2.1] text-muted-foreground">
-        <strong className="font-semibold">{name}</strong>، فرم شما بررسی شد. این یک
-        پیش‌نمایش محلی است و پیام واقعاً ارسال نشده است.
+        <strong className="font-semibold">{name}</strong>، فرم شما بررسی شد. این یک پیش‌نمایش محلی
+        است و پیام واقعاً ارسال نشده است.
       </p>
 
       <Button

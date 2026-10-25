@@ -1,5 +1,5 @@
-import { Small, Span } from '@/core/components/custom/ui/typography/Typography';
-import { Card } from '@/core/components/shadcn/ui/card/card';
+import { Card, Small, Span } from '@repo/web/ui';
+
 import type {
   DashboardData,
   DashboardPeriod,

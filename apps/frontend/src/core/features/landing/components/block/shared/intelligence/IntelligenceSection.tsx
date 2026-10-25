@@ -7,7 +7,7 @@ import type { AssistantSectionData } from '@/core/features/landing/assets/@types
 import { landingAssistantSectionData } from '@/core/features/landing/assets/mock/sections';
 import { AssistantPreview } from '@/core/features/landing/components/ui/intelligence/AssistantPreview';
 import { IntelligenceCopy } from '@/core/features/landing/components/ui/intelligence/IntelligenceCopy';
-import { cn } from '@/core/utils/shadcn/utils';
+import { cn } from '@repo/web/ui/utils/cn';
 
 interface IntelligenceSectionProps {
   data?: AssistantSectionData;

@@ -4,12 +4,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
-import { Button } from '@/core/components/shadcn/ui/button/button';
+import { Button, Small, Span } from '@repo/web/ui';
 import { navigationLinks, productMenuItems } from '@/core/features/landing/assets/mock/navigation';
 import { SiteBrand } from '@/core/features/landing/components/ui/brand/SiteBrand';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { cn } from '@/core/utils/shadcn/utils';
-import { Small, Span } from '@/core/components/custom/ui/typography/Typography';
+import { cn } from '@repo/web/ui/utils/cn';
 
 const PRIMARY_NAV_ID = 'primary-navigation';
 const PRODUCT_MENU_ID = 'product-menu';

@@ -1,5 +1,6 @@
-import { Button } from "@/components/shadcn/ui/button/button";
 import {
+  Button,
+  ImgNormalCustom,
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -11,42 +12,41 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-} from "@/components/shadcn/ui/sidebar/sidebar";
-import { MessageCircle, MessageSquarePlus } from "lucide-react";
-import Link from "next/link";
-import * as React from "react";
-import { ImgNormalCustom } from "../../ui/image/ImgNormalCustom";
-import { VersionSwitcher } from "./version-switcher";
+} from '@repo/web/ui';
+import { MessageCircle, MessageSquarePlus } from 'lucide-react';
+import Link from 'next/link';
+import * as React from 'react';
+import { VersionSwitcher } from './version-switcher';
 const data = {
-  versions: ["1.0.1", "1.1.0-alpha", "2.0.0-beta1"],
+  versions: ['1.0.1', '1.1.0-alpha', '2.0.0-beta1'],
   top: [
     {
-      title: "New Chat",
-      url: "#",
+      title: 'New Chat',
+      url: '#',
       icon: MessageSquarePlus,
     },
     {
-      title: "Last Chat",
-      url: "#",
+      title: 'Last Chat',
+      url: '#',
       icon: MessageCircle,
     },
   ],
   recents: [
     {
-      title: "React Authentication",
-      url: "#",
+      title: 'React Authentication',
+      url: '#',
     },
     {
-      title: "Generate Landing Page",
-      url: "#",
+      title: 'Generate Landing Page',
+      url: '#',
     },
     {
-      title: "NestJS Clean Architecture",
-      url: "#",
+      title: 'NestJS Clean Architecture',
+      url: '#',
     },
     {
-      title: "Resume Review",
-      url: "#",
+      title: 'Resume Review',
+      url: '#',
     },
   ],
 };
@@ -54,10 +54,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar {...props}>
       <SidebarHeader>
-        <VersionSwitcher
-          versions={data.versions}
-          defaultVersion={data.versions[0]}
-        />
+        <VersionSwitcher versions={data.versions} defaultVersion={data.versions[0]} />
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -104,7 +101,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter>
         <Button className="flex justify-start hover:text-accent bg-background border border-border shadow-none">
           <ImgNormalCustom
-            src={"/img/profile/avatar-4c776756.svg"}
+            src={'/img/profile/avatar-4c776756.svg'}
             width={35}
             height={25}
             alt="profile"

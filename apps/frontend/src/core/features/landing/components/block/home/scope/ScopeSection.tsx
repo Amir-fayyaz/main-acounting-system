@@ -1,7 +1,7 @@
-import { H2, H3, P, Small, Span } from '@/core/components/custom/ui/typography/Typography';
+import { H2, H3, P, Small, Span } from '@repo/web/ui';
 import { scopeModules } from '@/core/features/landing/assets/mock/workspace';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { cn } from '@/core/utils/shadcn/utils';
+import { cn } from '@repo/web/ui/utils/cn';
 import Link from 'next/link';
 
 export function ScopeSection() {

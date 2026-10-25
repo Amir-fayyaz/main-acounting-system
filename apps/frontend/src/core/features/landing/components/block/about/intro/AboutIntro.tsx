@@ -1,8 +1,8 @@
-import { H1, H2, P, Small, Span } from '@/core/components/custom/ui/typography/Typography';
+import { Button, H1, H2, P, Small, Span } from '@repo/web/ui';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import { Button } from '@/shadcn/button/button';
-import { cn } from '@/core/utils/shadcn/utils';
+
+import { cn } from '@repo/web/ui/utils/cn';
 import { aboutSteps } from '@/core/features/landing/assets/mock/about';
 
 export function AboutIntro() {

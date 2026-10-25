@@ -1,9 +1,9 @@
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { cn } from '@/core/utils/shadcn/utils';
+import { cn } from '@repo/web/ui/utils/cn';
 import HeroActions from '@/core/features/landing/components/ui/hero/HeroActions';
 import HeroBenefits from '@/core/features/landing/components/ui/hero/HeroBenefits';
 import { HeroDashboard } from '@/core/features/landing/components/block/shared/dashboard/HeroDashboard';
-import { H1, Muted, Span } from '@/core/components/custom/ui/typography/Typography';
+import { H1, Muted, Span } from '@repo/web/ui';
 import { Check } from 'lucide-react';
 
 export function Hero() {

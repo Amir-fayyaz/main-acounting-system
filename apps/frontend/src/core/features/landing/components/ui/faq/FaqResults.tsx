@@ -1,6 +1,6 @@
-import { H2, P, Span } from '@/core/components/custom/ui/typography/Typography';
+import { Button, H2, P, Span } from '@repo/web/ui';
 import { FileText, Plus } from 'lucide-react';
-import { Button } from '@/shadcn/button/button';
+
 import type { FaqCategoryId, FaqEntry } from '@/core/features/landing/assets/@types/faq';
 
 interface FaqResultsProps {

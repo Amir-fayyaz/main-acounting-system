@@ -1,8 +1,8 @@
-import PagesContainer from '@/core/components/custom/ui/wrapper/PagesContainer';
+import { PagesContainer } from '@repo/web/ui';
 import Link from 'next/link';
 
-import { Button } from '@/core/components/shadcn/ui/button/button';
-import { Separator } from '@/core/components/shadcn/ui/separator/separator';
+import { Button, H2, P, Separator, Span } from '@repo/web/ui';
+
 import {
   footerCaption,
   footerColumns,
@@ -13,7 +13,6 @@ import {
 } from '@/core/features/landing/assets/mock/navigation';
 import { SiteBrand } from '@/core/features/landing/components/ui/brand/SiteBrand';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { H2, P, Span } from '@/core/components/custom/ui/typography/Typography';
 
 const footerSeparatorClass = 'bg-[#57442c]';
 

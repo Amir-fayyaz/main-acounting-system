@@ -1,6 +1,6 @@
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { cn } from '@/core/utils/shadcn/utils';
-import { Span } from '@/core/components/custom/ui/typography/Typography';
+import { cn } from '@repo/web/ui/utils/cn';
+import { Span } from '@repo/web/ui';
 
 const benefits = [
   { label: 'طراحی‌شده برای حسابدار', icon: 'book' },

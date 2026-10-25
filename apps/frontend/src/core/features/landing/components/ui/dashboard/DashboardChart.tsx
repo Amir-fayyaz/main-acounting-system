@@ -1,13 +1,13 @@
 import type { CSSProperties } from 'react';
 
-import { Small, Span } from '@/core/components/custom/ui/typography/Typography';
-import { Card } from '@/core/components/shadcn/ui/card/card';
+import { Card, Small, Span } from '@repo/web/ui';
+
 import type {
   DashboardData,
   DashboardPeriod,
   DashboardReport,
 } from '@/core/features/landing/assets/@types/dashboard';
-import { cn } from '@/core/utils/shadcn/utils';
+import { cn } from '@repo/web/ui/utils/cn';
 
 interface DashboardChartProps {
   data: DashboardData;
