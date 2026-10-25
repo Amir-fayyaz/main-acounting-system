@@ -164,6 +164,20 @@
   }
 }
 
+@layer components {
+  .pricing-root {
+    @apply bg-[#f7f6ee] text-[15px] leading-[1.9] text-[#1a120a];
+  }
+
+  .pricing-container {
+    @apply mx-auto w-[min(1160px,calc(100%_-_80px))] max-[1050px]:w-[calc(100%_-_48px)] max-[600px]:w-[calc(100%_-_36px)];
+  }
+
+  .pricing-eyebrow {
+    @apply inline-flex items-center gap-[9px] text-[12px] font-[650] text-[#8f5800] before:size-[6px] before:rounded-full before:bg-[#ffa00a] before:content-[''] max-[600px]:gap-[7px] max-[600px]:text-[10px];
+  }
+}
+
 .pages-container {
   @apply mx-auto w-full max-w-350 space-y-4 px-5 sm:space-y-10 sm:px-15;
 }

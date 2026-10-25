@@ -5,16 +5,12 @@ import { PricingComparison } from '@/core/features/pricing/components/block/pric
 import { PricingCta } from '@/core/features/pricing/components/block/pricing-cta/PricingCta';
 import { PricingHero } from '@/core/features/pricing/components/block/pricing-hero/PricingHero';
 import { PricingPlans } from '@/core/features/pricing/components/block/pricing-plans/PricingPlans';
-import {
-  pricingContainerClass,
-  pricingRootClass,
-} from '@/core/features/pricing/lib/pricing-classes';
 import { P } from '@/core/components/custom/ui/typography/Typography';
 
 export function PricingPage() {
   return (
-    <div className={pricingRootClass}>
-      <div className={pricingContainerClass}>
+    <div className="pricing-root">
+      <div className="pricing-container">
         <PricingHero />
         <PricingPlans />
 

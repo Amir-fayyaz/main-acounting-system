@@ -1,9 +1,5 @@
 import { H1, P, Span } from '@/core/components/custom/ui/typography/Typography';
 import { Badge } from '@/core/components/shadcn/ui/badge/badge';
-import {
-  pricingEyebrowClass,
-  pricingMutedTextClass,
-} from '@/core/features/pricing/lib/pricing-classes';
 import { cn } from '@/core/utils/shadcn/utils';
 
 export function PricingHero() {
@@ -12,7 +8,7 @@ export function PricingHero() {
       aria-labelledby="pricing-title"
       className="mx-auto max-w-[800px] pt-[66px] pb-[38px] text-center max-[600px]:pt-[43px] max-[600px]:pb-[30px] max-[900px]:pt-[53px]"
     >
-      <Span className={pricingEyebrowClass}>تعرفه‌ها</Span>
+      <Span className="pricing-eyebrow">تعرفه‌ها</Span>
 
       <H1
         id="pricing-title"
@@ -25,8 +21,7 @@ export function PricingHero() {
 
       <P
         className={cn(
-          'mx-auto max-w-[570px] text-sm leading-[2.1] max-[600px]:max-w-[345px] max-[600px]:text-xs',
-          pricingMutedTextClass,
+          'text-[#746b60] mx-auto max-w-[570px] text-sm leading-[2.1] max-[600px]:max-w-[345px] max-[600px]:text-xs',
         )}
       >
         همه پلن‌ها روی یک جریان مالی یکپارچه بنا شده‌اند. ظرفیت و همراهی مناسب تیم خودتان را
