@@ -1,5 +1,3 @@
-import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
-
 import { Span } from '@/core/components/custom/ui/typography/Typography';
 import Link from 'next/link';
 
@@ -8,7 +6,7 @@ import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingI
 
 export function DemoScenarioNav() {
   return (
-    <SectionLayout className="py-4">
+    <section className="py-4">
       <div aria-label="سناریوهای دمو">
         <nav aria-label="بخش‌های دمو">
           <div className="mt-6 flex flex-wrap justify-center gap-2.5 max-sm:mt-5 max-sm:gap-1.5">
@@ -28,6 +26,6 @@ export function DemoScenarioNav() {
           </div>
         </nav>
       </div>
-    </SectionLayout>
+    </section>
   );
 }

@@ -1,4 +1,3 @@
-import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 import { BankMatchScene } from '@/core/features/landing/components/ui/capabilities/BankMatchScene';
 import { ReportScene } from '@/core/features/landing/components/ui/capabilities/ReportScene';
 import { SalesScene } from '@/core/features/landing/components/ui/capabilities/SalesScene';
@@ -10,7 +9,7 @@ import { H2, H3, P, Span } from '@/core/components/custom/ui/typography/Typograp
 
 export function CapabilitiesSection() {
   return (
-    <SectionLayout className="py-8 sm:py-12">
+    <section className="py-8 sm:py-12">
       <div id="features" aria-labelledby="features-title">
         <div className="mb-8 grid grid-cols-[1.4fr_1fr] items-end gap-14 max-xl:gap-9 max-md:mb-6 max-md:block max-lg:gap-6">
           <div>
@@ -123,7 +122,7 @@ export function CapabilitiesSection() {
           </article>
         </div>
       </div>
-    </SectionLayout>
+    </section>
   );
 }
 

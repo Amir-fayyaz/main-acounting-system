@@ -1,3 +1,4 @@
+import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 import type { Metadata } from 'next';
 
 import { PricingPage } from '@/core/features/landing/components/block/pricing/PricingPage';
@@ -8,5 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default function PricingRoute() {
-  return <PricingPage />;
+  return (
+    <SectionLayout>
+      <PricingPage />
+    </SectionLayout>
+  );
 }

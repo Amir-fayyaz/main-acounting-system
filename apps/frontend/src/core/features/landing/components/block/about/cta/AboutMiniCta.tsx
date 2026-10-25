@@ -1,5 +1,3 @@
-import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
-
 import { H2, P, Span } from '@/core/components/custom/ui/typography/Typography';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
@@ -19,7 +17,7 @@ export function AboutMiniCta({
   buttonHref = '/demo',
 }: AboutMiniCtaProps) {
   return (
-    <SectionLayout className="py-8 sm:py-12">
+    <section className="py-8 sm:py-12">
       <div className="block rounded-lg border border-border bg-sand p-6 sm:flex sm:items-center sm:justify-between sm:gap-9 sm:rounded-xl sm:px-8">
         <div>
           <H2 className="mb-1 text-xl leading-relaxed tracking-tight sm:text-2xl">{title}</H2>
@@ -35,6 +33,6 @@ export function AboutMiniCta({
           </Link>
         </Button>
       </div>
-    </SectionLayout>
+    </section>
   );
 }

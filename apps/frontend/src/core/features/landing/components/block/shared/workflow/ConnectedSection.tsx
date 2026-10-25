@@ -1,5 +1,4 @@
 'use client';
-import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 
 import Link from 'next/link';
 import { useState } from 'react';
@@ -34,7 +33,7 @@ export function ConnectedSection({
   const activeTab = data.tabs.find((tab) => tab.key === flow) ?? data.tabs[0];
 
   return (
-    <SectionLayout className="py-8 sm:py-12">
+    <section className="py-8 sm:py-12">
       <div id={data.id} aria-labelledby={titleId} className={className}>
         <div
           className={cn(
@@ -176,6 +175,6 @@ export function ConnectedSection({
           </div>
         </div>
       </div>
-    </SectionLayout>
+    </section>
   );
 }

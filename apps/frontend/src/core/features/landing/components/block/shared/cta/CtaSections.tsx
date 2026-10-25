@@ -1,4 +1,3 @@
-import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 import Link from 'next/link';
 
 import { H2, P, Small, Span } from '@/core/components/custom/ui/typography/Typography';
@@ -15,7 +14,7 @@ interface MiniCtaProps {
 
 export function MiniCta({ data = landingMiniCtaData, className }: MiniCtaProps) {
   return (
-    <SectionLayout className="py-8 sm:py-12">
+    <section className="py-8 sm:py-12">
       <div
         aria-labelledby="mini-cta-title"
         className={cn(
@@ -45,13 +44,13 @@ export function MiniCta({ data = landingMiniCtaData, className }: MiniCtaProps) 
           </Link>
         </Button>
       </div>
-    </SectionLayout>
+    </section>
   );
 }
 
 export function FinalCta() {
   return (
-    <SectionLayout className="py-8 sm:py-12">
+    <section className="py-8 sm:py-12">
       <div
         aria-labelledby="cta-title"
         className="relative flex items-center justify-between gap-10 overflow-hidden rounded-xl bg-[#ffa00a] py-12 px-14 after:absolute after:inset-auto after:-bottom-44 after:-left-16 after:size-112 after:rounded-full after:border after:border-[#b8710033] after:content-[''] max-xl:p-9 max-sm:block max-sm:rounded-lg max-sm:px-6 max-md:p-8 [&>div]:relative [&>div]:z-1"
@@ -91,6 +90,6 @@ export function FinalCta() {
           </Small>
         </div>
       </div>
-    </SectionLayout>
+    </section>
   );
 }

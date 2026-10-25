@@ -1,4 +1,3 @@
-import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 import { demoDashboardData } from '@/core/features/landing/assets/mock/demo/dashboard';
 import {
   demoAssistantSectionData,
@@ -17,11 +16,11 @@ export function DemoPage() {
     <main>
       <DemoHero />
 
-      <SectionLayout className="pt-0">
+      <section className="pb-8">
         <div aria-label="پیش‌نمایش تعاملی محصول">
           <HeroDashboard data={demoDashboardData} id="demo" variant="demo" />
         </div>
-      </SectionLayout>
+      </section>
 
       <DemoScenarioNav />
 

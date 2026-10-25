@@ -1,4 +1,3 @@
-import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
 import { cn } from '@/core/utils/shadcn/utils';
 import HeroActions from '@/core/features/landing/components/ui/hero/HeroActions';
@@ -9,7 +8,7 @@ import { Check } from 'lucide-react';
 
 export function Hero() {
   return (
-    <SectionLayout className="relative overflow-hidden pt-10 pb-0 sm:pt-16">
+    <section className="relative overflow-hidden pt-10 pb-0 sm:pt-16">
       <div aria-labelledby="hero-title">
         <div
           aria-hidden="true"
@@ -107,6 +106,6 @@ export function Hero() {
           <HeroBenefits />
         </div>
       </div>
-    </SectionLayout>
+    </section>
   );
 }

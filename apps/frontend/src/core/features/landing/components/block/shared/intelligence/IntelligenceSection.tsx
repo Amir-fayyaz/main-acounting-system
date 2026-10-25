@@ -1,5 +1,4 @@
 'use client';
-import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -52,7 +51,7 @@ export function IntelligenceSection({
   );
 
   return (
-    <SectionLayout className="py-8 sm:py-12">
+    <section className="py-8 sm:py-12">
       <div
         id={data.id}
         aria-labelledby={titleId}
@@ -79,6 +78,6 @@ export function IntelligenceSection({
           )}
         </div>
       </div>
-    </SectionLayout>
+    </section>
   );
 }

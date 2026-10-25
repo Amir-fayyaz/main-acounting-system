@@ -1,11 +1,10 @@
-import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 import { H1, P, Span } from '@/core/components/custom/ui/typography/Typography';
 import { Badge } from '@/core/components/shadcn/ui/badge/badge';
 import { cn } from '@/core/utils/shadcn/utils';
 
 export function PricingHero() {
   return (
-    <SectionLayout className="py-8 sm:py-12">
+    <section className="py-8 sm:py-12">
       <div aria-labelledby="pricing-title" className="mx-auto max-w-200 text-center">
         <Span className="pricing-eyebrow">تعرفه‌ها</Span>
 
@@ -36,6 +35,6 @@ export function PricingHero() {
           </Span>
         </Badge>
       </div>
-    </SectionLayout>
+    </section>
   );
 }

@@ -1,4 +1,3 @@
-import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 import { H2, P, Small, Span } from '@/core/components/custom/ui/typography/Typography';
 import { industryTags, outcomeAssurances } from '@/core/features/landing/assets/mock/workspace';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
@@ -6,7 +5,7 @@ import { cn } from '@/core/utils/shadcn/utils';
 
 export function OutcomesSection() {
   return (
-    <SectionLayout className="py-8 sm:py-12">
+    <section className="py-8 sm:py-12">
       <div id="results" aria-labelledby="proof-title">
         <div className="mb-7 flex items-end justify-between gap-10 max-md:mb-6 max-md:block max-lg:gap-7">
           <div>
@@ -163,6 +162,6 @@ export function OutcomesSection() {
           ))}
         </div>
       </div>
-    </SectionLayout>
+    </section>
   );
 }

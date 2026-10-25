@@ -1,3 +1,4 @@
+import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 import type { Metadata } from 'next';
 import { ContactPage } from '@/core/features/landing/components/block/contact/ContactPage';
 
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function ContactRoute() {
-  return <ContactPage />;
+  return (
+    <SectionLayout>
+      <ContactPage />
+    </SectionLayout>
+  );
 }

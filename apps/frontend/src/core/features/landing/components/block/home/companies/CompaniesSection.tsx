@@ -1,4 +1,3 @@
-import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 import { H2, Muted, Span } from '@/core/components/custom/ui/typography/Typography';
 import { Badge } from '@/core/components/shadcn/ui/badge/badge';
 import { companyBrands } from '@/core/features/landing/assets/mock/companies';
@@ -6,7 +5,7 @@ import { CompanyWordmark } from '@/core/features/landing/components/ui/company-w
 
 export function CompaniesSection() {
   return (
-    <SectionLayout className="py-8 sm:py-12">
+    <section className="py-8 sm:py-12">
       <div
         id="companies"
         aria-labelledby="companies-title"
@@ -42,6 +41,6 @@ export function CompaniesSection() {
           نام برندها صرفاً برای نمایش این چیدمان است و به معنی مشتری بودن یا تأیید تراز نیست.
         </Muted>
       </div>
-    </SectionLayout>
+    </section>
   );
 }

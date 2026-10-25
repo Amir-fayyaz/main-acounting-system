@@ -1,4 +1,3 @@
-import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
@@ -8,7 +7,7 @@ import { H2, P, Span } from '@/core/components/custom/ui/typography/Typography';
 
 export function PricingCta() {
   return (
-    <SectionLayout className="py-8 sm:py-12">
+    <section className="py-8 sm:py-12">
       <div
         aria-labelledby="pricing-cta-title"
         className="flex items-center justify-between gap-9 rounded-xl border border-[#e1d7c3] bg-[#efe9d9] py-7 px-8 max-sm:block max-sm:rounded-lg max-sm:p-6 max-lg:p-6"
@@ -33,6 +32,6 @@ export function PricingCta() {
           </Link>
         </Button>
       </div>
-    </SectionLayout>
+    </section>
   );
 }

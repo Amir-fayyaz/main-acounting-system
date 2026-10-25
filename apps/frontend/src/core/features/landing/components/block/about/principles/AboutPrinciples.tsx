@@ -1,11 +1,9 @@
-import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
-
 import { H2, H3, P, Span } from '@/core/components/custom/ui/typography/Typography';
 import { aboutPrinciples } from '@/core/features/landing/assets/mock/about';
 
 export function AboutPrinciples() {
   return (
-    <SectionLayout className="py-8 sm:py-12">
+    <section className="py-8 sm:py-12">
       <div>
         <Span className="flex items-center gap-2 text-xs font-semibold text-brand-link before:h-1.5 before:w-1.5 before:rounded-full before:bg-brand before:content-['']">
           اصولی که روی آن‌ها ساخته می‌شویم
@@ -41,6 +39,6 @@ export function AboutPrinciples() {
           </P>
         </div>
       </div>
-    </SectionLayout>
+    </section>
   );
 }

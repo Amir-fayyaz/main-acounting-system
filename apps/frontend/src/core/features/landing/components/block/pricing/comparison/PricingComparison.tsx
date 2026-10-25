@@ -1,4 +1,3 @@
-import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 import { Check } from 'lucide-react';
 
 import {
@@ -33,7 +32,7 @@ function ComparisonCell({ value }: { value: ComparisonValue }) {
 
 export function PricingComparison() {
   return (
-    <SectionLayout className="py-8 sm:py-12">
+    <section className="py-8 sm:py-12">
       <div aria-labelledby="comparison-title">
         <H2
           id="comparison-title"
@@ -102,6 +101,6 @@ export function PricingComparison() {
           </Table>
         </div>
       </div>
-    </SectionLayout>
+    </section>
   );
 }

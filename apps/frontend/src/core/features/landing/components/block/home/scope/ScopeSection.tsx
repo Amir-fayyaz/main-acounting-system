@@ -1,4 +1,3 @@
-import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 import { H2, H3, P, Small, Span } from '@/core/components/custom/ui/typography/Typography';
 import { scopeModules } from '@/core/features/landing/assets/mock/workspace';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
@@ -7,7 +6,7 @@ import Link from 'next/link';
 
 export function ScopeSection() {
   return (
-    <SectionLayout className="py-8 sm:py-12">
+    <section className="py-8 sm:py-12">
       <div id="scope" aria-labelledby="scope-title">
         <div className="mb-7 flex items-center justify-between gap-6 max-sm:mb-6 max-sm:block">
           <div>
@@ -84,6 +83,6 @@ export function ScopeSection() {
           <Span className="text-[length:inherit]">تمرکز نسخه نخست: جریان‌های اصلی مالی شرکت</Span>
         </div>
       </div>
-    </SectionLayout>
+    </section>
   );
 }

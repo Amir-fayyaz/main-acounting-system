@@ -1,5 +1,3 @@
-import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
-
 import { H1, H2, P, Small, Span } from '@/core/components/custom/ui/typography/Typography';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
@@ -9,7 +7,7 @@ import { aboutSteps } from '@/core/features/landing/assets/mock/about';
 
 export function AboutIntro() {
   return (
-    <SectionLayout className="py-8 sm:py-12">
+    <section className="py-8 sm:py-12">
       <div className="grid items-center gap-7 max-sm:grid-cols-1 max-xl:gap-11 sm:grid-cols-[1.1fr_1fr]">
         <div>
           <Span className="flex items-center gap-2 text-xs font-semibold text-brand-link before:h-1.5 before:w-1.5 before:rounded-full before:bg-brand before:content-['']">
@@ -70,6 +68,6 @@ export function AboutIntro() {
           </div>
         </div>
       </div>
-    </SectionLayout>
+    </section>
   );
 }

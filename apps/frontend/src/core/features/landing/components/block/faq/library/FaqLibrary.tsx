@@ -1,5 +1,4 @@
 'use client';
-import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 
 import { useMemo, useState } from 'react';
 import { faqCategories, faqEntries } from '@/core/features/landing/assets/mock/faq';
@@ -32,7 +31,7 @@ export function FaqLibrary() {
   };
 
   return (
-    <SectionLayout className="pt-0">
+    <section className="pb-8">
       <div aria-label="جست‌وجو و پاسخ پرسش‌های متداول">
         <FaqControls
           activeCategory={category}
@@ -43,6 +42,6 @@ export function FaqLibrary() {
         />
         <FaqResults entries={visibleEntries} labelOf={labelOf} onReset={reset} />
       </div>
-    </SectionLayout>
+    </section>
   );
 }

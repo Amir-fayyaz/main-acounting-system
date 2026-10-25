@@ -1,3 +1,4 @@
+import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 import type { Metadata } from 'next';
 import { AboutPage } from '@/core/features/landing/components/block/about/AboutPage';
 
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function AboutRoute() {
-  return <AboutPage />;
+  return (
+    <SectionLayout>
+      <AboutPage />
+    </SectionLayout>
+  );
 }

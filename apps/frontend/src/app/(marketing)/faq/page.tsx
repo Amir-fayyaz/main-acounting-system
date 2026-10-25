@@ -1,3 +1,4 @@
+import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 import type { Metadata } from 'next';
 import { FaqPage } from '@/core/features/landing/components/block/faq/FaqPage';
 
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function FaqRoute() {
-  return <FaqPage />;
+  return (
+    <SectionLayout>
+      <FaqPage />
+    </SectionLayout>
+  );
 }

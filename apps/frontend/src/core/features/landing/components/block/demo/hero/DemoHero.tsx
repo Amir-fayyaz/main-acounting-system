@@ -1,4 +1,3 @@
-import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 import { H1, P, Span } from '@/core/components/custom/ui/typography/Typography';
 import { demoHeroData } from '@/core/features/landing/assets/mock/demo/page';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
@@ -6,7 +5,7 @@ import { cn } from '@/core/utils/shadcn/utils';
 
 export function DemoHero() {
   return (
-    <SectionLayout className="py-8 sm:py-12">
+    <section className="py-8 sm:py-12">
       <div aria-labelledby="demo-title" className="mx-auto max-w-200 text-center">
         <Span className={cn('landingEyebrowClass justify-center')}>{demoHeroData.eyebrow}</Span>
 
@@ -28,6 +27,6 @@ export function DemoHero() {
           {demoHeroData.notice}
         </P>
       </div>
-    </SectionLayout>
+    </section>
   );
 }

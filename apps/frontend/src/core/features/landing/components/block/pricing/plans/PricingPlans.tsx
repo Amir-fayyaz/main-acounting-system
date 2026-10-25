@@ -1,7 +1,6 @@
 'use client';
 
 import { Info } from 'lucide-react';
-import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 import { pricingNote } from '@/core/features/landing/assets/mock/pricing';
 
 import { useState } from 'react';
@@ -17,7 +16,7 @@ export function PricingPlans() {
   const [period, setPeriod] = useState<BillingPeriod>('month');
 
   return (
-    <SectionLayout className="pt-0">
+    <section className="pb-8">
       <div aria-label="پلن‌های نمونه">
         <BillingToggle period={period} onPeriodChange={setPeriod} />
 
@@ -37,6 +36,6 @@ export function PricingPlans() {
           {pricingNote}
         </P>
       </div>
-    </SectionLayout>
+    </section>
   );
 }
