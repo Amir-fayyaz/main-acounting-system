@@ -1,4 +1,5 @@
 'use client';
+import { H2, P, Span } from '@/core/components/custom/ui/typography/Typography';
 
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -66,16 +67,14 @@ export function ContactForm() {
   };
 
   return (
-    <section
+    <div
       aria-label="فرم تماس نمایشی"
-      className="rounded-[14px] border border-border bg-card p-[25px_22px] max-[1100px]:p-[27px] max-[900px]:p-6 sm:p-[30px_32px]"
+      className="rounded-xl border border-border bg-card py-6 px-5 max-xl:p-7 max-lg:p-6 sm:py-7 sm:px-8"
     >
-      <h2 className="mb-[6px] text-[22px] leading-[1.8] tracking-[-0.4px] sm:text-[21px]">
-        همین‌جا برایمان بنویسید.
-      </h2>
-      <p className="mb-[23px] text-[11px] leading-[2] text-muted-foreground max-[600px]:mb-[21px]">
+      <H2 className="mb-1.5 text-xl leading-relaxed tracking-tight">همین‌جا برایمان بنویسید.</H2>
+      <P className="mb-6 text-xs leading-loose text-muted-foreground max-sm:mb-5">
         فیلدهای نام، ایمیل و پیام برای تکمیل فرم لازم‌اند.
-      </p>
+      </P>
 
       {successName ? (
         <ContactSuccess name={successName} onReset={handleReset} />
@@ -90,16 +89,16 @@ export function ContactForm() {
             onChange={updateField}
             onTopicChange={setTopic}
           />
-          <Button className="min-h-12 w-full rounded-lg text-[12px] font-semibold" type="submit">
-            بررسی پیام نمونه
-            <ArrowLeft className="size-[19px]" />
+          <Button className="min-h-12 w-full rounded-lg text-xs font-semibold" type="submit">
+            <Span className="text-[length:inherit]">بررسی پیام نمونه</Span>
+            <ArrowLeft className="size-5" />
           </Button>
-          <p className="mt-[14px] flex items-start gap-1.5 text-[10px] leading-[2] text-muted-foreground">
-            <Info className="mt-[3px] size-[13px]" />
+          <P className="mt-3.5 flex items-start gap-1.5 text-xs leading-loose text-muted-foreground">
+            <Info className="mt-0.5 size-3" />
             این فرم نمایشی است؛ هیچ پیام یا ایمیلی برای کسی ارسال نمی‌شود.
-          </p>
+          </P>
         </form>
       )}
-    </section>
+    </div>
   );
 }

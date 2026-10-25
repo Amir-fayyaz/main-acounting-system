@@ -1,3 +1,4 @@
+import { P, Span } from '@/core/components/custom/ui/typography/Typography';
 import type { Ref } from 'react';
 import { Input } from '@/shadcn/input/input';
 import {
@@ -21,22 +22,20 @@ interface ContactFieldsProps {
   topic: string;
   topics: ContactTopic[];
   nameRef: Ref<HTMLInputElement>;
-  // eslint-disable-next-line no-unused-vars
   onChange: (_id: ContactFieldId, _value: string) => void;
-  // eslint-disable-next-line no-unused-vars
   onTopicChange: (_topic: string) => void;
 }
 
 const fieldClass =
-  'min-h-[45px] rounded-[6px] border-border! bg-sand-soft! px-3 py-[10px] text-[12px] placeholder:text-muted-foreground! aria-invalid:border-destructive!';
+  'min-h-11 rounded-md border-border! bg-sand-soft! px-3 py-2.5 text-xs placeholder:text-muted-foreground! aria-invalid:border-destructive!';
 const textareaClass =
-  'mt-0! min-h-[132px]! rounded-[6px] border-border! bg-sand-soft! px-3 py-[10px]! text-[12px] leading-[2] placeholder:text-muted-foreground! aria-invalid:border-destructive! [field-sizing:fixed]';
+  'mt-0! min-h-32! rounded-md border-border! bg-sand-soft! px-3 py-2.5! text-xs leading-loose placeholder:text-muted-foreground! aria-invalid:border-destructive! [field-sizing:fixed]';
 
 function FieldError({ id, message }: { id: ContactFieldId; message?: string }) {
   return message ? (
-    <p className="mt-[5px] text-[10px] leading-[1.9] text-destructive" id={`contact-${id}-error`}>
+    <P className="mt-1 text-xs leading-loose text-destructive" id={`contact-${id}-error`}>
       {message}
-    </p>
+    </P>
   ) : null;
 }
 
@@ -59,9 +58,9 @@ export function ContactFields({
       placeholder: string;
     },
   ) => (
-    <div className="mb-[17px]">
-      <label className="mb-[7px] block text-[11px] font-semibold" htmlFor={`contact-${id}`}>
-        {label}
+    <div className="mb-4">
+      <label className="mb-1.5 block text-xs font-semibold" htmlFor={`contact-${id}`}>
+        <Span className="text-[length:inherit]">{label}</Span>
       </label>
       <Input
         {...props}
@@ -82,7 +81,7 @@ export function ContactFields({
 
   return (
     <>
-      <div className="grid gap-x-[18px] max-[900px]:grid-cols-1 sm:grid-cols-2">
+      <div className="grid gap-x-4 max-lg:grid-cols-1 sm:grid-cols-2">
         {input('name', 'نام و نام خانوادگی', {
           autoComplete: 'name',
           placeholder: 'نام شما',
@@ -99,13 +98,13 @@ export function ContactFields({
           placeholder: '0912 345 6789',
           type: 'tel',
         })}
-        <div className="mb-[17px]">
-          <label className="mb-[7px] block text-[11px] font-semibold" htmlFor="contact-topic">
-            موضوع پیام
+        <div className="mb-4">
+          <label className="mb-1.5 block text-xs font-semibold" htmlFor="contact-topic">
+            <Span className="text-[length:inherit]">موضوع پیام</Span>
           </label>
           <Select value={topic} onValueChange={onTopicChange}>
             <SelectTrigger
-              className="w-full! min-h-[45px] rounded-[6px] border-border! bg-sand-soft! px-3 py-[10px] text-[12px]"
+              className="w-full! min-h-11 rounded-md border-border! bg-sand-soft! px-3 py-2.5 text-xs"
               id="contact-topic"
               name="topic"
             >
@@ -114,16 +113,16 @@ export function ContactFields({
             <SelectContent>
               {topics.map((item) => (
                 <SelectItem key={item.value} value={item.value}>
-                  {item.label}
+                  <Span className="text-[length:inherit]">{item.label}</Span>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
       </div>
-      <div className="mb-[17px]">
-        <label className="mb-[7px] block text-[11px] font-semibold" htmlFor="contact-message">
-          پیام شما
+      <div className="mb-4">
+        <label className="mb-1.5 block text-xs font-semibold" htmlFor="contact-message">
+          <Span className="text-[length:inherit]">پیام شما</Span>
         </label>
         <Textarea
           aria-describedby="contact-message-error"
