@@ -13,23 +13,19 @@ import { P } from '@/core/components/custom/ui/typography/Typography';
 
 export function PricingPage() {
   return (
-    <main id="main" className={pricingRootClass}>
+    <div className={pricingRootClass}>
       <div className={pricingContainerClass}>
         <PricingHero />
         <PricingPlans />
 
         <P className="mt-[21px] flex items-start justify-center gap-[7px] text-[10px] leading-[2] text-[#7e6c51] max-[600px]:justify-start max-[600px]:text-[9px]">
-          <Info
-            aria-hidden="true"
-            strokeWidth={1.7}
-            className="mt-[2px] size-[14px] shrink-0"
-          />
+          <Info aria-hidden="true" strokeWidth={1.7} className="mt-[2px] size-[14px] shrink-0" />
           {pricingNote}
         </P>
 
         <PricingComparison />
         <PricingCta />
       </div>
-    </main>
+    </div>
   );
 }

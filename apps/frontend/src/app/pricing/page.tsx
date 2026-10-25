@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 
 import { PricingPage } from '@/core/features/pricing/components/block/pricing/PricingPage';
+import SectionLayout from '@/core/components/custom/ui/wrapper/SectionLayout';
 
 export const metadata: Metadata = {
   title: 'تعرفه‌ها و پلن‌ها',
@@ -8,5 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default function PricingRoute() {
-  return <PricingPage />;
+  return (
+    <SectionLayout>
+      <PricingPage />
+    </SectionLayout>
+  );
 }
