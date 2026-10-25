@@ -9,7 +9,7 @@ import { ConnectedSection } from '@/core/features/landing/components/block/workf
 
 export function LandingPage() {
   return (
-    <main id="main">
+    <div>
       <Hero />
       <CompaniesSection />
       <CapabilitiesSection />
@@ -19,6 +19,6 @@ export function LandingPage() {
       <ScopeSection />
       <MiniCta />
       <FinalCta />
-    </main>
+    </div>
   );
 }
