@@ -22,6 +22,9 @@ import type { FiscalYearEventRecorder } from '../ports/fiscal-year-event-recorde
 import { parseFiscalYearLabel, parseFiscalYearRange } from '../services/fiscal-year-input.js';
 import { toFiscalYearView } from '../views/fiscal-year.mapper.js';
 import type { FiscalYearView } from '../views/fiscal-year.view.js';
+import { GenerateFiscalPeriods } from '../commands/generate-fiscal-periods.command.js';
+import { FiscalPeriodGenerationPolicy } from '../../domain/policies/fiscal-period-generation.policy.js';
+import type { GenerateFiscalPeriodsUseCase } from './generate-fiscal-periods.use-case.js';
 
 /**
  * Creates a fiscal year — the annual frame a tenant's periods will live in
@@ -44,6 +47,9 @@ import type { FiscalYearView } from '../views/fiscal-year.view.js';
  *       (`FISCAL_YEAR_OVERLAP`);
  *    d. insert the row and record `FiscalYearCreated` in the outbox, so the
  *       event commits with the state change or not at all (SHR-005, SHR-006);
+ *    e. generate the twelve monthly periods inside the same boundary
+ *       (FIS-004): a year that cannot produce its contiguous months is not a
+ *       year the company can use, so its refusal fails the whole creation;
  * 4. return the created year as a view, carrying the revision the next update
  *    must state.
  *
@@ -59,6 +65,7 @@ export class CreateFiscalYearUseCase {
     private readonly repository: FiscalYearRepository,
     private readonly events: FiscalYearEventRecorder,
     private readonly boundary: TransactionBoundary,
+    private readonly generatePeriods: GenerateFiscalPeriodsUseCase,
   ) {}
 
   public async execute(command: CreateFiscalYear): Promise<Result<FiscalYearView, DomainError>> {
@@ -87,6 +94,10 @@ export class CreateFiscalYearUseCase {
         return Result.fail(new FiscalYearLabelDuplicateError());
       }
 
+      // A year the period policy refuses (not exactly one Jalali year) must
+      // leave no trace at all — so it is planned *before* anything is written,
+      // but *after* the overlap rule answers: an overlapping year is refused
+      // with its own code, whatever its calendar shape is (FIS-004).
       let fiscalYear: FiscalYear;
       try {
         fiscalYear = FiscalYear.create(
@@ -105,6 +116,13 @@ export class CreateFiscalYearUseCase {
           return Result.fail(error);
         }
         throw error;
+      }
+
+      // Nothing is written until the period policy accepts the range: a year
+      // that does not span exactly one Jalali year leaves no trace (FIS-004).
+      const plan = FiscalPeriodGenerationPolicy.plan(fiscalYearRange);
+      if (plan.isFail()) {
+        return Result.fail(plan.errorOrThrow());
       }
 
       let receipt: WriteReceipt;
@@ -131,6 +149,17 @@ export class CreateFiscalYearUseCase {
           tenantScopedMessageOptions(),
         ),
       );
+
+      // A year is not usable until the twelve months the company books into
+      // exist, so periods are generated in the *same* boundary: the call joins
+      // this transaction (SHR-005), and together it commits or not at all — a
+      // year whose generation failed leaves no row behind.
+      const periods = await this.generatePeriods.execute(
+        new GenerateFiscalPeriods({ fiscalYearId: fiscalYear.id.value }),
+      );
+      if (periods.isFail()) {
+        return Result.fail(periods.errorOrThrow());
+      }
 
       return Result.ok(toFiscalYearView({ aggregate: fiscalYear, revision: receipt.revision }));
     });
