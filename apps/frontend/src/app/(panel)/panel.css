@@ -1,0 +1,35 @@
+@import 'tailwindcss/utilities.css' layer(utilities);
+@reference '../globals.css';
+@source '../../../../../packages/web/ui';
+
+/* Keep panel styling inside its route without changing the site's layout. */
+body:has(.panel-preview) > header#top,
+body:has(.panel-preview) > footer {
+  display: none;
+}
+
+.panel-preview .section-layout {
+  padding-block: --spacing(6);
+}
+
+.panel-preview .pages-container {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: --spacing(6);
+  padding-inline: --spacing(4);
+}
+
+.panel-preview .pages-container > * {
+  margin-block: 0;
+}
+
+@media (width >= 40rem) {
+  .panel-preview .section-layout {
+    padding-block: --spacing(8);
+  }
+
+  .panel-preview .pages-container {
+    padding-inline: --spacing(6);
+  }
+}
