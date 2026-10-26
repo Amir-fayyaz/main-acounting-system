@@ -1,4 +1,4 @@
-import type { PanelConfiguration } from '../@types/panel';
+import type { PanelConfiguration } from '@repo/web/ui/panel';
 
 export const accountingPanelConfig = {
   type: 'business-owner',

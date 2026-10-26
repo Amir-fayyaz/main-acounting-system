@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { SidebarProvider, Small, Span, TooltipProvider } from '@repo/web/ui';
+import { SidebarProvider } from '../../../../../shadcn/ui/sidebar/sidebar';
+import { Small, Span } from '../../../../ui/typography/Typography';
+import { TooltipProvider } from '../../../../../shadcn/ui/tooltip/tooltip';
 import type {
   PanelAccount as PanelAccountDetails,
   PanelConfiguration,

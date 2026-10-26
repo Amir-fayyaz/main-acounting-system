@@ -1,4 +1,4 @@
-import type { SidebarNavigationGroup } from '@/core/components/custom/blook/sidebar/assets/@types/sidebar';
+import type { SidebarNavigationGroup } from '../../../ui/sidebar/assets/@types/sidebar';
 
 export type PanelType = 'user' | 'business-owner' | 'admin';
 

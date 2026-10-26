@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { accountingPanelConfig } from '../../../assets/mock/navigation';
-import { PanelLayout } from './PanelLayout';
+import { PanelLayout } from '@repo/web/ui/panel';
 
 export function AccountingPanelLayout({
   children,

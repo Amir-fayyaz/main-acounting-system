@@ -1,12 +1,12 @@
 import { render, screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { PanelLayout } from '../components/block/layout/PanelLayout';
+import { PanelLayout } from '@repo/web/ui/panel';
 import { PanelPlaceholder } from '../components/block/placeholder/PanelPlaceholder';
 import { accountingPanelConfig } from '../assets/mock/navigation';
-import type { PanelConfiguration } from '../assets/@types/panel';
-import { getSidebarLinks } from '@/core/components/custom/blook/sidebar/utils/navigation';
-import { getActivePanelItem } from '../utils/navigation';
+import type { PanelConfiguration } from '@repo/web/ui/panel';
+import { getSidebarLinks } from '@repo/web/ui/sidebar';
+import { getActivePanelItem } from '@repo/web/ui/panel';
 
 const state = vi.hoisted(() => ({ pathname: '/panel', mobile: false, push: vi.fn() }));
 vi.mock('next/navigation', () => ({

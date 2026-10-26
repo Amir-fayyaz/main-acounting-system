@@ -1,9 +1,11 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { Button, P, Popover, PopoverContent, PopoverTrigger, Span } from '@repo/web/ui';
+import { Button } from '../../../../../shadcn/ui/button/button';
+import { P, Span } from '../../../../ui/typography/Typography';
+import { Popover, PopoverContent, PopoverTrigger } from '../../../../../shadcn/ui/popover/popover';
 import { CiBellOn, CiDark, CiSun } from 'react-icons/ci';
-import type { SidebarNavigationGroup } from '@/core/components/custom/blook/sidebar/assets/@types/sidebar';
+import type { SidebarNavigationGroup } from '../../../../ui/sidebar/assets/@types/sidebar';
 import { usePanelTheme } from '../../../hook/usePanelTheme';
 import { PanelSearch } from '../../ui/search/PanelSearch';
 import { PanelSidebarToggle } from '../../ui/sidebar-toggle/PanelSidebarToggle';

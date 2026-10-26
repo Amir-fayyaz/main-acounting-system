@@ -1,5 +1,5 @@
-import { getSidebarLinks } from '@/core/components/custom/blook/sidebar/utils/navigation';
-import type { SidebarNavigationGroup } from '@/core/components/custom/blook/sidebar/assets/@types/sidebar';
+import { getSidebarLinks } from '../../ui/sidebar/utils/navigation';
+import type { SidebarNavigationGroup } from '../../ui/sidebar/assets/@types/sidebar';
 
 /** Use the longest route boundary match so the home link never shadows a child page. */
 export function getActivePanelItem(

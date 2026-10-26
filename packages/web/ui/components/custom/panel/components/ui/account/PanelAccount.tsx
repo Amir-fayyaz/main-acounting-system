@@ -1,4 +1,5 @@
-import { ImgNormalCustom, Small, Span } from '@repo/web/ui';
+import { ImgNormalCustom } from '../../../../ui/image/ImgNormalCustom';
+import { Small, Span } from '../../../../ui/typography/Typography';
 import { CiUser } from 'react-icons/ci';
 import type { PanelAccount as PanelAccountDetails } from '../../../assets/@types/panel';
 

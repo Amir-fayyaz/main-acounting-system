@@ -14,9 +14,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  Span,
   useSidebar,
-} from '@repo/web/ui';
+} from '../../../shadcn/ui/sidebar/sidebar';
+import { Span } from '../typography/Typography';
 import { SidebarNavigationBranch } from './SidebarNavigationBranch';
 import type { SidebarNavigationGroup } from './assets/@types/sidebar';
 

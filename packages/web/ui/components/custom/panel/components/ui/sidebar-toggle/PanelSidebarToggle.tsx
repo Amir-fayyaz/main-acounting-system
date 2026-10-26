@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { Button, useSidebar } from '@repo/web/ui';
-import { cn } from '@repo/web/ui/utils/cn';
+import { Button } from '../../../../../shadcn/ui/button/button';
+import { useSidebar } from '../../../../../shadcn/ui/sidebar/sidebar';
+import { cn } from '../../../../../../utils/cn';
 import { CiMenuBurger, CiViewColumn } from 'react-icons/ci';
 
 export function PanelSidebarToggle({

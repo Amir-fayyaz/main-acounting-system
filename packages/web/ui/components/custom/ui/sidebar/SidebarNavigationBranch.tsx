@@ -10,10 +10,10 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-  Span,
   useSidebar,
-} from '@repo/web/ui';
-import { cn } from '@repo/web/ui/utils/cn';
+} from '../../../shadcn/ui/sidebar/sidebar';
+import { Span } from '../typography/Typography';
+import { cn } from '../../../../utils/cn';
 import type { SidebarNavigationBranch as NavigationBranch } from './assets/@types/sidebar';
 
 export function SidebarNavigationBranch({

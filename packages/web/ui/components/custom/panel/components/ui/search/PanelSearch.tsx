@@ -3,11 +3,12 @@
 import Link from 'next/link';
 import { useId, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Input, P, Span } from '@repo/web/ui';
+import { Input } from '../../../../../shadcn/ui/input/input';
+import { P, Span } from '../../../../ui/typography/Typography';
 import { CiSearch } from 'react-icons/ci';
-import type { SidebarNavigationGroup } from '@/core/components/custom/blook/sidebar/assets/@types/sidebar';
-import { SidebarIcon } from '@/core/components/custom/blook/sidebar/SidebarIcon';
-import { getSidebarLinks } from '@/core/components/custom/blook/sidebar/utils/navigation';
+import type { SidebarNavigationGroup } from '../../../../ui/sidebar/assets/@types/sidebar';
+import { SidebarIcon } from '../../../../ui/sidebar/SidebarIcon';
+import { getSidebarLinks } from '../../../../ui/sidebar/utils/navigation';
 import { normalizePanelSearch } from '../../../utils/navigation';
 
 export function PanelSearch({ navigation }: { navigation: readonly SidebarNavigationGroup[] }) {
