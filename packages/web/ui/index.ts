@@ -1,3 +1,4 @@
+export * from './components/custom/ui/data-table/DataTable';
 export * from './components/custom/ui/image/ImgNormalCustom';
 export * from './components/custom/ui/modal/Modal';
 export * from './components/custom/ui/typography/Typography';
