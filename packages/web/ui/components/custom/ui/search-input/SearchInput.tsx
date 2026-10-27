@@ -1,6 +1,6 @@
 'use client';
 
-import { DEFAULT_PAGE } from '@repo/web/hooks/usePagination';
+import { DEFAULT_PAGE } from '@repo/web/ui/utils/pagination';
 import { Input } from '@repo/web/ui/components/shadcn/ui/input/input';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';

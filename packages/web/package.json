@@ -20,7 +20,8 @@
     "./ui/components/shadcn/ui/dialog/dialog": "./ui/components/shadcn/ui/dialog/dialog.tsx",
     "./styles/fonts/font": "./styles/fonts/font.ts",
     "./ui/panel": "./ui/panel.ts",
-    "./ui/sidebar": "./ui/sidebar.ts"
+    "./ui/sidebar": "./ui/sidebar.ts",
+    "./ui/utils/pagination": "./ui/utils/pagination.ts"
   },
   "peerDependencies": {
     "next": "16.2.5",

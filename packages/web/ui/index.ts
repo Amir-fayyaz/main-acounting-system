@@ -25,3 +25,4 @@ export * from './components/shadcn/ui/table/table';
 export * from './components/shadcn/ui/tabs/tabs';
 export * from './components/shadcn/ui/Textarea/textarea';
 export * from './components/shadcn/ui/tooltip/tooltip';
+export * from './components/custom/ui/data-table/data-table.types';
