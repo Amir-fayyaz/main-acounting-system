@@ -648,6 +648,102 @@ await TenantScope.run(createTenantContext(companyId, { correlationId }), async (
   tenant-scoped refusal; `test/tenant-context.e2e-spec.ts` proves spoofed
   headers, concurrent-request isolation and no cross-request leakage over real
   HTTP.
+## Tenant isolation (TNT-004)
+## Tenant isolation (TNT-004)
+
+Tenant isolation ensures that every tenant-owned operation can access only the records belonging to the active tenant. This boundary must be enforced in authorization, application operations, and persistence—not only in the user interface.
+
+Related documentation:
+
+- [Tenant context](../../docs/product/v1/11-engineering/21-tenant-context.md)
+- [Tenant membership validation](../../docs/product/v1/11-engineering/25-tenant-membership-validation.md)
+- [Tenant isolation](../../docs/product/v1/11-engineering/26-tenant-isolation.md)
+- [Tenant isolation contract tests](../../docs/testing/tenant-isolation.md)
+
+### Tenant resolution and authorization
+
+For HTTP requests, the authorization guard validates the authenticated principal, the requested tenant, and the required permission or membership policy. A tenant ID in a route is a claim to validate, not proof of access. A conflicting `x-tenant-id` header must not select or widen the tenant.
+
+After successful authorization, the global `TenantScopeInterceptor` establishes the tenant scope for the request. The active scope is propagated through the asynchronous call chain using `TenantScope`.
+
+Tenant context has three states:
+
+- `available`: an active tenant has been established.
+- `system`: an explicitly declared platform-level operation.
+- `missing`: no tenant context has been established.
+
+Tenant-scoped operations must fail closed when the required tenant context is missing. Operations that intentionally cross tenant boundaries must explicitly declare system scope; missing context must never silently become unrestricted access.
+
+### Tenant-safe persistence
+
+Repository adapters that read or write tenant-owned records must enforce the active tenant. Do not trust a tenant ID supplied by the client as the source of ownership.
+
+Use the shared helpers in `src/infrastructure/database/tenant-scoped.ts`:
+
+- `requireTenantId()` requires an available tenant scope.
+- `tenantEq(column)` builds a Drizzle equality predicate using the active tenant ID.
+- `assertTenantOwnership(tenantId, operation)` verifies that a record belongs to the active tenant before a write.
+- `assertTenantCriterion(tenantId, operation)` validates an explicit tenant criterion against the active scope.
+- `requireSystemScope(operation)` requires an explicitly declared system operation.
+- `assertPlatformWrite(operation)` prevents platform-level writes while running in an available tenant scope.
+
+For example, a tenant-owned query should include the central tenant predicate:
+
+```ts
+await db
+  .select()
+  .from(memberships)
+  .where(and(
+    tenantEq(memberships.tenantId),
+    eq(memberships.id, id),
+  ));
+```
+
+The tenant predicate must be applied to every relevant query path. Checking ownership in the UI or relying only on a route parameter does not provide database isolation.
+
+The root `tenants` registry is a special case: its records do not have a `tenant_id` column and are not filtered using `tenantEq()`. Do not copy this exception to ordinary tenant-owned entities.
+
+### Error behavior
+
+The error response depends on where the failure is detected:
+
+- Authorization failures, including denied tenant access and conflicting tenant claims, are mapped to HTTP `403 Forbidden` by the authorization error mapper.
+- A missing tenant context detected by the shared tenant infrastructure maps to `TENANT_REQUIRED` with HTTP `400 Bad Request`.
+- A tenant-isolation violation detected by the shared tenant infrastructure maps to `FORBIDDEN` with HTTP `403 Forbidden`.
+
+Authorization responses must not disclose whether another tenant, membership, or record exists.
+
+### Adding a tenant-owned entity
+
+Every new tenant-owned entity must carry its tenant ownership, enforce isolation in its repository operations, and have an isolation test.
+
+When adding an entity:
+
+1. Store its tenant ownership and ensure tenant-owned reads and writes are constrained to the active tenant.
+2. Use the shared tenant helpers where applicable instead of trusting client-supplied tenant IDs.
+3. Register the entity with `registerTenantIsolationSuite(...)` from `test/support/tenant-isolation-contract.ts`.
+4. Supply a fresh two-tenant fixture and an adapter that invokes the real use case or HTTP route.
+5. Enable the optional contract hooks for the operations the entity exposes, such as list, search, create, update, delete, and HTTP header tampering.
+6. Run the relevant isolation tests and verify that one tenant cannot read or modify another tenant's records.
+
+The reusable contract checks foreign-ID reads, missing tenant scope, and concurrent reads. Depending on the hooks supplied, it also checks list/search isolation, creation with an untrusted tenant ID, foreign-record updates and deletions, and tampered tenant headers.
+
+The adapter must normalize only expected access refusals to `{ allowed: false }`. Unexpected errors must be rethrown so that the test fails rather than hiding a defect.
+
+The existing example in `test/tenant-isolation-contract.e2e-spec.ts` covers the root `Tenant` registry. Because the root registry has no `tenant_id` column, it uses the record's own ID as its boundary and disables the swapped-identifier check. For an ordinary tenant-owned entity, `tenantIdOf` must return the record's actual tenant ID, and the adapter must reflect that entity's real ownership rules.
+
+See [Tenant isolation contract tests](../../docs/testing/tenant-isolation.md) for the adapter requirements and test commands.
+
+### Verification
+
+The following tests cover important parts of the tenant-isolation boundary:
+
+- `src/infrastructure/database/tenant-scoped.spec.ts` tests shared tenant-scope and ownership checks.
+- `src/modules/identity/infrastructure/persistence/tenant-filter-contract.spec.ts` verifies that the membership repository query includes the active tenant predicate.
+- `test/tenant-isolation-contract.e2e-spec.ts` exercises the reusable two-tenant isolation contract.
+- `test/tenant-isolation.e2e-spec.ts` exercises the HTTP authorization and tenant-scope boundary.
+
+Run the relevant isolation tests when changing tenant ownership, repository filters, authorization, or tenant-scope behavior. See the [tenant isolation test guide](../../docs/testing/tenant-isolation.md) for the available commands.
 
 ## Optimistic concurrency (SHR-008)
 
