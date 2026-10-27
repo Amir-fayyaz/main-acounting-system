@@ -28,8 +28,9 @@ export default [
       '**/.next/**',
       '**/coverage/**',
       '**/next-env.d.ts',
-      // Installed agent skills ship their own scripts (browser automation,
-      // assets, inspectors); they are not workspace source code.
+      // Agent skill assets: vendored browser/marketing snippets and reference
+      // documents, not workspace code. They are not part of any application's
+      // build or runtime, so the workspace lint does not apply to them.
       '**/.agents/**',
     ],
   },

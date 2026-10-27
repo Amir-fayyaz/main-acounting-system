@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 
 import { DatabaseModule, type Database } from '../../../infrastructure/database/database.module.js';
 import {
@@ -10,17 +10,27 @@ import { OUTBOX_RECORDER } from '../../../infrastructure/outbox/outbox.tokens.js
 import type { TransactionBoundary } from '../../../shared/transaction/transaction-boundary.js';
 import { AUDIT_RECORDER } from '../../audit/application/audit.tokens.js';
 import type { AuditRecorder } from '../../audit/application/ports/audit-recorder.port.js';
-import { TENANT_DIRECTORY, type TenantDirectory } from '../../tenant/public-api.js';
+import {
+  ACTIVE_COMPANY_SELECTION,
+  TENANT_DIRECTORY,
+  TENANT_OWNER_ENROLLMENT,
+  type ActiveCompanySelectionPort,
+  type TenantDirectory,
+  type TenantOwnerEnrollment,
+} from '../../tenant/public-api.js';
 import { ChangeMembershipStatusUseCase } from '../application/use-cases/change-membership-status.use-case.js';
 import { CreateMembershipUseCase } from '../application/use-cases/create-membership.use-case.js';
 import { GetMembershipUseCase } from '../application/use-cases/get-membership.use-case.js';
 import { ListTenantMembersUseCase } from '../application/use-cases/list-tenant-members.use-case.js';
 import { ListUserMembershipsUseCase } from '../application/use-cases/list-user-memberships.use-case.js';
+import { SelectActiveCompanyUseCase } from '../application/use-cases/select-active-company.use-case.js';
 import {
+  ACTIVE_COMPANY_PREFERENCE,
   MEMBERSHIP_EVENT_RECORDER,
   MEMBERSHIP_REPOSITORY,
   TENANT_MEMBERSHIP,
 } from '../application/membership.tokens.js';
+import type { ActiveCompanyPreference } from '../application/ports/active-company-preference.port.js';
 import type { MembershipEventRecorder } from '../application/ports/membership-event-recorder.port.js';
 import type { TenantMembership } from '../application/ports/tenant-membership.port.js';
 import { USER_REPOSITORY } from '../application/user.tokens.js';
@@ -28,8 +38,11 @@ import type { MembershipRepository } from '../domain/repositories/membership.rep
 import type { UserRepository } from '../domain/repositories/user.repository.js';
 import { MembershipsController } from '../presentation/controllers/membership.controller.js';
 import { ActorEventRecorder } from './audit/audit-trail-access-control-event-recorder.js';
+import { DrizzleActiveCompanyPreferenceRepository } from './persistence/drizzle-active-company-preference.repository.js';
 import { DrizzleMembershipRepository } from './persistence/drizzle-membership.repository.js';
 import { MembershipTenantMembershipAdapter } from './authorization/membership-tenant-membership.adapter.js';
+import { MembershipActiveCompanySelection } from './membership/membership-active-company-selection.adapter.js';
+import { MembershipTenantOwnerEnrollment } from './membership/membership-tenant-owner-enrollment.adapter.js';
 import { UserModule } from './user.module.js';
 
 /**
@@ -53,7 +66,15 @@ import { UserModule } from './user.module.js';
  *
  * No adapter is exposed: the Drizzle table and repository stay private, and the
  * only cross-module dependency is a published contract, never an internal.
+ *
+ * The module is `@Global` for one reason: company creation (IAM-009) needs
+ * Identity-owned membership provisioning and company selection, and a module
+ * inside `src/modules/` may not import another module's `infrastructure/` to
+ * reach them. Only the three published contracts are exported — the owner
+ * enrollment port implementation, the narrow membership lookup and the
+ * active-company selection port — so nothing else becomes visible.
  */
+@Global()
 @Module({
   imports: [DatabaseModule, OutboxModule, UserModule],
   controllers: [MembershipsController],
@@ -122,11 +143,59 @@ import { UserModule } from './user.module.js';
       ) => new ChangeMembershipStatusUseCase(repository, events, boundary),
       inject: [MEMBERSHIP_REPOSITORY, MEMBERSHIP_EVENT_RECORDER, TRANSACTION_BOUNDARY],
     },
+    {
+      // The user's active company is Identity-owned user preference data: it
+      // spans tenants, so it lives beside the identity, not beside a company.
+      provide: ACTIVE_COMPANY_PREFERENCE,
+      useFactory: (database: Database): ActiveCompanyPreference =>
+        new DrizzleActiveCompanyPreferenceRepository(database),
+      inject: [DATABASE],
+    },
+    {
+      // Company creation (IAM-009) provisions its creator through the ordinary
+      // membership use case. Exposed as the tenant module's own port, so tenant
+      // never learns how a membership is stored.
+      provide: TENANT_OWNER_ENROLLMENT,
+      useFactory: (createMembership: CreateMembershipUseCase): TenantOwnerEnrollment =>
+        new MembershipTenantOwnerEnrollment(createMembership),
+      inject: [CreateMembershipUseCase],
+    },
+    {
+      // Selecting a company records a durable preference; it reads the same
+      // membership evidence the authorization boundary uses, so the two can
+      // never disagree about whether the user belongs to the target company.
+      provide: SelectActiveCompanyUseCase,
+      useFactory: (
+        memberships: TenantMembership,
+        preferences: ActiveCompanyPreference,
+        audit: AuditRecorder,
+        boundary: TransactionBoundary,
+      ) => new SelectActiveCompanyUseCase(memberships, preferences, audit, boundary),
+      inject: [
+        TENANT_MEMBERSHIP,
+        ACTIVE_COMPANY_PREFERENCE,
+        AUDIT_RECORDER,
+        TRANSACTION_BOUNDARY,
+      ],
+    },
+    {
+      // The tenant module's contract (IAM-009) over the use case above. Published
+      // so the tenant REST resource can offer selection without importing
+      // Identity's application layer.
+      provide: ACTIVE_COMPANY_SELECTION,
+      useFactory: (selectActiveCompany: SelectActiveCompanyUseCase): ActiveCompanySelectionPort =>
+        new MembershipActiveCompanySelection(selectActiveCompany),
+      inject: [SelectActiveCompanyUseCase],
+    },
   ],
   // Exported to this module's own role feature (IAM-004), which must confirm a
-  // membership exists and belongs to the tenant before assigning a role. It is
-  // not an invitation to other modules: the boundary guard still forbids them
-  // from importing this file.
-  exports: [MEMBERSHIP_REPOSITORY, TENANT_MEMBERSHIP],
+  // membership exists and belongs to the tenant before assigning a role — and
+  // to the tenant module's company creation/selection contracts (IAM-009).
+  exports: [
+    MEMBERSHIP_REPOSITORY,
+    TENANT_MEMBERSHIP,
+    TENANT_OWNER_ENROLLMENT,
+    ACTIVE_COMPANY_SELECTION,
+  ],
 })
 export class MembershipModule {}
