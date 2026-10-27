@@ -160,9 +160,9 @@ export const FIXED_NOW = DateTime.parse('2026-10-03T08:00:00.000Z');
 /** Builds a fiscal year for seeding, with a fixed tenant and a given range. */
 export function aFiscalYear(
   tenantId: TenantReference,
-  label = 'FY2024',
-  startDate = '2024-01-01',
-  endDate = '2024-12-31',
+  label = 'FY1405',
+  startDate = '2026-03-21',
+  endDate = '2027-03-20',
   now: DateTime = FIXED_NOW,
 ): FiscalYear {
   return FiscalYear.create({

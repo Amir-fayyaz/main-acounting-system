@@ -1,6 +1,6 @@
+import { Small, Span } from '@repo/web/ui';
 import type { BenefitItem } from '@/core/features/landing/assets/mock/workspace';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { Small, Span } from '@repo/web/ui';
 import { cn } from '@repo/web/ui/utils/cn';
 
 export function BenefitsList({
@@ -19,17 +19,17 @@ export function BenefitsList({
       {items.map((item) => (
         <li
           key={item.title}
-          className={cn('flex items-start gap-2.5 text-[13px] font-[650]', itemClassName)}
+          className={cn('flex items-start gap-2.5 text-xs font-semibold', itemClassName)}
         >
-          <Span className="mt-[3px] inline-flex size-[21px] shrink-0 items-center justify-center rounded-full bg-[#e7f4ed] text-[#28765b]">
-            <LandingIcon name="check" className="size-[13px]" />
+          <Span className="text-[length:inherit] mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-[#e7f4ed] text-[#28765b]">
+            <LandingIcon name="check" className="size-3" />
           </Span>
 
           <div>
-            {item.title}
+            <Span className="text-[length:inherit]">{item.title}</Span>
             <Small
               className={cn(
-                'mt-[3px] block text-[11px] font-normal text-[#746b60]',
+                'mt-0.5 block text-xs font-normal text-[#746b60]',
                 descriptionClassName,
               )}
             >

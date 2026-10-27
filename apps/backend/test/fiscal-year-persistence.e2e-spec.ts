@@ -18,6 +18,13 @@ import { FiscalYearLabel } from '../src/modules/accounting/domain/value-objects/
 import { FiscalYearRange } from '../src/modules/accounting/domain/value-objects/fiscal-year-range.js';
 import { tenantReferenceFrom } from '../src/modules/accounting/domain/value-objects/tenant-reference.js';
 import { DrizzleFiscalYearRepository } from '../src/modules/accounting/infrastructure/persistence/drizzle-fiscal-year.repository.js';
+import { DrizzleFiscalPeriodRepository } from '../src/modules/accounting/infrastructure/persistence/drizzle-fiscal-period.repository.js';
+import { DrizzleActivePeriodRepository } from '../src/modules/accounting/infrastructure/persistence/drizzle-active-period.repository.js';
+import {
+  FISCAL_PERIODS_TABLE_NAME,
+  TENANT_ACTIVE_PERIODS_TABLE_NAME,
+} from '../src/modules/accounting/infrastructure/persistence/fiscal-period.schema.js';
+import { GenerateFiscalPeriodsUseCase } from '../src/modules/accounting/application/use-cases/generate-fiscal-periods.use-case.js';
 import {
   ensureAccountingSchema,
   FISCAL_YEAR_TABLE_NAME,
@@ -80,6 +87,8 @@ describe.skipIf(!integrationEnabled)('fiscal year persistence (integration)', ()
   let database: Database;
   let boundary: TransactionBoundary;
   let repository: DrizzleFiscalYearRepository;
+  let periodRepository: DrizzleFiscalPeriodRepository;
+  let createFiscalYearUseCase: CreateFiscalYearUseCase;
 
   beforeAll(async () => {
     loadDotEnvFiles();
@@ -111,15 +120,35 @@ describe.skipIf(!integrationEnabled)('fiscal year persistence (integration)', ()
     await ensureAccountingSchema(database);
 
     repository = new DrizzleFiscalYearRepository(database);
+    periodRepository = new DrizzleFiscalPeriodRepository(database);
+    const activePeriodRepository = new DrizzleActivePeriodRepository(database);
     boundary = createTransactionBoundary(new DrizzleTransactionRunner(database));
+    // The real use case under the real schema: creating a year generates its
+    // periods in the same transaction (FIS-004).
+    createFiscalYearUseCase = new CreateFiscalYearUseCase(
+      repository,
+      new RecordingFiscalYearEvents(),
+      boundary,
+      new GenerateFiscalPeriodsUseCase(
+        repository,
+        periodRepository,
+        activePeriodRepository,
+        new RecordingFiscalYearEvents(),
+        boundary,
+      ),
+    );
   });
 
   beforeEach(async () => {
     await pool.query(`DELETE FROM ${TABLE}`);
+    await pool.query(`DELETE FROM ${FISCAL_PERIODS_TABLE_NAME}`);
+    await pool.query(`DELETE FROM ${TENANT_ACTIVE_PERIODS_TABLE_NAME}`);
   });
 
   afterAll(async () => {
     if (pool !== undefined) {
+      await pool.query(`DROP TABLE IF EXISTS ${FISCAL_PERIODS_TABLE_NAME}`);
+      await pool.query(`DROP TABLE IF EXISTS ${TENANT_ACTIVE_PERIODS_TABLE_NAME}`);
       await pool.query(`DROP TABLE IF EXISTS ${TABLE}`);
       await pool.query('DROP TRIGGER IF EXISTS fiscal_years_no_overlap_insert');
       await pool.query('DROP TRIGGER IF EXISTS fiscal_years_no_overlap_update');
@@ -156,16 +185,16 @@ describe.skipIf(!integrationEnabled)('fiscal year persistence (integration)', ()
   });
 
   describe('the use case against real MySQL', () => {
-    it('creates a year and round-trips it through the repository', async () => {
+    it('creates a Jalali year with its periods and round-trips it through the repository', async () => {
       const events = new RecordingFiscalYearEvents();
-      const create = new CreateFiscalYearUseCase(repository, events, boundary);
+      const create = createFiscalYearUseCase;
 
       const created = await inTenant(TENANT_A, () =>
         create.execute(
           new CreateFiscalYear({
-            label: 'FY2024',
-            startDate: '2024-01-01',
-            endDate: '2024-12-31',
+            label: 'FY1405',
+            startDate: '2026-03-21',
+            endDate: '2027-03-20',
           }),
         ),
       );
@@ -174,9 +203,9 @@ describe.skipIf(!integrationEnabled)('fiscal year persistence (integration)', ()
       const view = created.valueOrThrow();
       expect(view).toMatchObject({
         tenantId: TENANT_A,
-        label: 'FY2024',
-        startDate: '2024-01-01',
-        endDate: '2024-12-31',
+        label: 'FY1405',
+        startDate: '2026-03-21',
+        endDate: '2027-03-20',
         status: 'open',
         revision: 1,
       });
@@ -184,20 +213,44 @@ describe.skipIf(!integrationEnabled)('fiscal year persistence (integration)', ()
 
       const stored = await inTenant(TENANT_A, () => repository.get(fiscalYearIdFrom(view.id)));
       expect(stored?.revision.value).toBe(1);
-      expect(stored?.aggregate.label.value).toBe('FY2024');
-      expect(stored?.aggregate.range.startDate.toIsoString()).toBe('2024-01-01');
+      expect(stored?.aggregate.label.value).toBe('FY1405');
+      expect(stored?.aggregate.range.startDate.toIsoString()).toBe('2026-03-21');
+
+      // The twelve monthly periods are stored, in sequence and in the year's
+      // own bounds.
+      const periods = await inTenant(TENANT_A, () =>
+        periodRepository.findByYear(fiscalYearIdFrom(view.id), tenantReferenceFrom(TENANT_A)),
+      );
+      expect(periods).toHaveLength(12);
+      expect(
+        periods.map((p) => [p.aggregate.sequence, p.aggregate.range.startDate.toIsoString(), p.aggregate.range.endDate.toIsoString()]),
+      ).toEqual([
+        // Months 1-6 have 31 days, months 7-11 have 30, Esfand has 29 in
+        // the non-leap 1405 (FIS-003).
+        [1, '2026-03-21', '2026-04-20'],
+        [2, '2026-04-21', '2026-05-21'],
+        [3, '2026-05-22', '2026-06-21'],
+        [4, '2026-06-22', '2026-07-22'],
+        [5, '2026-07-23', '2026-08-22'],
+        [6, '2026-08-23', '2026-09-22'],
+        [7, '2026-09-23', '2026-10-22'],
+        [8, '2026-10-23', '2026-11-21'],
+        [9, '2026-11-22', '2026-12-21'],
+        [10, '2026-12-22', '2027-01-20'],
+        [11, '2027-01-21', '2027-02-19'],
+        [12, '2027-02-20', '2027-03-20'],
+      ]);
     });
 
     it('refuses an overlapping year through the domain and writes nothing', async () => {
-      const events = new RecordingFiscalYearEvents();
-      const create = new CreateFiscalYearUseCase(repository, events, boundary);
+      const create = createFiscalYearUseCase;
 
       await inTenant(TENANT_A, () =>
         create.execute(
           new CreateFiscalYear({
-            label: 'FY2024',
-            startDate: '2024-01-01',
-            endDate: '2024-12-31',
+            label: 'FY1405',
+            startDate: '2026-03-21',
+            endDate: '2027-03-20',
           }),
         ),
       );
@@ -205,9 +258,9 @@ describe.skipIf(!integrationEnabled)('fiscal year persistence (integration)', ()
       const declined = await inTenant(TENANT_A, () =>
         create.execute(
           new CreateFiscalYear({
-            label: 'H2-2024',
-            startDate: '2024-06-01',
-            endDate: '2025-06-30',
+            label: 'H2-1405',
+            startDate: '2026-10-01',
+            endDate: '2027-10-01',
           }),
         ),
       );

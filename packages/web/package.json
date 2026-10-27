@@ -11,12 +11,15 @@
     "./styles/globals.css": "./styles/globals.css",
     "./ui": "./ui/index.ts",
     "./ui/components/shadcn/ui/dialog/dialog": "./ui/components/shadcn/ui/dialog/dialog.tsx",
-    "./styles/fonts/font": "./styles/fonts/font.ts"
+    "./styles/fonts/font": "./styles/fonts/font.ts",
+    "./ui/panel": "./ui/panel.ts",
+    "./ui/sidebar": "./ui/sidebar.ts"
   },
   "peerDependencies": {
     "next": "16.2.5",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "react-icons": "^5.7.0"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.3.3",
