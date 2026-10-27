@@ -193,7 +193,7 @@ export function SiteHeader() {
             asChild
             className="min-h-10 gap-1.5 rounded-full px-4 py-2 text-xs [&_svg]:size-4 max-xl:px-3 max-sm:min-h-9 max-sm:gap-1 max-sm:px-3 max-sm:[&_svg]:size-3.5 max-lg:px-3.5"
           >
-            <Link href="/auth">
+            <Link href="/login">
               <Span className="text-[length:inherit]">ورود یا ثبت‌نام</Span>
               <LandingIcon name="users" />
             </Link>
