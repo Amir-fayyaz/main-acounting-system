@@ -20,7 +20,7 @@ export function DashboardSidebar({ data, view, onViewChange }: DashboardSidebarP
       className="border-l border-[#e5e2d9] bg-[#f4f3ec] pt-5 px-3 pb-3.5 max-sm:hidden max-md:px-2"
     >
       <div className="inline-flex items-center gap-2 px-2 text-2xl leading-none font-extrabold">
-        <Span className="text-[length:inherit] grid size-7 place-items-center rounded-md bg-[#ffa00a] text-[#1a120a]">
+        <Span className="text-[length:inherit] grid size-7 place-items-center rounded-md bg-primary text-foreground">
           <LandingIcon name="logo" className="h-5 w-5 stroke-[2.4]" />
         </Span>
         <Span className="text-[length:inherit]">{data.brandName}</Span>
@@ -74,7 +74,7 @@ export function DashboardSidebar({ data, view, onViewChange }: DashboardSidebarP
         {data.staticItems.map((item) => (
           <Span
             key={item.label}
-            className={cn('text-[length:inherit]', cn('navItemClass text-[#1a120a]'))}
+            className={cn('text-[length:inherit]', cn('navItemClass text-foreground'))}
           >
             <LandingIcon name={item.icon} className="size-4 text-[#817667] max-md:size-3.5" />
             {item.label}

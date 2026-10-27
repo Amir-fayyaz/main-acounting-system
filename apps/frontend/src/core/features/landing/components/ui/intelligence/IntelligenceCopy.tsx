@@ -1,7 +1,7 @@
-import { H2, P, Span } from '@repo/web/ui';
 import type { AssistantSectionData } from '@/core/features/landing/assets/@types/sections';
 import { BenefitsList } from '@/core/features/landing/components/ui/benefits/BenefitsList';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
+import { H2, P, Span } from '@repo/web/ui';
 import { cn } from '@repo/web/ui/utils/cn';
 
 interface IntelligenceCopyProps {
@@ -60,9 +60,7 @@ export function IntelligenceCopy({ data, isDemo, titleId }: IntelligenceCopyProp
       ) : null}
 
       {data.quote ? (
-        <P className="mt-5 border-r-2 border-r-[#ffa00a] pr-3 text-xs leading-loose">
-          {data.quote}
-        </P>
+        <P className="mt-5 border-r-2 border-r-primary pr-3 text-xs leading-loose">{data.quote}</P>
       ) : null}
     </div>
   );

@@ -3,9 +3,9 @@ import type { MouseEventHandler } from 'react';
 import { Badge, Button, Card, P, Span } from '@repo/web/ui';
 
 import type { AssistantPreviewData } from '@/core/features/landing/assets/@types/sections';
+import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
 import { AssistantReview } from '@/core/features/landing/components/ui/intelligence/AssistantReview';
 import { ReviewRows } from '@/core/features/landing/components/ui/intelligence/ReviewRows';
-import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
 import { cn } from '@repo/web/ui/utils/cn';
 
 interface AssistantPreviewProps {
@@ -41,7 +41,7 @@ export function AssistantPreview({
               className={cn(
                 'h-auto min-h-10 min-w-0 flex-1 whitespace-normal rounded-sm px-3 py-1.5 text-xs',
                 'text-xs font-bold [&_svg]:size-4',
-                approved && 'border border-border bg-card text-[#1a120a] hover:bg-[#f8f4ea]',
+                approved && 'border border-border bg-card text-foreground hover:bg-[#f8f4ea]',
               )}
             >
               <LandingIcon name={approved ? 'refresh' : 'check'} />
@@ -58,7 +58,7 @@ export function AssistantPreview({
               onClick={onManualToggle}
               className={cn(
                 'h-auto min-h-10 min-w-0 flex-1 whitespace-normal rounded-sm px-3 py-1.5 text-xs',
-                'border border-border bg-card font-bold text-[#1a120a] hover:bg-[#f8f4ea]',
+                'border border-border bg-card font-bold text-foreground hover:bg-[#f8f4ea]',
               )}
             >
               <Span className="text-[length:inherit]">

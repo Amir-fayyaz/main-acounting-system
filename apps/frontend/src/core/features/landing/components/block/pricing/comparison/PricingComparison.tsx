@@ -1,5 +1,11 @@
 import { Check } from 'lucide-react';
 
+import type { ComparisonValue } from '@/core/features/landing/assets/@types/pricing';
+import {
+  comparisonColumns,
+  comparisonFeatureHeader,
+  comparisonRows,
+} from '@/core/features/landing/assets/mock/pricing';
 import {
   H2,
   P,
@@ -12,12 +18,6 @@ import {
   TableHeader,
   TableRow,
 } from '@repo/web/ui';
-import type { ComparisonValue } from '@/core/features/landing/assets/@types/pricing';
-import {
-  comparisonColumns,
-  comparisonFeatureHeader,
-  comparisonRows,
-} from '@/core/features/landing/assets/mock/pricing';
 
 function ComparisonCell({ value }: { value: ComparisonValue }) {
   if (value.kind === 'included') {
@@ -54,7 +54,7 @@ export function PricingComparison() {
           className="mt-6 overflow-hidden rounded-xl border border-[#ddd3c0] bg-[#fffdf8] max-sm:mt-5"
         >
           <Table className="min-w-160 border-collapse text-center text-xs">
-            <TableCaption className="caption-top mt-0 bg-[#eee8da] px-5 py-4 text-right text-xs font-semibold text-[#1a120a] max-sm:px-4 max-sm:py-3.5">
+            <TableCaption className="caption-top mt-0 bg-[#eee8da] px-5 py-4 text-right text-xs font-semibold text-foreground max-sm:px-4 max-sm:py-3.5">
               <Span className="text-[length:inherit]">مقایسه پلن‌های نمایشی تراز</Span>
             </TableCaption>
 
@@ -62,7 +62,7 @@ export function PricingComparison() {
               <TableRow className="border-0 hover:bg-transparent">
                 <TableHead
                   scope="col"
-                  className="h-auto min-w-52 border-t border-[#e4dccd] bg-[#f9f5e9] px-4 py-3.5 text-right text-xs font-semibold whitespace-nowrap text-[#1a120a] max-sm:min-w-48 max-sm:px-3.5 max-sm:py-3"
+                  className="h-auto min-w-52 border-t border-[#e4dccd] bg-[#f9f5e9] px-4 py-3.5 text-right text-xs font-semibold whitespace-nowrap text-foreground max-sm:min-w-48 max-sm:px-3.5 max-sm:py-3"
                 >
                   <Span className="text-[length:inherit]">{comparisonFeatureHeader}</Span>
                 </TableHead>
@@ -71,7 +71,7 @@ export function PricingComparison() {
                   <TableHead
                     key={column.id}
                     scope="col"
-                    className="h-auto border-t border-[#e4dccd] bg-[#f9f5e9] px-4 py-3.5 text-center text-xs font-semibold whitespace-nowrap text-[#1a120a] max-sm:px-3.5 max-sm:py-3"
+                    className="h-auto border-t border-[#e4dccd] bg-[#f9f5e9] px-4 py-3.5 text-center text-xs font-semibold whitespace-nowrap text-foreground max-sm:px-3.5 max-sm:py-3"
                   >
                     <Span className="text-[length:inherit]">{column.label}</Span>
                   </TableHead>
@@ -84,7 +84,7 @@ export function PricingComparison() {
                 <TableRow key={row.label} className="border-0 hover:bg-transparent">
                   <TableHead
                     scope="row"
-                    className="h-auto border-t border-[#e4dccd] bg-transparent px-4 py-3.5 text-right text-xs font-medium whitespace-nowrap text-[#1a120a] max-sm:px-3.5 max-sm:py-3"
+                    className="h-auto border-t border-[#e4dccd] bg-transparent px-4 py-3.5 text-right text-xs font-medium whitespace-nowrap text-foreground max-sm:px-3.5 max-sm:py-3"
                   >
                     <Span className="text-[length:inherit]">{row.label}</Span>
                   </TableHead>
