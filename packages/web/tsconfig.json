@@ -17,6 +17,6 @@
     },
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["ui/**/*.ts", "ui/**/*.tsx", "styles/**/*.ts", "hooks/**/*.tsx"],
+  "include": ["index.ts", "ui/**/*.ts", "ui/**/*.tsx", "styles/**/*.ts", "hooks/**/*.tsx"],
   "exclude": ["node_modules", "**/*.stories.ts", "**/*.stories.tsx"]
 }

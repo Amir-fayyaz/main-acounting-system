@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "exports": {
+    ".": "./index.ts",
     "./ui/utils/cn": "./ui/utils/cn.ts",
     "./assets/@types/Typography": "./assets/@types/Typography.ts",
     "./hooks/useIsMobile": "./hooks/useIsMobile.tsx",

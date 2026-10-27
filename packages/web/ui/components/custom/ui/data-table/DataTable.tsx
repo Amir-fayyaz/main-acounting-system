@@ -51,6 +51,15 @@ export interface PaginationMeta {
   totalPages: number;
 }
 
+/**
+ * The standard `{ data, meta }` list envelope every paginated endpoint
+ * returns (backend `Paginated<T>` in `infrastructure/api/pagination`).
+ */
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: PaginationMeta;
+}
+
 /** Renders one body cell. Receives the row and its index within `rows`. */
 export type DataTableCell<T> = (row: T, index: number) => React.ReactNode;
 
@@ -84,6 +93,7 @@ export type DataTableColumn<T> = DataTableColumnBase &
   );
 
 export interface DataTableProps<T> {
+  /** Column definitions, rendered left to right. */
   columns: DataTableColumn<T>[];
   /** One entry per body row. */
   rows: T[];
@@ -111,7 +121,10 @@ export interface DataTableProps<T> {
    * renders exactly as it did without pagination.
    */
   meta?: PaginationMeta;
-  /** Allowed page sizes for the selector; invalid entries are dropped. */
+  /**
+   * Allowed page sizes for the selector; invalid entries are dropped and the
+   * current limit is always included.
+   */
   pageSizes?: number[];
 }
 
@@ -245,6 +258,12 @@ function PaginationControls({ meta, pageSizes }: { meta: PaginationMeta; pageSiz
   );
 }
 
+/**
+ * Table with explicit state slots — precedence is `error` > `loading` >
+ * empty rows, and `searchTerm` only chooses between the two empty messages.
+ * Pagination controls render only when the server's `meta` is passed; without
+ * `meta`, the table renders exactly as it did without pagination.
+ */
 export function DataTable<T>({
   columns,
   rows,
