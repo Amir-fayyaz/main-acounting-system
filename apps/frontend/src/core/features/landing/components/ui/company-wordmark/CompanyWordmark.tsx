@@ -47,7 +47,7 @@ export function CompanyWordmark({ brand }: { brand: CompanyBrand }) {
     <div
       lang={brand.lang}
       dir={brand.dir}
-      className="flex min-h-10 items-center justify-center gap-1.5 leading-tight text-[#776f63] transition-colors duration-200 select-none hover:text-foreground max-sm:min-h-9 max-sm:gap-1"
+      className="flex min-h-10 items-center justify-center gap-1.5 leading-tight text-muted-foreground transition-colors duration-200 select-none hover:text-foreground max-sm:min-h-9 max-sm:gap-1"
     >
       {symbol ? (
         <Span className="text-[length:inherit] grid h-7 w-7 place-items-center max-xl:w-6 max-sm:h-5 max-sm:w-5 max-md:w-5">

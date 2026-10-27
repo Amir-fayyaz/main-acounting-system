@@ -21,11 +21,11 @@ export function CapabilitiesSection() {
             >
               هر بخش، سر جای خودش.
               <br />
-              <Span className="text-[length:inherit] text-[#a86400]">همه‌چیز، در یک جریان.</Span>
+              <Span className="text-[length:inherit] text-brand-link">همه‌چیز، در یک جریان.</Span>
             </H2>
           </div>
 
-          <P className="mr-auto mb-1.5 max-w-80 text-xs leading-loose text-[#746b60] max-md:mt-3.5 max-md:mx-0 max-md:mb-0 max-md:max-w-112">
+          <P className="mr-auto mb-1.5 max-w-80 text-xs leading-loose text-muted-foreground max-md:mt-3.5 max-md:mx-0 max-md:mb-0 max-md:max-w-112">
             فروش، انبار، بانک و حسابداری از هم جدا نیستند. یک‌بار اطلاعات را وارد کنید و اثرش را در
             تمام مسیر ببینید.
           </P>
@@ -34,7 +34,7 @@ export function CapabilitiesSection() {
         <div className="grid grid-cols-12 gap-5 max-md:grid-cols-1 max-md:gap-4 max-lg:gap-4">
           <article
             className={cn(
-              'cardClass col-span-7 flex min-h-128 flex-col border-[#eeeade] bg-[#eeeade] max-md:min-h-0',
+              'cardClass col-span-7 flex min-h-128 flex-col border-muted bg-muted max-md:min-h-0',
             )}
           >
             <div className={cn('copyClass pl-14 max-xl:pl-7 max-md:pt-6 max-md:px-7 max-md:pb-0')}>
@@ -56,19 +56,19 @@ export function CapabilitiesSection() {
 
           <article
             className={cn(
-              'cardClass col-span-5 flex min-h-128 flex-col border-[#231b12] bg-[#231b12] max-md:min-h-0',
+              'cardClass col-span-5 flex min-h-128 flex-col border-ink-soft bg-ink-soft max-md:min-h-0',
             )}
           >
             <div className="copyClass">
               <CapKicker icon="bank" label="بانک و تطبیق" dark />
 
-              <H3 className={cn('headingClass text-3xl! text-[#fff8ea]')}>
+              <H3 className={cn('headingClass text-3xl! text-foreground')}>
                 این واریزی،
                 <br />
                 برای کدام فاکتور بود؟
               </H3>
 
-              <P className={cn('textClass text-[#ccbea9]')}>
+              <P className={cn('textClass text-muted-foreground')}>
                 تراز تطبیق را پیشنهاد می‌دهد؛ شما مستندات را بررسی و دریافت را تأیید می‌کنید.
               </P>
             </div>
@@ -84,14 +84,14 @@ export function CapabilitiesSection() {
                 'copyClass max-md:pt-6 max-md:px-7 max-md:pb-0 max-lg:pt-6 max-lg:px-5 max-lg:pb-0',
               )}
             >
-              <Span className="flex! items-center gap-2 text-xs! font-medium! text-[#603a08] [&_svg]:size-4 [&_svg]:text-[#67400a]">
+              <Span className="flex! items-center gap-2 text-xs! font-medium! text-ink [&_svg]:size-4 [&_svg]:text-brand-link">
                 <LandingIcon name="box" />
                 کالا و موجودی
               </Span>
 
               <H3 className={cn('headingClass text-2xl!')}>خبرِ انبار را، همان لحظه بگیرید.</H3>
 
-              <P className={cn('textClass text-[#603a08]')}>
+              <P className={cn('textClass text-brand-link')}>
                 ورود، خروج و حداقل موجودی؛ همگام با خرید و فروش.
               </P>
             </div>
@@ -99,7 +99,7 @@ export function CapabilitiesSection() {
             <StockScene />
           </article>
 
-          <article className={cn('cardClass col-span-7 min-h-96 bg-[#fffdf8] max-md:min-h-0')}>
+          <article className={cn('cardClass col-span-7 min-h-96 bg-card max-md:min-h-0')}>
             <div
               className={cn(
                 'copyClass max-md:pt-6 max-md:px-7 max-md:pb-0 max-lg:pt-6 max-lg:px-5 max-lg:pb-0',
@@ -137,7 +137,7 @@ function CapKicker({
     <Span
       className={cn(
         'text-[length:inherit]',
-        cn(dark && 'kickerClass text-[#d6b784] [&_svg]:text-primary'),
+        cn(dark && 'kickerClass text-chart-4 [&_svg]:text-primary'),
       )}
     >
       <LandingIcon name={icon} />

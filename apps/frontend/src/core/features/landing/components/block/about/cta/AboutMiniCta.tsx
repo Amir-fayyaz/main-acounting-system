@@ -24,7 +24,7 @@ export function AboutMiniCta({
         </div>
         <Button
           asChild
-          className="mt-5 min-h-10 shrink-0 gap-2.5 rounded-lg bg-ink px-4 text-xs font-semibold text-white hover:bg-ink-soft sm:mt-0 sm:min-h-11 sm:px-6"
+          className="mt-5 min-h-10 shrink-0 gap-2.5 rounded-lg bg-ink px-4 text-xs font-semibold text-sand-soft hover:bg-ink-soft sm:mt-0 sm:min-h-11 sm:px-6"
         >
           <Link href={buttonHref}>
             <Span className="text-[length:inherit]">{buttonLabel}</Span>

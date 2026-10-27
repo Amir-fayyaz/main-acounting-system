@@ -15,14 +15,14 @@ export function DemoHero() {
         >
           {demoHeroData.title.first}
           <br />
-          <Span className="text-[length:inherit] text-[#a86400]">{demoHeroData.title.accent}</Span>
+          <Span className="text-[length:inherit] text-brand-link">{demoHeroData.title.accent}</Span>
         </H1>
 
-        <P className="mx-auto max-w-144 text-sm leading-loose text-[#746b60] max-sm:max-w-80 max-sm:text-xs">
+        <P className="mx-auto max-w-144 text-sm leading-loose text-muted-foreground max-sm:max-w-80 max-sm:text-xs">
           {demoHeroData.description}
         </P>
 
-        <P className="mt-4 flex items-center justify-center gap-1.5 text-xs leading-loose text-[#826037] max-sm:items-start">
+        <P className="mt-4 flex items-center justify-center gap-1.5 text-xs leading-loose text-muted-foreground max-sm:items-start">
           <LandingIcon name="shield" className="size-3.5 max-sm:mt-0.5 max-sm:size-3" />
           {demoHeroData.notice}
         </P>

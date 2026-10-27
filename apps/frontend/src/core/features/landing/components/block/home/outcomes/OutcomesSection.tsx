@@ -22,7 +22,7 @@ export function OutcomesSection() {
           </div>
 
           <div className="max-w-72 max-md:mt-3.5 max-md:max-w-96 max-lg:max-w-56">
-            <P className="text-xs leading-loose text-[#746b60]">
+            <P className="text-xs leading-loose text-muted-foreground">
               از یک تیم کوچک تا هزاران رویداد مالی؛ تمرکز روی تداوم کار، ثبات اطلاعات و حساب‌های
               قابل اتکا.
             </P>
@@ -60,13 +60,13 @@ export function OutcomesSection() {
 
             <P
               className={cn(
-                'textClass text-[#603b08] max-md:col-start-2 max-md:row-start-2 max-md:mt-2 max-md:text-xs',
+                'textClass text-brand-link max-md:col-start-2 max-md:row-start-2 max-md:mt-2 max-md:text-xs',
               )}
             >
               تیم‌های مالی، با یک زبان مشترک.
             </P>
 
-            <div className="mt-auto flex flex-wrap gap-1.5 pt-7 max-md:col-span-2 max-md:gap-2 max-md:pt-6 max-lg:gap-1 [&_span]:flex [&_span]:items-center [&_span]:gap-1 [&_span]:rounded-sm [&_span]:border [&_span]:border-[#b775124d] [&_span]:bg-[#ffb333] [&_span]:px-2 [&_span]:py-1 [&_span]:text-xs [&_svg]:size-3 max-md:[&_span]:px-2 max-md:[&_span]:py-1 max-md:[&_span]:text-xs max-lg:[&_span]:py-1 max-lg:[&_span]:px-1.5 max-lg:[&_span]:text-xs">
+            <div className="mt-auto flex flex-wrap gap-1.5 pt-7 max-md:col-span-2 max-md:gap-2 max-md:pt-6 max-lg:gap-1 [&_span]:flex [&_span]:items-center [&_span]:gap-1 [&_span]:rounded-sm [&_span]:border [&_span]:border-brand-dark/30 [&_span]:bg-brand [&_span]:px-2 [&_span]:py-1 [&_span]:text-xs [&_svg]:size-3 max-md:[&_span]:px-2 max-md:[&_span]:py-1 max-md:[&_span]:text-xs max-lg:[&_span]:py-1 max-lg:[&_span]:px-1.5 max-lg:[&_span]:text-xs">
               {industryTags.map((tag) => (
                 <Span className="text-[length:inherit]" key={tag.label}>
                   <LandingIcon name={tag.icon} />
@@ -76,22 +76,22 @@ export function OutcomesSection() {
             </div>
           </article>
 
-          <article className={cn('cardClass bg-[#fffdf8] max-md:min-h-64 max-md:py-6 max-md:px-4')}>
-            <Span className={cn('labelClass [&_svg]:text-[#52836a]')}>
+          <article className={cn('cardClass bg-card max-md:min-h-64 max-md:py-6 max-md:px-4')}>
+            <Span className={cn('labelClass [&_svg]:text-muted-foreground')}>
               <LandingIcon name="clock" />
               دسترس‌پذیری سرویس
             </Span>
 
             <Span className="numberClass">۹۹٫۹٪</Span>
 
-            <P className={cn('textClass text-[#756953]')}>
+            <P className={cn('textClass text-muted-foreground')}>
               برای روزهایی که حساب‌ها منتظر نمی‌مانند.
             </P>
 
             <div
               role="img"
               aria-label="نمای نمونه دسترس‌پذیری در ۳۰ روز"
-              className="mt-auto flex gap-0.5 pt-7 [direction:ltr] max-md:[&>i]:h-7 [&>i]:h-8 [&>i]:min-w-0 [&>i]:flex-1 [&>i]:rounded-sm [&>i]:bg-[#5f8a70] [&>i:nth-child(11)]:h-6 [&>i:nth-child(11)]:self-end [&>i:nth-child(9n)]:bg-[#acc3a9]"
+              className="mt-auto flex gap-0.5 pt-7 [direction:ltr] max-md:[&>i]:h-7 [&>i]:h-8 [&>i]:min-w-0 [&>i]:flex-1 [&>i]:rounded-sm [&>i]:bg-secondary [&>i:nth-child(11)]:h-6 [&>i:nth-child(11)]:self-end [&>i:nth-child(9n)]:bg-muted"
             >
               {Array.from({ length: 30 }, (_, index) => (
                 <i key={index} />
@@ -99,17 +99,17 @@ export function OutcomesSection() {
             </div>
 
             <div className="mt-1.5 flex justify-between">
-              <Span className="text-xs text-[#7d705c]">۳۰ روز گذشته · نمونه</Span>
-              <Span className="text-xs text-[#7d705c]">امروز</Span>
+              <Span className="text-xs text-muted-foreground">۳۰ روز گذشته · نمونه</Span>
+              <Span className="text-xs text-muted-foreground">امروز</Span>
             </div>
           </article>
 
           <article
             className={cn(
-              'cardClass border-[#231b12] bg-[#231b12] text-[#fff7e8] max-md:min-h-64 max-md:py-6 max-md:px-4',
+              'cardClass border-ink-soft bg-ink-soft text-sand-soft max-md:min-h-64 max-md:py-6 max-md:px-4',
             )}
           >
-            <Span className={cn('labelClass text-[#dcc39b] [&_svg]:text-primary')}>
+            <Span className={cn('labelClass text-chart-4 [&_svg]:text-primary')}>
               <LandingIcon name="receipt" />
               فاکتور ثبت‌شده
             </Span>
@@ -118,7 +118,7 @@ export function OutcomesSection() {
               ۱۲ میلیون
             </Span>
 
-            <P className={cn('textClass text-[#c8b89d]')}>هر فاکتور، بخشی از یک تصویر بزرگ‌تر.</P>
+            <P className={cn('textClass text-chart-4')}>هر فاکتور، بخشی از یک تصویر بزرگ‌تر.</P>
 
             <svg
               role="img"
@@ -127,28 +127,28 @@ export function OutcomesSection() {
               preserveAspectRatio="none"
               className="mt-auto block h-16 w-full overflow-visible pt-3.5 max-md:h-16"
             >
-              <path d="M0 48H260M0 25H260" stroke="#58442b" strokeWidth=".6" />
+              <path d="M0 48H260M0 25H260" stroke="var(--muted-foreground)" strokeWidth=".6" />
               <path
                 d="M2 47 28 44 51 46 75 34 99 37 123 24 148 29 171 15 194 20 217 8 239 13 258 2"
-                stroke="#ffa00a"
+                stroke="var(--chart-1)"
                 strokeWidth="2.2"
               />
-              <circle cx="258" cy="2" r="3" fill="#ffa00a" stroke="none" />
+              <circle cx="258" cy="2" r="3" fill="var(--chart-1)" stroke="none" />
             </svg>
 
             <div className="mt-1 flex justify-between">
-              <Span className="text-xs text-[#c4ad88]">یک مسیر پیوسته</Span>
-              <Span className="text-xs text-[#c4ad88]">تا دفتر کل</Span>
+              <Span className="text-xs text-chart-4">یک مسیر پیوسته</Span>
+              <Span className="text-xs text-chart-4">تا دفتر کل</Span>
             </div>
           </article>
         </div>
 
-        <P className="mt-3 flex items-center gap-1 text-xs text-[#796e5d] max-md:items-start max-md:leading-loose [&_svg]:size-3 max-md:[&_svg]:mt-0.5 max-md:[&_svg]:shrink-0">
+        <P className="mt-3 flex items-center gap-1 text-xs text-muted-foreground max-md:items-start max-md:leading-loose [&_svg]:size-3 max-md:[&_svg]:mt-0.5 max-md:[&_svg]:shrink-0">
           <LandingIcon name="info" />
           اعداد این بخش نمونه‌اند و آمار واقعی عملکرد یا مشتریان تراز نیستند.
         </P>
 
-        <div className="mt-7 grid grid-cols-3 gap-5 border-y border-[#e7e1d4] py-5 max-xl:gap-3.5 max-md:mt-6 max-md:grid-cols-1 max-md:gap-0 max-md:border-b-0 max-md:p-0 max-lg:[&_small]:text-xs max-lg:[&_strong]:text-xs max-lg:[&_svg]:size-5 [&>div]:flex [&>div]:items-center [&>div]:gap-3 [&>div]:border-l [&>div]:border-[#e0d8c7] [&>div]:pl-5 [&>div:last-child]:border-0 [&>div:last-child]:pl-0 max-xl:[&>div]:gap-2 max-xl:[&>div]:pl-3.5 max-xl:[&_strong]:text-xs max-md:[&>div]:gap-3 max-md:[&>div]:border-0 max-md:[&>div]:border-b max-md:[&>div]:border-[#e7e1d4] max-md:[&>div]:py-4 max-md:[&>div:last-child]:border-b max-md:[&>div:last-child]:pb-4 max-md:[&_small]:text-xs max-md:[&_strong]:text-xs max-md:[&_svg]:size-5 max-lg:[&>div]:gap-2 max-lg:[&>div]:pl-3 [&_svg]:size-5 [&_svg]:text-[#9a6c25] [&_small]:mt-0.5 [&_small]:block [&_small]:text-xs [&_small]:leading-relaxed [&_small]:text-[#746b60] [&_strong]:block [&_strong]:text-xs [&_strong]:font-semibold">
+        <div className="mt-7 grid grid-cols-3 gap-5 border-y border-border py-5 max-xl:gap-3.5 max-md:mt-6 max-md:grid-cols-1 max-md:gap-0 max-md:border-b-0 max-md:p-0 max-lg:[&_small]:text-xs max-lg:[&_strong]:text-xs max-lg:[&_svg]:size-5 [&>div]:flex [&>div]:items-center [&>div]:gap-3 [&>div]:border-l [&>div]:border-border [&>div]:pl-5 [&>div:last-child]:border-0 [&>div:last-child]:pl-0 max-xl:[&>div]:gap-2 max-xl:[&>div]:pl-3.5 max-xl:[&_strong]:text-xs max-md:[&>div]:gap-3 max-md:[&>div]:border-0 max-md:[&>div]:border-b max-md:[&>div]:border-border max-md:[&>div]:py-4 max-md:[&>div:last-child]:border-b max-md:[&>div:last-child]:pb-4 max-md:[&_small]:text-xs max-md:[&_strong]:text-xs max-md:[&_svg]:size-5 max-lg:[&>div]:gap-2 max-lg:[&>div]:pl-3 [&_svg]:size-5 [&_svg]:text-brand-link [&_small]:mt-0.5 [&_small]:block [&_small]:text-xs [&_small]:leading-relaxed [&_small]:text-muted-foreground [&_strong]:block [&_strong]:text-xs [&_strong]:font-semibold">
           {outcomeAssurances.map((assurance) => (
             <div key={assurance.title}>
               <LandingIcon name={assurance.icon} />

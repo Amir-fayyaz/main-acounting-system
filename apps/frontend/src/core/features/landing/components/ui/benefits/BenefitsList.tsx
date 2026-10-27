@@ -21,7 +21,7 @@ export function BenefitsList({
           key={item.title}
           className={cn('flex items-start gap-2.5 text-xs font-semibold', itemClassName)}
         >
-          <Span className="text-[length:inherit] mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-[#e7f4ed] text-[#28765b]">
+          <Span className="text-[length:inherit] mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground">
             <LandingIcon name="check" className="size-3" />
           </Span>
 
@@ -29,7 +29,7 @@ export function BenefitsList({
             <Span className="text-[length:inherit]">{item.title}</Span>
             <Small
               className={cn(
-                'mt-0.5 block text-xs font-normal text-[#746b60]',
+                'mt-0.5 block text-xs font-normal text-muted-foreground',
                 descriptionClassName,
               )}
             >
