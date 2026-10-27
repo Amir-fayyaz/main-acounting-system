@@ -4,10 +4,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
-import { Button, Small, Span } from '@repo/web/ui';
+import { SiteBrand } from '@/core/components/custom/ui/brand/SiteBrand';
 import { navigationLinks, productMenuItems } from '@/core/features/landing/assets/mock/navigation';
-import { SiteBrand } from '@/core/features/landing/components/ui/brand/SiteBrand';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
+import { Button, Small, Span } from '@repo/web/ui';
 import { cn } from '@repo/web/ui/utils/cn';
 
 const PRIMARY_NAV_ID = 'primary-navigation';
@@ -17,7 +17,7 @@ const navLinkClass =
   'relative inline-flex min-h-9 items-center p-0 whitespace-nowrap max-lg:flex max-lg:min-h-11 max-lg:px-0 max-lg:py-2';
 
 const activeNavLinkClass =
-  "font-bold text-[#925704] after:absolute after:right-1/2 after:bottom-0.5 after:h-0.5 after:w-3 after:translate-x-1/2 after:rounded-sm after:bg-[#ffa00a] after:content-[''] max-lg:after:hidden";
+  "font-bold text-[#925704] after:absolute after:right-1/2 after:bottom-0.5 after:h-0.5 after:w-3 after:translate-x-1/2 after:rounded-sm after:bg-primary after:content-[''] max-lg:after:hidden";
 
 const inactiveNavLinkClass = 'transition-colors duration-200 hover:text-[#a45f00]';
 
@@ -25,7 +25,7 @@ const productTriggerClass =
   'min-h-9 gap-1 rounded-none bg-transparent px-0 py-0 text-xs font-medium shadow-none hover:scale-100 hover:bg-transparent hover:shadow-none active:scale-100 max-lg:w-full max-lg:min-h-11 max-lg:justify-between max-lg:py-2';
 
 const mobileTriggerClass =
-  'hidden size-9 shrink-0 rounded-full border border-[#e2d9c8] bg-[#f8f5eb] p-0 text-[#1a120a] shadow-none hover:scale-100 hover:bg-[#f8f5eb] hover:shadow-none active:scale-100 max-sm:size-8 max-lg:flex';
+  'hidden size-9 shrink-0 rounded-full border border-[#e2d9c8] bg-[#f8f5eb] p-0 text-foreground shadow-none hover:scale-100 hover:bg-[#f8f5eb] hover:shadow-none active:scale-100 max-sm:size-8 max-lg:flex';
 
 function isActiveLink(pathname: string, href: string): boolean {
   const [path] = href.split('#');

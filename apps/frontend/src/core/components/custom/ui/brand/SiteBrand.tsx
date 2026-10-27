@@ -38,7 +38,7 @@ export function SiteBrand({ size = 'header' }: { size?: SiteBrandSize }) {
         aria-hidden="true"
         className={cn(
           'text-[length:inherit]',
-          cn('grid shrink-0 place-items-center bg-[#ffa00a] text-[#1a120a]', classes.mark),
+          cn('grid shrink-0 place-items-center bg-primary text-foreground', classes.mark),
         )}
       >
         <LandingIcon name="logo" className={classes.icon} />

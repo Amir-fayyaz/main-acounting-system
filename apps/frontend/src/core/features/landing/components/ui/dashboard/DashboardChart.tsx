@@ -31,10 +31,7 @@ export function DashboardChart({ data, period, report }: DashboardChartProps) {
           <Span key={item} className="flex! items-center gap-1 text-xs!">
             <i
               aria-hidden="true"
-              className={cn(
-                'block size-1.5 rounded-sm bg-[#ffa00a]',
-                index === 1 && 'bg-[#e8e4d8]',
-              )}
+              className={cn('block size-1.5 rounded-sm bg-primary', index === 1 && 'bg-[#e8e4d8]')}
             />
             <Span className="text-xs!">{item}</Span>
           </Span>
@@ -76,7 +73,7 @@ function ChartBar({ height, tone }: { height: string; tone: 'primary' | 'muted' 
       aria-hidden="true"
       className={cn(
         'h-(--height) w-4 max-w-[32%] rounded-t-sm transition-[height] duration-500 max-md:w-3.5 max-sm:w-3',
-        tone === 'primary' ? 'bg-[#ffa00a]' : 'bg-[#e8e4d8]',
+        tone === 'primary' ? 'bg-primary' : 'bg-[#e8e4d8]',
       )}
       style={{ '--height': height } as CSSProperties}
     />

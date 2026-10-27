@@ -30,7 +30,7 @@ export function DashboardTopbar({ data, reportName, view, onViewChange }: Dashbo
         <Select value={view} onValueChange={(value) => onViewChange(value as DashboardView)}>
           <SelectTrigger
             aria-label={data.viewSelectLabel}
-            className="hidden! h-auto! w-auto! border-0! bg-transparent! p-0! text-xs! text-[#1a120a]! shadow-none! max-sm:flex! max-sm:max-w-32"
+            className="hidden! h-auto! w-auto! border-0! bg-transparent! p-0! text-xs! text-foreground! shadow-none! max-sm:flex! max-sm:max-w-32"
           >
             <SelectValue />
           </SelectTrigger>

@@ -166,7 +166,7 @@
 
 @layer components {
   .pricing-eyebrow {
-    @apply inline-flex items-center gap-2 text-xs font-semibold text-[#8f5800] before:size-1.5 before:rounded-full before:bg-[#ffa00a] before:content-[''] max-sm:gap-1.5 max-sm:text-xs;
+    @apply inline-flex items-center gap-2 text-xs font-semibold text-[#8f5800] before:size-1.5 before:rounded-full before:bg-primary before:content-[''] max-sm:gap-1.5 max-sm:text-xs;
   }
 
   .review-line {
@@ -210,7 +210,7 @@
   }
 
   .landingEyebrowClass {
-    @apply flex items-center gap-2 text-xs font-semibold text-[#8f5800] before:h-1.5 before:w-1.5 before:rounded-full before:bg-[#ffa00a] before:content-[''] max-sm:gap-1.5 max-sm:text-xs;
+    @apply flex items-center gap-2 text-xs font-semibold text-[#8f5800] before:h-1.5 before:w-1.5 before:rounded-full before:bg-primary before:content-[''] max-sm:gap-1.5 max-sm:text-xs;
   }
 
   .navItemClass {

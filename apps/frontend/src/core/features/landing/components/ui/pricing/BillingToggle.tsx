@@ -1,5 +1,5 @@
-import { Badge, Button, Span } from '@repo/web/ui';
 import type { BillingPeriod } from '@/core/features/landing/assets/@types/pricing';
+import { Badge, Button, Span } from '@repo/web/ui';
 
 import { cn } from '@repo/web/ui/utils/cn';
 
@@ -35,7 +35,7 @@ export function BillingToggle({
               className={cn(
                 'h-auto min-h-0 rounded-3xl bg-transparent px-5 py-1.5 text-xs leading-relaxed font-normal tracking-normal text-[#706147] shadow-none hover:scale-100 hover:bg-transparent hover:text-[#706147] active:scale-100 max-sm:px-4',
                 selected &&
-                  'bg-[#fffdf6] font-semibold text-[#1a120a] shadow-[0_1px_5px_#5b39140c] hover:bg-[#fffdf6] hover:text-[#1a120a]',
+                  'bg-[#fffdf6] font-semibold text-foreground shadow-[0_1px_5px_#5b39140c] hover:bg-[#fffdf6] hover:text-foreground',
               )}
             >
               <Span className="text-[length:inherit]">{item.label}</Span>
