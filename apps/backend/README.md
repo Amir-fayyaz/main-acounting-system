@@ -730,7 +730,7 @@ The reusable contract checks foreign-ID reads, missing tenant scope, and concurr
 
 The adapter must normalize only expected access refusals to `{ allowed: false }`. Unexpected errors must be rethrown so that the test fails rather than hiding a defect.
 
-The existing example in `test/tenant-isolation-contract.e2e-spec.ts` covers the root `Tenant` registry. Because the root registry has no `tenant_id` column, it uses the record's own ID as its boundary and disables the swapped-identifier check. For an ordinary tenant-owned entity, `tenantIdOf` must return the record's actual tenant ID, and the adapter must reflect that entity's real ownership rules.
+The example in `test/tenant-isolation-contract.e2e-spec.ts` covers the root `Tenant` registry. Because the root registry has no `tenant_id` column, it uses the record's own ID as its boundary and disables the swapped-identifier check. For an ordinary tenant-owned entity, `tenantIdOf` must return the record's actual tenant ID, and the adapter must reflect that entity's real ownership rules. The working `Role` example in `test/role-tenant-isolation-contract.e2e-spec.ts` demonstrates this pattern using the real role use cases and an in-memory repository.
 
 See [Tenant isolation contract tests](../../docs/testing/tenant-isolation.md) for the adapter requirements and test commands.
 
@@ -740,7 +740,8 @@ The following tests cover important parts of the tenant-isolation boundary:
 
 - `src/infrastructure/database/tenant-scoped.spec.ts` tests shared tenant-scope and ownership checks.
 - `src/modules/identity/infrastructure/persistence/tenant-filter-contract.spec.ts` verifies that the membership repository query includes the active tenant predicate.
-- `test/tenant-isolation-contract.e2e-spec.ts` exercises the reusable two-tenant isolation contract.
+- `test/tenant-isolation-contract.e2e-spec.ts` exercises the reusable two-tenant isolation contract for the root `Tenant` registry.
+- `test/role-tenant-isolation-contract.e2e-spec.ts` demonstrates the contract for a tenant-owned entity and tests cross-tenant reads, swapped identifiers, missing scope, concurrent reads, and list isolation.
 - `test/tenant-isolation.e2e-spec.ts` exercises the HTTP authorization and tenant-scope boundary.
 
 Run the relevant isolation tests when changing tenant ownership, repository filters, authorization, or tenant-scope behavior. See the [tenant isolation test guide](../../docs/testing/tenant-isolation.md) for the available commands.
