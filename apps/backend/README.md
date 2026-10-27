@@ -648,7 +648,7 @@ await TenantScope.run(createTenantContext(companyId, { correlationId }), async (
   tenant-scoped refusal; `test/tenant-context.e2e-spec.ts` proves spoofed
   headers, concurrent-request isolation and no cross-request leakage over real
   HTTP.
-  
+
 ## Tenant isolation (TNT-004)
 
 Tenant isolation ensures that every tenant-owned operation can access only the records belonging to the active tenant. This boundary must be enforced in authorization, application operations, and persistence—not only in the user interface.
