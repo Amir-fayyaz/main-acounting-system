@@ -17,6 +17,7 @@ vi.mock('../lib/auth-api', () => ({ signInApi: m.signInApi, signUpApi: m.signUpA
 vi.mock('../lib/auth-storage', () => ({ setAuthToken: m.setAuthToken }));
 
 import { RegisterForm } from '../components/block/RegisterForm';
+import { createHttpApiError } from '@repo/web/api';
 
 const PASSWORD = 'a-long-password-1';
 const session = { token: 'tok', tokenType: 'Bearer', expiresAt: 'e', principal: {} };
@@ -116,7 +117,7 @@ describe('RegisterForm — ثبت‌نام', () => {
   });
 
   it('409: خطا زیر فیلد ایمیل، toast، بدون ریدایرکت و دکمه دوباره فعال', async () => {
-    m.signUpApi.mockRejectedValue({ status: 409, body: null });
+    m.signUpApi.mockRejectedValue(createHttpApiError(409));
     render(<RegisterForm />);
     await fill();
     await user.click(submitButton());
@@ -129,9 +130,8 @@ describe('RegisterForm — ثبت‌نام', () => {
   });
 
   it('400 با details فیلد را زیر همان فیلد نشان می‌دهد', async () => {
-    m.signUpApi.mockRejectedValue({
-      status: 400,
-      body: {
+    m.signUpApi.mockRejectedValue(
+      createHttpApiError(400, {
         error: {
           code: 'VALIDATION_FAILED',
           category: 'validation',
@@ -139,13 +139,13 @@ describe('RegisterForm — ثبت‌نام', () => {
           correlationId: 'c',
           details: [{ field: 'displayName', code: 'maxLength', message: 'too long' }],
         },
-      },
-    });
+      }),
+    );
     render(<RegisterForm />);
     await fill();
     await user.click(submitButton());
 
-    expect(await screen.findByText('مقدار واردشده معتبر نیست.')).toBeInTheDocument();
+    expect(await screen.findByText('too long')).toBeInTheDocument();
   });
 
   it('حین ارسال دکمه غیرفعال و متن «در حال ثبت‌نام...» است', async () => {

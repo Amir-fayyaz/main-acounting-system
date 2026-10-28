@@ -9,6 +9,17 @@ import { env } from 'process';
 const fetchMock = vi.fn();
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+const validSignInResponse = {
+  token: 't',
+  tokenType: 'Bearer' as const,
+  expiresAt: '2026-01-01T00:00:00.000Z',
+  principal: { userId: 'u', displayName: 'Ali', email: 'a@b.co' },
+};
+const validSessionResponse = {
+  sessionId: 's',
+  expiresAt: '2026-01-01T00:00:00.000Z',
+  principal: { userId: 'u', displayName: 'Ali', email: 'a@b.co' },
+};
 
 const lastCall = () => {
   const [url, init] = fetchMock.mock.calls.at(-1)!;
@@ -28,14 +39,14 @@ afterEach(() => {
 
 describe('آدرس پایه', () => {
   it('از NEXT_PUBLIC_API_BASE_URL + /v1/auth ساخته می‌شود (نه /api/api)', async () => {
-    fetchMock.mockResolvedValue(json(201, {}));
+    fetchMock.mockResolvedValue(json(201, validSignInResponse));
     await signInApi({ email: 'a@b.co', password: 'x' });
     expect(lastCall().url).toBe('http://api.test/api/v1/auth/sign-in');
   });
 
   it('سمت سرور INTERNAL_API_BASE_URL را ترجیح می‌دهد (Docker)', async () => {
     vi.stubEnv('INTERNAL_API_BASE_URL', 'http://backend:3000/api');
-    fetchMock.mockResolvedValue(json(200, {}));
+    fetchMock.mockResolvedValue(json(200, validSessionResponse));
     await getSessionApi('tok');
     expect(lastCall().url).toBe('http://backend:3000/api/v1/auth/session');
   });
@@ -43,7 +54,7 @@ describe('آدرس پایه', () => {
   it('بدون هیچ‌کدام از متغیرهای جدید به BASE_URL قدیمی برمی‌گردد', async () => {
     vi.stubEnv('NEXT_PUBLIC_API_BASE_URL', undefined as unknown as string);
     delete env.NEXT_PUBLIC_API_BASE_URL;
-    fetchMock.mockResolvedValue(json(201, {}));
+    fetchMock.mockResolvedValue(json(201, validSignInResponse));
     await signInApi({ email: 'a@b.co', password: 'x' });
     expect(lastCall().url).toBe('http://legacy.test/api/v1/auth/sign-in');
   });
@@ -51,7 +62,7 @@ describe('آدرس پایه', () => {
 
 describe('signInApi', () => {
   it('POST با بدنه‌ی JSON می‌فرستد و پاسخ را برمی‌گرداند', async () => {
-    const payload = { token: 't', tokenType: 'Bearer', expiresAt: 'e', principal: {} };
+    const payload = validSignInResponse;
     fetchMock.mockResolvedValue(json(201, payload));
 
     await expect(signInApi({ email: 'a@b.co', password: 'secret' })).resolves.toEqual(payload);
@@ -62,32 +73,69 @@ describe('signInApi', () => {
     expect((init.headers as Record<string, string>)['Content-Type']).toBe('application/json');
   });
 
-  it('روی 401 شیء {status, body} پرتاب می‌کند', async () => {
-    const body = { error: { code: 'UNAUTHENTICATED' } };
+  it('روی 401 خطای استاندارد با پیام بک‌اند پرتاب می‌کند', async () => {
+    const body = {
+      error: {
+        code: 'AUTHENTICATION_REQUIRED',
+        category: 'client',
+        message: 'Authentication is required for this operation.',
+        correlationId: 'correlation-1',
+      },
+    };
     fetchMock.mockResolvedValue(json(401, body));
-    await expect(signInApi({ email: 'a@b.co', password: 'x' })).rejects.toEqual({
+    await expect(signInApi({ email: 'a@b.co', password: 'x' })).rejects.toMatchObject({
+      name: 'ApiError',
+      kind: 'http',
+      source: 'backend',
       status: 401,
-      body,
+      code: 'AUTHENTICATION_REQUIRED',
+      correlationId: 'correlation-1',
+      message: 'Authentication is required for this operation.',
     });
   });
 
   it('بدنه‌ی غیر JSON باعث کرش نمی‌شود', async () => {
     fetchMock.mockResolvedValue(new Response('<html>bad gateway</html>', { status: 502 }));
-    await expect(signInApi({ email: 'a@b.co', password: 'x' })).rejects.toEqual({
+    await expect(signInApi({ email: 'a@b.co', password: 'x' })).rejects.toMatchObject({
+      name: 'ApiError',
+      kind: 'http',
+      source: 'default',
       status: 502,
-      body: null,
+      code: 'INTERNAL_ERROR',
+      message: 'An unexpected error occurred.',
     });
   });
 
-  it('خطای شبکه همان‌طور که هست پرتاب می‌شود (بدون status)', async () => {
+  it('خطای شبکه را normalize می‌کند', async () => {
     fetchMock.mockRejectedValue(new TypeError('fetch failed'));
-    await expect(signInApi({ email: 'a@b.co', password: 'x' })).rejects.toBeInstanceOf(TypeError);
+    await expect(signInApi({ email: 'a@b.co', password: 'x' })).rejects.toMatchObject({
+      name: 'ApiError',
+      kind: 'network',
+      code: 'NETWORK_ERROR',
+    });
+  });
+
+  it('پاسخ موفق با قرارداد نامعتبر را رد می‌کند', async () => {
+    fetchMock.mockResolvedValue(json(200, { token: 'missing-other-fields' }));
+    await expect(signInApi({ email: 'a@b.co', password: 'x' })).rejects.toMatchObject({
+      name: 'ApiError',
+      kind: 'invalid-response',
+      code: 'INVALID_RESPONSE',
+    });
   });
 });
 
 describe('signUpApi', () => {
   it('دقیقاً سه فیلد قرارداد را به /sign-up می‌فرستد', async () => {
-    const user = { id: '1', displayName: 'Ali', email: 'a@b.co', status: 'active' };
+    const user = {
+      id: '1',
+      displayName: 'Ali',
+      email: 'a@b.co',
+      status: 'active',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+      revision: 1,
+    };
     fetchMock.mockResolvedValue(json(201, user));
 
     await expect(
@@ -113,7 +161,7 @@ describe('signUpApi', () => {
 
 describe('getSessionApi', () => {
   it('GET با هدر Bearer و بدون cache', async () => {
-    fetchMock.mockResolvedValue(json(200, { sessionId: 's' }));
+    fetchMock.mockResolvedValue(json(200, validSessionResponse));
     await getSessionApi('tok');
 
     const { init } = lastCall();

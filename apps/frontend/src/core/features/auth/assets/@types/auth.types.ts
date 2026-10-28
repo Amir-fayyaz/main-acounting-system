@@ -17,23 +17,6 @@ export interface SessionResponse {
   principal: Principal;
 }
 
-/** شکل خطای استاندارد بک‌اند */
-export interface ApiErrorBody {
-  error: {
-    code: string;
-    category: string;
-    message: string;
-    correlationId: string;
-    details?: Array<{ field: string; code: string; message: string }>;
-  };
-}
-
-/** خطایی که لایه‌ی auth-api پرتاب می‌کند (status=0 یعنی شبکه/نامشخص). */
-export interface AuthApiError {
-  status?: number;
-  body?: ApiErrorBody | null;
-}
-
 export type SignInInput = {
   email: string;
   password: string;
