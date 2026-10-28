@@ -15,7 +15,6 @@ import {
   SearchParamsContext,
 } from 'next/dist/shared/lib/hooks-client-context.shared-runtime';
 
-
 interface Membership {
   id: string;
   name: string;
@@ -25,7 +24,13 @@ interface Membership {
 }
 
 const ROLES = ['صندوقدار', 'حسابدار', 'مدیر شعبه', 'انباردار', 'ویزیتور'] as const;
-const STATUSES: readonly Membership['status'][] = ['فعال', 'فعال', 'در انتظار', 'فعال', 'متوقف'];
+const STATUSES: readonly Membership['status'][] = [
+  'فعال',
+  'فعال',
+  'در انتظار',
+  'فعال',
+  'متوقف',
+];
 
 const MEMBERSHIPS: Membership[] = [
   'سارا محمدی',
@@ -71,7 +76,11 @@ const columns: DataTableColumn<Membership>[] = [
     cell: (row) => (
       <Badge
         variant={
-          row.status === 'فعال' ? 'success' : row.status === 'متوقف' ? 'secondary' : 'outline'
+          row.status === 'فعال'
+            ? 'success'
+            : row.status === 'متوقف'
+              ? 'secondary'
+              : 'outline'
         }
       >
         {row.status}
@@ -82,7 +91,7 @@ const columns: DataTableColumn<Membership>[] = [
 ];
 
 function MembershipsPage() {
-  const { page, limit } = usePagination();
+  const { page, limit, setPage, setLimit } = usePagination();
   const start = (page - 1) * limit;
   const payload: PaginatedResponse<Membership> = {
     data: MEMBERSHIPS.slice(start, start + limit),
@@ -97,8 +106,12 @@ function MembershipsPage() {
   return (
     <DataTable
       columns={columns}
-      rows={payload.data}
+      data={payload.data}
       meta={payload.meta}
+      page={page}
+      limit={limit}
+      onPageChange={setPage}
+      onLimitChange={setLimit}
       rowKey={(row) => row.id}
       aria-label="عضویت‌ها"
     />
@@ -108,7 +121,10 @@ function MembershipsPage() {
 function MockPaginatedMemberships() {
   const [href, setHref] = React.useState('/memberships?page=1&limit=10');
   const [pathname, search = ''] = href.split('?');
-  const searchParams = React.useMemo(() => new URLSearchParams(search), [search]);
+  const searchParams = React.useMemo(
+    () => new URLSearchParams(search),
+    [search],
+  );
   const router = React.useMemo<AppRouterInstance>(
     () => ({
       back: () => {},
@@ -146,21 +162,34 @@ export const Paginated: Story = {
 
 export const WithoutPagination: Story = {
   render: () => (
-    <DataTable columns={columns} rows={MEMBERSHIPS.slice(0, 8)} aria-label="عضویت‌ها" />
+    <DataTable
+      columns={columns}
+      data={MEMBERSHIPS.slice(0, 8)}
+      aria-label="عضویت‌ها"
+    />
   ),
 };
 
 export const Loading: Story = {
-  render: () => <DataTable columns={columns} rows={[]} loading aria-label="عضویت‌ها" />,
+  render: () => (
+    <DataTable columns={columns} data={[]} loading aria-label="عضویت‌ها" />
+  ),
 };
 
 export const Empty: Story = {
-  render: () => <DataTable columns={columns} rows={[]} aria-label="عضویت‌ها" />,
+  render: () => (
+    <DataTable columns={columns} data={[]} aria-label="عضویت‌ها" />
+  ),
 };
 
 export const SearchEmpty: Story = {
   render: () => (
-    <DataTable columns={columns} rows={[]} searchTerm="ناموجود" aria-label="عضویت‌ها" />
+    <DataTable
+      columns={columns}
+      data={[]}
+      searchTerm="ناموجود"
+      aria-label="عضویت‌ها"
+    />
   ),
 };
 
@@ -168,7 +197,7 @@ export const Error: Story = {
   render: () => (
     <DataTable
       columns={columns}
-      rows={MEMBERSHIPS.slice(0, 3)}
+      data={MEMBERSHIPS.slice(0, 3)}
       error="خطا در دریافت اطلاعات"
       aria-label="عضویت‌ها"
     />

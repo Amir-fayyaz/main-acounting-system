@@ -1,4 +1,3 @@
-
 import type { PaginationMeta } from './data-table.types';
 
 import {
@@ -31,12 +30,10 @@ export function resolvePageSizes(
   pageSizes: number[] | undefined,
   current: number,
 ): number[] {
-  const requested = pageSizes ?? DEFAULT_PAGE_SIZES;
+  const requested = pageSizes ?? [...DEFAULT_PAGE_SIZES];
   const valid = requested.filter(
     (size) =>
-      Number.isSafeInteger(size) &&
-      size >= MIN_LIMIT &&
-      size <= MAX_LIMIT,
+      Number.isSafeInteger(size) && size >= MIN_LIMIT && size <= MAX_LIMIT,
   );
 
   const sizes = valid.length > 0 ? valid : [...DEFAULT_PAGE_SIZES];

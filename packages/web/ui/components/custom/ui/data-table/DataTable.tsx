@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -59,8 +58,17 @@ function StateRow({ state, colSpan, children, role }: StateRowProps) {
   );
 }
 
+/**
+ * Reusable, presentational data table.
+ *
+ * - Owns only visual states (loading / error / empty / data)
+ * - Does not touch the URL or fetch data
+ * - When `meta` is provided, pagination controls are rendered and must be
+ *   driven via controlled `page` / `limit` / `onPageChange` / `onLimitChange`
+ */
 export function DataTable<T>({
   columns,
+  data,
   rows,
   rowKey = (_row, index) => index,
   error,
@@ -72,13 +80,25 @@ export function DataTable<T>({
   className,
   'aria-label': ariaLabel,
   meta,
+  page,
+  limit,
+  onPageChange,
+  onLimitChange,
   pageSizes,
 }: DataTableProps<T>) {
+  const tableData = data ?? rows ?? [];
   const isError = hasContent(error);
   const isLoading = !isError && loading;
-  const isEmpty = !isError && !isLoading && rows.length === 0;
+  const isEmpty = !isError && !isLoading && tableData.length === 0;
   const hasSearchTerm = (searchTerm?.trim().length ?? 0) > 0;
   const colSpan = columns.length;
+
+  const showPagination =
+    Boolean(meta) &&
+    page !== undefined &&
+    limit !== undefined &&
+    typeof onPageChange === 'function' &&
+    typeof onLimitChange === 'function';
 
   let body: React.ReactNode;
 
@@ -104,7 +124,7 @@ export function DataTable<T>({
       </StateRow>
     );
   } else {
-    body = rows.map((row, rowIndex) => (
+    body = tableData.map((row, rowIndex) => (
       <TableRow key={rowKey(row, rowIndex)}>
         {columns.map((column, columnIndex) => (
           <TableCell
@@ -138,19 +158,25 @@ export function DataTable<T>({
           ))}
         </TableRow>
       </TableHeader>
-
       <TableBody>{body}</TableBody>
     </Table>
   );
 
-  if (!meta) {
+  if (!showPagination || !meta) {
     return table;
   }
 
   return (
     <>
       {table}
-      <PaginationControls meta={meta} pageSizes={pageSizes} />
+      <PaginationControls
+        meta={meta}
+        page={page!}
+        limit={limit!}
+        onPageChange={onPageChange!}
+        onLimitChange={onLimitChange!}
+        pageSizes={pageSizes}
+      />
     </>
   );
 }

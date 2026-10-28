@@ -9,24 +9,34 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@repo/web/ui/components/shadcn/ui/pagination/pagination';
-import { usePagination } from '@repo/web/hooks/usePagination';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@repo/web/ui/components/shadcn/ui/select/select';
 
-import type { PaginationMeta } from './data-table.types';
+import type { PaginationControlsProps } from './data-table.types';
 import { resolvePageSizes, sanitizeMeta } from './data-table.utils';
 
-interface PaginationControlsProps {
-  meta: PaginationMeta;
-  pageSizes?: number[];
-}
-
+/**
+ * Presentational pagination bar.
+ * All state is controlled via props — this component never touches the URL.
+ */
 export function PaginationControls({
   meta,
+  page: controlledPage,
+  limit: controlledLimit,
+  onPageChange,
+  onLimitChange,
   pageSizes,
 }: PaginationControlsProps) {
-  const { setPage, setLimit } = usePagination();
   const selectId = React.useId();
 
-  const { page, limit, total, totalPages } = sanitizeMeta(meta);
+  const { total, totalPages } = sanitizeMeta(meta);
+  const page = controlledPage;
+  const limit = controlledLimit;
   const sizes = resolvePageSizes(pageSizes, limit);
   const canGoPrevious = page > 1;
   const canGoNext = page < totalPages;
@@ -37,9 +47,8 @@ export function PaginationControls({
     enabled: boolean,
   ) {
     event.preventDefault();
-
     if (enabled) {
-      setPage(target);
+      onPageChange(target);
     }
   }
 
@@ -47,26 +56,34 @@ export function PaginationControls({
     <div
       data-slot="data-table-pagination"
       dir="rtl"
-      className="flex flex-col gap-4 border-t border-border/60 pt-4 sm:flex-row sm:items-center sm:justify-between px-16"
+      className="flex flex-col gap-4 border-t border-border/60 px-4 pt-4 sm:flex-row sm:items-center sm:justify-between sm:px-6"
     >
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <label htmlFor={selectId} className="shrink-0">
           نمایش
         </label>
 
-        <select
-          id={selectId}
-          data-slot="data-table-page-size"
-          value={limit}
-          onChange={(event) => setLimit(Number(event.target.value))}
-          className="h-9 min-w-16 cursor-pointer rounded-lg border border-input bg-background px-3 text-sm font-medium text-foreground outline-none transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
+        <Select
+          value={String(limit)}
+          onValueChange={(value) => onLimitChange(Number(value))}
         >
-          {sizes.map((size) => (
-            <option key={size} value={size}>
-              {size}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger
+            id={selectId}
+            size="sm"
+            data-slot="data-table-page-size"
+            className="min-w-16"
+            aria-label="تعداد مورد در هر صفحه"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {sizes.map((size) => (
+              <SelectItem key={size} value={String(size)}>
+                {size}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
         <span className="shrink-0">مورد در هر صفحه</span>
       </div>
@@ -78,11 +95,11 @@ export function PaginationControls({
         >
           صفحه{' '}
           <span className="font-semibold tabular-nums text-foreground">
-            {page}
-          </span>
-          {' '}از{' '}
+            {page.toLocaleString('fa-IR')}
+          </span>{' '}
+          از{' '}
           <span className="font-medium tabular-nums text-foreground">
-            {totalPages}
+            {totalPages.toLocaleString('fa-IR')}
           </span>
           <span className="mx-2 text-border">|</span>
           <span data-slot="data-table-pagination-total">
@@ -90,16 +107,17 @@ export function PaginationControls({
           </span>
         </div>
 
-        <Pagination data-slot="data-table-pagination-nav" className="mx-0 w-auto">
+        <Pagination
+          data-slot="data-table-pagination-nav"
+          className="mx-0 w-auto"
+        >
           <PaginationContent className="gap-1">
             <PaginationItem>
               <PaginationPrevious
                 href="#"
                 aria-disabled={!canGoPrevious}
                 tabIndex={canGoPrevious ? 0 : -1}
-                onClick={(event) =>
-                  navigate(event, page - 1, canGoPrevious)
-                }
+                onClick={(event) => navigate(event, page - 1, canGoPrevious)}
                 className="h-9 gap-1 rounded-lg border border-border bg-background px-3 transition-colors hover:bg-accent hover:text-accent-foreground aria-disabled:pointer-events-none aria-disabled:opacity-40"
               />
             </PaginationItem>
@@ -118,9 +136,7 @@ export function PaginationControls({
                 href="#"
                 aria-disabled={!canGoNext}
                 tabIndex={canGoNext ? 0 : -1}
-                onClick={(event) =>
-                  navigate(event, page + 1, canGoNext)
-                }
+                onClick={(event) => navigate(event, page + 1, canGoNext)}
                 className="h-9 gap-1 rounded-lg border border-border bg-background px-3 transition-colors hover:bg-accent hover:text-accent-foreground aria-disabled:pointer-events-none aria-disabled:opacity-40"
               />
             </PaginationItem>

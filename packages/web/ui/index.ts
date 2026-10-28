@@ -1,6 +1,7 @@
-export * from './components/custom/ui/data-table/DataTable';
+export * from './components/custom/ui/data-table';
 export * from './components/custom/ui/image/ImgNormalCustom';
 export * from './components/custom/ui/modal/Modal';
+export * from './components/custom/ui/search-input/SearchInput';
 export * from './components/custom/ui/typography/Typography';
 export { default as PagesContainer } from './components/custom/ui/wrapper/PagesContainer';
 export { default as SectionLayout } from './components/custom/ui/wrapper/SectionLayout';
@@ -25,4 +26,3 @@ export * from './components/shadcn/ui/table/table';
 export * from './components/shadcn/ui/tabs/tabs';
 export * from './components/shadcn/ui/Textarea/textarea';
 export * from './components/shadcn/ui/tooltip/tooltip';
-export * from './components/custom/ui/data-table/data-table.types';

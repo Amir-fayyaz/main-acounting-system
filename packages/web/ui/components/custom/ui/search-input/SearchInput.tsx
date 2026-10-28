@@ -1,11 +1,12 @@
 'use client';
 
-import { DEFAULT_PAGE } from '@repo/web/ui/utils/pagination';
-import { Input } from '@repo/web/ui/components/shadcn/ui/input/input';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-const DEFAULT_PLACEHOLDER = 'جستجو بر اساس خدمت';
+import { Input } from '@repo/web/ui/components/shadcn/ui/input/input';
+import { DEFAULT_PAGE } from '@repo/web/ui/utils/pagination';
+
+const DEFAULT_PLACEHOLDER = 'جستجو…';
 const DEFAULT_DEBOUNCE_MS = 300;
 
 export interface SearchInputProps {
@@ -15,6 +16,8 @@ export interface SearchInputProps {
   delay?: number;
   /** @deprecated Misspelling of `delay`, kept so existing callers keep working. */
   dely?: number;
+  /** URL query key for the search term. Defaults to `"search"`. */
+  paramName?: string;
 }
 
 type DebouncedCallback<A extends unknown[]> = ((...args: A) => void) & {
@@ -30,15 +33,14 @@ function useDebouncedCallback<A extends unknown[]>(
 
   useEffect(() => {
     callbackRef.current = callback;
-  });
+  }, [callback]);
 
   const cancel = useCallback(() => {
-    if (timerRef.current === null) return;
-    clearTimeout(timerRef.current);
-    timerRef.current = null;
+    if (timerRef.current !== null) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
   }, []);
-
-  useEffect(() => cancel, [cancel]);
 
   const debounced = useCallback(
     (...args: A) => {
@@ -51,29 +53,45 @@ function useDebouncedCallback<A extends unknown[]>(
     [cancel, delay],
   );
 
-  return useMemo(() => Object.assign(debounced, { cancel }), [debounced, cancel]);
+  useEffect(() => cancel, [cancel]);
+
+  return useMemo(
+    () => Object.assign(debounced, { cancel }),
+    [debounced, cancel],
+  );
 }
 
-export function SearchInput({ title = DEFAULT_PLACEHOLDER, delay, dely }: SearchInputProps = {}) {
+/**
+ * Debounced search input synced to a URL query parameter.
+ * When the term changes, `page` is reset to 1 so results start from the first page.
+ * Unrelated query parameters are preserved.
+ */
+export function SearchInput({
+  title = DEFAULT_PLACEHOLDER,
+  delay,
+  dely,
+  paramName = 'search',
+}: SearchInputProps = {}) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { replace } = useRouter();
 
-  const urlSearch = searchParams.get('search') ?? '';
+  const urlSearch = searchParams.get(paramName) ?? '';
   const [term, setTerm] = useState(urlSearch);
   const pushedTermRef = useRef<string | null>(null);
 
   const commitToUrl = useCallback(
     (nextTerm: string) => {
       const params = new URLSearchParams(searchParams.toString());
-      const currentTerm = params.get('search') ?? '';
+      const currentTerm = params.get(paramName) ?? '';
 
       if (nextTerm) {
-        params.set('search', nextTerm);
+        params.set(paramName, nextTerm);
       } else {
-        params.delete('search');
+        params.delete(paramName);
       }
 
+      // Reset pagination when the search term actually changes.
       if (nextTerm !== currentTerm) {
         const currentPage = params.get('page');
         if (currentPage !== null && currentPage !== String(DEFAULT_PAGE)) {
@@ -87,10 +105,13 @@ export function SearchInput({ title = DEFAULT_PLACEHOLDER, delay, dely }: Search
       pushedTermRef.current = nextTerm;
       replace(nextQuery ? `${pathname}?${nextQuery}` : pathname);
     },
-    [pathname, replace, searchParams],
+    [paramName, pathname, replace, searchParams],
   );
 
-  const scheduleCommit = useDebouncedCallback(commitToUrl, delay ?? dely ?? DEFAULT_DEBOUNCE_MS);
+  const scheduleCommit = useDebouncedCallback(
+    commitToUrl,
+    delay ?? dely ?? DEFAULT_DEBOUNCE_MS,
+  );
 
   // Adopt URL-driven changes (back/forward, another component) but ignore the
   // echo of our own navigation so in-flight typing is never clobbered.
