@@ -15,7 +15,11 @@ export default function GlobalError({
       <body
         className={`flex min-h-screen items-center justify-center ${rubik.variable} ${vazirmatn.variable} bg-background text-foreground font-sans`}
       >
-        <ErrorPresentation type={500} retry={reset} />
+        <ErrorPresentation
+          type={500}
+          retry={reset}
+          onHome={() => window.location.assign('/')}
+        />
       </body>
     </html>
   );
