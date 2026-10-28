@@ -148,6 +148,28 @@ describe('RegisterForm — ثبت‌نام', () => {
     expect(await screen.findByText('too long')).toBeInTheDocument();
   });
 
+  it('خطای فیلد بک‌اند بعد از ویرایش همان فیلد پاک می‌شود', async () => {
+    m.signUpApi.mockRejectedValue(
+      createHttpApiError(400, {
+        error: {
+          code: 'VALIDATION_FAILED',
+          category: 'validation',
+          message: 'x',
+          correlationId: 'c',
+          details: [{ field: 'displayName', code: 'maxLength', message: 'too long' }],
+        },
+      }),
+    );
+    render(<RegisterForm />);
+    await fill();
+    await user.click(submitButton());
+    expect(await screen.findByText('too long')).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('نام نمایشی'), ' جدید');
+
+    expect(screen.queryByText('too long')).not.toBeInTheDocument();
+  });
+
   it('حین ارسال دکمه غیرفعال و متن «در حال ثبت‌نام...» است', async () => {
     m.signUpApi.mockReturnValue(new Promise(() => {}));
     render(<RegisterForm />);
