@@ -1,6 +1,6 @@
-import { H2, P, Small, Span } from '@repo/web/ui';
 import { industryTags, outcomeAssurances } from '@/core/features/landing/assets/mock/workspace';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
+import { H2, P, Small, Span } from '@repo/web/ui';
 import { cn } from '@repo/web/ui/utils/cn';
 
 export function OutcomesSection() {
@@ -36,7 +36,7 @@ export function OutcomesSection() {
         <div className="grid grid-cols-[1.05fr_1fr_1fr] gap-4 max-md:grid-cols-2 max-md:gap-3 max-lg:gap-3">
           <article
             className={cn(
-              'cardClass border-[#ffa00a] bg-[#ffa00a] text-[#1a120a] max-md:col-span-2 max-md:grid max-md:min-h-56 max-md:grid-cols-[1fr_1.1fr] max-md:content-center max-md:gap-x-5 max-md:py-6 max-md:px-7',
+              'cardClass border-primary bg-primary text-foreground max-md:col-span-2 max-md:grid max-md:min-h-56 max-md:grid-cols-[1fr_1.1fr] max-md:content-center max-md:gap-x-5 max-md:py-6 max-md:px-7',
             )}
           >
             <Span
@@ -109,7 +109,7 @@ export function OutcomesSection() {
               'cardClass border-[#231b12] bg-[#231b12] text-[#fff7e8] max-md:min-h-64 max-md:py-6 max-md:px-4',
             )}
           >
-            <Span className={cn('labelClass text-[#dcc39b] [&_svg]:text-[#ffa00a]')}>
+            <Span className={cn('labelClass text-[#dcc39b] [&_svg]:text-primary')}>
               <LandingIcon name="receipt" />
               فاکتور ثبت‌شده
             </Span>

@@ -36,7 +36,7 @@ export function MiniCta({ data = landingMiniCtaData, className }: MiniCtaProps) 
         <Button
           asChild
           variant="default"
-          className="bg-[#1a120a] text-white max-sm:min-h-11 max-sm:text-xs max-md:text-xs sm:mt-0 mt-5"
+          className="bg-foreground text-white max-sm:min-h-11 max-sm:text-xs max-md:text-xs sm:mt-0 mt-5"
         >
           <Link href={data.href}>
             <Span className="text-[length:inherit]">{data.actionLabel}</Span>
@@ -53,10 +53,10 @@ export function FinalCta() {
     <section className="py-8 sm:py-12">
       <div
         aria-labelledby="cta-title"
-        className="relative flex items-center justify-between gap-10 overflow-hidden rounded-xl bg-[#ffa00a] py-12 px-14 after:absolute after:inset-auto after:-bottom-44 after:-left-16 after:size-112 after:rounded-full after:border after:border-[#b8710033] after:content-[''] max-xl:p-9 max-sm:block max-sm:rounded-lg max-sm:px-6 max-md:p-8 [&>div]:relative [&>div]:z-1"
+        className="relative flex items-center justify-between gap-10 overflow-hidden rounded-xl bg-primary py-12 px-14 after:absolute after:inset-auto after:-bottom-44 after:-left-16 after:size-112 after:rounded-full after:border after:border-[#b8710033] after:content-[''] max-xl:p-9 max-sm:block max-sm:rounded-lg max-sm:px-6 max-md:p-8 [&>div]:relative [&>div]:z-1"
       >
         <div>
-          <Span className={cn('landingEyebrowClass text-[#5f3909] before:bg-[#1a120a]')}>
+          <Span className={cn('landingEyebrowClass text-[#5f3909] before:bg-foreground')}>
             وقت حساب‌های روشن‌تر است.
           </Span>
 
@@ -77,7 +77,7 @@ export function FinalCta() {
         <div className="text-center max-sm:mt-5 max-sm:text-right">
           <Button
             asChild
-            className="bg-[#1a120a] text-white max-sm:min-h-11 max-sm:text-xs max-md:text-xs"
+            className="bg-foreground text-white max-sm:min-h-11 max-sm:text-xs max-md:text-xs"
           >
             <Link href="/demo">
               <Span className="text-[length:inherit]">تراز را از نزدیک ببینید</Span>

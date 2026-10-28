@@ -25,7 +25,7 @@ import type { SignedUpView } from '../../application/views/signed-up.view.js';
 import { SignInUseCase } from '../../application/use-cases/sign-in.use-case.js';
 import { SignOutUseCase } from '../../application/use-cases/sign-out.use-case.js';
 import { SignUpUseCase } from '../../application/use-cases/sign-up.use-case.js';
-import { CurrentAuthentication } from '../decorators/current-principal.decorator.js';
+import { CurrentAuthentication } from '../decorators/current-authentication.decorator.js';
 import { AuthenticatedSessionResponseDto } from '../dto/authenticated-session-response.dto.js';
 import { SignInDto } from '../dto/sign-in.dto.js';
 import { SignInResponseDto } from '../dto/sign-in-response.dto.js';

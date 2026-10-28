@@ -1,4 +1,4 @@
-import { Inject, Injectable, Module, type Type } from '@nestjs/common';
+import { Global, Inject, Injectable, Module, type Type } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { describe, expect, it } from 'vitest';
 
@@ -7,12 +7,13 @@ import {
   DATABASE,
   TRANSACTION_BOUNDARY,
 } from '../src/infrastructure/database/database.tokens.js';
-import { OutboxModule } from '../src/infrastructure/outbox/outbox.module.js';
-import { OUTBOX_RECORDER } from '../src/infrastructure/outbox/outbox.tokens.js';
 import { TENANT_REPOSITORY } from '../src/modules/tenant/application/tenant.tokens.js';
 import {
+  ACTIVE_COMPANY_SELECTION,
   TENANT_CONTEXT,
   TENANT_DIRECTORY,
+  TENANT_EVENT_RECORDER,
+  TENANT_OWNER_ENROLLMENT,
   TenantModule,
   type TenantContextAccessor,
   type TenantDirectory,
@@ -23,6 +24,7 @@ import { TenantContextMissingError } from '../src/shared/tenant/tenant.errors.js
 import {
   InMemoryTenantRepository,
   PassthroughTransactionBoundary,
+  RecordingOwnerEnrollment,
   RecordingTenantEvents,
 } from './support/tenant-doubles.js';
 
@@ -47,11 +49,31 @@ const UNKNOWN_TENANT_ID = '018f0d3c-6d0f-7a4b-9d4e-2b3c4d5e6f70';
 })
 class FakeDatabaseModule {}
 
+/**
+ * The application-wide contracts the tenant module consumes but does not
+ * provide: its event recorder (published by the audit module) and owner
+ * enrollment (published by the membership module). Both are faked here so the
+ * tenant module can be loaded without MySQL, Redis or another business module.
+ */
+@Global()
 @Module({
-  providers: [{ provide: OUTBOX_RECORDER, useValue: new RecordingTenantEvents() }],
-  exports: [OUTBOX_RECORDER],
+  providers: [
+    { provide: TENANT_EVENT_RECORDER, useValue: new RecordingTenantEvents() },
+    { provide: TENANT_OWNER_ENROLLMENT, useValue: new RecordingOwnerEnrollment() },
+    {
+      // Selection is exercised through the HTTP spec and the membership module's
+      // own tests; this module only has to resolve the controller's dependency.
+      provide: ACTIVE_COMPANY_SELECTION,
+      useValue: {
+        select: (): never => {
+          throw new Error('active company selection is not under test here');
+        },
+      },
+    },
+  ],
+  exports: [TENANT_EVENT_RECORDER, TENANT_OWNER_ENROLLMENT, ACTIVE_COMPANY_SELECTION],
 })
-class FakeOutboxModule {}
+class FakeContractsModule {}
 
 @Injectable()
 class SampleConsumer {
@@ -73,11 +95,9 @@ class LeakyConsumer {
 class LeakyConsumerModule {}
 
 function compile(consumer: Type<unknown>): Promise<TestingModule> {
-  return Test.createTestingModule({ imports: [consumer] })
+  return Test.createTestingModule({ imports: [FakeContractsModule, consumer] })
     .overrideModule(DatabaseModule)
     .useModule(FakeDatabaseModule)
-    .overrideModule(OutboxModule)
-    .useModule(FakeOutboxModule)
     .overrideProvider(TENANT_REPOSITORY)
     .useValue(new InMemoryTenantRepository())
     .compile();

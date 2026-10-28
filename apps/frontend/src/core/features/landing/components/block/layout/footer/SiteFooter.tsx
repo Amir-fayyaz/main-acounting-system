@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import { Button, H2, P, Separator, Span } from '@repo/web/ui';
 
+import { SiteBrand } from '@/core/components/custom/ui/brand/SiteBrand';
 import {
   footerCaption,
   footerColumns,
@@ -11,7 +12,6 @@ import {
   footerSignature,
   footerTopline,
 } from '@/core/features/landing/assets/mock/navigation';
-import { SiteBrand } from '@/core/features/landing/components/ui/brand/SiteBrand';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
 
 const footerSeparatorClass = 'bg-[#57442c]';
@@ -55,7 +55,7 @@ export function SiteFooter() {
               <Span className="mt-5 flex items-center gap-1.5 text-xs text-[#dfc198] max-md:mt-3.5 max-lg:col-start-2 max-lg:mt-1.5">
                 <span
                   aria-hidden="true"
-                  className="block size-1 shrink-0 rounded-full bg-[#ffa00a]"
+                  className="block size-1 shrink-0 rounded-full bg-primary"
                 />
                 {footerIdentity.origin}
               </Span>
@@ -72,7 +72,7 @@ export function SiteFooter() {
                     <Link
                       key={link.label}
                       href={link.href}
-                      className="text-xs text-[#c5b69e] transition-colors duration-200 hover:text-[#ffa00a]"
+                      className="text-xs text-[#c5b69e] transition-colors duration-200 hover:text-primary"
                     >
                       <Span className="text-[length:inherit]">{link.label}</Span>
                     </Link>

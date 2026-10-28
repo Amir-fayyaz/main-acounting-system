@@ -31,7 +31,7 @@ export function BankMatchScene() {
         </Card>
 
         <div className="relative flex h-9 items-center justify-center before:absolute before:inset-y-0 before:w-px before:bg-[#947441] before:content-['']">
-          <Span className="text-[length:inherit] relative z-1 grid size-9 place-items-center rounded-full border-4 border-[#231b12] bg-[#ffa00a] text-[#1a120a]">
+          <Span className="text-[length:inherit] relative z-1 grid size-9 place-items-center rounded-full border-4 border-[#231b12] bg-primary text-foreground">
             <LandingIcon name="spark" className="size-4" />
           </Span>
         </div>
