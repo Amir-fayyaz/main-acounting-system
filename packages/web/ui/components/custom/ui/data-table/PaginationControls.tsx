@@ -9,6 +9,9 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@repo/web/ui/components/shadcn/ui/pagination/pagination';
+
+import type { PaginationControlsProps } from './data-table.types';
+import { resolvePageSizes, sanitizeMeta } from './data-table.utils';
 import {
   Select,
   SelectContent,
@@ -16,9 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@repo/web/ui/components/shadcn/ui/select/select';
-
-import type { PaginationControlsProps } from './data-table.types';
-import { resolvePageSizes, sanitizeMeta } from './data-table.utils';
 
 /**
  * Presentational pagination bar.
@@ -41,11 +41,7 @@ export function PaginationControls({
   const canGoPrevious = page > 1;
   const canGoNext = page < totalPages;
 
-  function navigate(
-    event: React.MouseEvent<HTMLAnchorElement>,
-    target: number,
-    enabled: boolean,
-  ) {
+  function navigate(event: React.MouseEvent<HTMLAnchorElement>, target: number, enabled: boolean) {
     event.preventDefault();
     if (enabled) {
       onPageChange(target);
@@ -63,10 +59,7 @@ export function PaginationControls({
           نمایش
         </label>
 
-        <Select
-          value={String(limit)}
-          onValueChange={(value) => onLimitChange(Number(value))}
-        >
+        <Select value={String(limit)} onValueChange={(value) => onLimitChange(Number(value))}>
           <SelectTrigger
             id={selectId}
             size="sm"
@@ -89,10 +82,7 @@ export function PaginationControls({
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-3 sm:justify-end">
-        <div
-          data-slot="data-table-pagination-summary"
-          className="text-sm text-muted-foreground"
-        >
+        <div data-slot="data-table-pagination-summary" className="text-sm text-muted-foreground">
           صفحه{' '}
           <span className="font-semibold tabular-nums text-foreground">
             {page.toLocaleString('fa-IR')}
@@ -102,15 +92,10 @@ export function PaginationControls({
             {totalPages.toLocaleString('fa-IR')}
           </span>
           <span className="mx-2 text-border">|</span>
-          <span data-slot="data-table-pagination-total">
-            {total.toLocaleString('fa-IR')} مورد
-          </span>
+          <span data-slot="data-table-pagination-total">{total.toLocaleString('fa-IR')} مورد</span>
         </div>
 
-        <Pagination
-          data-slot="data-table-pagination-nav"
-          className="mx-0 w-auto"
-        >
+        <Pagination data-slot="data-table-pagination-nav" className="mx-0 w-auto">
           <PaginationContent className="gap-1">
             <PaginationItem>
               <PaginationPrevious
