@@ -6,8 +6,11 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { configureApplication } from '../src/bootstrap.js';
 import { AppConfigModule } from '../src/infrastructure/config/app-config.module.js';
 import { TRANSACTION_BOUNDARY } from '../src/infrastructure/database/database.tokens.js';
+import { SelectActiveCompanyUseCase } from '../src/modules/identity/application/use-cases/select-active-company.use-case.js';
+import { MembershipActiveCompanySelection } from '../src/modules/identity/infrastructure/membership/membership-active-company-selection.adapter.js';
 import { ChangeTenantStatusUseCase } from '../src/modules/tenant/application/use-cases/change-tenant-status.use-case.js';
 import {
+  ACTIVE_COMPANY_SELECTION,
   TENANT_EVENT_RECORDER,
   TENANT_REPOSITORY,
 } from '../src/modules/tenant/application/tenant.tokens.js';
@@ -17,12 +20,20 @@ import { GetTenantUseCase } from '../src/modules/tenant/application/use-cases/ge
 import { UpdateTenantUseCase } from '../src/modules/tenant/application/use-cases/update-tenant.use-case.js';
 import { TenantController } from '../src/modules/tenant/presentation/controllers/tenant.controller.js';
 import type { TenantRepository } from '../src/modules/tenant/domain/repositories/tenant.repository.js';
+import { TenantAuditEventRecorder } from '../src/modules/audit/infrastructure/tenant/tenant-audit-event-recorder.js';
 import type { TransactionBoundary } from '../src/shared/transaction/transaction-boundary.js';
+import { RecordingAuditTrail } from './support/audit-doubles.js';
+import {
+  InMemoryActiveCompanyPreference,
+  StubTenantMembership,
+} from './support/identity-active-company-doubles.js';
 import {
   InMemoryTenantRepository,
   PassthroughTransactionBoundary,
+  RecordingOwnerEnrollment,
   RecordingTenantEvents,
 } from './support/tenant-doubles.js';
+import { authenticateAs, TEST_PRINCIPAL } from './support/test-principal.js';
 
 /**
  * The tenant resource over the real HTTP boundary (IAM-001; FND-006).
@@ -45,24 +56,32 @@ interface Harness {
   readonly app: INestApplication;
   readonly repository: InMemoryTenantRepository;
   readonly events: RecordingTenantEvents;
+  readonly owners: RecordingOwnerEnrollment;
+  readonly audit: RecordingAuditTrail;
+  readonly preferences: InMemoryActiveCompanyPreference;
+  readonly memberships: StubTenantMembership;
 }
 
 async function createHarness(): Promise<Harness> {
   const repository = new InMemoryTenantRepository();
   const events = new RecordingTenantEvents();
+  const owners = new RecordingOwnerEnrollment();
   const boundary = new PassthroughTransactionBoundary();
+  const audit = new RecordingAuditTrail();
+  const preferences = new InMemoryActiveCompanyPreference();
+  const memberships = new StubTenantMembership();
 
   const moduleRef = await Test.createTestingModule({
     imports: [AppConfigModule],
     controllers: [TenantController],
     providers: [
       { provide: TENANT_REPOSITORY, useValue: repository },
-      { provide: TENANT_EVENT_RECORDER, useValue: events },
+      { provide: TENANT_EVENT_RECORDER, useValue: new TenantAuditEventRecorder(events, audit) },
       { provide: TRANSACTION_BOUNDARY, useValue: boundary },
       {
         provide: CreateTenantUseCase,
         useFactory: (r: TenantRepository, e: TenantEventRecorder, b: TransactionBoundary) =>
-          new CreateTenantUseCase(r, e, b),
+          new CreateTenantUseCase(r, owners, e, b),
         inject: [TENANT_REPOSITORY, TENANT_EVENT_RECORDER, TRANSACTION_BOUNDARY],
       },
       {
@@ -82,22 +101,34 @@ async function createHarness(): Promise<Harness> {
           new ChangeTenantStatusUseCase(r, e, b),
         inject: [TENANT_REPOSITORY, TENANT_EVENT_RECORDER, TRANSACTION_BOUNDARY],
       },
+      {
+        provide: ACTIVE_COMPANY_SELECTION,
+        useFactory: () =>
+          new MembershipActiveCompanySelection(
+            new SelectActiveCompanyUseCase(memberships, preferences, audit, boundary),
+          ),
+      },
     ],
   }).compile();
 
   const app = moduleRef.createNestApplication();
   configureApplication(app);
+  authenticateAs(app);
   await app.init();
 
-  return { app, repository, events };
+  return { app, repository, events, owners, audit, preferences, memberships };
 }
 
 describe('tenant resource (e2e)', () => {
   let app: INestApplication;
   let events: RecordingTenantEvents;
+  let owners: RecordingOwnerEnrollment;
+  let audit: RecordingAuditTrail;
+  let preferences: InMemoryActiveCompanyPreference;
+  let memberships: StubTenantMembership;
 
   beforeAll(async () => {
-    ({ app, events } = await createHarness());
+    ({ app, events, owners, audit, preferences, memberships } = await createHarness());
   });
 
   afterAll(async () => {
@@ -131,6 +162,29 @@ describe('tenant resource (e2e)', () => {
       expect(new Date(response.body.createdAt).toISOString()).toBe(response.body.createdAt);
       expect(response.headers['x-correlation-id']).toBeTruthy();
       expect(events.recorded.some((event) => event.name === 'TenantCreated')).toBe(true);
+
+      // The creator's membership is provisioned in the same operation.
+      expect(owners.enrolled).toContainEqual({
+        tenantId: String(response.body.id),
+        userId: TEST_PRINCIPAL.userId,
+      });
+      // The write is audited.
+      expect(audit.find('company.created')?.target).toEqual({
+        type: 'tenant',
+        id: String(response.body.id),
+      });
+    });
+
+    it('rejects a client-supplied company id in the body', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/v1/tenants')
+        .send({ name: 'Forged Co.', tenantId: '018f0d3c-6d0f-7a4b-9d4e-2b3c4d5e6f70' })
+        .expect(400);
+
+      expect(response.body.error.code).toBe('VALIDATION_FAILED');
+      expect(
+        response.body.error.details.map((detail: { field: string }) => detail.field),
+      ).toContain('tenantId');
     });
 
     it('rejects a blank name with the standard validation contract', async () => {
@@ -198,6 +252,10 @@ describe('tenant resource (e2e)', () => {
 
       expect(response.body).toMatchObject({ name: 'After', revision: 2 });
       expect(events.recorded.some((event) => event.name === 'TenantProfileUpdated')).toBe(true);
+      expect(audit.find('company.updated')?.target).toEqual({
+        type: 'tenant',
+        id: String(created.id),
+      });
     });
 
     it('rejects a stale update with the conflict contract and stale-revision detail', async () => {
@@ -252,6 +310,8 @@ describe('tenant resource (e2e)', () => {
         .send({ status: 'active', expectedRevision: 2 })
         .expect(200);
       expect(reactivated.body).toMatchObject({ status: 'active', revision: 3 });
+
+      expect(audit.actions()).toContain('company.status_changed');
     });
 
     it('rejects an invalid transition as a domain failure', async () => {
@@ -280,6 +340,93 @@ describe('tenant resource (e2e)', () => {
     });
   });
 
+  describe('active company selection', () => {
+    it('selects a company the caller belongs to and records the preference', async () => {
+      const created = await createTenant('Selectable Co.');
+      const tenantId = String(created.id);
+      memberships.grant(TEST_PRINCIPAL.userId, tenantId);
+
+      const response = await request(app.getHttpServer())
+        .post(`/api/v1/tenants/${tenantId}/select`)
+        .expect(200);
+
+      expect(response.body).toMatchObject({ tenantId });
+      expect(new Date(response.body.selectedAt).toISOString()).toBe(response.body.selectedAt);
+      expect(preferences.selectedFor(TEST_PRINCIPAL.userId)).toBe(tenantId);
+      expect(audit.find('company.selected')?.target).toEqual({ type: 'tenant', id: tenantId });
+    });
+
+    it('refuses a company the caller does not belong to', async () => {
+      const previous = await createTenant('Prior Co.');
+      memberships.grant(TEST_PRINCIPAL.userId, String(previous.id));
+      await request(app.getHttpServer())
+        .post(`/api/v1/tenants/${String(previous.id)}/select`)
+        .expect(200);
+
+      const created = await createTenant('Foreign Co.');
+      const tenantId = String(created.id);
+
+      const response = await request(app.getHttpServer())
+        .post(`/api/v1/tenants/${tenantId}/select`)
+        .expect(403);
+
+      expect(response.body.error).toMatchObject({
+        code: 'TENANT_ACCESS_DENIED',
+        category: 'client',
+      });
+      // The refusal leaves the caller's existing selection untouched.
+      expect(preferences.selectedFor(TEST_PRINCIPAL.userId)).toBe(String(previous.id));
+      expect(audit.find('company.selection_denied')?.outcome).toBe('denied');
+    });
+
+    it('answers an unknown company with the same tenant-access denial', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/v1/tenants/018f0d3c-6d0f-7a4b-9d4e-2b3c4d5e6f70/select')
+        .expect(403);
+
+      expect(response.body.error.code).toBe('TENANT_ACCESS_DENIED');
+    });
+  });
+
+  describe('documentation', () => {
+    it('gives every operation a request, success and error example', async () => {
+      const response = await request(app.getHttpServer()).get('/api/docs-json').expect(200);
+      const paths = response.body.paths;
+      const operations: readonly [string, 'get' | 'post' | 'patch', string, boolean][] = [
+        ['/api/v1/tenants', 'post', '201', true],
+        ['/api/v1/tenants/{id}', 'get', '200', false],
+        ['/api/v1/tenants/{id}', 'patch', '200', true],
+        ['/api/v1/tenants/{id}/status', 'post', '200', true],
+        ['/api/v1/tenants/{id}/select', 'post', '200', false],
+      ];
+
+      for (const [path, method, successStatus, hasBody] of operations) {
+        const operation = paths[path][method];
+        expect(operation, `${method.toUpperCase()} ${path}`).toBeDefined();
+
+        const success = operation.responses[successStatus];
+        expect(success.content['application/json'].examples, `${method} ${path} success`).toBeDefined();
+
+        if (hasBody) {
+          expect(operation.requestBody, `${method} ${path} request body`).toBeDefined();
+        }
+
+        const errorResponses = Object.entries<{
+          content?: { 'application/json'?: { examples?: unknown } };
+        }>(operation.responses).filter(([status]) => Number(status) >= 400);
+
+        expect(errorResponses.length, `${method} ${path} error responses`).toBeGreaterThan(0);
+
+        for (const [status, errorResponse] of errorResponses) {
+          expect(
+            errorResponse.content?.['application/json']?.examples,
+            `${method} ${path} ${status} example`,
+          ).toBeDefined();
+        }
+      }
+    });
+  });
+
   describe('security posture', () => {
     it('declares the bearer requirement on every protected operation (IAM-006)', async () => {
       const response = await request(app.getHttpServer()).get('/api/docs-json').expect(200);
@@ -288,6 +435,7 @@ describe('tenant resource (e2e)', () => {
       expect(paths['/api/v1/tenants']).toBeDefined();
       expect(paths['/api/v1/tenants'].post.security).toEqual([{ bearer: [] }]);
       expect(paths['/api/v1/tenants/{id}'].get.security).toEqual([{ bearer: [] }]);
+      expect(paths['/api/v1/tenants/{id}/select'].post.security).toEqual([{ bearer: [] }]);
       // The requirement is stated per operation rather than globally, so a
       // future public endpoint cannot inherit it by accident.
       expect(response.body.security).toBeUndefined();

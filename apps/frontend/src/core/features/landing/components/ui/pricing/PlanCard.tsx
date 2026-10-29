@@ -10,12 +10,12 @@ import { cn } from '@repo/web/ui/utils/cn';
 
 const ctaVariantClass: Record<Plan['id'], string> = {
   starter:
-    'border border-[#d8d2c5] bg-transparent text-[#1a120a] shadow-none hover:bg-white hover:text-[#1a120a] hover:scale-100 active:scale-100',
+    'border border-[#d8d2c5] bg-transparent text-foreground shadow-none hover:bg-white hover:text-foreground hover:scale-100 active:scale-100',
   growth:
-    'border-0 bg-[#ffa00a] text-[#1a120a] shadow-none hover:bg-[#ef8f00] hover:text-[#1a120a] hover:scale-100 active:scale-100',
-  pro: 'border border-[#d8d2c5] bg-transparent text-[#1a120a] shadow-none hover:bg-white hover:text-[#1a120a] hover:scale-100 active:scale-100',
+    'border-0 bg-primary text-foreground shadow-none hover:bg-[#ef8f00] hover:text-foreground hover:scale-100 active:scale-100',
+  pro: 'border border-[#d8d2c5] bg-transparent text-foreground shadow-none hover:bg-white hover:text-foreground hover:scale-100 active:scale-100',
   enterprise:
-    'border-0 bg-[#1a120a] text-white shadow-none hover:bg-[#3b2b1b] hover:text-white hover:scale-100 active:scale-100',
+    'border-0 bg-foreground text-white shadow-none hover:bg-[#3b2b1b] hover:text-white hover:scale-100 active:scale-100',
 };
 
 export function PlanCard({ plan, period }: { plan: Plan; period: BillingPeriod }) {
@@ -36,7 +36,7 @@ export function PlanCard({ plan, period }: { plan: Plan; period: BillingPeriod }
         'flex w-full min-w-0 flex-col gap-0 rounded-xl border border-[#dfd6c5] bg-[#fffdf7] py-6 px-5 shadow-none',
         'max-xl:py-6 max-xl:px-4 max-sm:p-6 max-lg:p-6',
         plan.featured &&
-          'border-2 border-[#ffa00a] bg-[#fffbef] py-6 px-5 max-xl:py-5 max-xl:px-4 max-sm:p-6 max-lg:p-6',
+          'border-2 border-primary bg-[#fffbef] py-6 px-5 max-xl:py-5 max-xl:px-4 max-sm:p-6 max-lg:p-6',
       )}
     >
       <CardHeader className="block gap-0 p-0">

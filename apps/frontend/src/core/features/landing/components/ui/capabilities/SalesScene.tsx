@@ -55,7 +55,7 @@ export function SalesScene() {
         <div className="flex items-center justify-between gap-3 text-xs text-[#776952]">
           <Span className="text-xs! font-medium! text-[#776952]">جمع اقلام</Span>
 
-          <Span className="text-xl! font-semibold! tracking-tight text-[#1a120a] max-md:text-2xl! max-lg:text-lg! [&>small]:mr-1">
+          <Span className="text-xl! font-semibold! tracking-tight text-foreground max-md:text-2xl! max-lg:text-lg! [&>small]:mr-1">
             ۳۲٬۰۰۰٬۰۰۰
             <Small className="text-xs! font-normal!">تومان</Small>
           </Span>
@@ -80,7 +80,7 @@ export function SalesScene() {
         </div>
       </Card>
 
-      <div className="relative z-3 mt-3 flex items-center gap-2 self-end rounded-md bg-[#1a120a] py-2.5 px-3 text-xs text-[#fff7e5] shadow-[0_7px_15px_#2f20061a] max-lg:py-2 max-lg:px-2.5 [&>svg]:size-5 [&>svg]:text-[#ffa00a]">
+      <div className="relative z-3 mt-3 flex items-center gap-2 self-end rounded-md bg-foreground py-2.5 px-3 text-xs text-[#fff7e5] shadow-[0_7px_15px_#2f20061a] max-lg:py-2 max-lg:px-2.5 [&>svg]:size-5 [&>svg]:text-primary">
         <LandingIcon name="book" />
         <div>
           <Span className="text-[length:inherit]">پیش‌نویس سند آماده است</Span>

@@ -206,6 +206,6 @@ import { UserModule } from './user.module.js';
   // The authentication boundary is the published contract of this feature: a
   // later authorization feature applies the guard and reads the principal, and
   // never re-resolves a token itself.
-  exports: [AuthenticationGuard, GetAuthenticatedSessionUseCase],
+  exports: [AuthenticationGuard, GetAuthenticatedSessionUseCase, SignUpUseCase, SetUserCredentialUseCase, CREDENTIAL_REPOSITORY],
 })
 export class AuthenticationModule {}

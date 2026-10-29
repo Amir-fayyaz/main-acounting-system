@@ -1,8 +1,8 @@
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
-import { Button, H2, P, Span } from '@repo/web/ui';
 import { pricingCta } from '@/core/features/landing/assets/mock/pricing';
+import { Button, H2, P, Span } from '@repo/web/ui';
 
 export function PricingCta() {
   return (
@@ -23,7 +23,7 @@ export function PricingCta() {
 
         <Button
           asChild
-          className="min-h-11 shrink-0 gap-2.5 rounded-lg border-0 bg-[#1a120a] px-6 py-2.5 text-xs leading-relaxed font-semibold text-white shadow-none hover:bg-[#3b2b1b] hover:text-white hover:scale-100 active:scale-100 max-sm:mt-5 max-sm:min-h-10 [&_svg]:size-5"
+          className="min-h-11 shrink-0 gap-2.5 rounded-lg border-0 bg-foreground px-6 py-2.5 text-xs leading-relaxed font-semibold text-white shadow-none hover:bg-[#3b2b1b] hover:text-white hover:scale-100 active:scale-100 max-sm:mt-5 max-sm:min-h-10 [&_svg]:size-5"
         >
           <Link href={pricingCta.href}>
             <Span className="text-[length:inherit]">{pricingCta.actionLabel}</Span>

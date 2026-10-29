@@ -108,7 +108,7 @@ function DashboardHeading({
               size="sm"
               className={cn(
                 'h-auto rounded-sm border-0 bg-transparent py-1 px-2.5 text-xs font-normal text-[#746b60] shadow-none hover:scale-100 hover:bg-transparent active:scale-100 max-sm:py-0.5 max-sm:px-1.5',
-                selected && 'bg-[#f4f3e7] font-bold text-[#1a120a] hover:bg-[#f4f3e7]',
+                selected && 'bg-[#f4f3e7] font-bold text-foreground hover:bg-[#f4f3e7]',
               )}
             >
               <Span className="text-[length:inherit]">{option.label}</Span>

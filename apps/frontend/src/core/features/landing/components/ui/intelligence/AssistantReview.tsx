@@ -1,8 +1,8 @@
 import { Badge, P, Span } from '@repo/web/ui';
 
 import type { AssistantPreviewData } from '@/core/features/landing/assets/@types/sections';
-import { ReviewRows } from '@/core/features/landing/components/ui/intelligence/ReviewRows';
 import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
+import { ReviewRows } from '@/core/features/landing/components/ui/intelligence/ReviewRows';
 import { cn } from '@repo/web/ui/utils/cn';
 
 export function AssistantReview({
@@ -20,7 +20,7 @@ export function AssistantReview({
 
   return (
     <div aria-live="polite">
-      <P className="mt-4 mb-2.5 text-xs leading-loose text-[#625b4e] [&_strong]:font-semibold [&_strong]:text-[#1a120a]">
+      <P className="mt-4 mb-2.5 text-xs leading-loose text-[#625b4e] [&_strong]:font-semibold [&_strong]:text-foreground">
         <strong>
           <Span className="text-[length:inherit]">{answer.strong}</Span>
         </strong>

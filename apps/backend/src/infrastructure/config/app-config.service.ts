@@ -4,6 +4,7 @@ import type {
   ApplicationRuntime,
   AuthenticationConfiguration,
   Configuration,
+  SystemAdminBootstrapConfiguration,
   DatabaseConfiguration,
   EnvironmentIdentification,
   HttpConfiguration,
@@ -72,6 +73,10 @@ export class AppConfigService {
 
   get authentication(): AuthenticationConfiguration {
     return this.configuration.authentication;
+  }
+
+  get systemAdmin(): SystemAdminBootstrapConfiguration {
+    return this.configuration.systemAdmin;
   }
 
   get jobs(): JobsConfiguration {

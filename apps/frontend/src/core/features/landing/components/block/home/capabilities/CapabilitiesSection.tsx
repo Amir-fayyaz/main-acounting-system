@@ -2,10 +2,10 @@ import { BankMatchScene } from '@/core/features/landing/components/ui/capabiliti
 import { ReportScene } from '@/core/features/landing/components/ui/capabilities/ReportScene';
 import { SalesScene } from '@/core/features/landing/components/ui/capabilities/SalesScene';
 import { StockScene } from '@/core/features/landing/components/ui/capabilities/StockScene';
-import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
-import { cn } from '@repo/web/ui/utils/cn';
 import type { LandingIconName } from '@/core/features/landing/components/ui/icon/LandingIcon';
+import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
 import { H2, H3, P, Span } from '@repo/web/ui';
+import { cn } from '@repo/web/ui/utils/cn';
 
 export function CapabilitiesSection() {
   return (
@@ -77,9 +77,7 @@ export function CapabilitiesSection() {
           </article>
 
           <article
-            className={cn(
-              'cardClass col-span-5 min-h-96 border-[#ffa00a] bg-[#ffa00a] max-md:min-h-0',
-            )}
+            className={cn('cardClass col-span-5 min-h-96 border-primary bg-primary max-md:min-h-0')}
           >
             <div
               className={cn(
@@ -139,7 +137,7 @@ function CapKicker({
     <Span
       className={cn(
         'text-[length:inherit]',
-        cn(dark && 'kickerClass text-[#d6b784] [&_svg]:text-[#ffa00a]'),
+        cn(dark && 'kickerClass text-[#d6b784] [&_svg]:text-primary'),
       )}
     >
       <LandingIcon name={icon} />
