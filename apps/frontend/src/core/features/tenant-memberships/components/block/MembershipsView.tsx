@@ -11,10 +11,7 @@ import {
   type PaginationMeta,
 } from '@repo/web';
 
-import type {
-  TenantMember,
-  TenantMembershipsResult,
-} from '../../assets/@types/membership.types';
+import type { TenantMember, TenantMembershipsResult } from '../../assets/@types/membership.types';
 import { filterMembersBySearch } from '../../utils/filter-members';
 import { formatMemberDate } from '../../utils/format-member-date';
 import { memberStatusLabel } from '../../utils/member-status-label';
@@ -67,23 +64,19 @@ export function MembershipsView({ initialResult }: MembershipsViewProps) {
   const searchParams = useSearchParams();
   const searchTerm = searchParams.get('search') ?? '';
 
-  const members = initialResult.ok ? initialResult.result.data : [];
-  const meta: PaginationMeta | undefined = initialResult.ok
-    ? initialResult.result.meta
-    : undefined;
+  const meta: PaginationMeta | undefined = initialResult.ok ? initialResult.result.meta : undefined;
 
-  const filtered = useMemo(
-    () => filterMembersBySearch(members, searchTerm),
-    [members, searchTerm],
-  );
+  const filtered = useMemo(() => {
+    const members = initialResult.ok ? initialResult.result.data : [];
+    return filterMembersBySearch(members, searchTerm);
+  }, [initialResult, searchTerm]);
 
   const errorContent = !initialResult.ok ? (
     <div className="grid gap-1">
       <p>{initialResult.message}</p>
       {initialResult.correlationId ? (
         <p className="text-xs text-muted-foreground">
-          کد پیگیری:{' '}
-          <span dir="ltr">{initialResult.correlationId}</span>
+          کد پیگیری: <span dir="ltr">{initialResult.correlationId}</span>
         </p>
       ) : null}
     </div>

@@ -6,9 +6,9 @@ import type {
   MembershipsResponse,
   TenantMembershipsResult,
 } from '../assets/@types/membership.types';
+import { env } from '@/core/lib/basic-link/env';
 
-const GENERIC_ERROR =
-  'دریافت اعضای مجموعه با خطا مواجه شد. لطفاً دوباره تلاش کنید.';
+const GENERIC_ERROR = 'دریافت اعضای مجموعه با خطا مواجه شد. لطفاً دوباره تلاش کنید.';
 
 type ApiErrorPayload = {
   error?: {
@@ -19,9 +19,7 @@ type ApiErrorPayload = {
 
 function getApiBaseUrl(): string | null {
   const baseUrl =
-    process.env.INTERNAL_API_BASE_URL ??
-    process.env.NEXT_PUBLIC_API_BASE_URL ??
-    process.env.NEXT_PUBLIC_BACK_URL;
+    env.INTERNAL_API_BASE_URL ?? env.NEXT_PUBLIC_API_BASE_URL ?? env.NEXT_PUBLIC_BACK_URL;
 
   return baseUrl?.replace(/\/+$/, '') || null;
 }
@@ -71,17 +69,11 @@ export async function getTenantMemberships(
     );
 
     if (!response.ok) {
-      const payload = (await response.json().catch(() => null)) as
-        | ApiErrorPayload
-        | null;
+      const payload = (await response.json().catch(() => null)) as ApiErrorPayload | null;
       const message =
-        typeof payload?.error?.message === 'string'
-          ? payload.error.message
-          : GENERIC_ERROR;
+        typeof payload?.error?.message === 'string' ? payload.error.message : GENERIC_ERROR;
       const correlationId =
-        typeof payload?.error?.correlationId === 'string'
-          ? payload.error.correlationId
-          : undefined;
+        typeof payload?.error?.correlationId === 'string' ? payload.error.correlationId : undefined;
 
       return {
         ok: false,
