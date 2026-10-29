@@ -3,6 +3,12 @@
  * Anything not exported here is a Tenant internal; `deps:check` enforces it.
  */
 export { TenantModule } from './infrastructure/tenant.module.js';
+
+// The creation contract, published for the development seeder (DEV-001): an
+// example company is established through the ordinary use case — including its
+// owner enrollment — instead of by writing tenant rows.
+export { CreateTenant } from './application/commands/create-tenant.command.js';
+export { CreateTenantUseCase } from './application/use-cases/create-tenant.use-case.js';
 export {
   ACTIVE_COMPANY_SELECTION,
   TENANT_CONTEXT,

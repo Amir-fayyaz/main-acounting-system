@@ -14,6 +14,7 @@
     "start:worker": "node dist/processes/worker/worker.js",
     "start:scheduler": "node dist/processes/scheduler/scheduler.js",
     "job:enqueue": "node dist/processes/cli/enqueue-sample-job.js",
+    "seed": "tsc -p tsconfig.build.json && node dist/processes/seed/seed.js",
     "db:generate": "drizzle-kit generate",
     "db:check": "drizzle-kit check",
     "db:migrate": "drizzle-kit migrate",

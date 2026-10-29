@@ -46,6 +46,7 @@ interface Harness {
   readonly assignments: InMemoryMembershipRoleRepository;
   readonly roles: InMemoryRoleRepository;
   readonly audit: RecordingAuditTrail;
+  readonly platformAdmins: Set<string>;
   readonly authorize: AuthorizeActionUseCase;
 }
 
@@ -55,6 +56,7 @@ function harness(): Harness {
   const assignments = new InMemoryMembershipRoleRepository();
   const roles = new InMemoryRoleRepository();
   const audit = new RecordingAuditTrail();
+  const platformAdmins = new Set<string>();
   const tenantMembership: TenantMembership = {
     async findActiveForUserAndTenant(userId, tenantId) {
       const found = await memberships.findByUserAndTenant(userId, tenantId);
@@ -74,6 +76,7 @@ function harness(): Harness {
     assignments,
     roles,
     audit,
+    platformAdmins,
     authorize: new AuthorizeActionUseCase(
       users,
       memberships,
@@ -81,6 +84,7 @@ function harness(): Harness {
       assignments,
       roles,
       audit,
+      { hasSystemAdmin: async (userId) => platformAdmins.has(userId.value), grantSystemAdmin: async (userId) => { platformAdmins.add(userId.value); } },
     ),
   };
 }
@@ -421,6 +425,55 @@ describe('authorize — effective permissions', () => {
     });
 
     expect(outcome.errorOrThrow().code).toBe('AUTHORIZATION_DENIED');
+  });
+});
+
+describe('authorize — platform system-admin authority', () => {
+  it('grants registered permissions across tenants without a membership', async () => {
+    const app = harness();
+    const user = seedUser(app);
+    app.platformAdmins.add(user.id.value);
+
+    const outcome = await app.authorize.authorize({
+      principal: principalOf(user),
+      requiredPermission: PermissionKey.from('company.read'),
+      targetTenantId: TENANT_B,
+    });
+
+    expect(outcome.isOk()).toBe(true);
+    expect(outcome.valueOrThrow()).toMatchObject({
+      userId: user.id.value,
+      tenantId: TENANT_B,
+      systemAdmin: true,
+    });
+    expect(outcome.valueOrThrow().permissions).toContain('company.read');
+    expect(outcome.valueOrThrow().membershipId).toBeUndefined();
+  });
+
+  it('denies an unregistered permission even to a platform administrator', async () => {
+    const app = harness();
+    const user = seedUser(app);
+    app.platformAdmins.add(user.id.value);
+
+    const outcome = await app.authorize.authorize({
+      principal: principalOf(user),
+      requiredPermission: PermissionKey.from('future.unregistered'),
+    });
+
+    expect(outcome.errorOrThrow().code).toBe('AUTHORIZATION_DENIED');
+  });
+
+  it('still requires an active authenticated identity', async () => {
+    const app = harness();
+    const user = seedUser(app, { active: false });
+    app.platformAdmins.add(user.id.value);
+
+    const outcome = await app.authorize.authorize({
+      principal: principalOf(user),
+      requiredPermission: PermissionKey.from('company.read'),
+    });
+
+    expect(outcome.errorOrThrow().code).toBe('ACCOUNT_NOT_AUTHENTICATABLE');
   });
 });
 

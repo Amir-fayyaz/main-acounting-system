@@ -171,6 +171,33 @@ function readEnvironmentName(raw: RawConfiguration, problems: string[]): Runtime
   return readEnum(raw, 'NODE_ENV', SUPPORTED_ENVIRONMENTS, DEFAULT_ENVIRONMENT, problems);
 }
 
+function readSystemAdminBootstrap(raw: RawConfiguration, problems: string[]): Configuration['systemAdmin'] {
+  const enabled = readBoolean(raw, 'SYSTEM_ADMIN_ENABLED', false, problems);
+  const email = readText(raw, 'SYSTEM_ADMIN_EMAIL') ?? '';
+  const password = readText(raw, 'SYSTEM_ADMIN_PASSWORD') ?? '';
+  const displayName = readText(raw, 'SYSTEM_ADMIN_DISPLAY_NAME', 'Product Owner') ?? 'Product Owner';
+
+  if (enabled) {
+    if (email.trim() === '') {
+      problems.push('SYSTEM_ADMIN_EMAIL is required when SYSTEM_ADMIN_ENABLED=true');
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      problems.push('SYSTEM_ADMIN_EMAIL must be a valid email address');
+    }
+
+    if (password.length === 0) {
+      problems.push('SYSTEM_ADMIN_PASSWORD is required when SYSTEM_ADMIN_ENABLED=true');
+    }
+
+    if (displayName.trim() === '') {
+      problems.push('SYSTEM_ADMIN_DISPLAY_NAME must not be empty when SYSTEM_ADMIN_ENABLED=true');
+    }
+  }
+
+  // Bootstrap is opt-in in every environment; there are no credential defaults.
+
+  return { enabled, email: email.trim().toLowerCase(), password, displayName: displayName.trim() };
+}
+
 function readApiPrefix(raw: RawConfiguration, problems: string[]): string {
   const value = readText(raw, 'BACKEND_API_PREFIX', DEFAULT_API_PREFIX) ?? DEFAULT_API_PREFIX;
 
@@ -251,6 +278,7 @@ export function loadConfiguration(raw: RawConfiguration = process.env): Configur
         problems,
       ),
     },
+    systemAdmin: readSystemAdminBootstrap(raw, problems),
     jobs: {
       concurrency: readPositiveInteger(
         raw,
