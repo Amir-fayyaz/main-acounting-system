@@ -26,6 +26,7 @@ export default defineConfig({
   schema: [
     './src/modules/*/infrastructure/persistence/*.schema.ts',
     './src/infrastructure/outbox/persistence/outbox.schema.ts',
+    './src/infrastructure/seed/persistence/*.schema.ts',
   ],
   out: './drizzle',
   dbCredentials: {

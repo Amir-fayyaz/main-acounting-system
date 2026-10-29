@@ -191,11 +191,18 @@ import { UserModule } from './user.module.js';
   // Exported to this module's own role feature (IAM-004), which must confirm a
   // membership exists and belongs to the tenant before assigning a role — and
   // to the tenant module's company creation/selection contracts (IAM-009).
+  //
+  // The two provisioning/read use cases are exported for the development
+  // seeder (DEV-001), which composes them from outside the module instead of
+  // writing membership rows of its own: a fixture keeps every validation,
+  // audit and event guarantee an ordinary caller gets.
   exports: [
     MEMBERSHIP_REPOSITORY,
     TENANT_MEMBERSHIP,
     TENANT_OWNER_ENROLLMENT,
     ACTIVE_COMPANY_SELECTION,
+    CreateMembershipUseCase,
+    ListUserMembershipsUseCase,
   ],
 })
 export class MembershipModule {}

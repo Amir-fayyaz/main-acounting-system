@@ -102,6 +102,14 @@ export interface AuthenticationConfiguration {
   readonly sessionTtlMinutes: number;
 }
 
+/** Explicit platform Product Owner bootstrap input. Secret material is never logged. */
+export interface SystemAdminBootstrapConfiguration {
+  readonly enabled: boolean;
+  readonly email: string;
+  readonly password: string;
+  readonly displayName: string;
+}
+
 /** Scheduler process settings (ADR-008, section 9). */
 export interface SchedulerConfiguration {
   /** How often the scheduler promotes due work and periodic triggers, in milliseconds. */
@@ -136,6 +144,7 @@ export interface Configuration {
   readonly storage: StorageConfiguration;
   readonly logging: LoggingConfiguration;
   readonly authentication: AuthenticationConfiguration;
+  readonly systemAdmin: SystemAdminBootstrapConfiguration;
   readonly jobs: JobsConfiguration;
   readonly scheduler: SchedulerConfiguration;
   readonly outbox: OutboxConfiguration;

@@ -121,8 +121,10 @@ import { ScopedTenantContext } from './scoped-tenant-context.js';
       inject: [TENANT_REPOSITORY, TENANT_EVENT_RECORDER, TRANSACTION_BOUNDARY],
     },
   ],
-  // Only the published cross-module contracts are visible; the repository,
-  // the event recorder and the use cases stay private to the module.
-  exports: [TENANT_DIRECTORY, TENANT_CONTEXT],
+  // The published cross-module contracts are visible, plus the creation use
+  // case the development seeder (DEV-001) composes to establish its example
+  // companies through the ordinary application flow — the repository and the
+  // event recorder stay private to the module.
+  exports: [TENANT_DIRECTORY, TENANT_CONTEXT, CreateTenantUseCase],
 })
 export class TenantModule {}

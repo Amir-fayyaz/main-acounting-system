@@ -94,6 +94,10 @@ pnpm --filter @accounting-saas/backend test:timezones  # Jalali suite under UTC/
 
 # Background jobs (FND-007)
 pnpm --filter @accounting-saas/backend job:enqueue <type> [payload-json]
+
+# Development/test dataset (DEV-001): development and test only, idempotent
+pnpm seed                    # root-level alias for the backend seed command
+pnpm --filter @accounting-saas/backend seed
 REDIS_INTEGRATION=1 pnpm --filter @accounting-saas/backend test   # + Redis-backed job tests
 
 # Transaction boundary and transactional outbox against a real MySQL server (SHR-005, SHR-006)
@@ -153,7 +157,11 @@ committed or baked into an image (Engineering Principles, rule 10).
 (`LOG_LEVEL`), `jobs` (`WORKER_CONCURRENCY`, `WORKER_MAX_ATTEMPTS` — reserved for
 the worker process, ADR-008), `scheduler` (`SCHEDULER_INTERVAL_MS`) and `outbox`
 (`OUTBOX_BATCH_SIZE`, `OUTBOX_MAX_ATTEMPTS`, `OUTBOX_RETRY_*`,
-`OUTBOX_PUBLISH_INTERVAL_MS` — the publication contract of SHR-006).
+`OUTBOX_PUBLISH_INTERVAL_MS` — the publication contract of SHR-006), and
+`systemAdmin` (`SYSTEM_ADMIN_ENABLED`, `SYSTEM_ADMIN_EMAIL`,
+`SYSTEM_ADMIN_PASSWORD`, `SYSTEM_ADMIN_DISPLAY_NAME` — the Product Owner
+bootstrap contract, see
+[Product Owner bootstrap and development/test seeding](#product-owner-bootstrap-and-developmenttest-seeding-dev-001)).
 
 The database pool, the Redis connection and the MinIO client are all created
 without opening a connection, so the API process starts even when the
@@ -860,6 +868,158 @@ pnpm --filter @accounting-saas/backend db:migrate:status # applied/pending count
   — the global setup (`test/support/database-global-setup.ts`) applies the
   migration journal once before any spec runs, so the specs exercise the real,
   indexed schema (see `test/database-migrations.e2e-spec.ts`).
+
+## Product Owner bootstrap and development/test seeding (DEV-001)
+
+### The platform `system-admin` role
+
+The Product Owner is the owner of the **whole product**, not a company
+administrator. That platform-wide authority is the `system-admin` role, and it
+is deliberately *not* a tenant role:
+
+| | tenant roles (`Tenant Administrator`, …) | platform role (`system-admin`) |
+| --- | --- | --- |
+| Scope | one company, via a membership | every company, membership or not |
+| Stored | `roles` + `membership_roles` | `platform_authorizations` (no tenant column) |
+| Grants | the registered capabilities the role lists | every registered capability |
+| Created by | a company administrator | Product Owner bootstrap only |
+
+The consequence is what the acceptance criteria ask for: platform access is
+independent of tenant membership, covers companies created *after* the
+bootstrap, and automatically covers a capability the moment it is registered in
+`PERMISSION_CATALOG` — no re-seeding required. It is not an authorization
+bypass: the acting identity is still authenticated, the operation still resolves
+a tenant scope, and the decision and its refusals are still audited. A
+tenant-scoped operation of the Product Owner runs under the target company's
+scope like anyone else's; only the capability check short-circuits because the
+principal holds platform authority. Nothing a client sends (header, body field,
+query parameter, tenant id, role name) can grant it, and ordinary tenant role
+management never can: `system-admin` is not in any tenant's role table.
+
+### Environment configuration
+
+```dotenv
+SYSTEM_ADMIN_ENABLED=true
+SYSTEM_ADMIN_EMAIL=owner@example.test
+SYSTEM_ADMIN_PASSWORD=
+SYSTEM_ADMIN_DISPLAY_NAME=Product Owner
+```
+
+- `SYSTEM_ADMIN_ENABLED` is the only switch, and it is **off by default**:
+bootstrap is opt-in in every environment, and production never inherits a
+development credential.
+- With it enabled, a valid `SYSTEM_ADMIN_EMAIL` and a non-empty
+`SYSTEM_ADMIN_PASSWORD` are required; a missing or malformed value fails the
+process at startup, and the validation message names the variable without ever
+echoing the value.
+- The email is normalized to lower case; `SYSTEM_ADMIN_DISPLAY_NAME` defaults to
+`Product Owner`.
+- The same typed contract is available to the API, Worker, Scheduler and CLI
+processes (`configuration.systemAdmin`).
+
+### Startup provisioning
+
+The API provisions the Product Owner while Nest initializes
+(`SystemAdminBootstrapRunner`, `OnApplicationBootstrap`), so the identity exists
+**before** the server accepts HTTP requests; a failed bootstrap fails startup
+instead of leaving a half-provisioned privileged account.
+
+Provisioning reuses the existing Identity use cases — `CreateUserUseCase`, then
+`SetUserCredentialUseCase` (the approved `PasswordHasher` abstraction), then the
+platform grant — inside one transaction boundary, and records the fact in the
+audit trail. It creates **no** tenant, membership or sample data.
+
+It is idempotent, and the rules are deliberately conservative:
+
+- the identity is looked up by its unique email first, so a restart never
+  creates a second Product Owner;
+- an existing, fully provisioned Product Owner is *verified* and left untouched —
+  in particular **the password is never reset because the environment variable
+  changed**. Rotating the secret is an explicit credential-management operation
+  (the credential endpoint), never a side effect of a restart;
+- an existing account that does not hold `system-admin`, or that has no
+  credential, is a conflict: startup fails with an actionable message instead of
+  silently promoting or repairing it;
+- `platform_authorizations.user_id` is the primary key, so two instances racing
+  through a cold start still produce exactly one grant; the loser re-reads and
+  reports success rather than inserting again.
+
+### Seeding development/test data
+
+The dataset is populated by one explicit root-level command, never at startup:
+
+```bash
+pnpm seed
+```
+
+It is allowed only when the resolved `NODE_ENV` is `development` or `test`. The
+refusal happens in code, before the application context — and therefore before
+any database access — is created; there is deliberately no override flag.
+
+```bash
+pnpm --filter @accounting-saas/backend db:migrate   # apply migrations first (creates seed_fixtures)
+pnpm seed                                           # create the dataset
+pnpm seed                                           # second run: 0 created, everything reused
+```
+
+The command:
+
+1. loads `.env` and the typed configuration exactly like the API (so it works
+   from any working directory);
+2. ensures the configured Product Owner exists, by reusing the **same**
+   idempotent bootstrap the API runs — it never creates a second privileged
+   account, and `SYSTEM_ADMIN_ENABLED=false` is an actionable error;
+3. creates or reuses the documented fixtures below, through the ordinary
+   application use cases (validation, tenant isolation, transactions, audit and
+   outbox events all apply);
+4. prints one line per fixture (`+ created`, `= reused`), then a count summary,
+   and exits non-zero on any failure while closing the database pool cleanly.
+
+The summary names fixture keys only — never an email, password, hash or token.
+
+### The dataset
+
+| Fixture | What is created |
+| --- | --- |
+| Product Owner | the identity from `SYSTEM_ADMIN_*`, holding platform `system-admin` (not a member of any seeded company) |
+| Companies | `بازرگانی آریا` and `گروه صنعتی پارس`, each owned by its administrator |
+| Users | per company: an administrator and an accountant, on reserved `.test` addresses |
+| Memberships | one per seeded user, inside its own company |
+| Tenant roles | `Tenant Administrator` (company read/update, user and role administration, audit read) and `Accountant` (`company.read` only), per company |
+| Role assignments | administrator → `Tenant Administrator`, accountant → `Accountant` |
+| Accounting | the current Jalali year per company, with its twelve generated periods and the first open period active |
+
+Sign in as a seeded user with the fixture password `Seed-user-password-1!`
+(development/test only — it is applied when a user is *created* and never to an
+existing identity). The differences are the point: the accountant of `آریا` can
+read its own company and nothing else, the administrator of `آریا` has no access
+to `پارس`, and the Product Owner can exercise supported operations in both.
+
+### Repeat runs, and what is never touched
+
+- Users are matched by email, roles by name within the tenant, memberships by
+  (user, tenant), fiscal years by label, and companies by the key recorded in
+  `seed_fixtures` — a small infrastructure-owned table that maps a stable fixture
+  key to the identity it created. A second run therefore reports `0 created`.
+- A seeded credential is set only when the user is created: re-running never
+  resets a password or overwrites developer-managed data.
+- The dataset is created by application use cases, so each unit stays atomic; the
+  run as a whole is not one transaction. It is *retry-safe* instead: every
+  fixture is looked up before it is created, so re-running after a partial
+  failure completes the missing pieces without destructive cleanup.
+- The command never truncates, drops or deletes anything. A conflict (for
+  example, a seeded email that exists but is inactive) fails visibly instead of
+  being worked around.
+
+### Troubleshooting
+
+| Symptom | Cause and fix |
+| --- | --- |
+| `Refusing to seed the "production" environment` | `NODE_ENV=production` (or unset in a production image): seeding is development/test only by design. |
+| `SYSTEM_ADMIN_ENABLED must be true to seed` | Set `SYSTEM_ADMIN_ENABLED=true` plus the email/password, or use a `.env` that already does. |
+| `Configured Product Owner email conflicts with an existing identity` | The configured email belongs to a user without the platform grant or without a credential. Resolve it through an audited operator workflow; the bootstrap will not self-promote. |
+| API fails to start with a bootstrap error | The configured Product Owner cannot be provisioned (conflict, unreachable database, refused credential). The message names the failing step and never a secret. |
+| `Failed query: … seed_fixtures` | Migrations are pending: run `pnpm --filter @accounting-saas/backend db:migrate`. |
 
 ## Rules for new code
 
