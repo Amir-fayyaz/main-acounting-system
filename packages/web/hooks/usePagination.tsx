@@ -1,6 +1,5 @@
 'use client';
 
-import type { ReadonlyURLSearchParams } from 'next/navigation';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useMemo } from 'react';
 
@@ -9,6 +8,7 @@ import {
   DEFAULT_PAGE,
   MAX_LIMIT,
   MIN_LIMIT,
+  parsePaginationParams,
 } from '@repo/web/ui/utils/pagination';
 
 export interface UsePaginationOptions {
@@ -34,36 +34,6 @@ export interface UsePaginationReturn {
   };
 }
 
-const DIGITS_ONLY = /^\d+$/;
-
-function clampLimit(value: number): number {
-  return Math.min(Math.max(value, MIN_LIMIT), MAX_LIMIT);
-}
-
-function parsePaginationParams(
-  searchParams: ReadonlyURLSearchParams | URLSearchParams,
-  pageParam: string,
-  limitParam: string,
-  defaultLimit: number,
-): { page: number; limit: number } {
-  const rawPage = searchParams.get(pageParam);
-  const parsedPage =
-    rawPage !== null && DIGITS_ONLY.test(rawPage) ? Number(rawPage) : Number.NaN;
-  const page =
-    Number.isSafeInteger(parsedPage) && parsedPage >= DEFAULT_PAGE
-      ? parsedPage
-      : DEFAULT_PAGE;
-
-  const rawLimit = searchParams.get(limitParam);
-  const parsedLimit =
-    rawLimit !== null && DIGITS_ONLY.test(rawLimit) ? Number(rawLimit) : Number.NaN;
-  const limit = Number.isNaN(parsedLimit)
-    ? defaultLimit
-    : clampLimit(parsedLimit);
-
-  return { page, limit };
-}
-
 /**
  * URL-synced pagination state for list endpoints.
  *
@@ -73,24 +43,19 @@ function parsePaginationParams(
  * - Changing limit always resets page to 1
  * - Preserves unrelated query parameters
  */
-export function usePagination(
-  options: UsePaginationOptions = {},
-): UsePaginationReturn {
-  const {
-    pageParam = 'page',
-    limitParam = 'limit',
-    defaultLimit = DEFAULT_LIMIT,
-  } = options;
+export function usePagination(options: UsePaginationOptions = {}): UsePaginationReturn {
+  const { pageParam = 'page', limitParam = 'limit', defaultLimit = DEFAULT_LIMIT } = options;
 
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const { page, limit } = parsePaginationParams(
-    searchParams,
-    pageParam,
-    limitParam,
-    defaultLimit,
+    {
+      page: searchParams.get(pageParam),
+      limit: searchParams.get(limitParam),
+    },
+    { defaultLimit },
   );
 
   const replaceParams = useCallback(
@@ -120,15 +85,10 @@ export function usePagination(
 
   const setLimit = useCallback(
     (nextLimit: number) => {
-      if (
-        !Number.isInteger(nextLimit) ||
-        nextLimit < MIN_LIMIT ||
-        nextLimit > MAX_LIMIT
-      ) {
+      if (!Number.isInteger(nextLimit) || nextLimit < MIN_LIMIT || nextLimit > MAX_LIMIT) {
         return;
       }
       if (nextLimit === limit && page === DEFAULT_PAGE) return;
-      // Changing page size always restarts at page 1.
       replaceParams({
         [limitParam]: String(nextLimit),
         [pageParam]: String(DEFAULT_PAGE),
@@ -141,10 +101,7 @@ export function usePagination(
     setPage(DEFAULT_PAGE);
   }, [setPage]);
 
-  const queryParams = useMemo(
-    () => ({ page, limit }),
-    [page, limit],
-  );
+  const queryParams = useMemo(() => ({ page, limit }), [page, limit]);
 
   return {
     page,
