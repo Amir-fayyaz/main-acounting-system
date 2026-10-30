@@ -1,0 +1,32 @@
+import { H1, P, Span } from '@repo/web/ui';
+import { demoHeroData } from '@/core/features/landing/assets/mock/demo/page';
+import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingIcon';
+import { cn } from '@repo/web/ui/utils/cn';
+
+export function DemoHero() {
+  return (
+    <section className="py-8 sm:py-12">
+      <div aria-labelledby="demo-title" className="mx-auto max-w-200 text-center">
+        <Span className={cn('landingEyebrowClass justify-center')}>{demoHeroData.eyebrow}</Span>
+
+        <H1
+          id="demo-title"
+          className="mt-4 mb-3.5 leading-relaxed font-extrabold tracking-tighter max-sm:mt-3 max-sm:mb-3 text-3xl sm:text-5xl"
+        >
+          {demoHeroData.title.first}
+          <br />
+          <Span className="text-[length:inherit] text-brand-link">{demoHeroData.title.accent}</Span>
+        </H1>
+
+        <P className="mx-auto max-w-144 text-sm leading-loose text-muted-foreground max-sm:max-w-80 max-sm:text-xs">
+          {demoHeroData.description}
+        </P>
+
+        <P className="mt-4 flex items-center justify-center gap-1.5 text-xs leading-loose text-muted-foreground max-sm:items-start">
+          <LandingIcon name="shield" className="size-3.5 max-sm:mt-0.5 max-sm:size-3" />
+          {demoHeroData.notice}
+        </P>
+      </div>
+    </section>
+  );
+}

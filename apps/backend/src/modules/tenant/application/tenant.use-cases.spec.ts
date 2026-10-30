@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ConflictError } from '../../../shared/errors/category-errors.js';
+import { ConflictError, ValidationError } from '../../../shared/errors/category-errors.js';
 import { EntityId } from '../../../shared/id/entity-id.js';
 import { Revision } from '../../../shared/persistence/revision.js';
 import { createTenantContext } from '../../../shared/tenant/tenant-context.js';
@@ -7,7 +7,9 @@ import { TenantScope } from '../../../shared/tenant/tenant-scope.js';
 import { TenantContextMissingError } from '../../../shared/tenant/tenant.errors.js';
 import {
   InMemoryTenantRepository,
+  OWNER_USER_ID,
   PassthroughTransactionBoundary,
+  RecordingOwnerEnrollment,
   RecordingTenantEvents,
   aTenant,
 } from '../../../../test/support/tenant-doubles.js';
@@ -26,6 +28,7 @@ import { TenantStatus } from '../domain/value-objects/tenant-status.js';
 interface Harness {
   readonly repository: InMemoryTenantRepository;
   readonly events: RecordingTenantEvents;
+  readonly owners: RecordingOwnerEnrollment;
   readonly boundary: PassthroughTransactionBoundary;
   readonly createTenant: CreateTenantUseCase;
   readonly getTenant: GetTenantUseCase;
@@ -36,13 +39,15 @@ interface Harness {
 function harness(): Harness {
   const repository = new InMemoryTenantRepository();
   const events = new RecordingTenantEvents();
+  const owners = new RecordingOwnerEnrollment();
   const boundary = new PassthroughTransactionBoundary();
 
   return {
     repository,
     events,
+    owners,
     boundary,
-    createTenant: new CreateTenantUseCase(repository, events, boundary),
+    createTenant: new CreateTenantUseCase(repository, owners, events, boundary),
     getTenant: new GetTenantUseCase(repository),
     updateTenant: new UpdateTenantUseCase(repository, events, boundary),
     changeTenantStatus: new ChangeTenantStatusUseCase(repository, events, boundary),
@@ -64,7 +69,9 @@ describe('tenant use cases', () => {
       const app = harness();
 
       const outcome = await TenantScope.runAsSystem(() =>
-        app.createTenant.execute(new CreateTenant({ name: '  Acme Trading Co.  ' })),
+        app.createTenant.execute(
+          new CreateTenant({ name: '  Acme Trading Co.  ', ownerUserId: OWNER_USER_ID }),
+        ),
       );
 
       expect(outcome.isOk()).toBe(true);
@@ -80,19 +87,35 @@ describe('tenant use cases', () => {
       expect(app.events.recorded).toHaveLength(1);
       expect(app.events.recorded[0]?.name).toBe('TenantCreated');
       expect(app.events.recorded[0]?.metadata.tenantId).toBe(view.id);
+
+      // The creator becomes the first member of the company it just created.
+      expect(app.owners.enrolled).toEqual([{ tenantId: view.id, userId: OWNER_USER_ID }]);
+    });
+
+    it('fails the creation when the owner cannot be enrolled', async () => {
+      const app = harness();
+      app.owners.failWith(new ValidationError('The creator cannot be enrolled.'));
+
+      const outcome = await TenantScope.runAsSystem(() =>
+        app.createTenant.execute(new CreateTenant({ name: 'Acme', ownerUserId: OWNER_USER_ID })),
+      );
+
+      expect(outcome.isFail()).toBe(true);
+      expect(app.owners.enrolled).toHaveLength(1);
     });
 
     it('rejects a blank name as an expected failure without persisting', async () => {
       const app = harness();
 
       const outcome = await TenantScope.runAsSystem(() =>
-        app.createTenant.execute(new CreateTenant({ name: '   ' })),
+        app.createTenant.execute(new CreateTenant({ name: '   ', ownerUserId: OWNER_USER_ID })),
       );
 
       expect(outcome.isFail()).toBe(true);
       expect(outcome.errorOrThrow().code).toBe('VALIDATION_FAILED');
       expect(app.repository.addCalls).toBe(0);
       expect(app.events.recorded).toEqual([]);
+      expect(app.owners.enrolled).toEqual([]);
     });
   });
 

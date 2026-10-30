@@ -36,6 +36,8 @@ export interface AuthorizationContextView {
   readonly membershipId?: string;
   /** The state of that membership at the moment of the decision. */
   readonly membershipStatus?: MembershipStatusValue;
+  /** True only when Identity resolved first-class platform authority. */
+  readonly systemAdmin?: true;
   /**
    * The effective capability keys behind the decision, in deterministic (sorted)
    * order. For a tenant-scoped decision these are the permissions of the named

@@ -1,5 +1,7 @@
+export * from './components/custom/ui/data-table';
 export * from './components/custom/ui/image/ImgNormalCustom';
 export * from './components/custom/ui/modal/Modal';
+export * from './components/custom/ui/search-input/SearchInput';
 export * from './components/custom/ui/typography/Typography';
 export * from './components/custom/ui/wrapper/PagesContainer';
 export * from './components/custom/ui/wrapper/SectionLayout';

@@ -4,6 +4,7 @@ import { createTenantContext } from '../../../../shared/tenant/tenant-context.js
 import { TenantScope } from '../../../../shared/tenant/tenant-scope.js';
 import type { AuditRecorder } from '../../../audit/application/ports/audit-recorder.port.js';
 import { AccountNotAuthenticatableError } from '../../domain/errors/authentication.errors.js';
+import { PERMISSION_CATALOG } from '../../domain/permission.js';
 import type { AuthorizationEvidence } from '../../domain/authorization/authorization-evidence.js';
 import { decideAuthorization, permits } from '../../domain/authorization/authorization-policy.js';
 import {
@@ -12,6 +13,7 @@ import {
 } from '../../domain/authorization/authorization-requirement.js';
 import {
   AuthorizationContextInvalidError,
+  AuthorizationDeniedError,
   TenantAccessDeniedError,
   TenantContextRequiredError,
   authorizationErrorFor,
@@ -21,6 +23,7 @@ import type { TenantMembership } from '../ports/tenant-membership.port.js';
 import type { MembershipRoleRepository } from '../../domain/repositories/membership-role.repository.js';
 import type { RoleRepository } from '../../domain/repositories/role.repository.js';
 import type { UserRepository } from '../../domain/repositories/user.repository.js';
+import type { PlatformAuthorization } from '../ports/platform-authorization.port.js';
 import type { PermissionKey } from '../../domain/value-objects/permission-key.js';
 import {
   isTenantReference,
@@ -80,6 +83,7 @@ export class AuthorizeActionUseCase implements Authorization {
     private readonly assignments: MembershipRoleRepository,
     private readonly roles: RoleRepository,
     private readonly audit: AuditRecorder,
+    private readonly platformAuthorization: PlatformAuthorization = { hasSystemAdmin: async () => false, grantSystemAdmin: async () => undefined },
   ) {}
 
   public async authorize(
@@ -104,6 +108,10 @@ export class AuthorizeActionUseCase implements Authorization {
 
     const target = request.targetTenantId;
 
+    // Platform authority is resolved exclusively from Identity-owned persisted
+    // state. Client payloads, roles and tenant memberships cannot grant it.
+    const systemAdmin = await this.platformAuthorization.hasSystemAdmin(userId);
+
     // A conflicting secondary client claim is never used to choose a tenant;
     // it only makes the decision more restrictive. Handle it after resolving
     // the authenticated actor so the refusal can be attributed and correlated.
@@ -115,6 +123,28 @@ export class AuthorizeActionUseCase implements Authorization {
     // caller may enter a tenant is answered before that tenant's scope exists.
     // If a caller already runs inside a tenant, the work stays there (no
     // escalation), and the repository criterion must match it.
+    if (systemAdmin) {
+      if (target !== undefined && !isTenantReference(target)) {
+        return this.deny(request, userId.value, new TenantContextRequiredError());
+      }
+
+      const permissions = new Set(PERMISSION_CATALOG.map((permission) => permission.key.value));
+      if (!permissions.has(request.requiredPermission.value)) {
+        return this.deny(
+          request,
+          userId.value,
+          new AuthorizationDeniedError(request.requiredPermission.value),
+        );
+      }
+
+      return Result.ok({
+        userId: userId.value,
+        ...(target === undefined ? {} : { tenantId: target }),
+        systemAdmin: true,
+        permissions: [...permissions].sort(),
+      });
+    }
+
     const resolved =
       target === undefined
         ? await this.inSystemScope(() => this.resolvePlatformEvidence(userId))

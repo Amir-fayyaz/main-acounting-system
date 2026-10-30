@@ -165,6 +165,72 @@
   }
 }
 
+@layer components {
+  .pricing-eyebrow {
+    @apply inline-flex items-center gap-2 text-xs font-semibold text-[#8f5800] before:size-1.5 before:rounded-full before:bg-primary before:content-[''] max-sm:gap-1.5 max-sm:text-xs;
+  }
+
+  .review-line {
+    @apply flex justify-between gap-2.5 py-1.5 text-xs text-[#766a59] [&+&]:border-t [&+&]:border-[#f0ede5] [&_strong]:font-semibold [&_strong]:text-ink;
+  }
+
+  .cardClass {
+    @apply relative flex min-h-72 min-w-0 flex-col overflow-hidden rounded-xl border border-[#e7e1d4] py-7 px-6 max-xl:py-6 max-xl:px-5 max-lg:min-h-72 max-lg:py-5 max-lg:px-4;
+  }
+
+  .kickerClass {
+    @apply flex items-center gap-2 text-xs font-medium text-[#7b6d59] [&_svg]:size-4 [&_svg]:text-[#a26a11] max-md:text-xs max-lg:text-xs;
+  }
+
+  .headingClass {
+    @apply my-3 mb-2.5 text-2xl leading-relaxed font-bold tracking-tight max-xl:text-2xl max-lg:text-2xl max-md:text-2xl;
+  }
+
+  .labelClass {
+    @apply flex items-center gap-2 text-xs font-semibold max-md:gap-1.5 max-md:text-xs max-lg:text-xs [&_svg]:size-4;
+  }
+
+  .numberClass {
+    @apply mt-3.5 block text-5xl leading-relaxed font-extrabold tracking-tighter whitespace-nowrap max-xl:text-5xl max-md:text-4xl max-lg:mt-4 max-lg:text-4xl max-lg:tracking-tighter;
+  }
+
+  .textClass {
+    @apply mt-0.5 text-xs leading-loose max-md:text-xs max-lg:text-xs;
+  }
+
+  .sampleLabelClass {
+    @apply inline-flex items-center gap-1 rounded-sm border border-[#d8d0c0] px-2 py-0.5 text-xs leading-relaxed font-medium whitespace-nowrap text-[#6e6251] max-md:mt-2.5 [&_svg]:size-3;
+  }
+
+  .workflowTabClass {
+    @apply h-auto min-w-0 flex-1 rounded-sm border-0 bg-transparent p-1.5 text-xs font-normal normal-case text-[#756950] shadow-none transition-none hover:scale-100 hover:bg-transparent hover:text-[#756950] active:scale-100 data-[state=active]:bg-[#fff1d9] data-[state=active]:font-bold data-[state=active]:text-[#865000] data-[state=active]:hover:bg-[#fff1d9] data-[state=active]:hover:text-[#865000] max-sm:text-xs group-data-horizontal/tabs:h-auto;
+  }
+
+  .symbolClassName {
+    @apply h-6 w-6 fill-none stroke-current stroke-2 max-xl:w-6 max-sm:h-5 max-sm:w-5 max-md:h-5 max-md:w-5;
+  }
+
+  .landingEyebrowClass {
+    @apply flex items-center gap-2 text-xs font-semibold text-[#8f5800] before:h-1.5 before:w-1.5 before:rounded-full before:bg-primary before:content-[''] max-sm:gap-1.5 max-sm:text-xs;
+  }
+
+  .navItemClass {
+    @apply flex w-full items-center gap-2 rounded-md border-0 bg-none py-2 px-2.5 text-right text-xs max-md:gap-1.5 max-md:p-2 max-md:text-xs;
+  }
+
+  .orbitIconClass {
+    @apply absolute z-1 grid size-12 place-items-center rounded-xl border border-[#e7dfd1] bg-[#f7f6ee] text-[#7c6648] shadow-[0_5px_15px_#37240e04] max-sm:hidden max-md:size-10 max-md:rounded-lg;
+  }
+
+  .dashboardBaseClass {
+    @apply relative mx-auto rounded-t-2xl border border-[#ded9cb] bg-[#e9e6dc] pt-2 px-2 pb-0 shadow-[0_20px_60px_#4735180d] before:absolute before:-top-2 before:inset-x-5 before:-z-10 before:h-2 before:rounded-t-xl before:border before:border-b-0 before:border-[#e4dece] before:content-[''] max-xl:mx-4 max-md:mx-0 max-sm:rounded-t-lg max-sm:pt-1 max-sm:px-1 max-sm:pb-0 max-sm:shadow-[0_10px_30px_#49391908];
+  }
+
+  .dashboardInnerClass {
+    @apply relative grid min-h-112 grid-cols-[11rem_minmax(0,1fr)] overflow-hidden rounded-t-lg border border-[#dfdbd1] bg-[#fcfcf8] leading-relaxed max-md:min-h-112 max-md:grid-cols-[8rem_minmax(0,1fr)] max-sm:min-h-0 max-sm:grid-cols-1 max-sm:rounded-t-md;
+  }
+}
+
 .pages-container {
   @apply mx-auto w-full max-w-350 space-y-4 px-5 sm:space-y-10 sm:px-15;
 }

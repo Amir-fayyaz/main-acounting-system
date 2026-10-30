@@ -1,4 +1,4 @@
-import { H2, P, Span } from '@/core/components/custom/ui/typography/Typography'; // اضافه شدن Span
+import { H2, P, Span } from '@repo/web/ui'; // اضافه شدن Span
 
 const LEDGER_ROWS = [
   { label: 'فروش این ماه', value: '۴۸۲٬۰۰۰٬۰۰۰' },

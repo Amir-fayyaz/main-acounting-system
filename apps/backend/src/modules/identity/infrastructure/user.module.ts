@@ -14,7 +14,12 @@ import { CreateUserUseCase } from '../application/use-cases/create-user.use-case
 import { ChangeUserStatusUseCase } from '../application/use-cases/change-user-status.use-case.js';
 import { GetUserUseCase } from '../application/use-cases/get-user.use-case.js';
 import { UpdateUserUseCase } from '../application/use-cases/update-user.use-case.js';
-import { USER_EVENT_RECORDER, USER_REPOSITORY } from '../application/user.tokens.js';
+import {
+  USER_DIRECTORY,
+  USER_EVENT_RECORDER,
+  USER_REPOSITORY,
+} from '../application/user.tokens.js';
+import type { UserDirectory } from '../application/ports/user-directory.port.js';
 import type { UserEventRecorder } from '../application/ports/user-event-recorder.port.js';
 import type { UserRepository } from '../domain/repositories/user.repository.js';
 import { UsersController } from '../presentation/controllers/user.controller.js';
@@ -52,6 +57,21 @@ import { DrizzleUserRepository } from './persistence/drizzle-user.repository.js'
       useFactory: (outbox: UserEventRecorder, audit: AuditRecorder) =>
         new ActorEventRecorder(outbox, audit),
       inject: [OUTBOX_RECORDER, AUDIT_RECORDER],
+    },
+    {
+      // The published lookup (IAM-002): provisioning code resolves an identity
+      // by its unique primary contact email without touching this module's
+      // repository, entity or table.
+      provide: USER_DIRECTORY,
+      useFactory: (repository: UserRepository): UserDirectory => ({
+        async findByEmail(email: string): Promise<{ userId: string; status: string } | undefined> {
+          const loaded = await repository.findByEmail(email);
+          return loaded === undefined
+            ? undefined
+            : { userId: loaded.aggregate.id.value, status: loaded.aggregate.status.value };
+        },
+      }),
+      inject: [USER_REPOSITORY],
     },
     {
       provide: CreateUserUseCase,
@@ -92,6 +112,6 @@ import { DrizzleUserRepository } from './persistence/drizzle-user.repository.js'
   // `CreateUserUseCase` with credential establishment in one transaction. The
   // user feature is not an invitation to other modules: the boundary guard
   // still forbids them from importing this file.
-  exports: [USER_REPOSITORY, CreateUserUseCase],
+  exports: [USER_REPOSITORY, CreateUserUseCase, USER_DIRECTORY],
 })
 export class UserModule {}

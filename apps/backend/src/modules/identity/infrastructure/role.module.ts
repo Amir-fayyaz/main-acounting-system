@@ -196,11 +196,22 @@ import { MembershipModule } from './membership.module.js';
       inject: [MEMBERSHIP_REPOSITORY, MEMBERSHIP_ROLE_REPOSITORY, ROLE_REPOSITORY],
     },
   ],
-  // Exported to this module's own authorization feature (IAM-006), which must
-  // resolve a subject's effective permissions from the roles their active
-  // memberships hold. It is not an invitation to other modules: the boundary
-  // guard still forbids them from importing this file, and the authorization
-  // contract they consume never exposes a repository.
-  exports: [ROLE_REPOSITORY, MEMBERSHIP_ROLE_REPOSITORY],
+  // The repositories are exported to this module's own authorization feature
+  // (IAM-006), which must resolve a subject's effective permissions from the
+  // roles their active memberships hold. The role use cases are exported for
+  // the development seeder (DEV-001), which creates tenant roles and assigns
+  // them through the ordinary application contracts rather than by writing the
+  // role tables. Neither is an invitation to other modules: the boundary guard
+  // still forbids them from importing this file, and the authorization contract
+  // they consume never exposes a repository.
+  exports: [
+    ROLE_REPOSITORY,
+    MEMBERSHIP_ROLE_REPOSITORY,
+    CreateRoleUseCase,
+    ListRolesUseCase,
+    GrantRolePermissionUseCase,
+    AssignRoleToMembershipUseCase,
+    ListMembershipRolesUseCase,
+  ],
 })
 export class RoleModule {}

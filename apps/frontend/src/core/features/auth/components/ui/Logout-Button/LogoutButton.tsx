@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@/core/components/shadcn/ui/button/button';
+import { Button } from '@repo/web/ui';
 import { LogOut } from 'lucide-react';
 import { useSignOut } from '../../../hook/useSignOut';
 
