@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import type { AuthApiError, SignUpInput } from '../assets/@types/auth.types';
+import type { SignUpInput } from '../assets/@types/auth.types';
 import { signInApi, signUpApi } from '../lib/auth-api';
 import { setAuthToken } from '../lib/auth-storage';
 import { mapAuthError, mapSignUpFieldErrors, type SignUpFieldErrors } from '../utils/mapAuthError';
@@ -32,11 +32,10 @@ export function useSignUp() {
 
     try {
       await signUpApi(input);
-    } catch (e) {
-      const err = e as AuthApiError;
-      toast.error(mapAuthError(err));
+    } catch (error: unknown) {
+      toast.error(mapAuthError(error));
       setLoading(false);
-      return { ok: false, fieldErrors: mapSignUpFieldErrors(err) };
+      return { ok: false, fieldErrors: mapSignUpFieldErrors(error) };
     }
 
     // ثبت‌نام موفق بود؛ از اینجا به بعد هیچ خطایی نباید آن را «شکست» نشان دهد.

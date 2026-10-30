@@ -20,6 +20,7 @@ vi.mock('../lib/auth-api', () => ({
 }));
 
 import { clearAuthToken, getSessionAction, setAuthToken, signOutAction } from '../lib/auth-storage';
+import { createHttpApiError } from '@repo/web/api';
 
 const NOW = new Date('2026-01-01T00:00:00Z');
 const inSeconds = (s: number) => new Date(NOW.getTime() + s * 1000).toISOString();
@@ -80,9 +81,14 @@ describe('clearAuthToken', () => {
 describe('getSessionAction', () => {
   it('بدون توکن 401 برمی‌گرداند و API را صدا نمی‌زند', async () => {
     m.getAccessTokenSSR.mockResolvedValue(null);
-    await expect(getSessionAction()).resolves.toEqual({
+    await expect(getSessionAction()).resolves.toMatchObject({
       ok: false,
-      error: { status: 401, body: null },
+      error: {
+        name: 'ApiError',
+        kind: 'http',
+        status: 401,
+        code: 'UNAUTHORIZED',
+      },
     });
     expect(m.getSessionApi).not.toHaveBeenCalled();
   });
@@ -98,11 +104,16 @@ describe('getSessionAction', () => {
 
   it('خطای API را به‌صورت {ok:false} برمی‌گرداند', async () => {
     m.getAccessTokenSSR.mockResolvedValue('tok');
-    m.getSessionApi.mockRejectedValue({ status: 401, body: null });
+    m.getSessionApi.mockRejectedValue(createHttpApiError(401));
 
-    await expect(getSessionAction()).resolves.toEqual({
+    await expect(getSessionAction()).resolves.toMatchObject({
       ok: false,
-      error: { status: 401, body: null },
+      error: {
+        name: 'ApiError',
+        kind: 'http',
+        status: 401,
+        code: 'UNAUTHORIZED',
+      },
     });
   });
 });
