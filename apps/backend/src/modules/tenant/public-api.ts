@@ -26,3 +26,8 @@ export type {
   AvailableTenantContext,
   TenantContext,
 } from '../../shared/tenant/tenant-context.js';
+
+// Schema table for drizzle-kit (FND-010): re-exported so the infrastructure
+// schema entry point can aggregate every module-owned table without reaching
+// into the tenant module's internals.
+export { tenants, TENANT_TABLE_NAME, TENANT_SCHEMA_VERSION, TENANT_DDL } from './infrastructure/persistence/tenant.schema.js';

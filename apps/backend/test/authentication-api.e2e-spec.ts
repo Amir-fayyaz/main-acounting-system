@@ -37,6 +37,9 @@ import { PlainPassword } from '../src/modules/identity/domain/value-objects/plai
 import { AuthenticationController } from '../src/modules/identity/presentation/controllers/authentication.controller.js';
 import { CredentialsController } from '../src/modules/identity/presentation/controllers/credential.controller.js';
 import { AuthenticationGuard } from '../src/modules/identity/presentation/guards/authentication.guard.js';
+import { RateLimitGuard } from '../src/infrastructure/api/rate-limit/rate-limit.guard.js';
+import { RATE_LIMITER } from '../src/infrastructure/api/rate-limit/rate-limit.tokens.js';
+import type { RateLimiter } from '../src/infrastructure/api/rate-limit/rate-limiter.js';
 import { CryptoSessionTokenService } from '../src/modules/identity/infrastructure/security/crypto-session-token-service.js';
 import { ScryptPasswordHasher } from '../src/modules/identity/infrastructure/security/scrypt-password-hasher.js';
 import { DateTime } from '../src/shared/time/date-time.js';
@@ -177,6 +180,18 @@ async function createHarness(): Promise<Harness> {
         ),
       },
       AuthenticationGuard,
+      RateLimitGuard,
+      {
+        provide: RATE_LIMITER,
+        useValue: {
+          consume: async () => ({
+            allowed: true,
+            remaining: 99,
+            limit: 100,
+            resetAtMs: Date.now() + 60_000,
+          }),
+        },
+      } as unknown as { provide: symbol; useValue: RateLimiter },
     ],
   }).compile();
 

@@ -135,6 +135,22 @@ export interface OutboxConfiguration {
   readonly publishIntervalMs: number;
 }
 
+/**
+ * Rate-limiting settings (SEC-001).
+ *
+ * The window and thresholds are configuration, not literals, so an
+ * installation can tighten them without a release and a test can state the
+ * exact window it exercises. No default may allow unlimited attempts.
+ */
+export interface RateLimitConfiguration {
+  /** The fixed window length, in milliseconds. */
+  readonly windowMs: number;
+  /** Maximum requests per client IP per window. */
+  readonly maxPerIp: number;
+  /** Maximum requests per identity hint (email, token) per window. */
+  readonly maxPerIdentity: number;
+}
+
 export interface Configuration {
   readonly environment: EnvironmentIdentification;
   readonly runtime: ApplicationRuntime;
@@ -144,6 +160,7 @@ export interface Configuration {
   readonly storage: StorageConfiguration;
   readonly logging: LoggingConfiguration;
   readonly authentication: AuthenticationConfiguration;
+  readonly rateLimit: RateLimitConfiguration;
   readonly systemAdmin: SystemAdminBootstrapConfiguration;
   readonly jobs: JobsConfiguration;
   readonly scheduler: SchedulerConfiguration;

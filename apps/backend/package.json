@@ -19,6 +19,8 @@
     "db:check": "drizzle-kit check",
     "db:migrate": "drizzle-kit migrate",
     "db:migrate:status": "node dist/processes/cli/db-migrate.js status",
+    "db:reset": "drizzle-kit migrate --reset",
+    "db:studio": "drizzle-kit studio",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
     "deps:check": "depcruise src --config .dependency-cruiser.cjs",
