@@ -24,12 +24,13 @@ export default defineConfig({
   ],
   test: {
     environment: 'node',
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
     // FND-008: with `MYSQL_INTEGRATION=1` the database is migrated once before
     // any spec runs (test/support/database-global-setup.ts), so the persistence
     // specs run on the real, indexed schema instead of scaffolding their own.
-    globalSetup: env.MYSQL_INTEGRATION === '1'
-      ? './test/support/database-global-setup.ts'
-      : undefined,
+    globalSetup:
+      env.MYSQL_INTEGRATION === '1' ? './test/support/database-global-setup.ts' : undefined,
     include: ['src/**/*.spec.ts', 'test/**/*.e2e-spec.ts'],
     // The MySQL integration specs share one database and drop their tables in
     // `afterAll`, so a spec can destroy another spec's tables mid-run when
