@@ -23,6 +23,7 @@
 - [استانداردهای کدنویسی](#استانداردهای-کدنویسی)
 - [الزامات تست](#الزامات-تست)
 - [مستندات](#مستندات)
+- [Pre-commit Hooks](#pre-commit-hooks)
 - [فرایند Pull Request](#فرایند-pull-request)
 - [نسخه‌بندی](#نسخهبندی)
 - [مجوز](#مجوز)
@@ -489,6 +490,82 @@ pnpm verify
   (`05-testing-strategy.md`).
 - `Dependency/Security Checks` بخشی از حداقل CI
   (`09-ci-cd-and-development-workflow.md`) است و هنوز پیاده‌سازی نشده است.
+
+---
+
+# Pre-commit Hooks
+
+پیش از آنکه یک Commit وارد تاریخچهٔ محلی شود، چند بررسی ارزان روی همان فایل‌هایی که
+در حال Commit شدن هستند اجرا می‌شود. هدف این است که یک فاصله‌گذاری اشتباه، یک Secret
+جاافتاده یا یک Commit Message بدفرم، یک اجرای CI و توجه Reviewer را هدر ندهد.
+
+Hooks با [Husky](https://typicode.github.io/husky/) نصب می‌شوند. اسکریپت‌ها در
+`.husky/` داخل مخزن نگهداری می‌شوند و اسکریپت `prepare` ریشهٔ Workspace آن‌ها را با
+`pnpm install` نصب می‌کند؛ بنابراین پس از یک Clone تازه نیازی به کار اضافه نیست.
+
+## فهرست Hookها
+
+| Hook         | چه کاری می‌کند                                                                                     | چرا                                                                                                                                             |
+| ------------ | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pre-commit` | `lint-staged` (اجرای `eslint --fix` و `prettier --write` روی فایل‌های Stage‌شده) و سپس اسکن Secret | بازخورد سریع: خطای Lint/Format در چند ثانیه پیدا می‌شود، نه بعد از یک اجرای CI؛ و بررسی Secret مانع از ورود کلید یا رمز به تاریخچهٔ Git می‌شود. |
+| `commit-msg` | `commitlint` روی فایل پیام Commit                                                                  | قالب `<type>(<scope>): <short summary>` که در همین سند تعریف شده، به‌صورت مکانیکی اعمال شود.                                                    |
+| `pre-push`   | `pnpm verify`                                                                                      | همان Gateای که CI اجرا می‌کند، یک بار در هر Push به‌جای هر Commit؛ Push معیوب دیگر یک اجرای CI را هدر نمی‌دهد.                                  |
+
+`pnpm verify` عمداً روی مسیر Commit نیست: Commit معیوب ارزان اصلاح می‌شود و کسی نباید
+برای ذخیرهٔ یک کار نیمه‌تمام منتظر Build کامل بماند.
+
+## اسکن Secret
+
+اسکریپت `tooling/scripts/check-staged-secrets.mjs` محتوای **Stage‌شده** (نه فایل‌های
+روی دیسک) را بررسی می‌کند، چون آن است که واقعاً Commit می‌شود. یک Commit در این
+موارد رد می‌شود:
+
+- یک بلوک Private Key،
+- یک AWS Access Key ID،
+- یک Connection String با رمز درون‌خطی (`scheme://user:password@host`)،
+- یک فایل `.env` (به‌جز `.env.example`)،
+- یک انتساب به یکی از متغیرهای رمزدار که در `apps/backend/src/infrastructure/config/secrets.ts`
+  تعریف شده‌اند.
+
+مقدار یافت‌شده **هرگز** چاپ نمی‌شود؛ خروجی فقط نام فایل، شمارهٔ خط و قاعدهٔ نقض‌شده را
+نشان می‌دهد. مقادیر واضحاً جای‌نگهدار (مثل `changeme`، `${MYSQL_PASSWORD}` یا
+`your-password`) Secret محسوب نمی‌شوند تا قالب‌های `.env.example` و مستندات مسدود نشوند.
+
+اگر یک Secret واقعاً Commit شده باشد، حذف آن از Commit کافی نیست: آن اعتبارنامه باید
+باطل و جایگزین شود.
+
+## راه فرار (Escape Hatch)
+
+در شرایط اضطراری هر Hook را می‌توان برای یک دستور غیرفعال کرد:
+
+```bash
+git commit --no-verify            # pre-commit و commit-msg را رد می‌کند
+git push --no-verify              # pre-push را رد می‌کند
+HUSKY=0 git commit                # Husky را برای همین یک دستور غیرفعال می‌کند
+HUSKY=0 git push
+```
+
+**قانون:** هر استفاده از این راه‌ها باید در توضیحات Pull Request و همراه با دلیل
+ذکر شود. عبور بی‌صدا از Hook یک نکتهٔ Review است، نه یک حق طبیعی.
+
+این راه‌ها فقط برای همان دستور عمل می‌کنند و هیچ Bypassای در تنظیمات مخزن ذخیره
+نمی‌شود (`git config` تغییر نمی‌کند).
+
+## نسبت Hooks با CI
+
+CI مرجع است، Hook فقط یک راحتی محلی است:
+
+- Hookها همان دستورهای CI را اجرا می‌کنند (`eslint`, `prettier`, `commitlint`,
+  `pnpm verify`)، فقط روی فایل‌های Stage‌شده و در زمان کوتاه‌تر.
+- Hook محلی قابل دور زدن است؛ محافظت واقعی از `main` از طریق CI و Branch Protection
+  انجام می‌شود، نه از طریق یک اسکریپت روی کامپیوتر توسعه‌دهنده.
+- هیچ قاعدهٔ کیفیتی در `.husky/` تعریف نمی‌شود؛ قواعد در `eslint.config.mjs`،
+  `.prettierrc.json`، `commitlint.config.mjs` و `tooling/scripts/verify.mjs` هستند.
+- منطق غیرساده در Node نوشته شده (`tooling/scripts/check-staged-secrets.mjs`) تا روی
+  Windows، macOS و Linux یکسان رفتار کند؛ Shell فقط برای فراخوانی استفاده می‌شود.
+
+نسخهٔ ابزارها در ریشه `package.json` به‌صورت دقیق (Pin) شده است تا همهٔ مشارکت‌کنندگان
+رفتار یکسان Hook را تجربه کنند.
 
 ---
 

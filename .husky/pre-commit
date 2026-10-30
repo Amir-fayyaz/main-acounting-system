@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+# pre-commit (FND-014)
+#
+# The two cheapest failures, on the files this commit actually changes:
+#
+# 1. lint-staged — eslint --fix and prettier --write, so the commit that lands is
+#    the formatted one instead of one that will fail CI a minute later.
+# 2. the staged secret scan — refuses a private key, an AWS-style key id, an
+#    inline-password connection string or a .env file, without ever printing the
+#    matched value.
+#
+# lint-staged runs first on purpose: it rewrites the staged content, so the scan
+# inspects what will really be committed. Nothing heavy belongs here — `pnpm
+# verify` runs on push, not on commit.
+#
+# Windows, macOS and Linux all run this through the `sh` that ships with git;
+# the non-trivial logic lives in Node, not in shell.
+set -e
+
+pnpm exec lint-staged
+node tooling/scripts/check-staged-secrets.mjs

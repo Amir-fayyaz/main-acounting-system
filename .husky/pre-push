@@ -1,0 +1,20 @@
+#!/usr/bin/env sh
+# pre-push (FND-014)
+#
+# The full gate, once per push rather than once per commit: `pnpm verify` is the
+# same command CI runs (typecheck → lint → dependency check → tests → build), so
+# a push that would burn a CI run and a reviewer's attention stops here instead.
+#
+# Deliberately not on the commit path: a broken commit is cheap to fix locally,
+# and nobody should wait for a full build to save a work-in-progress commit.
+#
+# The fallback keeps the hook working where `pnpm` is not on the `sh` PATH (a
+# Windows shell started outside the normal profile); it is the same script
+# `pnpm verify` runs, not a second definition of the checks.
+set -e
+
+if command -v pnpm >/dev/null 2>&1; then
+  pnpm verify
+else
+  node tooling/scripts/verify.mjs
+fi
