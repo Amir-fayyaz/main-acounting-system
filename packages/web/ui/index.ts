@@ -3,6 +3,7 @@ export * from './components/custom/ui/modal/Modal';
 export * from './components/custom/ui/typography/Typography';
 export * from './components/custom/ui/wrapper/PagesContainer';
 export * from './components/custom/ui/wrapper/SectionLayout';
+export * from './components/custom/ui/error/ErrorPresentation';
 export * from './components/shadcn/ui/badge/badge';
 export * from './components/shadcn/ui/button/button';
 export * from './components/shadcn/ui/card/card';
