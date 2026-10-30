@@ -8,6 +8,7 @@ import {
   TEST_PASSWORD,
   type AuthenticationHarness,
 } from '../../../../test/support/authentication-harness.js';
+import { User, type LockoutPolicy } from '../domain/aggregates/user.js';
 import { EntityId } from '../../../shared/id/entity-id.js';
 import { TenantScope } from '../../../shared/tenant/tenant-scope.js';
 import { DateTime } from '../../../shared/time/date-time.js';
@@ -191,6 +192,213 @@ describe('sign-in', () => {
     expect(TenantScope.current().state).toBe('missing');
     expect(app.users.findByEmailCalls).toBe(1);
     expect(app.credentials.addCalls).toBe(0);
+  });
+});
+
+describe('account lockout (SEC-002)', () => {
+  const POLICY: LockoutPolicy = { threshold: 2, durationMs: 60_000 };
+
+  beforeEach(() => {
+    app = createAuthenticationHarness(60, POLICY);
+  });
+
+  /** Signs in `times` with a wrong secret, returning the outcomes. */
+  async function wrongAttempts(email: string, times: number) {
+    const outcomes = [];
+    for (let i = 0; i < times; i += 1) {
+      outcomes.push(
+        await app.signIn.execute(
+          new SignIn({ email, password: 'a secret that is not the stored one' }),
+        ),
+      );
+    }
+    return outcomes;
+  }
+
+  it('counts a credential failure and persists it', async () => {
+    const user = await seedUser(app);
+    await seedCredential(app, user);
+
+    const [outcome] = await wrongAttempts(user.email.value, 1);
+
+    expect(outcome.errorOrThrow().code).toBe('INVALID_CREDENTIALS');
+    expect(app.users.stored(user.id)?.failedAuthAttempts).toBe(1);
+    expect(app.users.stored(user.id)?.lockedUntil).toBeUndefined();
+  });
+
+  it('locks after the threshold and refuses the next attempt with ACCOUNT_LOCKED_OUT', async () => {
+    const user = await seedUser(app);
+    await seedCredential(app, user);
+
+    const outcomes = await wrongAttempts(user.email.value, POLICY.threshold);
+
+    // The attempt that reaches the threshold is still answered as a credential
+    // failure; the lockout is reported from the next attempt on.
+    for (const outcome of outcomes) {
+      expect(outcome.errorOrThrow().code).toBe('INVALID_CREDENTIALS');
+    }
+
+    const stored = app.users.stored(user.id);
+    expect(stored?.failedAuthAttempts).toBe(POLICY.threshold);
+    expect(stored?.lockedUntil).toBeDefined();
+
+    const locked = await app.signIn.execute(
+      new SignIn({ email: user.email.value, password: TEST_PASSWORD }),
+    );
+    expect(locked.errorOrThrow().code).toBe('ACCOUNT_LOCKED_OUT');
+    expect(locked.errorOrThrow().message).toBe(
+      'This account is temporarily unavailable. Try again later or reset the password.',
+    );
+  });
+
+  it('refuses a locked account before comparing any credential', async () => {
+    const user = await seedUser(app);
+    await seedCredential(app, user);
+    await wrongAttempts(user.email.value, POLICY.threshold);
+
+    const verifyCallsBefore = app.hasher.verifyCalls;
+    const dummyBefore = app.hasher.dummyVerifications;
+
+    await app.signIn.execute(new SignIn({ email: user.email.value, password: TEST_PASSWORD }));
+
+    // No derivation is spent: the lockout is decided from the account state.
+    expect(app.hasher.verifyCalls).toBe(verifyCallsBefore);
+    expect(app.hasher.dummyVerifications).toBe(dummyBefore);
+    expect(app.sessions.addCalls).toBe(0);
+  });
+
+  it('answers a locked account identically for a correct and a wrong secret', async () => {
+    const user = await seedUser(app);
+    await seedCredential(app, user);
+    await wrongAttempts(user.email.value, POLICY.threshold);
+
+    const correct = await app.signIn.execute(
+      new SignIn({ email: user.email.value, password: TEST_PASSWORD }),
+    );
+    const wrong = await app.signIn.execute(
+      new SignIn({ email: user.email.value, password: 'still not the stored secret' }),
+    );
+
+    expect(correct.errorOrThrow().code).toBe('ACCOUNT_LOCKED_OUT');
+    expect(wrong.errorOrThrow().code).toBe('ACCOUNT_LOCKED_OUT');
+    expect(correct.errorOrThrow().message).toBe(wrong.errorOrThrow().message);
+  });
+
+  it('records the lockout and the attempt against a locked account in the audit trail', async () => {
+    const user = await seedUser(app);
+    await seedCredential(app, user);
+    await wrongAttempts(user.email.value, POLICY.threshold);
+
+    expect(app.audit.names()).toContain('UserAccountLocked');
+    expect(
+      app.audit.recorded.find((event) => event.name === 'UserAccountLocked')?.toJSON(),
+    ).toMatchObject({ data: { userId: user.id.value } });
+
+    await app.signIn.execute(new SignIn({ email: user.email.value, password: TEST_PASSWORD }));
+
+    expect(app.audit.names()).toContain('LockedOutAccountTargeted');
+    // No credential, hash or token is ever part of a lockout record.
+    expect(auditText()).not.toContain(TEST_PASSWORD);
+    expect(auditText()).not.toContain('a secret that is not the stored one');
+  });
+
+  it('emits one structured signal per transition and per locked-out attempt', async () => {
+    const user = await seedUser(app);
+    await seedCredential(app, user);
+    const correlationId = 'corr-lockout-12345678';
+
+    // The failure that reaches the threshold carries the request's id.
+    await wrongAttempts(user.email.value, POLICY.threshold - 1);
+    await app.signIn.execute(
+      new SignIn(
+        { email: user.email.value, password: 'a secret that is not the stored one' },
+        { correlationId },
+      ),
+    );
+
+    expect(app.securityLog.transitions).toEqual([
+      {
+        userId: user.id.value,
+        correlationId,
+        threshold: POLICY.threshold,
+        durationMs: POLICY.durationMs,
+      },
+    ]);
+
+    await app.signIn.execute(
+      new SignIn({ email: user.email.value, password: TEST_PASSWORD }, { correlationId }),
+    );
+
+    expect(app.securityLog.attempts).toEqual([{ userId: user.id.value, correlationId }]);
+    // The signal states who and how, never the credential that was submitted.
+    expect(JSON.stringify([app.securityLog.transitions, app.securityLog.attempts])).not.toContain(
+      TEST_PASSWORD,
+    );
+  });
+
+  it('clears the counter and the lockout on a successful authentication', async () => {
+    const user = await seedUser(app);
+    await seedCredential(app, user);
+    await wrongAttempts(user.email.value, 1);
+
+    const outcome = await app.signIn.execute(
+      new SignIn({ email: user.email.value, password: TEST_PASSWORD }),
+    );
+
+    expect(outcome.isOk()).toBe(true);
+    const stored = app.users.stored(user.id);
+    expect(stored?.failedAuthAttempts).toBe(0);
+    expect(stored?.lockedUntil).toBeUndefined();
+  });
+
+  it('does not count a lifecycle refusal as a credential failure', async () => {
+    const user = await seedUser(app, { status: 'inactive' });
+    await seedCredential(app, user);
+
+    const outcome = await app.signIn.execute(
+      new SignIn({ email: user.email.value, password: TEST_PASSWORD }),
+    );
+
+    expect(outcome.errorOrThrow().code).toBe('ACCOUNT_NOT_AUTHENTICATABLE');
+    expect(app.users.stored(user.id)?.failedAuthAttempts).toBe(0);
+  });
+
+  it('does not count an unknown email against any account', async () => {
+    const outcome = await app.signIn.execute(
+      new SignIn({ email: 'nobody@example.com', password: TEST_PASSWORD }),
+    );
+
+    expect(outcome.errorOrThrow().code).toBe('INVALID_CREDENTIALS');
+    expect(app.securityLog.transitions).toEqual([]);
+  });
+
+  it('counts both attempts when two failures race for the same account', async () => {
+    const user = await seedUser(app);
+    await seedCredential(app, user);
+
+    const originalUpdate = app.users.update.bind(app.users);
+    let raced = false;
+
+    // Models the real race: a competing failure commits between this attempt's
+    // read and its write, so the write names a revision that is already stale.
+    app.users.update = async (candidate, revision) => {
+      if (!raced) {
+        raced = true;
+        const loaded = await app.users.get(candidate.id);
+        const competitor = User.rehydrate(loaded!.aggregate.snapshot());
+        competitor.recordFailedAuthentication(POLICY, DateTime.now());
+        await originalUpdate(competitor, loaded!.revision);
+      }
+      return originalUpdate(candidate, revision);
+    };
+
+    const outcome = await app.signIn.execute(
+      new SignIn({ email: user.email.value, password: 'not the stored secret at all' }),
+    );
+
+    expect(outcome.errorOrThrow().code).toBe('INVALID_CREDENTIALS');
+    // The loser re-read and re-applied its failure instead of dropping it.
+    expect(app.users.stored(user.id)?.failedAuthAttempts).toBe(2);
   });
 });
 

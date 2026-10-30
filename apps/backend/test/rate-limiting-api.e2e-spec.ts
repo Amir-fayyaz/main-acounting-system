@@ -15,6 +15,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { configureApplication } from '../src/bootstrap.js';
 import { AppConfigModule } from '../src/infrastructure/config/app-config.module.js';
+import { LOGGER } from '../src/infrastructure/logging/logging.tokens.js';
+import { SILENT_LOGGER } from './support/logging-doubles.js';
 import { AppConfigService } from '../src/infrastructure/config/app-config.service.js';
 import { TRANSACTION_BOUNDARY } from '../src/infrastructure/database/database.tokens.js';
 import {
@@ -49,6 +51,7 @@ import {
   InMemoryAuthSessionRepository,
   InMemoryCredentialRepository,
   RecordingAuthenticationAudit,
+  RecordingSecurityLogger,
 } from './support/authentication-doubles.js';
 import {
   InMemoryUserRepository,
@@ -131,6 +134,7 @@ async function createHarness(rateLimiter: RateLimiter): Promise<Harness> {
     imports: [AppConfigModule],
     controllers: [AuthenticationController],
     providers: [
+      { provide: LOGGER, useValue: SILENT_LOGGER },
       { provide: USER_REPOSITORY, useValue: users },
       { provide: CREDENTIAL_REPOSITORY, useValue: credentials },
       { provide: AUTH_SESSION_REPOSITORY, useValue: sessions },
@@ -149,7 +153,22 @@ async function createHarness(rateLimiter: RateLimiter): Promise<Harness> {
           a: AuthenticationAuditRecorder,
           b: TransactionBoundary,
           config: AppConfigService,
-        ) => new SignInUseCase(u, c, s, h, t, a, b, config.authentication.sessionTtlMinutes),
+        ) =>
+          new SignInUseCase(
+            u,
+            c,
+            s,
+            h,
+            t,
+            a,
+            b,
+            config.authentication.sessionTtlMinutes,
+            {
+              threshold: config.authentication.lockoutThreshold,
+              durationMs: config.authentication.lockoutDurationMs,
+            },
+            new RecordingSecurityLogger(),
+          ),
         inject: [
           USER_REPOSITORY,
           CREDENTIAL_REPOSITORY,

@@ -16,6 +16,8 @@ import { SAMPLE_SCHEDULES } from '../src/infrastructure/jobs/sample/sample-sched
 import { DelayedJobPromoter } from '../src/infrastructure/jobs/scheduling/delayed-job-promoter.js';
 import { ScheduledJobService } from '../src/infrastructure/jobs/scheduling/scheduled-job.service.js';
 import { RedisConnectionService } from '../src/infrastructure/redis/redis-connection.service.js';
+import { createLogger } from '../src/infrastructure/logging/structured-logger.js';
+import { RecordingLogger } from './support/logging-doubles.js';
 
 /**
  * Integration tests for the job infrastructure, against a real Redis Streams
@@ -70,13 +72,28 @@ describe.skipIf(!integrationEnabled)('Job infrastructure (integration)', () => {
     }),
   );
   const redactor = createSecretRedactor({ MYSQL_PASSWORD: SECRET });
-  const connection = new RedisConnectionService(appConfig, redactor);
+  // The job logger writes through the real structured logger (FND-011), with the
+  // process redactor and captured sinks: the suite stays quiet and still proves
+  // the failure line is redacted.
+  const jobLogLines: string[] = [];
+  const connection = new RedisConnectionService(appConfig, new RecordingLogger());
   const registry = new JobRegistry([...SAMPLE_JOBS, countedJob, leakyJob]);
-  const queue = new RedisJobQueue(connection, appConfig);
+  const queue = new RedisJobQueue(connection, appConfig, new RecordingLogger());
   const idempotency = new RedisIdempotencyGuard(connection, appConfig);
   const dispatcher = new JobDispatcher(
     registry,
-    new NestJobLogger(redactor),
+    new NestJobLogger(
+      createLogger({
+        service: 'test',
+        level: 'debug',
+        format: 'json',
+        secrets: redactor,
+        sinks: {
+          out: (line) => jobLogLines.push(line),
+          err: (line) => jobLogLines.push(line),
+        },
+      }),
+    ),
     queue,
     idempotency,
     appConfig,
@@ -211,6 +228,12 @@ describe.skipIf(!integrationEnabled)('Job infrastructure (integration)', () => {
 
     expect(record.lastError?.message).not.toContain(SECRET);
     expect(record.lastError?.message).toContain('[redacted]');
+
+    // The same holds for the log line (FND-011): the job detail shape is
+    // unchanged, but it now sits inside the structured line, redacted.
+    const logged = jobLogLines.join('\n');
+    expect(logged).not.toContain(SECRET);
+    expect(logged).toContain(envelope.jobId);
   });
 
   it('reclaims work from a consumer that stopped before acknowledging', async () => {

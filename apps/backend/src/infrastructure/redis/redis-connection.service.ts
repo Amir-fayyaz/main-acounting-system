@@ -1,8 +1,8 @@
-import { Inject, Injectable, Logger, type OnApplicationShutdown } from '@nestjs/common';
+import { Inject, Injectable, type OnApplicationShutdown } from '@nestjs/common';
 import { createClient } from 'redis';
 import { AppConfigService } from '../config/app-config.service.js';
-import { SECRET_REDACTOR } from '../config/app-config.tokens.js';
-import type { SecretHolder } from '../config/secrets.js';
+import { toLogError, type Logger } from '../logging/logger.js';
+import { LOGGER } from '../logging/logging.tokens.js';
 
 type RedisClient = ReturnType<typeof createClient>;
 
@@ -19,11 +19,10 @@ const MAX_RECONNECT_DELAY_MS = 5000;
  */
 @Injectable()
 export class RedisConnectionService implements OnApplicationShutdown {
-  private readonly logger = new Logger(RedisConnectionService.name);
   private readonly client: RedisClient;
   private pendingConnection?: Promise<void>;
 
-  constructor(config: AppConfigService, @Inject(SECRET_REDACTOR) secrets: SecretHolder) {
+  constructor(config: AppConfigService, @Inject(LOGGER) private readonly logger: Logger) {
     const { host, port } = config.redis;
 
     this.client = createClient({
@@ -36,9 +35,13 @@ export class RedisConnectionService implements OnApplicationShutdown {
 
     // Without a listener, a connection error becomes an unhandled 'error' event and
     // takes the process down. The failure is surfaced through readiness instead,
-    // and the log line is redacted so a future credential in the URL cannot leak.
+    // and the log line is redacted by the logger, so a future credential in the
+    // URL cannot leak.
     this.client.on('error', (error: Error) => {
-      this.logger.warn(`Redis connection error: ${secrets.redact(error.message)}`);
+      this.logger.warn('Redis connection error', {
+        error: toLogError(error),
+        detail: { dependency: 'redis' },
+      });
     });
   }
 

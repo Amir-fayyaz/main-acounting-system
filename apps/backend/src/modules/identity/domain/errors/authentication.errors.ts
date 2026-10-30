@@ -55,6 +55,26 @@ export class AccountNotAuthenticatableError extends DomainError {
 }
 
 /**
+ * The account is temporarily locked after repeated failed attempts (SEC-002).
+ *
+ * Raised *before* any credential comparison, so a locked account answers the
+ * same way whatever secret was supplied. The message deliberately discloses
+ * neither the threshold nor the remaining time: telling a caller how much longer
+ * the penalty runs would turn the lockout into a scheduling aid. It is still
+ * `401` (not `403` and not `423`) because the caller has proven nothing — the
+ * request is simply not authenticated.
+ */
+export class UserLockedOutError extends DomainError {
+  public constructor() {
+    super(
+      'ACCOUNT_LOCKED_OUT',
+      'This account is temporarily unavailable. Try again later or reset the password.',
+      { category: ErrorCategory.BUSINESS_RULE },
+    );
+  }
+}
+
+/**
  * The request carries no usable authentication.
  *
  * Raised when the authentication material is absent or malformed — no

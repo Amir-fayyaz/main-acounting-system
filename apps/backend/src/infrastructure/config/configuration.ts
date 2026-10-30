@@ -1,4 +1,4 @@
-import type { Configuration, LogLevel, RuntimeEnvironment } from './configuration.types.js';
+import type { Configuration, LogFormat, LogLevel, RuntimeEnvironment } from './configuration.types.js';
 
 /**
  * Reads, validates and groups raw environment values into the typed
@@ -35,6 +35,12 @@ const SUPPORTED_ENVIRONMENTS: readonly RuntimeEnvironment[] = ['development', 't
 
 const SUPPORTED_LOG_LEVELS: readonly LogLevel[] = ['debug', 'info', 'warn', 'error'];
 
+/**
+ * Output shapes (FND-011). `json` is what an aggregator reads, `pretty` is what
+ * a developer reads; there is no third possibility and no auto-detection.
+ */
+const SUPPORTED_LOG_FORMATS: readonly LogFormat[] = ['json', 'pretty'];
+
 const DEFAULT_ENVIRONMENT: RuntimeEnvironment = 'development';
 const DEFAULT_SERVICE_NAME = 'backend';
 const DEFAULT_HTTP_HOST = '0.0.0.0';
@@ -50,12 +56,23 @@ const DEFAULT_STORAGE_ENDPOINT = '127.0.0.1';
 const DEFAULT_STORAGE_PORT = 9000;
 const DEFAULT_STORAGE_BUCKET = 'accounting-local';
 const DEFAULT_LOG_LEVEL: LogLevel = 'info';
+
+/**
+ * The format is chosen from the environment, never guessed from a TTY: a
+ * production process might well be attached to a terminal, and a human-readable
+ * line there would still be unparseable for the aggregator that needs it.
+ */
+function defaultLogFormat(environment: RuntimeEnvironment): LogFormat {
+  return environment === 'production' ? 'json' : 'pretty';
+}
 const DEFAULT_JOBS_CONCURRENCY = 4;
 const DEFAULT_JOBS_MAX_ATTEMPTS = 3;
 const DEFAULT_RETRY_BASE_DELAY_MS = 1000;
 const DEFAULT_RETRY_MAX_DELAY_MS = 30000;
 const DEFAULT_SCHEDULER_INTERVAL_MS = 1000;
 const DEFAULT_SESSION_TTL_MINUTES = 60;
+const DEFAULT_LOCKOUT_THRESHOLD = 5;
+const DEFAULT_LOCKOUT_DURATION_MS = 900_000;
 const DEFAULT_OUTBOX_BATCH_SIZE = 25;
 const DEFAULT_OUTBOX_MAX_ATTEMPTS = 5;
 const DEFAULT_OUTBOX_RETRY_BASE_DELAY_MS = 1000;
@@ -272,12 +289,33 @@ export function loadConfiguration(raw: RawConfiguration = process.env): Configur
     },
     logging: {
       level: readEnum(raw, 'LOG_LEVEL', SUPPORTED_LOG_LEVELS, DEFAULT_LOG_LEVEL, problems),
+      format: readEnum(
+        raw,
+        'LOG_FORMAT',
+        SUPPORTED_LOG_FORMATS,
+        defaultLogFormat(environmentName),
+        problems,
+      ),
     },
     authentication: {
       sessionTtlMinutes: readPositiveInteger(
         raw,
         'AUTH_SESSION_TTL_MINUTES',
         DEFAULT_SESSION_TTL_MINUTES,
+        problems,
+      ),
+      // SEC-002: neither value may be zero, so no configuration can turn the
+      // lockout into "never lock" or "lock for no time".
+      lockoutThreshold: readPositiveInteger(
+        raw,
+        'AUTH_LOCKOUT_THRESHOLD',
+        DEFAULT_LOCKOUT_THRESHOLD,
+        problems,
+      ),
+      lockoutDurationMs: readPositiveInteger(
+        raw,
+        'AUTH_LOCKOUT_DURATION_MS',
+        DEFAULT_LOCKOUT_DURATION_MS,
         problems,
       ),
     },

@@ -9,6 +9,7 @@ import {
 } from '../../../../test/support/authentication-harness.js';
 import { EntityId } from '../../../shared/id/entity-id.js';
 import { DateTime } from '../../../shared/time/date-time.js';
+import { User } from '../domain/aggregates/user.js';
 import { SignOut } from './commands/sign-out.command.js';
 import { GetAuthenticatedSession } from './queries/get-authenticated-session.query.js';
 
@@ -138,6 +139,61 @@ describe('get authenticated session', () => {
     });
   });
 });
+
+describe('lockout and the authentication boundary (SEC-002)', () => {
+  it('refuses a valid, unexpired, unrevoked session once the account is locked', async () => {
+    const user = await seedUser(app);
+    await seedCredential(app, user);
+    const { token } = seedSession(app, user);
+
+    // The account locks while the session is on record, which is exactly the
+    // state a lockout that only blocked sign-in would leave usable.
+    app.users.seed(lockedCopyOf(user));
+
+    const outcome = await app.getAuthenticatedSession.execute(
+      new GetAuthenticatedSession({ token }),
+    );
+
+    expect(outcome.isFail()).toBe(true);
+    expect(outcome.errorOrThrow().code).toBe('ACCOUNT_LOCKED_OUT');
+    // The refusal is recorded for the security trail, with a coarse reason.
+    expect(app.audit.recorded.at(-1)?.toJSON()).toMatchObject({
+      name: 'AuthenticationStateRejected',
+      data: { reason: 'USER_LOCKED_OUT', userId: user.id.value },
+    });
+  });
+
+  it('accepts the same session again once the lockout window has passed', async () => {
+    const user = await seedUser(app);
+    await seedCredential(app, user);
+    const { token } = seedSession(app, user);
+
+    // A lockout that ended a moment ago is not a lockout.
+    app.users.seed(lockedCopyOf(user, -61_000));
+
+    const outcome = await app.getAuthenticatedSession.execute(
+      new GetAuthenticatedSession({ token }),
+    );
+
+    expect(outcome.isOk()).toBe(true);
+  });
+});
+
+/** A copy of `user` locked for a minute (`offsetMs` shifts the window). */
+function lockedCopyOf(user: User, offsetMs = 0): User {
+  const copy = User.rehydrate(user.snapshot());
+  copy.recordFailedAuthentication({ threshold: 1, durationMs: 60_000 }, DateTime.now());
+
+  if (offsetMs === 0) {
+    return copy;
+  }
+
+  const lockedUntil = copy.lockedUntil!;
+  return User.rehydrate({
+    ...copy.snapshot(),
+    lockedUntil: DateTime.fromEpochMillis(lockedUntil.epochMillis + offsetMs),
+  });
+}
 
 describe('sign-out', () => {
   it('invalidates the session, records it, and refuses the token from then on', async () => {

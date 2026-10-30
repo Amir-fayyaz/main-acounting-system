@@ -7,6 +7,7 @@ import {
   AuthenticationStateRejectedError,
   SessionExpiredError,
   SessionRevokedError,
+  UserLockedOutError,
 } from '../../domain/errors/authentication.errors.js';
 import {
   AuthenticationStateRejected,
@@ -118,6 +119,19 @@ export class GetAuthenticatedSessionUseCase {
         userId: user.userId(),
       });
       return Result.fail(new AccountNotAuthenticatableError());
+    }
+
+    // A lockout that only refused new sign-ins would leave every token the
+    // account ever obtained usable, which is not a lockout at all. The same
+    // aggregate state decides here, so an already-established session stops
+    // being accepted the moment the account is locked (SEC-002).
+    if (user.isLocked(now)) {
+      await this.record({
+        reason: 'USER_LOCKED_OUT',
+        sessionId: session.sessionId(),
+        userId: user.userId(),
+      });
+      return Result.fail(new UserLockedOutError());
     }
 
     return Result.ok({

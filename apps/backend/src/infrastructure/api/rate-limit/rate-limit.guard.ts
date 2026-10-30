@@ -10,9 +10,11 @@
  * (redacted) but the subject value (IP, email hash, token digest) is never
  * logged or persisted.
  */
-import { CanActivate, ExecutionContext, Inject, Injectable, Logger } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Inject, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AppConfigService } from '../../config/app-config.service.js';
+import type { Logger } from '../../logging/logger.js';
+import { LOGGER } from '../../logging/logging.tokens.js';
 import { ApiErrorException } from '../errors/api-error.exception.js';
 import { API_ERROR_CODES } from '../errors/api-error.registry.js';
 import { RATE_LIMITER } from './rate-limit.tokens.js';
@@ -22,12 +24,11 @@ import type { RateLimiter, RateLimitKey } from './rate-limiter.js';
 
 @Injectable()
 export class RateLimitGuard implements CanActivate {
-  private readonly logger = new Logger(RateLimitGuard.name);
-
   constructor(
     private readonly reflector: Reflector,
     @Inject(RATE_LIMITER) private readonly limiter: RateLimiter,
     private readonly config: AppConfigService,
+    @Inject(LOGGER) private readonly logger: Logger,
   ) {}
 
   public async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -114,20 +115,20 @@ export class RateLimitGuard implements CanActivate {
     if (throttledBy !== undefined) {
       const decision = throttledBy === 'ip' ? ipDecision! : identityDecision!;
 
-      // Emit a structured log line for the throttled request, without the
-      // subject value.
-      this.logger.warn(
-        JSON.stringify({
+      // One structured log line for the throttled request, without the subject
+      // value (FND-011: the shape comes from the logger, the fields from here).
+      this.logger.warn('Rate limit exceeded', {
+        ...(correlationId === undefined ? {} : { correlationId }),
+        detail: {
           event: 'rate_limited',
           scope: policy.scope,
           subjectType: throttledBy,
           limit: decision.limit,
           windowMs,
-          correlationId,
           method: request.method,
           url: request.url,
-        }),
-      );
+        },
+      });
 
       const resetAfterSeconds = Math.max(0, Math.ceil((decision.resetAtMs - now) / 1000));
       response.setHeader('Retry-After', String(resetAfterSeconds));

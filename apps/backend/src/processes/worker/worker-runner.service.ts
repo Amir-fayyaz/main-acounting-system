@@ -1,11 +1,12 @@
 import {
   Inject,
   Injectable,
-  Logger,
   type OnApplicationBootstrap,
   type OnApplicationShutdown,
 } from '@nestjs/common';
 import { AppConfigService } from '../../infrastructure/config/app-config.service.js';
+import { toLogError, type Logger } from '../../infrastructure/logging/logger.js';
+import { LOGGER } from '../../infrastructure/logging/logging.tokens.js';
 import { JOB_VISIBILITY_TIMEOUT_MS } from '../../infrastructure/jobs/job-keys.js';
 import { JobDispatcher } from '../../infrastructure/jobs/job-dispatcher.js';
 import { JOB_QUEUE } from '../../infrastructure/jobs/job.tokens.js';
@@ -31,7 +32,6 @@ const LOOP_ERROR_BACKOFF_MS = 1000;
  */
 @Injectable()
 export class WorkerRunnerService implements OnApplicationBootstrap, OnApplicationShutdown {
-  private readonly logger = new Logger(WorkerRunnerService.name);
   private running = false;
   private loop?: Promise<void>;
 
@@ -40,6 +40,7 @@ export class WorkerRunnerService implements OnApplicationBootstrap, OnApplicatio
     private readonly dispatcher: JobDispatcher,
     private readonly promoter: DelayedJobPromoter,
     @Inject(JOB_QUEUE) private readonly queue: JobQueuePort,
+    @Inject(LOGGER) private readonly logger: Logger,
   ) {}
 
   onApplicationBootstrap(): void {
@@ -53,7 +54,9 @@ export class WorkerRunnerService implements OnApplicationBootstrap, OnApplicatio
   }
 
   private async run(): Promise<void> {
-    this.logger.log(`Worker started (concurrency ${this.config.jobs.concurrency})`);
+    this.logger.info('Worker started', {
+      detail: { concurrency: this.config.jobs.concurrency },
+    });
 
     while (this.running) {
       try {
@@ -65,7 +68,9 @@ export class WorkerRunnerService implements OnApplicationBootstrap, OnApplicatio
         );
 
         if (stale.length > 0) {
-          this.logger.warn(`Reclaimed ${stale.length} job(s) from an interrupted consumer`);
+          this.logger.warn('Reclaimed jobs from an interrupted consumer', {
+            detail: { count: stale.length },
+          });
           await this.settle(stale);
         }
 
@@ -75,12 +80,15 @@ export class WorkerRunnerService implements OnApplicationBootstrap, OnApplicatio
           await this.settle(claimed);
         }
       } catch (error) {
-        this.logger.error(`Worker loop error; retrying: ${describeError(error)}`);
+        this.logger.error('Worker loop error; retrying', {
+          error: toLogError(error),
+          detail: { backoffMs: LOOP_ERROR_BACKOFF_MS },
+        });
         await delay(LOOP_ERROR_BACKOFF_MS);
       }
     }
 
-    this.logger.log('Worker stopped');
+    this.logger.info('Worker stopped');
   }
 
   private async settle(jobs: readonly ClaimedJob[]): Promise<void> {
@@ -93,17 +101,15 @@ export class WorkerRunnerService implements OnApplicationBootstrap, OnApplicatio
     } catch (error) {
       // The job stays pending in the stream and is reclaimed later, so nothing
       // is lost; the process stays up.
-      this.logger.error(
-        `Job ${job.envelope.jobId} (${job.envelope.type}) could not be dispatched: ${describeError(error)}`,
-      );
+      this.logger.error('Job could not be dispatched', {
+        correlationId: job.envelope.correlationId,
+        error: toLogError(error),
+        detail: { jobId: job.envelope.jobId, type: job.envelope.type },
+      });
     }
   }
 }
 
 function delay(ms: number): Promise<void> {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
-}
-
-function describeError(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
 }

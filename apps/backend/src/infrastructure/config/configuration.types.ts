@@ -22,6 +22,16 @@ export type RuntimeEnvironment = 'development' | 'test' | 'production';
 /** Log verbosity (ADR-015, section 3 — structured logging). */
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
+/**
+ * How a log line is rendered (FND-011).
+ *
+ * `json` is one machine-readable object per line, which is what an aggregator
+ * reads; `pretty` is the same information arranged for a human and is the
+ * development/test default. The difference is the shape only — never which
+ * fields a line carries, and never the redaction.
+ */
+export type LogFormat = 'json' | 'pretty';
+
 /** Which environment this process runs in. The flags are derived, never set. */
 export interface EnvironmentIdentification {
   readonly name: RuntimeEnvironment;
@@ -69,6 +79,8 @@ export interface StorageConfiguration {
 
 export interface LoggingConfiguration {
   readonly level: LogLevel;
+  /** The output shape; selected once at bootstrap and never per call site. */
+  readonly format: LogFormat;
 }
 
 /**
@@ -100,6 +112,15 @@ export interface JobsConfiguration {
 export interface AuthenticationConfiguration {
   /** How long an authenticated session stays valid after it is established, in minutes. */
   readonly sessionTtlMinutes: number;
+  /**
+   * Consecutive failed sign-in attempts that lock an account (SEC-002).
+   *
+   * Never unlimited: the value must be a positive integer, so a misconfigured
+   * installation cannot silently disable the lockout.
+   */
+  readonly lockoutThreshold: number;
+  /** How long the temporary lockout lasts, in milliseconds (SEC-002). */
+  readonly lockoutDurationMs: number;
 }
 
 /** Explicit platform Product Owner bootstrap input. Secret material is never logged. */

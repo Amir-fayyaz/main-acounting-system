@@ -33,6 +33,8 @@ import { DrizzleUserRepository } from '../src/modules/identity/infrastructure/pe
 import { ensureUserSchema } from '../src/modules/identity/infrastructure/persistence/drizzle-user.schema.js';
 import { CryptoSessionTokenService } from '../src/modules/identity/infrastructure/security/crypto-session-token-service.js';
 import { ScryptPasswordHasher } from '../src/modules/identity/infrastructure/security/scrypt-password-hasher.js';
+import { RecordingSecurityLogger } from './support/authentication-doubles.js';
+import { TEST_LOCKOUT_POLICY } from './support/authentication-harness.js';
 import { ConflictError } from '../src/shared/errors/category-errors.js';
 import { toConflict } from '../src/shared/persistence/optimistic-concurrency.js';
 import {
@@ -188,6 +190,8 @@ describe.skipIf(!integrationEnabled)('authentication persistence (integration)',
       audit,
       boundary,
       sessionTtlMinutes,
+      TEST_LOCKOUT_POLICY,
+      new RecordingSecurityLogger(),
     );
     signOut = new SignOutUseCase(sessions, audit, boundary);
     setCredential = new SetUserCredentialUseCase(

@@ -57,6 +57,8 @@ export const AUTHENTICATION_REJECTION_REASONS = [
   'USER_MISSING',
   /** The session's user is not currently allowed to authenticate. */
   'USER_NOT_AUTHENTICATABLE',
+  /** The session's user is temporarily locked out after repeated failures (SEC-002). */
+  'USER_LOCKED_OUT',
 ] as const;
 
 export type AuthenticationRejectionReason = (typeof AUTHENTICATION_REJECTION_REASONS)[number];
@@ -102,6 +104,45 @@ export interface SignInFailedData {
 export class SignInFailed extends DomainEvent<SignInFailedData> {
   public constructor(data: SignInFailedData, options?: MessageOptions) {
     super('SignInFailed', data, options);
+  }
+}
+
+/** The information `UserAccountLocked` carries. */
+export interface UserAccountLockedData {
+  readonly userId: string;
+}
+
+/**
+ * An account crossed its failure threshold and is now temporarily locked
+ * (SEC-002).
+ *
+ * The security fact is recorded through the audit boundary because it changes
+ * what the account may do for a while. The event carries the identity and
+ * nothing else: no credential, no failure reason and no lockout duration — an
+ * audit record that stated how long the penalty runs would be a clock an
+ * attacker could read.
+ */
+export class UserAccountLocked extends DomainEvent<UserAccountLockedData> {
+  public constructor(data: UserAccountLockedData, options?: MessageOptions) {
+    super('UserAccountLocked', data, options);
+  }
+}
+
+/** The information `LockedOutAccountTargeted` carries. */
+export interface LockedOutAccountTargetedData {
+  readonly userId: string;
+}
+
+/**
+ * A locked account was targeted by an authentication attempt (SEC-002).
+ *
+ * Recorded separately from `UserAccountLocked` so an operator can tell "the account
+ * was locked" from "the account is still being attacked", which is the signal
+ * the later escalation and notification work will read.
+ */
+export class LockedOutAccountTargeted extends DomainEvent<LockedOutAccountTargetedData> {
+  public constructor(data: LockedOutAccountTargetedData, options?: MessageOptions) {
+    super('LockedOutAccountTargeted', data, options);
   }
 }
 

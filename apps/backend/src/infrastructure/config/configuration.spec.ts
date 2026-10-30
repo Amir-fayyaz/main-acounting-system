@@ -29,14 +29,19 @@ describe('loadConfiguration', () => {
       secretKey: '',
       bucket: 'accounting-local',
     });
-    expect(configuration.logging).toEqual({ level: 'info' });
+    expect(configuration.logging).toEqual({ level: 'info', format: 'pretty' });
     expect(configuration.jobs).toEqual({
       concurrency: 4,
       maxAttempts: 3,
       retryBaseDelayMs: 1000,
       retryMaxDelayMs: 30000,
     });
-    expect(configuration.authentication).toEqual({ sessionTtlMinutes: 60 });
+    expect(configuration.authentication).toEqual({
+      sessionTtlMinutes: 60,
+      // SEC-002: safe defaults, never "never lock".
+      lockoutThreshold: 5,
+      lockoutDurationMs: 900_000,
+    });
     expect(configuration.systemAdmin).toEqual({ enabled: false, email: '', password: '', displayName: 'Product Owner' });
     expect(configuration.scheduler).toEqual({ intervalMs: 1000 });
     expect(configuration.outbox).toEqual({
@@ -80,6 +85,8 @@ describe('loadConfiguration', () => {
       WORKER_RETRY_MAX_DELAY_MS: '5000',
       SCHEDULER_INTERVAL_MS: '250',
       AUTH_SESSION_TTL_MINUTES: '15',
+      AUTH_LOCKOUT_THRESHOLD: '3',
+      AUTH_LOCKOUT_DURATION_MS: '120000',
       OUTBOX_BATCH_SIZE: '10',
       OUTBOX_MAX_ATTEMPTS: '7',
       OUTBOX_RETRY_BASE_DELAY_MS: '400',
@@ -112,14 +119,18 @@ describe('loadConfiguration', () => {
       accessKey: 'minio-local',
       secretKey: 'minio-secret',
     });
-    expect(configuration.logging).toEqual({ level: 'debug' });
+    expect(configuration.logging).toEqual({ level: 'debug', format: 'pretty' });
     expect(configuration.jobs).toEqual({
       concurrency: 8,
       maxAttempts: 5,
       retryBaseDelayMs: 200,
       retryMaxDelayMs: 5000,
     });
-    expect(configuration.authentication).toEqual({ sessionTtlMinutes: 15 });
+    expect(configuration.authentication).toEqual({
+      sessionTtlMinutes: 15,
+      lockoutThreshold: 3,
+      lockoutDurationMs: 120_000,
+    });
     expect(configuration.systemAdmin).toEqual({
       enabled: true,
       email: 'owner@example.com',
@@ -134,6 +145,26 @@ describe('loadConfiguration', () => {
       retryMaxDelayMs: 12000,
       publishIntervalMs: 500,
     });
+  });
+
+  it('rejects a lockout policy that would never lock or lock for no time', () => {
+    let caught: unknown;
+
+    try {
+      loadConfiguration({
+        NODE_ENV: 'development',
+        AUTH_LOCKOUT_THRESHOLD: '0',
+        AUTH_LOCKOUT_DURATION_MS: '-1',
+      });
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(ConfigurationValidationError);
+    expect((caught as ConfigurationValidationError).problems).toEqual([
+      'AUTH_LOCKOUT_THRESHOLD must be an integer greater than or equal to 1',
+      'AUTH_LOCKOUT_DURATION_MS must be an integer greater than or equal to 1',
+    ]);
   });
 
   it('rejects a retry base delay above the ceiling', () => {
@@ -220,6 +251,37 @@ describe('loadConfiguration', () => {
     });
 
     expect(configuration.environment.isProduction).toBe(true);
+  });
+
+  it('defaults the log format to json in production and pretty elsewhere', () => {
+    const production = loadConfiguration({
+      NODE_ENV: 'production',
+      MYSQL_PASSWORD: 'database-password',
+      MINIO_ACCESS_KEY: 'minio-access',
+      MINIO_SECRET_KEY: 'minio-secret',
+    });
+
+    expect(production.logging.format).toBe('json');
+    expect(loadConfiguration({ NODE_ENV: 'test' }).logging.format).toBe('pretty');
+    expect(loadConfiguration({ NODE_ENV: 'development' }).logging.format).toBe('pretty');
+  });
+
+  it('reads an explicit log format and rejects an unknown one', () => {
+    const configured = loadConfiguration({ NODE_ENV: 'test', LOG_FORMAT: 'json' });
+
+    expect(configured.logging.format).toBe('json');
+
+    let caught: unknown;
+
+    try {
+      loadConfiguration({ NODE_ENV: 'test', LOG_FORMAT: 'logfmt' });
+    } catch (error) {
+      caught = error;
+    }
+
+    expect((caught as ConfigurationValidationError).problems).toEqual([
+      'LOG_FORMAT must be one of: json, pretty',
+    ]);
   });
 
   it('rejects missing credentials in production by name', () => {

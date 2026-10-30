@@ -44,6 +44,20 @@ import { UserStatus, type UserStatusValue } from '../value-objects/user-status.j
  * reads the clock itself and a test can fix time.
  */
 
+/**
+ * The lockout policy the security state is evaluated against (SEC-002).
+ *
+ * Threshold and duration are configuration, so the aggregate is handed the
+ * policy per call instead of holding one: a test can state the exact window it
+ * exercises and an installation can tighten the policy without a release.
+ */
+export interface LockoutPolicy {
+  /** Consecutive failed attempts that lock the account. */
+  readonly threshold: number;
+  /** How long the lockout lasts, in milliseconds. */
+  readonly durationMs: number;
+}
+
 /** The plain state of a user, as storage and mapping see it. */
 export interface UserSnapshot {
   readonly id: string;
@@ -52,6 +66,10 @@ export interface UserSnapshot {
   readonly status: UserStatusValue;
   readonly createdAt: DateTime;
   readonly updatedAt: DateTime;
+  /** Consecutive failed authentication attempts; absent means none (SEC-002). */
+  readonly failedAuthAttempts?: number;
+  /** When the temporary lockout ends; absent means the account is not locked. */
+  readonly lockedUntil?: DateTime;
 }
 
 export class User {
@@ -62,6 +80,8 @@ export class User {
     private _status: UserStatus,
     private readonly _createdAt: DateTime,
     private _updatedAt: DateTime,
+    private _failedAuthAttempts: number = 0,
+    private _lockedUntil?: DateTime,
   ) {}
 
   /**
@@ -103,6 +123,8 @@ export class User {
       UserStatus.from(snapshot.status),
       snapshot.createdAt,
       snapshot.updatedAt,
+      snapshot.failedAuthAttempts ?? 0,
+      snapshot.lockedUntil,
     );
   }
 
@@ -144,6 +166,79 @@ export class User {
   /** Whether this user is currently usable / active. */
   public isActive(): boolean {
     return this._status.isActive();
+  }
+
+  /** How many consecutive authentication failures the account carries (SEC-002). */
+  public get failedAuthAttempts(): number {
+    return this._failedAuthAttempts;
+  }
+
+  /** When the current lockout ends, if the account is in (or left) a lockout. */
+  public get lockedUntil(): DateTime | undefined {
+    return this._lockedUntil;
+  }
+
+  /**
+   * Whether authentication is refused right now because of a lockout.
+   *
+   * Strictly before `lockedUntil`: at the instant the lockout ends the account
+   * accepts attempts again, so an expired lockout never has to be cleared to
+   * become usable.
+   */
+  public isLocked(now: DateTime): boolean {
+    return this._lockedUntil !== undefined && now.isBefore(this._lockedUntil);
+  }
+
+  /**
+   * Records one failed authentication attempt against the account (SEC-002).
+   *
+   * Three rules are deliberate:
+   *
+   * - **No extension.** A failure recorded while the account is already locked
+   *   changes nothing, so an attacker who keeps hammering a locked account is
+   *   throttled by the same window instead of pushing it forever into the
+   *   future.
+   * - **The threshold locks, it does not merely count.** Reaching `threshold`
+   *   sets the lockout instant to `now + durationMs`; the transition is a
+   *   domain fact the application turns into an audit event.
+   * - **An expired lockout starts a fresh window.** The counter is reset before
+   *   counting, so one late failure after the penalty has been served does not
+   *   immediately re-lock an account that never reached the threshold twice in
+   *   a row.
+   */
+  public recordFailedAuthentication(policy: LockoutPolicy, now: DateTime): void {
+    if (this.isLocked(now)) {
+      return;
+    }
+
+    if (this._lockedUntil !== undefined) {
+      this._lockedUntil = undefined;
+      this._failedAuthAttempts = 0;
+    }
+
+    this._failedAuthAttempts += 1;
+
+    if (this._failedAuthAttempts >= policy.threshold) {
+      this._lockedUntil = DateTime.fromEpochMillis(now.epochMillis + policy.durationMs);
+    }
+
+    this._updatedAt = now;
+  }
+
+  /**
+   * Clears the failure counter and any lockout after a successful authentication.
+   *
+   * A no-op when there is nothing to clear, so a successful sign-in on a clean
+   * account does not produce a pointless write (and a pointless revision bump).
+   */
+  public clearFailedAuthentications(now: DateTime): void {
+    if (this._failedAuthAttempts === 0 && this._lockedUntil === undefined) {
+      return;
+    }
+
+    this._failedAuthAttempts = 0;
+    this._lockedUntil = undefined;
+    this._updatedAt = now;
   }
 
   /**
@@ -209,6 +304,8 @@ export class User {
       status: this._status.value,
       createdAt: this._createdAt,
       updatedAt: this._updatedAt,
+      failedAuthAttempts: this._failedAuthAttempts,
+      ...(this._lockedUntil === undefined ? {} : { lockedUntil: this._lockedUntil }),
     };
   }
 

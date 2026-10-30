@@ -1,10 +1,12 @@
 import {
+  Inject,
   Injectable,
-  Logger,
   type OnApplicationBootstrap,
   type OnApplicationShutdown,
 } from '@nestjs/common';
 import { AppConfigService } from '../../infrastructure/config/app-config.service.js';
+import { toLogError, type Logger } from '../../infrastructure/logging/logger.js';
+import { LOGGER } from '../../infrastructure/logging/logging.tokens.js';
 import { DelayedJobPromoter } from '../../infrastructure/jobs/scheduling/delayed-job-promoter.js';
 import { ScheduledJobService } from '../../infrastructure/jobs/scheduling/scheduled-job.service.js';
 
@@ -21,7 +23,6 @@ const LOOP_ERROR_BACKOFF_MS = 1000;
  */
 @Injectable()
 export class SchedulerRunnerService implements OnApplicationBootstrap, OnApplicationShutdown {
-  private readonly logger = new Logger(SchedulerRunnerService.name);
   private running = false;
   private loop?: Promise<void>;
 
@@ -29,6 +30,7 @@ export class SchedulerRunnerService implements OnApplicationBootstrap, OnApplica
     private readonly config: AppConfigService,
     private readonly promoter: DelayedJobPromoter,
     private readonly scheduled: ScheduledJobService,
+    @Inject(LOGGER) private readonly logger: Logger,
   ) {}
 
   onApplicationBootstrap(): void {
@@ -43,7 +45,7 @@ export class SchedulerRunnerService implements OnApplicationBootstrap, OnApplica
 
   private async run(): Promise<void> {
     const intervalMs = this.config.scheduler.intervalMs;
-    this.logger.log(`Scheduler started (interval ${intervalMs}ms)`);
+    this.logger.info('Scheduler started', { detail: { intervalMs } });
 
     while (this.running) {
       try {
@@ -51,17 +53,20 @@ export class SchedulerRunnerService implements OnApplicationBootstrap, OnApplica
         const enqueued = await this.scheduled.enqueueDue();
 
         if (promoted > 0 || enqueued > 0) {
-          this.logger.log(`Scheduler tick: promoted ${promoted}, enqueued ${enqueued}`);
+          this.logger.info('Scheduler tick', { detail: { promoted, enqueued } });
         }
 
         await delay(intervalMs);
       } catch (error) {
-        this.logger.error(`Scheduler loop error; retrying: ${describeError(error)}`);
+        this.logger.error('Scheduler loop error; retrying', {
+          error: toLogError(error),
+          detail: { backoffMs: LOOP_ERROR_BACKOFF_MS },
+        });
         await delay(LOOP_ERROR_BACKOFF_MS);
       }
     }
 
-    this.logger.log('Scheduler stopped');
+    this.logger.info('Scheduler stopped');
   }
 }
 
@@ -69,6 +74,3 @@ function delay(ms: number): Promise<void> {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
 }
 
-function describeError(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}

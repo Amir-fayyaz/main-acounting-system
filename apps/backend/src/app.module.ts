@@ -3,6 +3,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AppConfigModule } from './infrastructure/config/app-config.module.js';
 import { DatabaseModule } from './infrastructure/database/database.module.js';
 import { JobsModule } from './infrastructure/jobs/jobs.module.js';
+import { LoggingModule } from './infrastructure/logging/logging.module.js';
 import { ExampleModule } from './infrastructure/presentation/example/example.module.js';
 import { HealthModule } from './infrastructure/presentation/health/health.module.js';
 import { RateLimitModule } from './infrastructure/api/rate-limit/rate-limit.module.js';
@@ -57,10 +58,13 @@ import { RoleModule } from './modules/identity/infrastructure/role.module.js';
  * `JobsModule` gives the HTTP process the same queue abstraction the Worker and
  * Scheduler use, so a use case can enqueue long-running work instead of keeping
  * it inside a request (ADR-008). It opens no connection at startup.
+ * `LoggingModule` is the cross-cutting logging baseline (FND-011): one contract,
+ * one JSON shape, one redaction pass, bound globally because every module logs.
  */
 @Module({
   imports: [
     AppConfigModule,
+    LoggingModule,
     DatabaseModule,
     RedisModule,
     RateLimitModule,

@@ -1,6 +1,6 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { SECRET_REDACTOR } from '../config/app-config.tokens.js';
-import type { SecretHolder } from '../config/secrets.js';
+import { Inject, Injectable } from '@nestjs/common';
+import { toLogError, type Logger } from '../logging/logger.js';
+import { LOGGER } from '../logging/logging.tokens.js';
 import { READINESS_PROBES } from './readiness.tokens.js';
 import type {
   DependencyCheck,
@@ -20,10 +20,6 @@ class ProbeTimeoutError extends Error {
     super(`${probeName} check timed out after ${PROBE_TIMEOUT_MS}ms`);
     this.name = 'ProbeTimeoutError';
   }
-}
-
-function toMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
 }
 
 function withTimeout(operation: Promise<void>, probeName: string): Promise<void> {
@@ -62,11 +58,9 @@ function withTimeout(operation: Promise<void>, probeName: string): Promise<void>
  */
 @Injectable()
 export class ReadinessService {
-  private readonly logger = new Logger(ReadinessService.name);
-
   constructor(
     @Inject(READINESS_PROBES) private readonly probes: readonly DependencyProbe[],
-    @Inject(SECRET_REDACTOR) private readonly secrets: SecretHolder,
+    @Inject(LOGGER) private readonly logger: Logger,
   ) {}
 
   async check(): Promise<ReadinessReport> {
@@ -88,11 +82,12 @@ export class ReadinessService {
       const latencyMs = Date.now() - startedAt;
 
       // The cause is reported to the operator here, never swallowed
-      // (Engineering Principles, rule 5); it is redacted because driver errors
-      // can carry connection details (06-security-engineering).
-      this.logger.warn(
-        `Readiness probe "${probe.name}" is down (${reason}): ${this.secrets.redact(toMessage(error))}`,
-      );
+      // (Engineering Principles, rule 5); it is redacted by the logger because
+      // driver errors can carry connection details (06-security-engineering).
+      this.logger.warn(`Readiness probe "${probe.name}" is down (${reason})`, {
+        error: toLogError(error),
+        detail: { probe: probe.name, reason, latencyMs },
+      });
 
       return { name: probe.name, status: 'down', latencyMs, reason };
     }

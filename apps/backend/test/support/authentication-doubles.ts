@@ -1,6 +1,11 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 
 import type { AuthenticationAuditRecorder } from '../../src/modules/identity/application/ports/authentication-audit-recorder.port.js';
+import type {
+  AuthenticationSecurityLogger,
+  LockedOutAttemptLogEntry,
+  LockoutTransitionLogEntry,
+} from '../../src/modules/identity/application/ports/authentication-security-logger.port.js';
 import type { PasswordHasher } from '../../src/modules/identity/application/ports/password-hasher.port.js';
 import {
   Credential,
@@ -216,6 +221,25 @@ export class RecordingAuthenticationAudit implements AuthenticationAuditRecorder
 
   public async record(event: DomainEvent<unknown>): Promise<void> {
     this.recorded.push(event);
+  }
+}
+
+/**
+ * Records the structured lockout signals SEC-002 emits (SEC-002).
+ *
+ * A test asserts against the port, never a logger's formatted output, so the
+ * fields are captured as the values the use case actually stated.
+ */
+export class RecordingSecurityLogger implements AuthenticationSecurityLogger {
+  public readonly transitions: LockoutTransitionLogEntry[] = [];
+  public readonly attempts: LockedOutAttemptLogEntry[] = [];
+
+  public lockoutTransitioned(entry: LockoutTransitionLogEntry): void {
+    this.transitions.push(entry);
+  }
+
+  public lockedOutAttempt(entry: LockedOutAttemptLogEntry): void {
+    this.attempts.push(entry);
   }
 }
 

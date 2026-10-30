@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { RecordingLogger } from '../../../../test/support/logging-doubles.js';
 import { AppConfigService } from '../../config/app-config.service.js';
 import { loadConfiguration } from '../../config/configuration.js';
 import type { RedisConnectionService } from '../../redis/redis-connection.service.js';
@@ -56,7 +57,7 @@ function setup(overrides?: {
     }),
   );
 
-  const limiter = new RedisRateLimiter(connection, config);
+  const limiter = new RedisRateLimiter(connection, config, new RecordingLogger());
 
   return {
     limiter,

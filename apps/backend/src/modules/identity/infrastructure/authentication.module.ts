@@ -12,12 +12,14 @@ import { AUDIT_RECORDER } from '../../audit/application/audit.tokens.js';
 import type { AuditRecorder } from '../../audit/application/ports/audit-recorder.port.js';
 import {
   AUTHENTICATION_AUDIT_RECORDER,
+  AUTHENTICATION_SECURITY_LOGGER,
   AUTH_SESSION_REPOSITORY,
   CREDENTIAL_REPOSITORY,
   PASSWORD_HASHER,
   SESSION_TOKEN_SERVICE,
 } from '../application/authentication.tokens.js';
 import type { AuthenticationAuditRecorder } from '../application/ports/authentication-audit-recorder.port.js';
+import type { AuthenticationSecurityLogger } from '../application/ports/authentication-security-logger.port.js';
 import type { PasswordHasher } from '../application/ports/password-hasher.port.js';
 import type { SessionTokenService } from '../application/ports/session-token-service.port.js';
 import { GetAuthenticatedSessionUseCase } from '../application/use-cases/get-authenticated-session.use-case.js';
@@ -34,6 +36,7 @@ import { AuthenticationController } from '../presentation/controllers/authentica
 import { CredentialsController } from '../presentation/controllers/credential.controller.js';
 import { AuthenticationGuard } from '../presentation/guards/authentication.guard.js';
 import { AuditTrailAuthenticationAuditRecorder } from './audit/audit-trail-authentication-audit-recorder.js';
+import { NestAuthenticationSecurityLogger } from './logging/authentication-security-logger.js';
 import { DrizzleAuthSessionRepository } from './persistence/drizzle-auth-session.repository.js';
 import { DrizzleCredentialRepository } from './persistence/drizzle-credential.repository.js';
 import { CryptoSessionTokenService } from './security/crypto-session-token-service.js';
@@ -112,6 +115,12 @@ import { UserModule } from './user.module.js';
       inject: [AUDIT_RECORDER],
     },
     {
+      // The structured lockout signal (SEC-002): a log line for operators, next
+      // to — never instead of — the durable audit record above.
+      provide: AUTHENTICATION_SECURITY_LOGGER,
+      useFactory: (): AuthenticationSecurityLogger => new NestAuthenticationSecurityLogger(),
+    },
+    {
       provide: SignInUseCase,
       useFactory: (
         users: UserRepository,
@@ -122,6 +131,7 @@ import { UserModule } from './user.module.js';
         audit: AuthenticationAuditRecorder,
         boundary: TransactionBoundary,
         config: AppConfigService,
+        securityLog: AuthenticationSecurityLogger,
       ) =>
         new SignInUseCase(
           users,
@@ -132,6 +142,11 @@ import { UserModule } from './user.module.js';
           audit,
           boundary,
           config.authentication.sessionTtlMinutes,
+          {
+            threshold: config.authentication.lockoutThreshold,
+            durationMs: config.authentication.lockoutDurationMs,
+          },
+          securityLog,
         ),
       inject: [
         USER_REPOSITORY,
@@ -142,6 +157,7 @@ import { UserModule } from './user.module.js';
         AUTHENTICATION_AUDIT_RECORDER,
         TRANSACTION_BOUNDARY,
         AppConfigService,
+        AUTHENTICATION_SECURITY_LOGGER,
       ],
     },
     {

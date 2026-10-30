@@ -17,6 +17,7 @@ import {
   Public,
   RequiresAuthentication,
 } from '../../../../infrastructure/api/authorization/authorization-policy.js';
+import { CorrelationId } from '../../../../infrastructure/api/correlation/correlation-id.decorator.js';
 import { ApiErrorResponseDto } from '../../../../infrastructure/api/errors/api-error.dto.js';
 import { SignIn } from '../../application/commands/sign-in.command.js';
 import { SignOut } from '../../application/commands/sign-out.command.js';
@@ -128,9 +129,17 @@ export class AuthenticationController {
     description:
       'The credentials did not authenticate a user, or the account may not sign in. The reason is not disclosed.',
   })
-  async signIn(@Body() body: SignInDto): Promise<SignInResponseDto> {
+  async signIn(
+    @Body() body: SignInDto,
+    @CorrelationId() correlationId: string | undefined,
+  ): Promise<SignInResponseDto> {
     const outcome = await this.signInUseCase.execute(
-      new SignIn({ email: body.email, password: body.password }),
+      new SignIn(
+        { email: body.email, password: body.password },
+        // The correlation id travels with the command so the lockout signal and
+        // the audit trail can be tied to the failing request (SEC-002).
+        correlationId === undefined ? undefined : { correlationId },
+      ),
     );
 
     return outcome.match<SignInResponseDto>({
