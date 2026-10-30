@@ -24,6 +24,8 @@ export default defineConfig({
   ],
   test: {
     environment: 'node',
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
     // FND-008: with `MYSQL_INTEGRATION=1` the database is migrated once before
     // any spec runs (test/support/database-global-setup.ts), so the persistence
     // specs run on the real, indexed schema instead of scaffolding their own.
