@@ -61,6 +61,9 @@ const DEFAULT_OUTBOX_MAX_ATTEMPTS = 5;
 const DEFAULT_OUTBOX_RETRY_BASE_DELAY_MS = 1000;
 const DEFAULT_OUTBOX_RETRY_MAX_DELAY_MS = 60000;
 const DEFAULT_OUTBOX_PUBLISH_INTERVAL_MS = 1000;
+const DEFAULT_RATE_LIMIT_WINDOW_MS = 60_000;
+const DEFAULT_RATE_LIMIT_MAX_PER_IP = 20;
+const DEFAULT_RATE_LIMIT_MAX_PER_IDENTITY = 5;
 
 /** Credentials. Required in production; reported by their consumer elsewhere. */
 const SECRET_KEYS = ['MYSQL_PASSWORD', 'MINIO_ACCESS_KEY', 'MINIO_SECRET_KEY'] as const;
@@ -337,6 +340,26 @@ export function loadConfiguration(raw: RawConfiguration = process.env): Configur
         raw,
         'OUTBOX_PUBLISH_INTERVAL_MS',
         DEFAULT_OUTBOX_PUBLISH_INTERVAL_MS,
+        problems,
+      ),
+    },
+    rateLimit: {
+      windowMs: readPositiveInteger(
+        raw,
+        'RATE_LIMIT_AUTH_WINDOW_MS',
+        DEFAULT_RATE_LIMIT_WINDOW_MS,
+        problems,
+      ),
+      maxPerIp: readPositiveInteger(
+        raw,
+        'RATE_LIMIT_AUTH_MAX_PER_IP',
+        DEFAULT_RATE_LIMIT_MAX_PER_IP,
+        problems,
+      ),
+      maxPerIdentity: readPositiveInteger(
+        raw,
+        'RATE_LIMIT_AUTH_MAX_PER_IDENTITY',
+        DEFAULT_RATE_LIMIT_MAX_PER_IDENTITY,
         problems,
       ),
     },

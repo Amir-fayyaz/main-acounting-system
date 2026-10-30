@@ -6,6 +6,7 @@ import {
   DATABASE,
   TRANSACTION_BOUNDARY,
 } from '../../../infrastructure/database/database.tokens.js';
+import { RateLimitModule } from '../../../infrastructure/api/rate-limit/rate-limit.module.js';
 import type { TransactionBoundary } from '../../../shared/transaction/transaction-boundary.js';
 import { AUDIT_RECORDER } from '../../audit/application/audit.tokens.js';
 import type { AuditRecorder } from '../../audit/application/ports/audit-recorder.port.js';
@@ -77,7 +78,7 @@ import { UserModule } from './user.module.js';
   // `AUDIT_RECORDER` arrives from the global Audit module (AUD-001): this
   // feature records its security facts through that published contract and
   // never touches the audit table, its repository or its read port.
-  imports: [DatabaseModule, UserModule],
+  imports: [DatabaseModule, UserModule, RateLimitModule],
   controllers: [AuthenticationController, CredentialsController],
   providers: [
     {

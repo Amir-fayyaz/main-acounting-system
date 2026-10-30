@@ -31,6 +31,9 @@ import type { AuthSessionRepository } from '../src/modules/identity/domain/repos
 import type { CredentialRepository } from '../src/modules/identity/domain/repositories/credential.repository.js';
 import type { UserRepository } from '../src/modules/identity/domain/repositories/user.repository.js';
 import { AuthenticationController } from '../src/modules/identity/presentation/controllers/authentication.controller.js';
+import { RateLimitGuard } from '../src/infrastructure/api/rate-limit/rate-limit.guard.js';
+import { RATE_LIMITER } from '../src/infrastructure/api/rate-limit/rate-limit.tokens.js';
+import type { RateLimiter } from '../src/infrastructure/api/rate-limit/rate-limiter.js';
 import { ScryptPasswordHasher } from '../src/modules/identity/infrastructure/security/scrypt-password-hasher.js';
 import { CryptoSessionTokenService } from '../src/modules/identity/infrastructure/security/crypto-session-token-service.js';
 import {
@@ -131,6 +134,18 @@ async function createHarness(): Promise<Harness> {
         provide: GetAuthenticatedSessionUseCase,
         useValue: new GetAuthenticatedSessionUseCase(users, sessions, tokens, audit),
       },
+      RateLimitGuard,
+      {
+        provide: RATE_LIMITER,
+        useValue: {
+          consume: async () => ({
+            allowed: true,
+            remaining: 99,
+            limit: 100,
+            resetAtMs: Date.now() + 60_000,
+          }),
+        },
+      } as unknown as { provide: symbol; useValue: RateLimiter },
     ],
   }).compile();
 
