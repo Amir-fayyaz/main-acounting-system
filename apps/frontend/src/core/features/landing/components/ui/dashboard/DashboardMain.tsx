@@ -61,7 +61,7 @@ export function DashboardMain({
 
       {data.footerNote ? (
         <div className="m-2 flex justify-end max-sm:hidden">
-          <Span className="rounded-sm bg-[#f7f6eedb] py-0.5 px-2 text-xs! text-[#827866]">
+          <Span className="rounded-sm bg-background/85 py-0.5 px-2 text-xs! text-muted-foreground">
             {data.footerNote}
           </Span>
         </div>
@@ -85,7 +85,7 @@ function DashboardHeading({
         >
           {report.title}
         </H2>
-        <P id="dash-subtitle" className="text-xs text-[#746b60]">
+        <P id="dash-subtitle" className="text-xs text-muted-foreground">
           {report.subtitle}
         </P>
       </div>
@@ -93,7 +93,7 @@ function DashboardHeading({
       <div
         role="group"
         aria-label={data.periodAriaLabel}
-        className="flex gap-0.5 rounded-sm border border-[#dfdbd1] bg-white p-0.5"
+        className="flex gap-0.5 rounded-sm border border-border bg-card p-0.5"
       >
         {data.periodOptions.map((option) => {
           const selected = period === option.value;
@@ -107,8 +107,8 @@ function DashboardHeading({
               variant="ghost"
               size="sm"
               className={cn(
-                'h-auto rounded-sm border-0 bg-transparent py-1 px-2.5 text-xs font-normal text-[#746b60] shadow-none hover:scale-100 hover:bg-transparent active:scale-100 max-sm:py-0.5 max-sm:px-1.5',
-                selected && 'bg-[#f4f3e7] font-bold text-foreground hover:bg-[#f4f3e7]',
+                'h-auto rounded-sm border-0 bg-transparent py-1 px-2.5 text-xs font-normal text-muted-foreground shadow-none hover:scale-100 hover:bg-transparent active:scale-100 max-sm:py-0.5 max-sm:px-1.5',
+                selected && 'bg-sand font-bold text-foreground hover:bg-sand',
               )}
             >
               <Span className="text-[length:inherit]">{option.label}</Span>
@@ -122,13 +122,13 @@ function DashboardHeading({
 
 function DashboardInsight({ data, message }: { data: DashboardData; message: string }) {
   return (
-    <div className="mt-3 flex items-center justify-between gap-2.5 rounded-md border border-[#e6e2d4] bg-[#f5f3e9] py-2.5 px-3 text-xs max-sm:mt-2 max-sm:gap-1 max-sm:p-2">
+    <div className="mt-3 flex items-center justify-between gap-2.5 rounded-md border border-border bg-sand py-2.5 px-3 text-xs max-sm:mt-2 max-sm:gap-1 max-sm:p-2">
       <div className="flex items-center gap-2 max-sm:gap-1">
-        <LandingIcon name="spark" className="size-4 text-[#a46700] max-sm:size-3.5" />
+        <LandingIcon name="spark" className="size-4 text-brand-link max-sm:size-3.5" />
         <Span className="text-xs!">{message}</Span>
       </div>
 
-      <Link href={data.insightHref} className="whitespace-nowrap text-xs text-[#885300]">
+      <Link href={data.insightHref} className="whitespace-nowrap text-xs text-muted-foreground">
         <Span className="text-[length:inherit]">{data.insightLinkLabel}</Span>
       </Link>
     </div>

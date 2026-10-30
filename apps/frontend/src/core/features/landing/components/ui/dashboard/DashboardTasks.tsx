@@ -5,28 +5,28 @@ import { LandingIcon } from '@/core/features/landing/components/ui/icon/LandingI
 
 export function DashboardTasks({ data }: { data: DashboardData }) {
   return (
-    <Card className="gap-0 rounded-lg border border-[#e8e4db] bg-white p-3.5 shadow-none max-sm:hidden max-md:p-2.5">
+    <Card className="gap-0 rounded-lg border border-border bg-card p-3.5 shadow-none max-sm:hidden max-md:p-2.5">
       <div className="flex justify-between gap-1.5 text-xs font-semibold">
         <Span className="text-xs! font-semibold!">{data.tasksTitle}</Span>
-        <Small className="text-xs! font-normal! text-[#746b60]">{data.tasksCount}</Small>
+        <Small className="text-xs! font-normal! text-muted-foreground">{data.tasksCount}</Small>
       </div>
 
       <ul className="m-0 mt-3 flex list-none flex-col gap-2 p-0">
         {data.tasks.map((task) => (
           <li
             key={task.title}
-            className="flex items-center gap-1.5 border-b border-[#efede7] pb-2 text-xs last:border-0 last:pb-0"
+            className="flex items-center gap-1.5 border-b border-sand pb-2 text-xs last:border-0 last:pb-0"
           >
-            <Span className="text-[length:inherit] grid! size-7 place-items-center rounded-md border border-[#eee7da] bg-[#faf8f2] text-[#a56700]!">
+            <Span className="text-[length:inherit] grid! size-7 place-items-center rounded-md border border-border bg-background text-brand-link!">
               <LandingIcon name={task.icon} className="size-3.5" />
             </Span>
 
             <div>
               <Span className="text-xs!">{task.title}</Span>
-              <P className="mt-px text-xs! text-[#746b60]">{task.description}</P>
+              <P className="mt-px text-xs! text-muted-foreground">{task.description}</P>
             </div>
 
-            <Badge className="mr-auto bg-[#fff1d9] py-0.5 px-1 text-xs max-md:hidden">
+            <Badge className="mr-auto bg-accent py-0.5 px-1 text-xs max-md:hidden">
               <Span className="text-[length:inherit]">{task.badge}</Span>
             </Badge>
           </li>

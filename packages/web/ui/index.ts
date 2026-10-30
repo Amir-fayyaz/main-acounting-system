@@ -1,5 +1,8 @@
+export * from './components/custom/ui/data-table';
+export * from './components/custom/ui/error/ErrorPresentation';
 export * from './components/custom/ui/image/ImgNormalCustom';
 export * from './components/custom/ui/modal/Modal';
+export * from './components/custom/ui/search-input/SearchInput';
 export * from './components/custom/ui/typography/Typography';
 export { default as PagesContainer } from './components/custom/ui/wrapper/PagesContainer';
 export { default as SectionLayout } from './components/custom/ui/wrapper/SectionLayout';

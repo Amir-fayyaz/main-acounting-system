@@ -2,7 +2,8 @@
 
 import { getAccessTokenSSR } from '@/core/lib/coockie/getAccess';
 import { removeCoockie, setCoockie } from '@/core/lib/coockie/setCoockie';
-import type { AuthApiError, SessionResponse } from '../assets/@types/auth.types';
+import { createHttpApiError, serializeApiError, type ApiErrorData } from '@repo/web/api';
+import type { SessionResponse } from '../assets/@types/auth.types';
 import { getSessionApi, signOutApi } from './auth-api';
 import { env } from 'process';
 
@@ -27,7 +28,7 @@ export async function clearAuthToken() {
 }
 
 export type SessionActionResult =
-  { ok: true; session: SessionResponse } | { ok: false; error: AuthApiError };
+  { ok: true; session: SessionResponse } | { ok: false; error: ApiErrorData };
 
 /**
  * چون cookie خاصیت httpOnly دارد، کلاینت نمی‌تواند آن را بخواند؛
@@ -35,11 +36,11 @@ export type SessionActionResult =
  */
 export async function getSessionAction(): Promise<SessionActionResult> {
   const token = await getAccessTokenSSR();
-  if (!token) return { ok: false, error: { status: 401, body: null } };
+  if (!token) return { ok: false, error: createHttpApiError(401).toData() };
   try {
     return { ok: true, session: await getSessionApi(token) };
-  } catch (e) {
-    return { ok: false, error: e as AuthApiError };
+  } catch (error: unknown) {
+    return { ok: false, error: serializeApiError(error) };
   }
 }
 

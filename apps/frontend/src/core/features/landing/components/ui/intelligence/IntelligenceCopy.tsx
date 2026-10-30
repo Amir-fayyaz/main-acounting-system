@@ -29,7 +29,7 @@ export function IntelligenceCopy({ data, isDemo, titleId }: IntelligenceCopyProp
         {data.title.second}
       </H2>
 
-      <P className="text-xs leading-loose text-[#746b60]">{data.description}</P>
+      <P className="text-xs leading-loose text-muted-foreground">{data.description}</P>
 
       {data.benefits?.length ? (
         <BenefitsList
@@ -43,7 +43,7 @@ export function IntelligenceCopy({ data, isDemo, titleId }: IntelligenceCopyProp
       ) : null}
 
       {data.tags?.length ? (
-        <div className="mt-6 mb-5 flex flex-wrap gap-2 max-sm:mt-5 max-md:gap-1 [&>span]:rounded-sm [&>span]:border [&>span]:border-[#ddd5c5] [&>span]:py-1 [&>span]:px-2.5 [&>span]:text-xs [&>span]:text-[#74634c] max-sm:[&>span]:py-0.5 max-sm:[&>span]:px-2 max-sm:[&>span]:text-xs max-md:[&>span]:py-0.5 max-md:[&>span]:px-1.5 max-md:[&>span]:text-xs">
+        <div className="mt-6 mb-5 flex flex-wrap gap-2 max-sm:mt-5 max-md:gap-1 [&>span]:rounded-sm [&>span]:border [&>span]:border-border [&>span]:py-1 [&>span]:px-2.5 [&>span]:text-xs [&>span]:text-muted-foreground max-sm:[&>span]:py-0.5 max-sm:[&>span]:px-2 max-sm:[&>span]:text-xs max-md:[&>span]:py-0.5 max-md:[&>span]:px-1.5 max-md:[&>span]:text-xs">
           {data.tags.map((tag) => (
             <Span className="text-[length:inherit]" key={tag}>
               {tag}
@@ -53,7 +53,7 @@ export function IntelligenceCopy({ data, isDemo, titleId }: IntelligenceCopyProp
       ) : null}
 
       {data.callout ? (
-        <div className="mt-6 flex items-start gap-2 rounded-lg border border-[#dfd2b9] bg-[#fff3dc] py-3 px-3.5 text-xs leading-loose text-[#805f2d] max-sm:mt-5 max-sm:p-3">
+        <div className="mt-6 flex items-start gap-2 rounded-lg border border-border bg-accent py-3 px-3.5 text-xs leading-loose text-muted-foreground max-sm:mt-5 max-sm:p-3">
           <LandingIcon name="info" className="mt-0.5 size-4 max-sm:size-3.5" />
           <Span className="text-xs leading-loose">{data.callout}</Span>
         </div>

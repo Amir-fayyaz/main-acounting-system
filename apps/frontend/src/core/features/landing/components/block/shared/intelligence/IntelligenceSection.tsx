@@ -55,7 +55,7 @@ export function IntelligenceSection({
       <div
         id={data.id}
         aria-labelledby={titleId}
-        className={cn(isDemo && 'border-t border-[#e4dfd2]', className)}
+        className={cn(isDemo && 'border-t border-border', className)}
       >
         <div
           className={cn(

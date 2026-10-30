@@ -16,6 +16,7 @@ vi.mock('../lib/auth-api', () => ({ signInApi: m.signInApi }));
 vi.mock('../lib/auth-storage', () => ({ setAuthToken: m.setAuthToken }));
 
 import { LoginForm } from '../components/block/LoginForm';
+import { createHttpApiError } from '@repo/web/api';
 
 const session = {
   token: 'tok',
@@ -93,7 +94,7 @@ describe('LoginForm — ورود', () => {
   });
 
   it('401: پیام عمومی امن و بدون ریدایرکت', async () => {
-    m.signInApi.mockRejectedValue({ status: 401, body: null });
+    m.signInApi.mockRejectedValue(createHttpApiError(401));
     render(<LoginForm />);
     await fill('ali@company.ir', 'wrong');
     await user.click(submitButton());

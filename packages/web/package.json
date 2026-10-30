@@ -3,17 +3,27 @@
   "version": "0.1.0",
   "private": true,
   "exports": {
+    ".": "./index.ts",
     "./ui/utils/cn": "./ui/utils/cn.ts",
     "./assets/@types/Typography": "./assets/@types/Typography.ts",
     "./hooks/useIsMobile": "./hooks/useIsMobile.tsx",
+    "./hooks/usePagination": "./hooks/usePagination.tsx",
     "./ui/components/*": "./ui/components/*",
+    "./ui/components/custom/ui/data-table/DataTable": "./ui/components/custom/ui/data-table/DataTable.tsx",
+    "./ui/components/custom/ui/search-input/SearchInput": "./ui/components/custom/ui/search-input/SearchInput.tsx",
     "./ui/components/shadcn/ui/button/button": "./ui/components/shadcn/ui/button/button.tsx",
+    "./ui/components/shadcn/ui/input/input": "./ui/components/shadcn/ui/input/input.tsx",
+    "./ui/components/shadcn/ui/pagination/pagination": "./ui/components/shadcn/ui/pagination/pagination.tsx",
+    "./ui/components/shadcn/ui/table/table": "./ui/components/shadcn/ui/table/table.tsx",
+    "./ui/components/shadcn/ui/select/select": "./ui/components/shadcn/ui/select/select.tsx",
     "./styles/globals.css": "./styles/globals.css",
     "./ui": "./ui/index.ts",
     "./ui/components/shadcn/ui/dialog/dialog": "./ui/components/shadcn/ui/dialog/dialog.tsx",
     "./styles/fonts/font": "./styles/fonts/font.ts",
+    "./api": "./api/index.ts",
     "./ui/panel": "./ui/panel.ts",
-    "./ui/sidebar": "./ui/sidebar.ts"
+    "./ui/sidebar": "./ui/sidebar.ts",
+    "./ui/utils/pagination": "./ui/utils/pagination.ts"
   },
   "peerDependencies": {
     "next": "16.2.5",

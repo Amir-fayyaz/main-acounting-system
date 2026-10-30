@@ -1,4 +1,5 @@
 import * as z from 'zod/mini';
+import { ZodString } from '@/core/lib/zod/zod';
 
 /** سیاست‌ها باید با بک‌اند یکی باشند (PlainPassword / UserName / UserEmail). */
 export const PASSWORD_MIN_LENGTH = 12;
@@ -12,14 +13,12 @@ const fa = (n: number) => n.toLocaleString('fa-IR');
 export const PASSWORD_HINT = `حداقل ${fa(PASSWORD_MIN_LENGTH)} کاراکتر`;
 
 const emailField = () =>
-  z
-    .string()
-    .check(
-      z.trim(),
-      z.minLength(1, 'ایمیل را وارد کنید'),
-      z.maxLength(EMAIL_MAX_LENGTH, `ایمیل نباید بیشتر از ${fa(EMAIL_MAX_LENGTH)} کاراکتر باشد`),
-      z.email('ایمیل وارد شده معتبر نیست'),
-    );
+  ZodString({
+    min: 1,
+    max: EMAIL_MAX_LENGTH,
+    message: 'ایمیل را وارد کنید',
+    maxMessage: `ایمیل نباید بیشتر از ${fa(EMAIL_MAX_LENGTH)} کاراکتر باشد`,
+  }).check(z.email('ایمیل وارد شده معتبر نیست'));
 
 const newPasswordField = () =>
   z.string().check(
@@ -33,23 +32,27 @@ const newPasswordField = () =>
   );
 
 /** sign-in: طول حداقل عمداً چک نمی‌شود تا با API هماهنگ بماند */
-export const signInSchema = z.object({
+const signInFields = {
   email: emailField(),
   password: z.string().check(z.minLength(1, 'رمز عبور را وارد کنید')),
+};
+
+export const signInSchema = z.object(signInFields);
+
+/** remember فقط متعلق به فرم است و جزو payload ورود نیست. */
+export const loginFormSchema = z.object({
+  ...signInFields,
+  remember: z.boolean(),
 });
 
 export const signUpSchema = z
   .object({
-    displayName: z
-      .string()
-      .check(
-        z.trim(),
-        z.minLength(1, 'نام نمایشی را وارد کنید'),
-        z.maxLength(
-          DISPLAY_NAME_MAX_LENGTH,
-          `نام نمایشی نباید بیشتر از ${fa(DISPLAY_NAME_MAX_LENGTH)} کاراکتر باشد`,
-        ),
-      ),
+    displayName: ZodString({
+      min: 1,
+      max: DISPLAY_NAME_MAX_LENGTH,
+      message: 'نام نمایشی را وارد کنید',
+      maxMessage: `نام نمایشی نباید بیشتر از ${fa(DISPLAY_NAME_MAX_LENGTH)} کاراکتر باشد`,
+    }),
     email: emailField(),
     password: newPasswordField(),
     password2: z.string().check(z.minLength(1, 'تکرار رمز عبور را وارد کنید')),

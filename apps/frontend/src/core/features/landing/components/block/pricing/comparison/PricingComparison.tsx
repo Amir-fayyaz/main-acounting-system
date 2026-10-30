@@ -23,7 +23,7 @@ function ComparisonCell({ value }: { value: ComparisonValue }) {
   if (value.kind === 'included') {
     return (
       <div className="inline-flex items-center gap-1">
-        <Check aria-hidden="true" strokeWidth={1.7} className="size-4 shrink-0 text-[#28765b]" />
+        <Check aria-hidden="true" strokeWidth={1.7} className="size-4 shrink-0 text-muted-foreground" />
         <Span className="text-xs">{value.label}</Span>
       </div>
     );
@@ -43,7 +43,7 @@ export function PricingComparison() {
           جزئیات را کنار هم ببینید.
         </H2>
 
-        <P className="max-w-144 text-xs leading-loose text-[#746b60]">
+        <P className="max-w-144 text-xs leading-loose text-muted-foreground">
           مقایسه ظرفیت‌های نمونه؛ مبنای انتخاب نهایی، نیاز و حجم کار تیم شماست.
         </P>
 
@@ -51,10 +51,10 @@ export function PricingComparison() {
           role="region"
           aria-label="جدول مقایسه پلن‌ها؛ در موبایل قابل پیمایش افقی"
           tabIndex={0}
-          className="mt-6 overflow-hidden rounded-xl border border-[#ddd3c0] bg-[#fffdf8] max-sm:mt-5"
+          className="mt-6 overflow-hidden rounded-xl border border-border bg-card max-sm:mt-5"
         >
           <Table className="min-w-160 border-collapse text-center text-xs">
-            <TableCaption className="caption-top mt-0 bg-[#eee8da] px-5 py-4 text-right text-xs font-semibold text-foreground max-sm:px-4 max-sm:py-3.5">
+            <TableCaption className="caption-top mt-0 bg-border px-5 py-4 text-right text-xs font-semibold text-foreground max-sm:px-4 max-sm:py-3.5">
               <Span className="text-[length:inherit]">مقایسه پلن‌های نمایشی تراز</Span>
             </TableCaption>
 
@@ -62,7 +62,7 @@ export function PricingComparison() {
               <TableRow className="border-0 hover:bg-transparent">
                 <TableHead
                   scope="col"
-                  className="h-auto min-w-52 border-t border-[#e4dccd] bg-[#f9f5e9] px-4 py-3.5 text-right text-xs font-semibold whitespace-nowrap text-foreground max-sm:min-w-48 max-sm:px-3.5 max-sm:py-3"
+                  className="h-auto min-w-52 border-t border-border  bg-background px-4 py-3.5 text-right text-xs font-semibold whitespace-nowrap text-foreground max-sm:min-w-48 max-sm:px-3.5 max-sm:py-3"
                 >
                   <Span className="text-[length:inherit]">{comparisonFeatureHeader}</Span>
                 </TableHead>
@@ -71,7 +71,7 @@ export function PricingComparison() {
                   <TableHead
                     key={column.id}
                     scope="col"
-                    className="h-auto border-t border-[#e4dccd] bg-[#f9f5e9] px-4 py-3.5 text-center text-xs font-semibold whitespace-nowrap text-foreground max-sm:px-3.5 max-sm:py-3"
+                    className="h-auto border-t border-border  bg-background px-4 py-3.5 text-center text-xs font-semibold whitespace-nowrap text-foreground max-sm:px-3.5 max-sm:py-3"
                   >
                     <Span className="text-[length:inherit]">{column.label}</Span>
                   </TableHead>
@@ -84,7 +84,7 @@ export function PricingComparison() {
                 <TableRow key={row.label} className="border-0 hover:bg-transparent">
                   <TableHead
                     scope="row"
-                    className="h-auto border-t border-[#e4dccd] bg-transparent px-4 py-3.5 text-right text-xs font-medium whitespace-nowrap text-foreground max-sm:px-3.5 max-sm:py-3"
+                    className="h-auto border-t border-border  bg-transparent px-4 py-3.5 text-right text-xs font-medium whitespace-nowrap text-foreground max-sm:px-3.5 max-sm:py-3"
                   >
                     <Span className="text-[length:inherit]">{row.label}</Span>
                   </TableHead>
@@ -92,7 +92,7 @@ export function PricingComparison() {
                   {row.values.map((value, index) => (
                     <TableCell
                       key={`${row.label}-${comparisonColumns[index]?.id ?? index}`}
-                      className="border-t border-[#e4dccd] px-4 py-3.5 text-xs whitespace-nowrap text-[#78654a] max-sm:px-3.5 max-sm:py-3"
+                      className="border-t border-border  px-4 py-3.5 text-xs whitespace-nowrap text-muted-foreground max-sm:px-3.5 max-sm:py-3"
                     >
                       <ComparisonCell value={value} />
                     </TableCell>
