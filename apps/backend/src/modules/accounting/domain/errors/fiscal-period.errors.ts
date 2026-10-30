@@ -2,24 +2,6 @@ import { DomainError } from '../../../../shared/errors/domain-error.js';
 import { ErrorCategory } from '../../../../shared/errors/error-category.js';
 import type { ErrorDetailValue } from '../../../../shared/errors/error-detail.js';
 
-/**
- * Fiscal-period business failures (FIS-004).
- *
- * Each carries a stable `code` in this module's language so a client can switch
- * on the failure without parsing a message, and each fixes the shared
- * {@link ErrorCategory} that says *what kind* of failure it is. None knows
- * about HTTP: how a failure becomes a response, a log line or an alert is the
- * presentation layer's decision (FND-006; ADR-013).
- */
-
-/**
- * No fiscal year with the requested identity exists for the active tenant.
- *
- * A year is the only frame periods may be generated inside; without it there
- * is nothing to generate, and "which company lacks the year" is decided by the
- * tenant scope — the scope filter means another company's year reads as
- * absent, never as a cross-tenant leak.
- */
 export class FiscalPeriodYearNotFoundError extends DomainError {
   public constructor(fiscalYearId: string) {
     super('FISCAL_YEAR_NOT_FOUND', 'No fiscal year with that identity exists for this company.', {
@@ -36,15 +18,6 @@ export class FiscalPeriodYearNotFoundError extends DomainError {
   }
 }
 
-/**
- * A fiscal year's range does not span exactly one Jalali year, so the twelve
- * monthly periods cannot cover it with no gap and no overlap.
- *
- * This is the contiguity guarantee the ticket exists for, and it fails before
- * anything is written: a year whose boundaries are not the Nawruz and the last
- * Esfand of one Jalali year cannot hold twelve contiguous monthly periods, so
- * generating them would produce a broken fiscal frame.
- */
 export class FiscalPeriodStructureError extends DomainError {
   public constructor(message: string, details: FiscalPeriodStructureErrorDetail[]) {
     super('FISCAL_PERIOD_STRUCTURE', message, {
@@ -54,25 +27,13 @@ export class FiscalPeriodStructureError extends DomainError {
   }
 }
 
-/** A structured reason the period structure was refused. */
 export interface FiscalPeriodStructureErrorDetail {
   readonly code: 'FISCAL_PERIOD_STRUCTURE';
   readonly message: string;
   readonly jalaliYear?: number;
-  // The kernel's `ErrorDetail` carries JSON primitives; stay compatible.
   [key: string]: ErrorDetailValue | undefined;
 }
 
-/**
- * The requested fiscal year already has periods; generation is idempotent and
- * never rewrites them.
- *
- * Generation's refusal is stored-level only: the use case itself no-ops when a
- * plan is replayed. This error surfaces when the persistence layer — which
- * defends the same rule with `UNIQUE (tenant_id, fiscal_year_id, sequence)` —
- * sees a duplicate insert that a concurrent generation raced past the
- * in-memory check.
- */
 export class FiscalPeriodDuplicateError extends DomainError {
   public constructor() {
     super(
@@ -83,9 +44,6 @@ export class FiscalPeriodDuplicateError extends DomainError {
   }
 }
 
-/**
- * No fiscal period with the requested identity exists for the active tenant.
- */
 export class FiscalPeriodNotFoundError extends DomainError {
   public constructor(periodId: string) {
     super('FISCAL_PERIOD_NOT_FOUND', 'No fiscal period with that identity exists.', {
@@ -102,17 +60,45 @@ export class FiscalPeriodNotFoundError extends DomainError {
   }
 }
 
-/**
- * Selecting a closed period as the tenant's active one is refused (FIS-004).
- *
- * The active period is the frame the company books into; a closed period
- * stopped accepting postings and can never carry the active flag again. The
- * transition belongs to the period-closing policy, not to selection.
- */
 export class FiscalPeriodNotOpenError extends DomainError {
   public constructor() {
     super('FISCAL_PERIOD_NOT_OPEN', 'Only an open period can be the active one.', {
       category: ErrorCategory.STATE_VIOLATION,
     });
+  }
+}
+
+/**
+ * The fiscal period is in an invalid state for the requested transition (FIS-005).
+ * Maps to HTTP 409 CONFLICT.
+ */
+export class PeriodStateInvalidError extends DomainError {
+  public constructor(message = 'The fiscal period is in an invalid state for this operation.') {
+    super('PERIOD_STATE_INVALID', message, {
+      category: ErrorCategory.CONFLICT,
+    });
+  }
+}
+
+/**
+ * Reopening a closed period requires a non-empty business justification (FIS-005).
+ * Maps to HTTP 400 BAD_REQUEST.
+ */
+export class ReopenReasonRequiredError extends DomainError {
+  public constructor() {
+    super(
+      'REOPEN_REASON_REQUIRED',
+      'A non-empty reason is required to reopen a closed fiscal period.',
+      {
+        category: ErrorCategory.VALIDATION,
+        details: [
+          {
+            code: 'REOPEN_REASON_REQUIRED',
+            field: 'reason',
+            message: 'reason must be a non-empty string',
+          },
+        ],
+      },
+    );
   }
 }

@@ -1,4 +1,4 @@
-import { HttpException } from '@nestjs/common';
+import { HttpException, HttpStatus } from '@nestjs/common';
 import { DomainError } from '../../../shared/errors/domain-error.js';
 import {
   TenantContextMissingError,
@@ -12,7 +12,6 @@ import {
 } from './api-error.registry.js';
 import type { ApiErrorCategory, ApiErrorDetail } from './api-error.types.js';
 
-/** The error contract reduced to the fields the filter serializes. */
 export interface MappedApiError {
   readonly status: number;
   readonly code: string;
@@ -25,28 +24,18 @@ const INTERNAL_ERROR = API_ERROR_DEFINITIONS[API_ERROR_CODES.INTERNAL_ERROR];
 const TENANT_REQUIRED = API_ERROR_DEFINITIONS[API_ERROR_CODES.TENANT_REQUIRED];
 const FORBIDDEN = API_ERROR_DEFINITIONS[API_ERROR_CODES.FORBIDDEN];
 
-/**
- * Reduces any thrown value to the standard contract.
- *
- * The rules encode the security requirement that API errors never disclose
- * internals (06-security-engineering, ADR-010):
- *
- * - A `DomainError` carries a client-safe message by contract, so it is kept.
- * - A `TenantContextMissingError` maps to `TENANT_REQUIRED` (TNT-002) so
- *   clients see a stable boundary code rather than a generic 500.
- * - A `TenantIsolationViolationError` maps to the generic `FORBIDDEN` body: a
- *   cross-tenant attempt is refused, and the response never names the tenant
- *   that was requested or the one the caller actually holds (IAM-007).
- * - An `ApiErrorException` states its own code/message.
- * - Another `HttpException` keeps its message only for a 4xx (an author written
- *   client error); a 5xx always falls back to a generic message.
- * - Anything else — an unexpected bug — becomes a generic 500. The cause is
- *   logged server-side by the filter, never serialized.
- */
 export function mapException(exception: unknown): MappedApiError {
   if (exception instanceof DomainError) {
+    let status = API_ERROR_DEFINITIONS[API_ERROR_CODES.DOMAIN_ERROR].status;
+
+    if (exception.code === 'PERIOD_STATE_INVALID') {
+      status = HttpStatus.CONFLICT;
+    } else if (exception.code === 'REOPEN_REASON_REQUIRED') {
+      status = HttpStatus.BAD_REQUEST;
+    }
+
     return {
-      status: API_ERROR_DEFINITIONS[API_ERROR_CODES.DOMAIN_ERROR].status,
+      status,
       code: exception.code,
       category: 'domain',
       message: exception.message,
