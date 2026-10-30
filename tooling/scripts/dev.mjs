@@ -9,10 +9,9 @@
  */
 
 import { execFileSync, spawn } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-
 import { assertRequiredVariables, createEnvFileFromExample, parseEnvText } from './dev/env.mjs';
 
 import {
@@ -144,6 +143,53 @@ function readEnv() {
   if (!existsSync(ENV_PATH)) return {};
   return parseEnvText(readFileSync(ENV_PATH, 'utf8'));
 }
+const ENV_KEY_PATTERN = /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=/;
+
+/**
+ * Appends variables that exist in .env.example but are missing from .env.
+ * Existing values in .env are never modified or removed.
+ */
+function syncEnvWithExample() {
+  const exampleText = readFileSync(ENV_EXAMPLE_PATH, 'utf8');
+  const envText = readFileSync(ENV_PATH, 'utf8');
+
+  const existingKeys = new Set(Object.keys(parseEnvText(envText)));
+  const exampleKeys = new Set(Object.keys(parseEnvText(exampleText)));
+
+  const additions = [];
+  const addedKeys = [];
+  let commentBuffer = [];
+
+  for (const line of exampleText.split(/\r?\n/)) {
+    if (line.trim().startsWith('#')) {
+      commentBuffer.push(line);
+      continue;
+    }
+
+    const match = line.match(ENV_KEY_PATTERN);
+
+    if (match && !existingKeys.has(match[1])) {
+      additions.push(...commentBuffer, line);
+      addedKeys.push(match[1]);
+    }
+
+    commentBuffer = [];
+  }
+
+  if (addedKeys.length > 0) {
+    const separator = envText.endsWith('\n') ? '' : '\n';
+    const header = '\n# --- added automatically from .env.example ---\n';
+    writeFileSync(ENV_PATH, `${envText}${separator}${header}${additions.join('\n')}\n`);
+    success(`Added ${addedKeys.length} new variable(s) to .env: ${addedKeys.join(', ')}`);
+  }
+
+  const obsolete = [...Object.keys(parseEnvText(envText))].filter((key) => !exampleKeys.has(key));
+  if (obsolete.length > 0) {
+    warn(`Variables in .env but not in .env.example (left unchanged): ${obsolete.join(', ')}`);
+  }
+
+  return addedKeys.length;
+}
 
 function prepareEnv() {
   const { created } = createEnvFileFromExample({
@@ -152,7 +198,10 @@ function prepareEnv() {
   });
 
   if (created) success('Created .env from .env.example');
-  else log('.env already exists; leaving it unchanged');
+  else {
+    log('.env already exists; checking for new variables in .env.example');
+    if (syncEnvWithExample() === 0) log('.env is up to date with .env.example');
+  }
 
   const variables = readEnv();
   assertRequiredVariables(variables, { filePath: ENV_PATH });
@@ -579,7 +628,7 @@ async function main() {
   }
 
   // Keep this launcher alive while the child processes run.
-  await new Promise(() => {});
+  await new Promise(() => { });
 }
 
 main();
