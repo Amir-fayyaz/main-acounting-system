@@ -20,7 +20,7 @@ export function PricingPlans() {
       <div aria-label="پلن‌های نمونه">
         <BillingToggle period={period} onPeriodChange={setPeriod} />
 
-        <P aria-live="polite" className="mb-5 text-center text-xs text-[#746b60]">
+        <P aria-live="polite" className="mb-5 text-center text-xs text-muted-foreground">
           {getBillingSummary(period)}
         </P>
 

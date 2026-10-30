@@ -11,11 +11,11 @@ const benefits = [
 const HeroBenefits = () => {
   return (
     <div>
-      <div className="flex items-center justify-center gap-9 text-xs text-[#7b7061] max-sm:grid max-sm:grid-cols-2 max-sm:justify-items-center max-sm:gap-2.5 max-md:gap-5">
+      <div className="flex items-center justify-center gap-9 text-xs text-muted-foreground max-sm:grid max-sm:grid-cols-2 max-sm:justify-items-center max-sm:gap-2.5 max-md:gap-5">
         {benefits.map((benefit, index) => (
           <Span key={benefit.label} className="contents! text-xs!">
             {index > 0 ? (
-              <i aria-hidden="true" className="h-4 w-px bg-[#dcd5c7] max-sm:hidden" />
+              <i aria-hidden="true" className="h-4 w-px bg-border max-sm:hidden" />
             ) : null}
 
             <Span

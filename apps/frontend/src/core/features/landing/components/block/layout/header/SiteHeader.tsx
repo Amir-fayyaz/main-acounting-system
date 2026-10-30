@@ -17,15 +17,15 @@ const navLinkClass =
   'relative inline-flex min-h-9 items-center p-0 whitespace-nowrap max-lg:flex max-lg:min-h-11 max-lg:px-0 max-lg:py-2';
 
 const activeNavLinkClass =
-  "font-bold text-[#925704] after:absolute after:right-1/2 after:bottom-0.5 after:h-0.5 after:w-3 after:translate-x-1/2 after:rounded-sm after:bg-primary after:content-[''] max-lg:after:hidden";
+  "font-bold text-brand-link after:absolute after:right-1/2 after:bottom-0.5 after:h-0.5 after:w-3 after:translate-x-1/2 after:rounded-sm after:bg-primary after:content-[''] max-lg:after:hidden";
 
-const inactiveNavLinkClass = 'transition-colors duration-200 hover:text-[#a45f00]';
+const inactiveNavLinkClass = 'transition-colors duration-200 hover:text-brand-link';
 
 const productTriggerClass =
   'min-h-9 gap-1 rounded-none bg-transparent px-0 py-0 text-xs font-medium shadow-none hover:scale-100 hover:bg-transparent hover:shadow-none active:scale-100 max-lg:w-full max-lg:min-h-11 max-lg:justify-between max-lg:py-2';
 
 const mobileTriggerClass =
-  'hidden size-9 shrink-0 rounded-full border border-[#e2d9c8] bg-[#f8f5eb] p-0 text-foreground shadow-none hover:scale-100 hover:bg-[#f8f5eb] hover:shadow-none active:scale-100 max-sm:size-8 max-lg:flex';
+  'hidden size-9 shrink-0 rounded-full border border-border bg-background p-0 text-foreground shadow-none hover:scale-100 hover:bg-background hover:shadow-none active:scale-100 max-sm:size-8 max-lg:flex';
 
 function isActiveLink(pathname: string, href: string): boolean {
   const [path] = href.split('#');
@@ -91,7 +91,7 @@ export function SiteHeader() {
     >
       <nav
         aria-label="منوی اصلی"
-        className="relative grid h-16 w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-5 rounded-full border border-white bg-[#fffefaf5] px-5 shadow-[0_5px_22px_#4937130b] backdrop-blur-lg max-xl:gap-3.5 max-sm:gap-2.5 max-sm:px-3 max-lg:grid-cols-[1fr_auto] max-lg:gap-4 max-lg:px-3.5"
+        className="relative grid h-16 w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-5 rounded-full border border-card bg-card px-5 shadow-[0_5px_22px_color-mix(in_srgb,var(--foreground)_4%,transparent)] backdrop-blur-lg max-xl:gap-3.5 max-sm:gap-2.5 max-sm:px-3 max-lg:grid-cols-[1fr_auto] max-lg:gap-4 max-lg:px-3.5"
       >
         <SiteBrand />
 
@@ -99,7 +99,7 @@ export function SiteHeader() {
           id={PRIMARY_NAV_ID}
           className={cn(
             'items-center justify-center gap-5 p-0 text-xs font-medium max-xl:gap-4',
-            'max-lg:absolute max-lg:top-full max-lg:mt-3 max-lg:right-0 max-lg:left-0 max-lg:items-stretch max-lg:justify-start max-lg:gap-0 max-lg:rounded-2xl max-lg:border max-lg:border-[#e2d6c0] max-lg:bg-[#fffefa] max-lg:px-5 max-lg:py-3 max-lg:text-xs max-lg:shadow-[0_12px_28px_#503a1312] max-sm:px-4',
+            'max-lg:absolute max-lg:top-full max-lg:mt-3 max-lg:right-0 max-lg:left-0 max-lg:items-stretch max-lg:justify-start max-lg:gap-0 max-lg:rounded-2xl max-lg:border max-lg:border-border max-lg:bg-card max-lg:px-5 max-lg:py-3 max-lg:text-xs max-lg:shadow-[0_12px_28px_color-mix(in_srgb,var(--foreground)_7%,transparent)] max-sm:px-4',
             mobileOpen
               ? 'flex max-lg:max-h-[calc(100svh-6rem)] max-lg:flex-col max-lg:overflow-y-auto max-lg:overscroll-contain'
               : 'hidden lg:flex',
@@ -141,8 +141,8 @@ export function SiteHeader() {
             <div
               id={PRODUCT_MENU_ID}
               className={cn(
-                'absolute top-full mt-4 -right-5 z-45 w-64 rounded-xl border border-[#e4dccd] bg-[#fffefa] p-2 shadow-[0_14px_30px_#49351515]',
-                'max-lg:static max-lg:my-0.5 max-lg:mb-2 max-lg:w-full max-lg:rounded-none max-lg:border-0 max-lg:bg-[#f5f0e5] max-lg:p-1 max-lg:shadow-none',
+                'absolute top-full mt-4 -right-5 z-45 w-64 rounded-xl border border-border  bg-cardp-2 shadow-[0_14px_30px_color-mix(in_srgb,var(--foreground)_8%,transparent)]',
+                'max-lg:static max-lg:my-0.5 max-lg:mb-2 max-lg:w-full max-lg:rounded-none max-lg:border-0 max-lg:bg-muted max-lg:p-1 max-lg:shadow-none',
                 productOpen ? 'flex flex-col' : 'hidden',
               )}
             >
@@ -151,15 +151,15 @@ export function SiteHeader() {
                   key={item.label}
                   href={item.href}
                   onClick={closeMenus}
-                  className="flex min-h-12 items-center gap-2.5 rounded-md p-2.5 text-xs hover:bg-[#f6f2e7]"
+                  className="flex min-h-12 items-center gap-2.5 rounded-md p-2.5 text-xs hover:bg-muted"
                 >
-                  <LandingIcon name={item.icon} className="size-5 text-[#a36b16]" />
+                  <LandingIcon name={item.icon} className="size-5 text-brand-link" />
 
                   <Span className="text-[length:inherit]">
                     <strong className="block text-xs leading-relaxed font-semibold">
                       <Span className="text-[length:inherit]">{item.label}</Span>
                     </strong>
-                    <Small className="block text-xs leading-relaxed font-normal text-[#746b60]">
+                    <Small className="block text-xs leading-relaxed font-normal text-muted-foreground">
                       {item.description}
                     </Small>
                   </Span>
@@ -185,7 +185,7 @@ export function SiteHeader() {
         </div>
 
         <div className="m-0 flex items-center gap-4 max-xl:gap-3 max-sm:gap-2 max-lg:gap-3">
-          <Link href="/demo" className="text-xs whitespace-nowrap text-[#7a6341] max-lg:hidden">
+          <Link href="/demo" className="text-xs whitespace-nowrap text-muted-foreground max-lg:hidden">
             <Span className="text-[length:inherit]">مشاهده دمو</Span>
           </Link>
 
