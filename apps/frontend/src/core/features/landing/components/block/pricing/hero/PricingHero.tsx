@@ -14,12 +14,12 @@ export function PricingHero() {
         >
           به اندازه تیم‌تان،
           <br />
-          <Span className="text-[length:inherit] text-[#a86400]">برای مسیر رشدتان.</Span>
+          <Span className="text-[length:inherit] text-brand-link">برای مسیر رشدتان.</Span>
         </H1>
 
         <P
           className={cn(
-            'text-[#746b60] mx-auto max-w-144 text-sm leading-loose max-sm:max-w-80 max-sm:text-xs',
+            'text-muted-foreground mx-auto max-w-144 text-sm leading-loose max-sm:max-w-80 max-sm:text-xs',
           )}
         >
           همه پلن‌ها روی یک جریان مالی یکپارچه بنا شده‌اند. ظرفیت و همراهی مناسب تیم خودتان را
@@ -28,7 +28,7 @@ export function PricingHero() {
 
         <Badge
           variant="outline"
-          className="mt-4 inline-flex min-h-0 items-center gap-1 rounded-sm border border-[#d8d0c0] bg-transparent px-2 py-0.5 text-xs leading-relaxed font-medium whitespace-nowrap text-[#6e6251] max-sm:mt-3.5"
+          className="mt-4 inline-flex min-h-0 items-center gap-1 rounded-sm border border-border bg-transparent px-2 py-0.5 text-xs leading-relaxed font-medium whitespace-nowrap text-muted-foreground max-sm:mt-3.5"
         >
           <Span className="text-[length:inherit]">
             تمام قیمت‌ها، ظرفیت‌ها و پلن‌ها در این صفحه نمونه‌اند.

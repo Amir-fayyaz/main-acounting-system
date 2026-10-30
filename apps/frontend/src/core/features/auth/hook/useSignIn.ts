@@ -2,7 +2,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import type { AuthApiError, SignInResponse } from '../assets/@types/auth.types';
+import type { SignInResponse } from '../assets/@types/auth.types';
 import { signInApi } from '../lib/auth-api';
 import { setAuthToken } from '../lib/auth-storage';
 import { mapAuthError } from '../utils/mapAuthError';
@@ -30,8 +30,8 @@ export function useSignIn() {
     let res: SignInResponse;
     try {
       res = await signInApi({ email: input.email, password: input.password });
-    } catch (e) {
-      return fail(mapAuthError(e as AuthApiError));
+    } catch (error: unknown) {
+      return fail(mapAuthError(error));
     }
 
     // session در بک‌اند ساخته شده؛ شکست ذخیره‌ی کوکی را جدا از خطای اعتبارسنجی گزارش می‌کنیم.

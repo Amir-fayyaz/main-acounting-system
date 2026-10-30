@@ -102,6 +102,14 @@ export interface AuthenticationConfiguration {
   readonly sessionTtlMinutes: number;
 }
 
+/** Explicit platform Product Owner bootstrap input. Secret material is never logged. */
+export interface SystemAdminBootstrapConfiguration {
+  readonly enabled: boolean;
+  readonly email: string;
+  readonly password: string;
+  readonly displayName: string;
+}
+
 /** Scheduler process settings (ADR-008, section 9). */
 export interface SchedulerConfiguration {
   /** How often the scheduler promotes due work and periodic triggers, in milliseconds. */
@@ -127,6 +135,22 @@ export interface OutboxConfiguration {
   readonly publishIntervalMs: number;
 }
 
+/**
+ * Rate-limiting settings (SEC-001).
+ *
+ * The window and thresholds are configuration, not literals, so an
+ * installation can tighten them without a release and a test can state the
+ * exact window it exercises. No default may allow unlimited attempts.
+ */
+export interface RateLimitConfiguration {
+  /** The fixed window length, in milliseconds. */
+  readonly windowMs: number;
+  /** Maximum requests per client IP per window. */
+  readonly maxPerIp: number;
+  /** Maximum requests per identity hint (email, token) per window. */
+  readonly maxPerIdentity: number;
+}
+
 export interface Configuration {
   readonly environment: EnvironmentIdentification;
   readonly runtime: ApplicationRuntime;
@@ -136,6 +160,8 @@ export interface Configuration {
   readonly storage: StorageConfiguration;
   readonly logging: LoggingConfiguration;
   readonly authentication: AuthenticationConfiguration;
+  readonly rateLimit: RateLimitConfiguration;
+  readonly systemAdmin: SystemAdminBootstrapConfiguration;
   readonly jobs: JobsConfiguration;
   readonly scheduler: SchedulerConfiguration;
   readonly outbox: OutboxConfiguration;

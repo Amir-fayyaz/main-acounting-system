@@ -11,3 +11,10 @@ export const USER_REPOSITORY = 'USER_REPOSITORY';
 
 /** The recorder the application uses to persist User domain events. */
 export const USER_EVENT_RECORDER = 'USER_EVENT_RECORDER';
+
+/**
+ * The published user lookup (IAM-002): resolves an identity by its primary
+ * contact email. Provisioning callers (Product Owner bootstrap, development
+ * seeder) depend on this instead of the user repository.
+ */
+export const USER_DIRECTORY = 'USER_DIRECTORY';

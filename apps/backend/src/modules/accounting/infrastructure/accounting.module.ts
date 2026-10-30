@@ -129,6 +129,9 @@ import { DrizzleFiscalYearRepository } from './persistence/drizzle-fiscal-year.r
       ],
     },
   ],
-  exports: [],
+  // Exported for the development seeder (DEV-001): a fixture fiscal year is
+  // created through the same use case a later HTTP resource will call, so the
+  // overlap rule, the generated periods and the active-period pointer all apply.
+  exports: [CreateFiscalYearUseCase],
 })
 export class AccountingModule {}

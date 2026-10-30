@@ -14,3 +14,6 @@ export const MEMBERSHIP_EVENT_RECORDER = 'MEMBERSHIP_EVENT_RECORDER';
 
 /** Narrow membership lookup used by the tenant authorization boundary. */
 export const TENANT_MEMBERSHIP = 'TENANT_MEMBERSHIP';
+
+/** The durable store of a user's selected company (IAM-009). */
+export const ACTIVE_COMPANY_PREFERENCE = 'ACTIVE_COMPANY_PREFERENCE';

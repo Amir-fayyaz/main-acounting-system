@@ -5,6 +5,7 @@ import { DatabaseModule } from './infrastructure/database/database.module.js';
 import { JobsModule } from './infrastructure/jobs/jobs.module.js';
 import { ExampleModule } from './infrastructure/presentation/example/example.module.js';
 import { HealthModule } from './infrastructure/presentation/health/health.module.js';
+import { RateLimitModule } from './infrastructure/api/rate-limit/rate-limit.module.js';
 import { RedisModule } from './infrastructure/redis/redis.module.js';
 import { StorageModule } from './infrastructure/storage/storage.module.js';
 import { AccountingModule } from './modules/accounting/infrastructure/accounting.module.js';
@@ -62,6 +63,7 @@ import { RoleModule } from './modules/identity/infrastructure/role.module.js';
     AppConfigModule,
     DatabaseModule,
     RedisModule,
+    RateLimitModule,
     StorageModule,
     JobsModule,
     HealthModule,

@@ -22,6 +22,27 @@
       "when": 1792675268412,
       "tag": "0002_fiscal_year_overlap_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1792880302021,
+      "tag": "0003_worthless_terrax",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1793290000000,
+      "tag": "0004_platform_authorizations",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1793300000000,
+      "tag": "0005_many_ricochet",
+      "breakpoints": true
     }
   ]
 }

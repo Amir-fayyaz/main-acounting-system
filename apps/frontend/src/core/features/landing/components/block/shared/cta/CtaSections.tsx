@@ -18,7 +18,7 @@ export function MiniCta({ data = landingMiniCtaData, className }: MiniCtaProps) 
       <div
         aria-labelledby="mini-cta-title"
         className={cn(
-          'flex items-center justify-between gap-9 rounded-xl border border-[#e1d7c3] bg-[#efe9d9] py-7 px-8 max-sm:block max-sm:rounded-lg max-sm:p-6 max-lg:p-6',
+          'flex items-center justify-between gap-9 rounded-xl border border-border bg-sand py-7 px-8 max-sm:block max-sm:rounded-lg max-sm:p-6 max-lg:p-6',
           className,
         )}
       >
@@ -30,13 +30,13 @@ export function MiniCta({ data = landingMiniCtaData, className }: MiniCtaProps) 
             {data.title}
           </H2>
 
-          <P className="text-xs text-[#78674c]">{data.description}</P>
+          <P className="text-xs text-muted-foreground">{data.description}</P>
         </div>
 
         <Button
           asChild
           variant="default"
-          className="bg-foreground text-white max-sm:min-h-11 max-sm:text-xs max-md:text-xs sm:mt-0 mt-5"
+          className="bg-foreground text-sand-soft max-sm:min-h-11 max-sm:text-xs max-md:text-xs sm:mt-0 mt-5"
         >
           <Link href={data.href}>
             <Span className="text-[length:inherit]">{data.actionLabel}</Span>
@@ -53,10 +53,10 @@ export function FinalCta() {
     <section className="py-8 sm:py-12">
       <div
         aria-labelledby="cta-title"
-        className="relative flex items-center justify-between gap-10 overflow-hidden rounded-xl bg-primary py-12 px-14 after:absolute after:inset-auto after:-bottom-44 after:-left-16 after:size-112 after:rounded-full after:border after:border-[#b8710033] after:content-[''] max-xl:p-9 max-sm:block max-sm:rounded-lg max-sm:px-6 max-md:p-8 [&>div]:relative [&>div]:z-1"
+        className="relative flex items-center justify-between gap-10 overflow-hidden rounded-xl bg-primary py-12 px-14 after:absolute after:inset-auto after:-bottom-44 after:-left-16 after:size-112 after:rounded-full after:border after:border-[color-mix(in_srgb,var(--primary)_20%,transparent)] after:content-[''] max-xl:p-9 max-sm:block max-sm:rounded-lg max-sm:px-6 max-md:p-8 [&>div]:relative [&>div]:z-1"
       >
         <div>
-          <Span className={cn('landingEyebrowClass text-[#5f3909] before:bg-foreground')}>
+          <Span className={cn('landingEyebrowClass text-primary-foreground before:bg-foreground')}>
             وقت حساب‌های روشن‌تر است.
           </Span>
 
@@ -69,7 +69,7 @@ export function FinalCta() {
             تسلط بیشتر.
           </H2>
 
-          <P className="text-xs text-[#5f3909]">
+          <P className="text-xs text-primary-foreground">
             یک جریان مالی یکپارچه، از اولین فاکتور تا آخرین تراز.
           </P>
         </div>
@@ -77,7 +77,7 @@ export function FinalCta() {
         <div className="text-center max-sm:mt-5 max-sm:text-right">
           <Button
             asChild
-            className="bg-foreground text-white max-sm:min-h-11 max-sm:text-xs max-md:text-xs"
+            className="bg-foreground text-sand-soft max-sm:min-h-11 max-sm:text-xs max-md:text-xs"
           >
             <Link href="/demo">
               <Span className="text-[length:inherit]">تراز را از نزدیک ببینید</Span>
@@ -85,7 +85,7 @@ export function FinalCta() {
             </Link>
           </Button>
 
-          <Small className="mt-2.5 block text-xs text-[#5f3909] max-sm:pr-0.5">
+          <Small className="mt-2.5 block text-xs text-primary-foreground max-sm:pr-0.5">
             محیط نمونه · بدون نیاز به ثبت‌نام
           </Small>
         </div>

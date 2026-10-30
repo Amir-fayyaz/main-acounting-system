@@ -10,12 +10,12 @@ import { cn } from '@repo/web/ui/utils/cn';
 
 const ctaVariantClass: Record<Plan['id'], string> = {
   starter:
-    'border border-[#d8d2c5] bg-transparent text-foreground shadow-none hover:bg-white hover:text-foreground hover:scale-100 active:scale-100',
+    'border border-border bg-transparent text-foreground shadow-none hover:bg-card hover:text-foreground hover:scale-100 active:scale-100',
   growth:
-    'border-0 bg-primary text-foreground shadow-none hover:bg-[#ef8f00] hover:text-foreground hover:scale-100 active:scale-100',
-  pro: 'border border-[#d8d2c5] bg-transparent text-foreground shadow-none hover:bg-white hover:text-foreground hover:scale-100 active:scale-100',
+    'border-0 bg-primary text-foreground shadow-none hover:bg-brand-dark hover:text-foreground hover:scale-100 active:scale-100',
+  pro: 'border border-border bg-transparent text-foreground shadow-none hover:bg-card hover:text-foreground hover:scale-100 active:scale-100',
   enterprise:
-    'border-0 bg-foreground text-white shadow-none hover:bg-[#3b2b1b] hover:text-white hover:scale-100 active:scale-100',
+    'border-0 bg-foreground text-sand-soft shadow-none hover:bg-ink-soft hover:text-sand-soft hover:scale-100 active:scale-100',
 };
 
 export function PlanCard({ plan, period }: { plan: Plan; period: BillingPeriod }) {
@@ -33,16 +33,16 @@ export function PlanCard({ plan, period }: { plan: Plan; period: BillingPeriod }
     <Card
       aria-labelledby={titleId}
       className={cn(
-        'flex w-full min-w-0 flex-col gap-0 rounded-xl border border-[#dfd6c5] bg-[#fffdf7] py-6 px-5 shadow-none',
+        'flex w-full min-w-0 flex-col gap-0 rounded-xl border border-border bg-card py-6 px-5 shadow-none',
         'max-xl:py-6 max-xl:px-4 max-sm:p-6 max-lg:p-6',
         plan.featured &&
-          'border-2 border-primary bg-[#fffbef] py-6 px-5 max-xl:py-5 max-xl:px-4 max-sm:p-6 max-lg:p-6',
+          'border-2 border-primary bg-background py-6 px-5 max-xl:py-5 max-xl:px-4 max-sm:p-6 max-lg:p-6',
       )}
     >
       <CardHeader className="block gap-0 p-0">
         <Badge
           variant="outline"
-          className="mb-2 min-h-5 w-fit gap-1 rounded-none border-0 bg-transparent px-0 py-0 text-xs leading-loose font-normal whitespace-normal text-[#93600f]"
+          className="mb-2 min-h-5 w-fit gap-1 rounded-none border-0 bg-transparent px-0 py-0 text-xs leading-loose font-normal whitespace-normal text-brand-link"
         >
           {plan.featured ? (
             <Sparkles aria-hidden="true" strokeWidth={1.7} className="size-3 shrink-0" />
@@ -54,7 +54,7 @@ export function PlanCard({ plan, period }: { plan: Plan; period: BillingPeriod }
           {plan.name}
         </H2>
 
-        <P className="min-h-12 text-xs leading-loose text-[#746b60] max-xl:min-h-10 max-sm:min-h-0">
+        <P className="min-h-12 text-xs leading-loose text-muted-foreground max-xl:min-h-10 max-sm:min-h-0">
           {plan.description}
         </P>
       </CardHeader>
@@ -69,11 +69,11 @@ export function PlanCard({ plan, period }: { plan: Plan; period: BillingPeriod }
           {priceLabel}
         </P>
 
-        <P className="mt-0.5 text-xs text-[#7b6b51]">
+        <P className="mt-0.5 text-xs text-muted-foreground">
           {isCustom ? plan.unitLabel : 'تومان در ماه'}
         </P>
 
-        <P className="mt-2 min-h-9 text-xs leading-loose text-[#7e6e54] max-sm:mt-1.5 max-sm:min-h-0">
+        <P className="mt-2 min-h-9 text-xs leading-loose text-muted-foreground max-sm:mt-1.5 max-sm:min-h-0">
           {billedLabel}
         </P>
 
@@ -90,13 +90,13 @@ export function PlanCard({ plan, period }: { plan: Plan; period: BillingPeriod }
           </Link>
         </Button>
 
-        <ul className="mt-6 flex list-none flex-col gap-3 border-t border-[#e6ddcb] p-0 pt-5 max-sm:mt-5">
+        <ul className="mt-6 flex list-none flex-col gap-3 border-t border-border p-0 pt-5 max-sm:mt-5">
           {plan.features.map((feature) => (
             <li key={feature} className="flex items-start gap-1.5 text-xs leading-loose">
               <Check
                 aria-hidden="true"
                 strokeWidth={1.7}
-                className="mt-0.5 size-3.5 shrink-0 text-[#9b7026]"
+                className="mt-0.5 size-3.5 shrink-0 text-brand-link"
               />
               <Span className="text-[length:inherit]">{feature}</Span>
             </li>

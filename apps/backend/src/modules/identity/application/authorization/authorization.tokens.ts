@@ -8,3 +8,6 @@
  * the role model.
  */
 export const AUTHORIZATION = 'AUTHORIZATION';
+
+/** Identity-owned capability store, separate from tenant role management. */
+export const PLATFORM_AUTHORIZATION = 'PLATFORM_AUTHORIZATION';

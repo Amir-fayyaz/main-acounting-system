@@ -94,10 +94,17 @@ pnpm --filter @accounting-saas/backend test:timezones  # Jalali suite under UTC/
 
 # Background jobs (FND-007)
 pnpm --filter @accounting-saas/backend job:enqueue <type> [payload-json]
+
+# Development/test dataset (DEV-001): development and test only, idempotent
+pnpm seed                    # root-level alias for the backend seed command
+pnpm --filter @accounting-saas/backend seed
 REDIS_INTEGRATION=1 pnpm --filter @accounting-saas/backend test   # + Redis-backed job tests
 
 # Transaction boundary and transactional outbox against a real MySQL server (SHR-005, SHR-006)
 MYSQL_INTEGRATION=1 pnpm --filter @accounting-saas/backend test   # + MySQL-backed transaction & outbox tests
+
+# Rate limiting on authentication endpoints (SEC-001)
+REDIS_INTEGRATION=1 pnpm --filter @accounting-saas/backend test   # + Redis-backed rate-limit tests
 ```
 
 From the repository root, `pnpm dev`, `pnpm typecheck`, `pnpm lint` and `pnpm test`
@@ -153,13 +160,62 @@ committed or baked into an image (Engineering Principles, rule 10).
 (`LOG_LEVEL`), `jobs` (`WORKER_CONCURRENCY`, `WORKER_MAX_ATTEMPTS` — reserved for
 the worker process, ADR-008), `scheduler` (`SCHEDULER_INTERVAL_MS`) and `outbox`
 (`OUTBOX_BATCH_SIZE`, `OUTBOX_MAX_ATTEMPTS`, `OUTBOX_RETRY_*`,
-`OUTBOX_PUBLISH_INTERVAL_MS` — the publication contract of SHR-006).
+`OUTBOX_PUBLISH_INTERVAL_MS` — the publication contract of SHR-006), and
+`systemAdmin` (`SYSTEM_ADMIN_ENABLED`, `SYSTEM_ADMIN_EMAIL`,
+`SYSTEM_ADMIN_PASSWORD`, `SYSTEM_ADMIN_DISPLAY_NAME` — the Product Owner
+bootstrap contract, see
+[Product Owner bootstrap and development/test seeding](#product-owner-bootstrap-and-developmenttest-seeding-dev-001)).
 
 The database pool, the Redis connection and the MinIO client are all created
 without opening a connection, so the API process starts even when the
 infrastructure is not running yet; `GET /api/health/ready` reports the actual
 state of each dependency. Start the local dependencies with `pnpm infra:up` from
 the repository root.
+
+## Rate limiting (SEC-001)
+
+Authentication endpoints are protected by a Redis-backed fixed-window rate
+limiter, enforced by `RateLimitGuard` via the `@RateLimit` decorator on each
+route. The guard is applied to the authentication controller only — it is not
+global.
+
+| Endpoint | Policy |
+| --- | --- |
+| `POST /api/v1/auth/sign-in` | Per client IP and per identity hint (email) |
+| `GET /api/v1/auth/session` | Per client IP |
+| `POST /api/v1/auth/sign-out` | Per client IP |
+
+Default window and thresholds (overridable via environment variables):
+
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `RATE_LIMIT_AUTH_WINDOW_MS` | `60000` | Fixed window length, in milliseconds |
+| `RATE_LIMIT_AUTH_MAX_PER_IP` | `20` | Max attempts per client IP per window |
+| `RATE_LIMIT_AUTH_MAX_PER_IDENTITY` | `5` | Max attempts per identity hint per window |
+
+When a limit is exceeded, the endpoint responds with HTTP **429** and the
+standard API error contract:
+
+```json
+{
+  "error": {
+    "code": "RATE_LIMITED",
+    "category": "client",
+    "message": "Rate limit exceeded for scope \"auth.sign-in\". Try again later.",
+    "correlationId": "..."
+  }
+}
+```
+
+Throttled responses also carry `Retry-After`, `X-RateLimit-Limit`,
+`X-RateLimit-Remaining` and `X-RateLimit-Reset` headers.
+
+The limiter **fails closed**: when Redis is unavailable, authentication
+attempts are refused with the same 429 error contract rather than being
+allowed through. No credential value (password, email, token) is logged or
+persisted by the limiter — only a hashed form of the subject is used as the
+Redis bucket key, and throttled requests are logged with scope, window and
+correlation id only.
 
 ## Endpoints
 
@@ -269,6 +325,44 @@ Contract notes for sign-up (IAM-008):
   in the transactional outbox (SHR-006) and `user.credential_changed` in the
   central audit trail (AUD-001). Sign-up invents no third audit or logging
   mechanism, and no audit record carries a secret.
+
+### Rate limiting (SEC-001)
+
+Authentication endpoints are protected by a Redis-backed sliding/fixed-window rate
+limiter applied per-route via `@RateLimit` and `RateLimitGuard`.
+
+**Protected endpoints:**
+
+| Method | Path                    | Policy                                              |
+| ------ | ----------------------- | --------------------------------------------------- |
+| POST   | `/api/v1/auth/sign-in`  | Per IP (`maxPerIp`) and per identity hint (`email`) |
+| GET    | `/api/v1/auth/session`  | Per IP only                                         |
+| POST   | `/api/v1/auth/sign-out` | Per IP only                                         |
+
+**Defaults (no default allows unlimited attempts):**
+
+| Key                          | Default | Purpose                                             |
+| ---------------------------- | ------- | --------------------------------------------------- |
+| `RATE_LIMIT_AUTH_WINDOW_MS`  | `60000` | Fixed window length in milliseconds                 |
+| `RATE_LIMIT_AUTH_MAX_PER_IP` | `20`    | Maximum requests per client IP per window           |
+| `RATE_LIMIT_AUTH_MAX_PER_IDENTITY` | `5` | Maximum requests per identity hint per window   |
+
+**429 error contract and headers:**
+
+- On throttling the API returns HTTP `429` with the standard error envelope
+  `{ error: { code: 'RATE_LIMITED', category: 'client', message, correlationId } }`.
+- Responses include `Retry-After` (seconds until window reset) and
+  `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset` (epoch
+  seconds) headers on throttled responses.
+- When the request carries `x-correlation-id` it is echoed in the response and
+  present in structured throttling logs.
+
+**Fail-closed behavior:**
+
+- If Redis is unavailable, credential-bearing authentication attempts are
+  **refused** (never allowed). The guard returns the same `RATE_LIMITED` error
+  contract. The refusal is logged in redacted form (subject values are never
+  logged or persisted). The limiter never logs or persists submitted credentials.
 
 ### Reference endpoints
 
@@ -649,6 +743,104 @@ await TenantScope.run(createTenantContext(companyId, { correlationId }), async (
   headers, concurrent-request isolation and no cross-request leakage over real
   HTTP.
 
+## Tenant isolation (TNT-004)
+
+Tenant isolation ensures that every tenant-owned operation can access only the records belonging to the active tenant. This boundary must be enforced in authorization, application operations, and persistence—not only in the user interface.
+
+Related documentation:
+
+- [Tenant context](../../docs/product/v1/11-engineering/21-tenant-context.md)
+- [Tenant membership validation](../../docs/product/v1/11-engineering/25-tenant-membership-validation.md)
+- [Tenant isolation](../../docs/product/v1/11-engineering/26-tenant-isolation.md)
+- [Tenant isolation contract tests](../../docs/testing/tenant-isolation.md)
+
+### Tenant resolution and authorization
+
+For HTTP requests, the authorization guard validates the authenticated principal, the requested tenant, and the required permission or membership policy. A tenant ID in a route is a claim to validate, not proof of access. A conflicting `x-tenant-id` header must not select or widen the tenant.
+
+After successful authorization, the global `TenantScopeInterceptor` establishes the tenant scope for the request. The active scope is propagated through the asynchronous call chain using `TenantScope`.
+
+Tenant context has three states:
+
+- `available`: an active tenant has been established.
+- `system`: an explicitly declared platform-level operation.
+- `missing`: no tenant context has been established.
+
+Tenant-scoped operations must fail closed when the required tenant context is missing. Operations that intentionally cross tenant boundaries must explicitly declare system scope; missing context must never silently become unrestricted access.
+
+### Tenant-safe persistence
+
+Repository adapters that read or write tenant-owned records must enforce the active tenant. Do not trust a tenant ID supplied by the client as the source of ownership.
+
+Use the shared helpers in `src/infrastructure/database/tenant-scoped.ts`:
+
+- `requireTenantId()` requires an available tenant scope.
+- `tenantEq(column)` builds a Drizzle equality predicate using the active tenant ID.
+- `assertTenantOwnership(tenantId, operation)` verifies that a record belongs to the active tenant before a write.
+- `assertTenantCriterion(tenantId, operation)` validates an explicit tenant criterion against the active scope.
+- `requireSystemScope(operation)` requires an explicitly declared system operation.
+- `assertPlatformWrite(operation)` prevents platform-level writes while running in an available tenant scope.
+
+For example, a tenant-owned query should include the central tenant predicate:
+
+```ts
+await db
+  .select()
+  .from(memberships)
+  .where(and(
+    tenantEq(memberships.tenantId),
+    eq(memberships.id, id),
+  ));
+```
+
+The tenant predicate must be applied to every relevant query path. Checking ownership in the UI or relying only on a route parameter does not provide database isolation.
+
+The root `tenants` registry is a special case: its records do not have a `tenant_id` column and are not filtered using `tenantEq()`. Do not copy this exception to ordinary tenant-owned entities.
+
+### Error behavior
+
+The error response depends on where the failure is detected:
+
+- Authorization failures, including denied tenant access and conflicting tenant claims, are mapped to HTTP `403 Forbidden` by the authorization error mapper.
+- A missing tenant context detected by the shared tenant infrastructure maps to `TENANT_REQUIRED` with HTTP `400 Bad Request`.
+- A tenant-isolation violation detected by the shared tenant infrastructure maps to `FORBIDDEN` with HTTP `403 Forbidden`.
+
+Authorization responses must not disclose whether another tenant, membership, or record exists.
+
+### Adding a tenant-owned entity
+
+Every new tenant-owned entity must carry its tenant ownership, enforce isolation in its repository operations, and have an isolation test.
+
+When adding an entity:
+
+1. Store its tenant ownership and ensure tenant-owned reads and writes are constrained to the active tenant.
+2. Use the shared tenant helpers where applicable instead of trusting client-supplied tenant IDs.
+3. Register the entity with `registerTenantIsolationSuite(...)` from `test/support/tenant-isolation-contract.ts`.
+4. Supply a fresh two-tenant fixture and an adapter that invokes the real use case or HTTP route.
+5. Enable the optional contract hooks for the operations the entity exposes, such as list, search, create, update, delete, and HTTP header tampering.
+6. Run the relevant isolation tests and verify that one tenant cannot read or modify another tenant's records.
+
+The reusable contract checks foreign-ID reads, missing tenant scope, and concurrent reads. Depending on the hooks supplied, it also checks list/search isolation, creation with an untrusted tenant ID, foreign-record updates and deletions, and tampered tenant headers.
+
+The adapter must normalize only expected access refusals to `{ allowed: false }`. Unexpected errors must be rethrown so that the test fails rather than hiding a defect.
+
+The example in `test/tenant-isolation-contract.e2e-spec.ts` covers the root `Tenant` registry. Because the root registry has no `tenant_id` column, it uses the record's own ID as its boundary and disables the swapped-identifier check. For an ordinary tenant-owned entity, `tenantIdOf` must return the record's actual tenant ID, and the adapter must reflect that entity's real ownership rules. The working `Role` example in `test/role-tenant-isolation-contract.e2e-spec.ts` demonstrates this pattern using the real role use cases and an in-memory repository.
+
+See [Tenant isolation contract tests](../../docs/testing/tenant-isolation.md) for the adapter requirements and test commands.
+
+### Verification
+
+The following tests cover important parts of the tenant-isolation boundary:
+
+- `src/infrastructure/database/tenant-scoped.spec.ts` tests shared tenant-scope and ownership checks.
+- `src/modules/identity/infrastructure/persistence/tenant-filter-contract.spec.ts` verifies that the membership repository query includes the active tenant predicate.
+- `test/tenant-isolation-contract.e2e-spec.ts` exercises the reusable two-tenant isolation contract for the root `Tenant` registry.
+- `test/role-tenant-isolation-contract.e2e-spec.ts` demonstrates the contract for a tenant-owned entity and tests cross-tenant reads, swapped identifiers, missing scope, concurrent reads, and list isolation.
+- `test/tenant-isolation.e2e-spec.ts` exercises the HTTP authorization and tenant-scope boundary.
+
+Run the relevant isolation tests when changing tenant ownership, repository filters, authorization, or tenant-scope behavior. See the [tenant isolation test guide](../../docs/testing/tenant-isolation.md) for the available commands.
+
+
 ## Optimistic concurrency (SHR-008)
 
 `src/shared/persistence/optimistic-concurrency.ts` and `stale-revision.ts` hold
@@ -762,6 +954,158 @@ pnpm --filter @accounting-saas/backend db:migrate:status # applied/pending count
   — the global setup (`test/support/database-global-setup.ts`) applies the
   migration journal once before any spec runs, so the specs exercise the real,
   indexed schema (see `test/database-migrations.e2e-spec.ts`).
+
+## Product Owner bootstrap and development/test seeding (DEV-001)
+
+### The platform `system-admin` role
+
+The Product Owner is the owner of the **whole product**, not a company
+administrator. That platform-wide authority is the `system-admin` role, and it
+is deliberately *not* a tenant role:
+
+| | tenant roles (`Tenant Administrator`, …) | platform role (`system-admin`) |
+| --- | --- | --- |
+| Scope | one company, via a membership | every company, membership or not |
+| Stored | `roles` + `membership_roles` | `platform_authorizations` (no tenant column) |
+| Grants | the registered capabilities the role lists | every registered capability |
+| Created by | a company administrator | Product Owner bootstrap only |
+
+The consequence is what the acceptance criteria ask for: platform access is
+independent of tenant membership, covers companies created *after* the
+bootstrap, and automatically covers a capability the moment it is registered in
+`PERMISSION_CATALOG` — no re-seeding required. It is not an authorization
+bypass: the acting identity is still authenticated, the operation still resolves
+a tenant scope, and the decision and its refusals are still audited. A
+tenant-scoped operation of the Product Owner runs under the target company's
+scope like anyone else's; only the capability check short-circuits because the
+principal holds platform authority. Nothing a client sends (header, body field,
+query parameter, tenant id, role name) can grant it, and ordinary tenant role
+management never can: `system-admin` is not in any tenant's role table.
+
+### Environment configuration
+
+```dotenv
+SYSTEM_ADMIN_ENABLED=true
+SYSTEM_ADMIN_EMAIL=owner@example.test
+SYSTEM_ADMIN_PASSWORD=
+SYSTEM_ADMIN_DISPLAY_NAME=Product Owner
+```
+
+- `SYSTEM_ADMIN_ENABLED` is the only switch, and it is **off by default**:
+bootstrap is opt-in in every environment, and production never inherits a
+development credential.
+- With it enabled, a valid `SYSTEM_ADMIN_EMAIL` and a non-empty
+`SYSTEM_ADMIN_PASSWORD` are required; a missing or malformed value fails the
+process at startup, and the validation message names the variable without ever
+echoing the value.
+- The email is normalized to lower case; `SYSTEM_ADMIN_DISPLAY_NAME` defaults to
+`Product Owner`.
+- The same typed contract is available to the API, Worker, Scheduler and CLI
+processes (`configuration.systemAdmin`).
+
+### Startup provisioning
+
+The API provisions the Product Owner while Nest initializes
+(`SystemAdminBootstrapRunner`, `OnApplicationBootstrap`), so the identity exists
+**before** the server accepts HTTP requests; a failed bootstrap fails startup
+instead of leaving a half-provisioned privileged account.
+
+Provisioning reuses the existing Identity use cases — `CreateUserUseCase`, then
+`SetUserCredentialUseCase` (the approved `PasswordHasher` abstraction), then the
+platform grant — inside one transaction boundary, and records the fact in the
+audit trail. It creates **no** tenant, membership or sample data.
+
+It is idempotent, and the rules are deliberately conservative:
+
+- the identity is looked up by its unique email first, so a restart never
+  creates a second Product Owner;
+- an existing, fully provisioned Product Owner is *verified* and left untouched —
+  in particular **the password is never reset because the environment variable
+  changed**. Rotating the secret is an explicit credential-management operation
+  (the credential endpoint), never a side effect of a restart;
+- an existing account that does not hold `system-admin`, or that has no
+  credential, is a conflict: startup fails with an actionable message instead of
+  silently promoting or repairing it;
+- `platform_authorizations.user_id` is the primary key, so two instances racing
+  through a cold start still produce exactly one grant; the loser re-reads and
+  reports success rather than inserting again.
+
+### Seeding development/test data
+
+The dataset is populated by one explicit root-level command, never at startup:
+
+```bash
+pnpm seed
+```
+
+It is allowed only when the resolved `NODE_ENV` is `development` or `test`. The
+refusal happens in code, before the application context — and therefore before
+any database access — is created; there is deliberately no override flag.
+
+```bash
+pnpm --filter @accounting-saas/backend db:migrate   # apply migrations first (creates seed_fixtures)
+pnpm seed                                           # create the dataset
+pnpm seed                                           # second run: 0 created, everything reused
+```
+
+The command:
+
+1. loads `.env` and the typed configuration exactly like the API (so it works
+   from any working directory);
+2. ensures the configured Product Owner exists, by reusing the **same**
+   idempotent bootstrap the API runs — it never creates a second privileged
+   account, and `SYSTEM_ADMIN_ENABLED=false` is an actionable error;
+3. creates or reuses the documented fixtures below, through the ordinary
+   application use cases (validation, tenant isolation, transactions, audit and
+   outbox events all apply);
+4. prints one line per fixture (`+ created`, `= reused`), then a count summary,
+   and exits non-zero on any failure while closing the database pool cleanly.
+
+The summary names fixture keys only — never an email, password, hash or token.
+
+### The dataset
+
+| Fixture | What is created |
+| --- | --- |
+| Product Owner | the identity from `SYSTEM_ADMIN_*`, holding platform `system-admin` (not a member of any seeded company) |
+| Companies | `بازرگانی آریا` and `گروه صنعتی پارس`, each owned by its administrator |
+| Users | per company: an administrator and an accountant, on reserved `.test` addresses |
+| Memberships | one per seeded user, inside its own company |
+| Tenant roles | `Tenant Administrator` (company read/update, user and role administration, audit read) and `Accountant` (`company.read` only), per company |
+| Role assignments | administrator → `Tenant Administrator`, accountant → `Accountant` |
+| Accounting | the current Jalali year per company, with its twelve generated periods and the first open period active |
+
+Sign in as a seeded user with the fixture password `Seed-user-password-1!`
+(development/test only — it is applied when a user is *created* and never to an
+existing identity). The differences are the point: the accountant of `آریا` can
+read its own company and nothing else, the administrator of `آریا` has no access
+to `پارس`, and the Product Owner can exercise supported operations in both.
+
+### Repeat runs, and what is never touched
+
+- Users are matched by email, roles by name within the tenant, memberships by
+  (user, tenant), fiscal years by label, and companies by the key recorded in
+  `seed_fixtures` — a small infrastructure-owned table that maps a stable fixture
+  key to the identity it created. A second run therefore reports `0 created`.
+- A seeded credential is set only when the user is created: re-running never
+  resets a password or overwrites developer-managed data.
+- The dataset is created by application use cases, so each unit stays atomic; the
+  run as a whole is not one transaction. It is *retry-safe* instead: every
+  fixture is looked up before it is created, so re-running after a partial
+  failure completes the missing pieces without destructive cleanup.
+- The command never truncates, drops or deletes anything. A conflict (for
+  example, a seeded email that exists but is inactive) fails visibly instead of
+  being worked around.
+
+### Troubleshooting
+
+| Symptom | Cause and fix |
+| --- | --- |
+| `Refusing to seed the "production" environment` | `NODE_ENV=production` (or unset in a production image): seeding is development/test only by design. |
+| `SYSTEM_ADMIN_ENABLED must be true to seed` | Set `SYSTEM_ADMIN_ENABLED=true` plus the email/password, or use a `.env` that already does. |
+| `Configured Product Owner email conflicts with an existing identity` | The configured email belongs to a user without the platform grant or without a credential. Resolve it through an audited operator workflow; the bootstrap will not self-promote. |
+| API fails to start with a bootstrap error | The configured Product Owner cannot be provisioned (conflict, unreachable database, refused credential). The message names the failing step and never a secret. |
+| `Failed query: … seed_fixtures` | Migrations are pending: run `pnpm --filter @accounting-saas/backend db:migrate`. |
 
 ## Rules for new code
 

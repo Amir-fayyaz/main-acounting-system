@@ -26,3 +26,8 @@ Thumbs.db
 
 # Local infrastructure data
 .tmp/
+
+# Local helper artifacts (never commit)
+*.ps1
+deepseek_full_chat.json
+project-dump.txt

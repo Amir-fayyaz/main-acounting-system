@@ -56,6 +56,18 @@ describe('ForgotForm — مرحله ۱', () => {
 });
 
 describe('ForgotForm — مرحله ۲', () => {
+  it('در ارسال نامعتبر روی OTP فوکوس می‌کند و پیام خطا به ورودی متصل است', async () => {
+    render(<ForgotForm />);
+    await goToStep2();
+    await user.click(screen.getByRole('button', { name: 'تغییر رمز عبور' }));
+
+    const otp = screen.getByLabelText('کد تأیید ۶ رقمی');
+    await waitFor(() => expect(otp).toHaveFocus());
+    expect(otp).toHaveAttribute('aria-invalid', 'true');
+    expect(otp).toHaveAccessibleDescription('کد ۶ رقمی را کامل وارد کنید.');
+    expect(m.push).not.toHaveBeenCalled();
+  });
+
   it('کد ناقص و رمز کوتاه خطا می‌دهند', async () => {
     render(<ForgotForm />);
     await goToStep2();

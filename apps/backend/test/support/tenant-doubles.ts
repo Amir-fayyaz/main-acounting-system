@@ -1,8 +1,11 @@
 import type { TenantEventRecorder } from '../../src/modules/tenant/application/ports/tenant-event-recorder.port.js';
+import type { TenantOwnerEnrollment } from '../../src/modules/tenant/application/ports/tenant-owner-enrollment.port.js';
 import { Tenant, type TenantSnapshot } from '../../src/modules/tenant/domain/aggregates/tenant.js';
 import type { TenantId } from '../../src/modules/tenant/domain/value-objects/tenant-id.js';
 import type { TenantRepository } from '../../src/modules/tenant/domain/repositories/tenant.repository.js';
 import { TenantName } from '../../src/modules/tenant/domain/value-objects/tenant-name.js';
+import type { DomainError } from '../../src/shared/errors/domain-error.js';
+import { Result } from '../../src/shared/errors/result.js';
 import type { DomainEvent } from '../../src/shared/messaging/domain-event.js';
 import { staleRevisionConflict } from '../../src/shared/persistence/optimistic-concurrency.js';
 import {
@@ -93,6 +96,33 @@ export class RecordingTenantEvents implements TenantEventRecorder {
     this.recorded.push(event);
   }
 }
+
+/**
+ * Records the owner enrollments company creation provisions, and can be told to
+ * fail so the "no company without an owner" path is testable.
+ */
+export class RecordingOwnerEnrollment implements TenantOwnerEnrollment {
+  public readonly enrolled: { readonly tenantId: string; readonly userId: string }[] = [];
+
+  private failure: DomainError | undefined;
+
+  /** Makes every subsequent enrollment answer with `failure`. */
+  public failWith(failure: DomainError): void {
+    this.failure = failure;
+  }
+
+  public async enrollOwner(input: {
+    readonly tenantId: string;
+    readonly userId: string;
+  }): Promise<Result<void, DomainError>> {
+    this.enrolled.push(input);
+
+    return this.failure === undefined ? Result.ok(undefined) : Result.fail(this.failure);
+  }
+}
+
+/** A stable creator identity for creation tests. */
+export const OWNER_USER_ID = '018f0d3c-6d0f-7a4b-9d4e-2b3c4d5e6f99';
 
 /** A boundary that runs work directly: enough for unit tests, no transaction. */
 export class PassthroughTransactionBoundary implements TransactionBoundary {

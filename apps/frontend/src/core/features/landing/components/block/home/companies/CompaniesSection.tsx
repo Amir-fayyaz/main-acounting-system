@@ -9,7 +9,7 @@ export function CompaniesSection() {
       <div
         id="companies"
         aria-labelledby="companies-title"
-        className="relative mx-auto w-full border-b border-[#e7e1d4]"
+        className="relative mx-auto w-full border-b border-border"
       >
         <div className="flex flex-wrap items-center justify-center gap-3 max-sm:gap-x-2.5 max-sm:gap-y-1.5">
           <H2
@@ -21,7 +21,7 @@ export function CompaniesSection() {
 
           <Badge
             variant="outline"
-            className="inline-flex items-center gap-1 rounded-sm border-[#d8d0c0] bg-transparent px-2 py-0.5 text-xs leading-relaxed font-medium whitespace-nowrap text-[#6e6251] max-sm:px-1.5"
+            className="inline-flex items-center gap-1 rounded-sm border-border bg-transparent px-2 py-0.5 text-xs leading-relaxed font-medium whitespace-nowrap text-muted-foreground max-sm:px-1.5"
           >
             <Span className="text-[length:inherit]">چیدمان نمونه</Span>
           </Badge>
@@ -37,7 +37,7 @@ export function CompaniesSection() {
           ))}
         </div>
 
-        <Muted className="mx-auto text-center text-xs leading-loose text-[#746b60] max-sm:max-w-72">
+        <Muted className="mx-auto text-center text-xs leading-loose text-muted-foreground max-sm:max-w-72">
           نام برندها صرفاً برای نمایش این چیدمان است و به معنی مشتری بودن یا تأیید تراز نیست.
         </Muted>
       </div>
