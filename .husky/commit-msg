@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+# commit-msg (FND-014)
+#
+# The message must match `<type>(<scope>): <short summary>` as documented in
+# CONTRIBUTING.md; the rules themselves live in commitlint.config.mjs and the
+# allowed types are the list CONTRIBUTING.md defines.
+#
+# git passes the path of the message file as the first argument. The fallback
+# covers a hook invoked without arguments (a plain `git commit -m` still writes
+# COMMIT_EDITMSG), so the check never silently passes because $1 was empty.
+set -e
+
+message_file="${1:-$(git rev-parse --git-dir)/COMMIT_EDITMSG}"
+
+pnpm exec commitlint --edit "$message_file"
