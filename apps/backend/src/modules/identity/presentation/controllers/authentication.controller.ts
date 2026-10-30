@@ -1,4 +1,6 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { RateLimitGuard } from '../../../../infrastructure/api/rate-limit/rate-limit.guard.js';
+import { RateLimit } from '../../../../infrastructure/api/rate-limit/rate-limit.decorator.js';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -25,7 +27,7 @@ import type { SignedUpView } from '../../application/views/signed-up.view.js';
 import { SignInUseCase } from '../../application/use-cases/sign-in.use-case.js';
 import { SignOutUseCase } from '../../application/use-cases/sign-out.use-case.js';
 import { SignUpUseCase } from '../../application/use-cases/sign-up.use-case.js';
-import { CurrentAuthentication } from '../decorators/current-principal.decorator.js';
+import { CurrentAuthentication } from '../decorators/current-authentication.decorator.js';
 import { AuthenticatedSessionResponseDto } from '../dto/authenticated-session-response.dto.js';
 import { SignInDto } from '../dto/sign-in.dto.js';
 import { SignInResponseDto } from '../dto/sign-in-response.dto.js';
@@ -111,6 +113,8 @@ export class AuthenticationController {
 
   @Post('sign-in')
   @Public()
+  @UseGuards(RateLimitGuard)
+  @RateLimit({ scope: 'auth.sign-in', perIp: true, perIdentity: 'email' })
   @ApiOperation({
     summary: 'Sign in',
     description:
@@ -137,7 +141,8 @@ export class AuthenticationController {
 
   @Get('session')
   @RequiresAuthentication()
-  @UseGuards(AuthenticationGuard)
+  @UseGuards(AuthenticationGuard, RateLimitGuard)
+  @RateLimit({ scope: 'auth.session', perIp: true })
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Read the current authentication state',
@@ -158,7 +163,8 @@ export class AuthenticationController {
 
   @Post('sign-out')
   @RequiresAuthentication()
-  @UseGuards(AuthenticationGuard)
+  @UseGuards(AuthenticationGuard, RateLimitGuard)
+  @RateLimit({ scope: 'auth.sign-out', perIp: true })
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiBearerAuth()
   @ApiOperation({

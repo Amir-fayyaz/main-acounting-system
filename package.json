@@ -20,6 +20,7 @@
     "lint:fix": "eslint . --fix",
     "deps:check": "pnpm --filter @accounting-saas/backend deps:check",
     "test": "pnpm -r test",
+    "seed": "pnpm --filter @accounting-saas/backend seed",
     "test:backend:e2e": "pnpm --filter @accounting-saas/backend test:e2e",
     "verify": "node tooling/scripts/verify.mjs",
     "format": "prettier --write .",

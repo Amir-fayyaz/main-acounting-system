@@ -1,18 +1,20 @@
 'use client';
 
-import { InputErrorMassage, Span } from '@/core/components/custom/ui/typography/Typography';
-import { Button } from '@/core/components/shadcn/ui/button/button';
 import {
+  Button,
+  InputErrorMassage,
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
-} from '@/core/components/shadcn/ui/input-otp/input-otp';
+  Span,
+} from '@repo/web/ui';
 import { RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
+import { useController, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import type { ForgotStep1Values, ForgotStep2Values } from '../../assets/@types/auth.types';
-import { useAuthForm } from '../../hook/useAuthForm';
+import type * as z from 'zod/mini';
+import { zodMiniResolver } from '@/core/lib/zod/zod';
 import { PASSWORD_HINT, forgotStep1Schema, forgotStep2Schema } from '../../lib/auth-schemas';
 import { normalizeDigits } from '../../utils/normalizeDigits';
 import { AuthField } from '../ui/Auth-Field/AuthField';
@@ -24,30 +26,44 @@ const OTP_LENGTH = 6;
 const OTP_LENGTH_FA = OTP_LENGTH.toLocaleString('fa-IR');
 const OTP_SLOTS = Array.from({ length: OTP_LENGTH }, (_, i) => i);
 
+type ForgotStep1Values = z.infer<typeof forgotStep1Schema>;
+type ForgotStep2Values = z.infer<typeof forgotStep2Schema>;
+
 export function ForgotForm() {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2>(1);
+  const [recoveryId, setRecoveryId] = useState('');
 
-  const step1 = useAuthForm<ForgotStep1Values>({ id: '' }, forgotStep1Schema);
-  const step2 = useAuthForm<ForgotStep2Values>({ otp: '', password: '' }, forgotStep2Schema);
+  const step1 = useForm<ForgotStep1Values>({
+    resolver: zodMiniResolver(forgotStep1Schema),
+    defaultValues: { id: '' },
+  });
+  const step2 = useForm<ForgotStep2Values>({
+    resolver: zodMiniResolver(forgotStep2Schema),
+    defaultValues: { otp: '', password: '' },
+  });
+  const {
+    field: { ref: otpRef, ...otpField },
+    fieldState: otpState,
+  } = useController({
+    control: step2.control,
+    name: 'otp',
+  });
 
-  function sendCode(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!step1.validate()) return;
+  const sendCode = step1.handleSubmit((data) => {
+    setRecoveryId(data.id);
     toast.success('کد ارسال شد (شبیه‌سازی)');
     setStep(2);
-  }
+  });
 
   function resend() {
     toast.success('کد ارسال شد (شبیه‌سازی)');
   }
 
-  function resetPassword(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!step2.validate()) return;
+  const resetPassword = step2.handleSubmit(() => {
     toast.success('رمز عبور تغییر کرد. وارد شوید.');
     setTimeout(() => router.push('/login'), 1200);
-  }
+  });
 
   return (
     <>
@@ -59,33 +75,38 @@ export function ForgotForm() {
           />
           <form onSubmit={sendCode} noValidate className="grid gap-4">
             <AuthField
-              name="id"
               label="ایمیل یا شماره موبایل"
               ltr
               autoComplete="username"
               placeholder="you@company.ir"
-              value={step1.values.id}
-              error={step1.errors.id}
-              onChange={(e) => step1.setValue('id', normalizeDigits(e.target.value))}
+              error={step1.formState.errors.id?.message}
+              {...step1.register('id', { setValueAs: normalizeDigits })}
             />
-            <AuthSubmitButton>ارسال کد تأیید</AuthSubmitButton>
+            <AuthSubmitButton loading={step1.formState.isSubmitting}>
+              ارسال کد تأیید
+            </AuthSubmitButton>
           </form>
         </>
       ) : (
         <>
           <AuthHeader
             title="کد تأیید را وارد کنید"
-            description={`کد ${OTP_LENGTH_FA} رقمی به ${step1.values.id.trim()} ارسال شد.`}
+            description={`کد ${OTP_LENGTH_FA} رقمی به ${recoveryId} ارسال شد.`}
           />
           <form onSubmit={resetPassword} noValidate className="grid gap-4">
             <div>
               <InputOTP
+                ref={otpRef}
+                name={otpField.name}
                 maxLength={OTP_LENGTH}
                 inputMode="numeric"
                 autoFocus
                 aria-label={`کد تأیید ${OTP_LENGTH_FA} رقمی`}
-                value={step2.values.otp}
-                onChange={(v) => step2.setValue('otp', normalizeDigits(v).replace(/\D/g, ''))}
+                aria-invalid={otpState.invalid || undefined}
+                aria-describedby={otpState.error ? 'otp-error' : undefined}
+                value={otpField.value}
+                onBlur={otpField.onBlur}
+                onChange={(value) => otpField.onChange(normalizeDigits(value).replace(/\D/g, ''))}
                 containerClassName="justify-center gap-2 [direction:ltr]"
               >
                 <InputOTPGroup className="gap-2">
@@ -98,22 +119,22 @@ export function ForgotForm() {
                   ))}
                 </InputOTPGroup>
               </InputOTP>
-              <InputErrorMassage role="alert" className="text-center">
-                {step2.errors.otp}
+              <InputErrorMassage id="otp-error" role="alert" className="text-center">
+                {step2.formState.errors.otp?.message}
               </InputErrorMassage>
             </div>
 
             <AuthField
-              name="password"
               label="رمز عبور جدید"
               type="password"
               autoComplete="new-password"
               placeholder={PASSWORD_HINT}
-              value={step2.values.password}
-              error={step2.errors.password}
-              onChange={(e) => step2.setValue('password', e.target.value)}
+              error={step2.formState.errors.password?.message}
+              {...step2.register('password')}
             />
-            <AuthSubmitButton>تغییر رمز عبور</AuthSubmitButton>
+            <AuthSubmitButton loading={step2.formState.isSubmitting}>
+              تغییر رمز عبور
+            </AuthSubmitButton>
 
             <div className="flex items-center justify-center gap-2">
               <Span className="text-sm text-muted-foreground">کد را دریافت نکردید؟</Span>

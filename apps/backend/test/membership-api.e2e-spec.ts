@@ -11,6 +11,8 @@ import { CreateMembershipUseCase } from '../src/modules/identity/application/use
 import { GetMembershipUseCase } from '../src/modules/identity/application/use-cases/get-membership.use-case.js';
 import { ListTenantMembersUseCase } from '../src/modules/identity/application/use-cases/list-tenant-members.use-case.js';
 import { ListUserMembershipsUseCase } from '../src/modules/identity/application/use-cases/list-user-memberships.use-case.js';
+import { SelectActiveCompanyUseCase } from '../src/modules/identity/application/use-cases/select-active-company.use-case.js';
+import { MembershipActiveCompanySelection } from '../src/modules/identity/infrastructure/membership/membership-active-company-selection.adapter.js';
 import {
   MEMBERSHIP_EVENT_RECORDER,
   MEMBERSHIP_REPOSITORY,
@@ -30,6 +32,7 @@ import type { UserRepository } from '../src/modules/identity/domain/repositories
 import { MembershipsController } from '../src/modules/identity/presentation/controllers/membership.controller.js';
 import { UsersController } from '../src/modules/identity/presentation/controllers/user.controller.js';
 import {
+  ACTIVE_COMPANY_SELECTION,
   TENANT_DIRECTORY,
   TENANT_EVENT_RECORDER,
   TENANT_REPOSITORY,
@@ -44,12 +47,18 @@ import type { TenantRepository } from '../src/modules/tenant/domain/repositories
 import { isTenantId, tenantIdFrom } from '../src/modules/tenant/domain/value-objects/tenant-id.js';
 import { TenantController } from '../src/modules/tenant/presentation/controllers/tenant.controller.js';
 import type { TransactionBoundary } from '../src/shared/transaction/transaction-boundary.js';
+import { RecordingAuditTrail } from './support/audit-doubles.js';
+import {
+  InMemoryActiveCompanyPreference,
+  StubTenantMembership,
+} from './support/identity-active-company-doubles.js';
 import {
   InMemoryMembershipRepository,
   PassthroughTransactionBoundary,
   RecordingMembershipEvents,
 } from './support/membership-doubles.js';
-import { InMemoryTenantRepository, RecordingTenantEvents } from './support/tenant-doubles.js';
+import { InMemoryTenantRepository, RecordingOwnerEnrollment, RecordingTenantEvents } from './support/tenant-doubles.js';
+import { authenticateAs } from './support/test-principal.js';
 import { InMemoryUserRepository, RecordingUserEvents } from './support/user-doubles.js';
 
 /**
@@ -81,6 +90,9 @@ async function createHarness(): Promise<Harness> {
   const userEvents = new RecordingUserEvents();
   const tenantEvents = new RecordingTenantEvents();
   const boundary = new PassthroughTransactionBoundary();
+  const preferences = new InMemoryActiveCompanyPreference();
+  const activeMemberships = new StubTenantMembership();
+  const audit = new RecordingAuditTrail();
 
   const directory: TenantDirectory = {
     async exists(tenantId: string): Promise<boolean> {
@@ -126,7 +138,7 @@ async function createHarness(): Promise<Harness> {
       {
         provide: CreateTenantUseCase,
         useFactory: (r: TenantRepository, e: TenantEventRecorder, b: TransactionBoundary) =>
-          new CreateTenantUseCase(r, e, b),
+          new CreateTenantUseCase(r, new RecordingOwnerEnrollment(), e, b),
         inject: [TENANT_REPOSITORY, TENANT_EVENT_RECORDER, TRANSACTION_BOUNDARY],
       },
       {
@@ -145,6 +157,13 @@ async function createHarness(): Promise<Harness> {
         useFactory: (r: TenantRepository, e: TenantEventRecorder, b: TransactionBoundary) =>
           new ChangeTenantStatusUseCase(r, e, b),
         inject: [TENANT_REPOSITORY, TENANT_EVENT_RECORDER, TRANSACTION_BOUNDARY],
+      },
+      {
+        provide: ACTIVE_COMPANY_SELECTION,
+        useFactory: () =>
+          new MembershipActiveCompanySelection(
+            new SelectActiveCompanyUseCase(activeMemberships, preferences, audit, boundary),
+          ),
       },
       {
         provide: CreateMembershipUseCase,
@@ -191,6 +210,7 @@ async function createHarness(): Promise<Harness> {
 
   const app = moduleRef.createNestApplication();
   configureApplication(app);
+  authenticateAs(app);
   await app.init();
 
   return { app, memberships, membershipEvents };

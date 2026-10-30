@@ -1,4 +1,4 @@
-import { H1, Muted } from '@/core/components/custom/ui/typography/Typography';
+import { H1, Muted } from '@repo/web/ui';
 
 type AuthHeaderProps = {
   title: string;

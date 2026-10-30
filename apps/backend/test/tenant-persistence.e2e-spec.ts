@@ -28,7 +28,11 @@ import { TenantScope } from '../src/shared/tenant/tenant-scope.js';
 import { TenantIsolationViolationError } from '../src/shared/tenant/tenant.errors.js';
 import type { TransactionBoundary } from '../src/shared/transaction/transaction-boundary.js';
 import { createTransactionBoundary } from '../src/shared/transaction/transaction-boundary.js';
-import { RecordingTenantEvents } from './support/tenant-doubles.js';
+import {
+  OWNER_USER_ID,
+  RecordingOwnerEnrollment,
+  RecordingTenantEvents,
+} from './support/tenant-doubles.js';
 
 /**
  * Tenant persistence against a real MySQL server (IAM-001).
@@ -116,10 +120,15 @@ describe.skipIf(!integrationEnabled)('tenant persistence (integration)', () => {
 
   it('round-trips a tenant and keeps its identity reusable as a tenant context', async () => {
     const events = new RecordingTenantEvents();
-    const create = new CreateTenantUseCase(repository, events, boundary);
+    const create = new CreateTenantUseCase(
+      repository,
+      new RecordingOwnerEnrollment(),
+      events,
+      boundary,
+    );
 
     const created = await TenantScope.runAsSystem(() =>
-      create.execute(new CreateTenant({ name: 'Acme Trading Co.' })),
+      create.execute(new CreateTenant({ ownerUserId: OWNER_USER_ID, name: 'Acme Trading Co.' })),
     );
     expect(created.isOk()).toBe(true);
     const view = created.valueOrThrow();
@@ -143,11 +152,16 @@ describe.skipIf(!integrationEnabled)('tenant persistence (integration)', () => {
 
   it('advances the revision by exactly one on an accepted update', async () => {
     const events = new RecordingTenantEvents();
-    const create = new CreateTenantUseCase(repository, events, boundary);
+    const create = new CreateTenantUseCase(
+      repository,
+      new RecordingOwnerEnrollment(),
+      events,
+      boundary,
+    );
     const update = new UpdateTenantUseCase(repository, events, boundary);
 
     const created = (
-      await TenantScope.runAsSystem(() => create.execute(new CreateTenant({ name: 'Before' })))
+      await TenantScope.runAsSystem(() => create.execute(new CreateTenant({ ownerUserId: OWNER_USER_ID, name: 'Before' })))
     ).valueOrThrow();
 
     const updated = await TenantScope.run(createTenantContext(created.id), () =>
@@ -163,11 +177,16 @@ describe.skipIf(!integrationEnabled)('tenant persistence (integration)', () => {
 
   it('refuses the second of two writes that read the same revision, keeping the winner', async () => {
     const events = new RecordingTenantEvents();
-    const create = new CreateTenantUseCase(repository, events, boundary);
+    const create = new CreateTenantUseCase(
+      repository,
+      new RecordingOwnerEnrollment(),
+      events,
+      boundary,
+    );
     const changeStatus = new ChangeTenantStatusUseCase(repository, events, boundary);
 
     const created = (
-      await TenantScope.runAsSystem(() => create.execute(new CreateTenant({ name: 'Contended' })))
+      await TenantScope.runAsSystem(() => create.execute(new CreateTenant({ ownerUserId: OWNER_USER_ID, name: 'Contended' })))
     ).valueOrThrow();
     const id = tenantIdFrom(created.id);
 
@@ -207,9 +226,14 @@ describe.skipIf(!integrationEnabled)('tenant persistence (integration)', () => {
 
   it('reports a lost race as a distinguishable stale revision at the adapter boundary', async () => {
     const events = new RecordingTenantEvents();
-    const create = new CreateTenantUseCase(repository, events, boundary);
+    const create = new CreateTenantUseCase(
+      repository,
+      new RecordingOwnerEnrollment(),
+      events,
+      boundary,
+    );
     const created = (
-      await TenantScope.runAsSystem(() => create.execute(new CreateTenant({ name: 'Racy' })))
+      await TenantScope.runAsSystem(() => create.execute(new CreateTenant({ ownerUserId: OWNER_USER_ID, name: 'Racy' })))
     ).valueOrThrow();
     const id = tenantIdFrom(created.id);
 
@@ -237,12 +261,17 @@ describe.skipIf(!integrationEnabled)('tenant persistence (integration)', () => {
 
   it('refuses to read or change a tenant from another tenant’s scope', async () => {
     const events = new RecordingTenantEvents();
-    const create = new CreateTenantUseCase(repository, events, boundary);
+    const create = new CreateTenantUseCase(
+      repository,
+      new RecordingOwnerEnrollment(),
+      events,
+      boundary,
+    );
     const created = (
-      await TenantScope.runAsSystem(() => create.execute(new CreateTenant({ name: 'Owned Co.' })))
+      await TenantScope.runAsSystem(() => create.execute(new CreateTenant({ ownerUserId: OWNER_USER_ID, name: 'Owned Co.' })))
     ).valueOrThrow();
     const other = (
-      await TenantScope.runAsSystem(() => create.execute(new CreateTenant({ name: 'Other Co.' })))
+      await TenantScope.runAsSystem(() => create.execute(new CreateTenant({ ownerUserId: OWNER_USER_ID, name: 'Other Co.' })))
     ).valueOrThrow();
 
     // The record exists, but not for the other tenant.
@@ -266,11 +295,16 @@ describe.skipIf(!integrationEnabled)('tenant persistence (integration)', () => {
 
   it('refuses to create a tenant from inside a tenant scope', async () => {
     const events = new RecordingTenantEvents();
-    const create = new CreateTenantUseCase(repository, events, boundary);
+    const create = new CreateTenantUseCase(
+      repository,
+      new RecordingOwnerEnrollment(),
+      events,
+      boundary,
+    );
 
     await expect(
       inTenant('018f0d3c-6d0f-7a4b-9d4e-2b3c4d5e6f70', () =>
-        create.execute(new CreateTenant({ name: 'Escalated Co.' })),
+        create.execute(new CreateTenant({ ownerUserId: OWNER_USER_ID, name: 'Escalated Co.' })),
       ),
     ).rejects.toBeInstanceOf(TenantIsolationViolationError);
   });

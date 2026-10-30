@@ -1,4 +1,3 @@
-
 import {
   ArrowLeft,
   Banknote,
@@ -28,7 +27,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
-import { cn } from '@/core/utils/shadcn/utils';
+import { cn } from '@repo/web/ui/utils/cn';
 
 export type LandingIconName =
   | 'logo'
@@ -100,10 +99,7 @@ export function LandingIcon({ name, className }: LandingIconProps) {
       aria-hidden="true"
       focusable="false"
       strokeWidth={1.7}
-      className={cn(
-        'inline-block size-[22px] shrink-0',
-        className,
-      )}
+      className={cn('inline-block size-5 shrink-0', className)}
     />
   );
 }

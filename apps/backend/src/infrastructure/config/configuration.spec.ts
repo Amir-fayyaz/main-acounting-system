@@ -37,6 +37,7 @@ describe('loadConfiguration', () => {
       retryMaxDelayMs: 30000,
     });
     expect(configuration.authentication).toEqual({ sessionTtlMinutes: 60 });
+    expect(configuration.systemAdmin).toEqual({ enabled: false, email: '', password: '', displayName: 'Product Owner' });
     expect(configuration.scheduler).toEqual({ intervalMs: 1000 });
     expect(configuration.outbox).toEqual({
       batchSize: 25,
@@ -84,6 +85,10 @@ describe('loadConfiguration', () => {
       OUTBOX_RETRY_BASE_DELAY_MS: '400',
       OUTBOX_RETRY_MAX_DELAY_MS: '12000',
       OUTBOX_PUBLISH_INTERVAL_MS: '500',
+      SYSTEM_ADMIN_ENABLED: 'true',
+      SYSTEM_ADMIN_EMAIL: ' Owner@Example.com ',
+      SYSTEM_ADMIN_PASSWORD: 'strong-password',
+      SYSTEM_ADMIN_DISPLAY_NAME: 'Product Owner',
     });
 
     expect(configuration.environment).toMatchObject({ name: 'test', isTest: true });
@@ -115,6 +120,12 @@ describe('loadConfiguration', () => {
       retryMaxDelayMs: 5000,
     });
     expect(configuration.authentication).toEqual({ sessionTtlMinutes: 15 });
+    expect(configuration.systemAdmin).toEqual({
+      enabled: true,
+      email: 'owner@example.com',
+      password: 'strong-password',
+      displayName: 'Product Owner',
+    });
     expect(configuration.scheduler).toEqual({ intervalMs: 250 });
     expect(configuration.outbox).toEqual({
       batchSize: 10,
@@ -161,6 +172,43 @@ describe('loadConfiguration', () => {
     expect((caught as ConfigurationValidationError).problems).toEqual([
       'OUTBOX_RETRY_BASE_DELAY_MS must not be greater than OUTBOX_RETRY_MAX_DELAY_MS',
     ]);
+  });
+
+  it('requires a valid email and password when Product Owner bootstrap is enabled', () => {
+    let caught: unknown;
+    try {
+      loadConfiguration({
+        NODE_ENV: 'development',
+        SYSTEM_ADMIN_ENABLED: 'true',
+        SYSTEM_ADMIN_EMAIL: 'not-valid',
+        SYSTEM_ADMIN_PASSWORD: '',
+      });
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(ConfigurationValidationError);
+    expect((caught as ConfigurationValidationError).problems).toEqual([
+      'SYSTEM_ADMIN_EMAIL must be a valid email address',
+      'SYSTEM_ADMIN_PASSWORD is required when SYSTEM_ADMIN_ENABLED=true',
+    ]);
+    expect((caught as Error).message).not.toContain('not-valid');
+  });
+
+  it('requires explicit production opt-in and never defaults bootstrap credentials', () => {
+    const configuration = loadConfiguration({
+      NODE_ENV: 'production',
+      MYSQL_PASSWORD: 'database-password',
+      MINIO_ACCESS_KEY: 'minio-access',
+      MINIO_SECRET_KEY: 'minio-secret',
+    });
+
+    expect(configuration.systemAdmin).toEqual({
+      enabled: false,
+      email: '',
+      password: '',
+      displayName: 'Product Owner',
+    });
   });
 
   it('accepts a fully configured production process', () => {

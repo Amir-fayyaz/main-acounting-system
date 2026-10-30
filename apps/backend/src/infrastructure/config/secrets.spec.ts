@@ -38,16 +38,22 @@ describe('SecretRedactor', () => {
 });
 
 describe('collectSecretValues', () => {
-  it('collects only the configured secret keys that hold a value', () => {
+  it('collects only configured secret keys that hold a value, including bootstrap credentials', () => {
     const values = collectSecretValues({
       MYSQL_PASSWORD: 'database-password',
       MYSQL_ROOT_PASSWORD: '',
       MINIO_ACCESS_KEY: 'minio-local',
       MINIO_SECRET_KEY: 'minio-secret',
+      SYSTEM_ADMIN_PASSWORD: 'product-owner-password',
       MYSQL_HOST: 'mysql',
     });
 
-    expect(values).toEqual(['database-password', 'minio-local', 'minio-secret']);
+    expect(values).toEqual([
+      'database-password',
+      'minio-local',
+      'minio-secret',
+      'product-owner-password',
+    ]);
   });
 
   it('builds a redactor from the process environment', () => {

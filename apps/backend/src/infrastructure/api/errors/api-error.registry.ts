@@ -21,6 +21,8 @@ export const API_ERROR_CODES = {
   INTERNAL_ERROR: 'INTERNAL_ERROR',
   /** Tenant context required but missing or malformed (TNT-002). */
   TENANT_REQUIRED: 'TENANT_REQUIRED',
+  /** Too many requests: the caller exceeded a rate limit (SEC-001). */
+  RATE_LIMITED: 'RATE_LIMITED',
 } as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[keyof typeof API_ERROR_CODES];
@@ -78,6 +80,11 @@ const DEFINITIONS: Readonly<Record<ApiErrorCode, ApiErrorDefinition>> = {
     category: 'client',
     defaultMessage: 'A tenant context is required for this operation.',
   },
+  RATE_LIMITED: {
+    status: HttpStatus.TOO_MANY_REQUESTS,
+    category: 'client',
+    defaultMessage: 'Too many requests. Try again later.',
+  },
 };
 
 export const API_ERROR_DEFINITIONS = DEFINITIONS;
@@ -89,6 +96,7 @@ const STATUS_TO_CODE: Readonly<Record<number, ApiErrorCode>> = {
   [HttpStatus.NOT_FOUND]: API_ERROR_CODES.NOT_FOUND,
   [HttpStatus.CONFLICT]: API_ERROR_CODES.CONFLICT,
   [HttpStatus.UNPROCESSABLE_ENTITY]: API_ERROR_CODES.DOMAIN_ERROR,
+  [HttpStatus.TOO_MANY_REQUESTS]: API_ERROR_CODES.RATE_LIMITED,
 };
 
 /**
