@@ -39,7 +39,7 @@ export function ConnectedSection({
             'grid grid-cols-2 items-center',
             isPlain
               ? 'gap-20 max-xl:gap-11 max-lg:gap-7 max-sm:grid-cols-1 max-sm:gap-6'
-              : 'gap-12 rounded-2xl border border-[#e7e1d4] bg-[#fffef9] p-9 max-xl:gap-7 max-xl:p-6 max-sm:grid-cols-1 max-sm:gap-6 max-sm:rounded-xl max-sm:py-6 max-sm:px-5 max-md:grid-cols-2 max-md:gap-6 max-md:p-6',
+              : 'gap-12 rounded-2xl border border-border bg-card p-9 max-xl:gap-7 max-xl:p-6 max-sm:grid-cols-1 max-sm:gap-6 max-sm:rounded-xl max-sm:py-6 max-sm:px-5 max-md:grid-cols-2 max-md:gap-6 max-md:p-6',
           )}
         >
           <div>
@@ -59,7 +59,7 @@ export function ConnectedSection({
               {data.title.second}
             </H2>
 
-            <P className="text-xs leading-loose text-[#746b60]">{data.description}</P>
+            <P className="text-xs leading-loose text-muted-foreground">{data.description}</P>
 
             {data.benefits?.length ? (
               <BenefitsList
@@ -78,7 +78,7 @@ export function ConnectedSection({
               <Button
                 asChild
                 variant="secondary"
-                className="border border-[#231b12] bg-[#231b12] text-[#fff7e8] hover:bg-[#35291c] hover:text-[#fff7e8] max-sm:min-h-10 max-sm:py-2.5 max-sm:px-4 max-sm:text-xs"
+                className="border border-ink-soft bg-ink-soft text-sand-soft hover:bg-foreground hover:text-sand-soft max-sm:min-h-10 max-sm:py-2.5 max-sm:px-4 max-sm:text-xs"
               >
                 <Link href={data.cta.href}>
                   <Span className="text-[length:inherit]">{data.cta.label}</Span>
@@ -88,10 +88,10 @@ export function ConnectedSection({
             ) : null}
           </div>
 
-          <div className="relative rounded-xl border border-[#e3dccd] bg-[#f8f7ef] p-5 max-sm:p-3.5 max-md:p-3">
+          <div className="relative rounded-xl border border-border bg-background p-5 max-sm:p-3.5 max-md:p-3">
             <div className="mb-3.5 flex items-center justify-between text-xs font-semibold">
               <Span className="text-xs">{data.boardTitle}</Span>
-              <LandingIcon name="link" className="size-4 text-[#8c7a61]" />
+              <LandingIcon name="link" className="size-4 text-muted-foreground" />
             </div>
 
             <Tabs
@@ -102,7 +102,7 @@ export function ConnectedSection({
               <TabsList
                 aria-label={data.tabsAriaLabel}
                 variant="line"
-                className="mb-4 flex h-auto! w-full justify-start gap-1 rounded-none border-b border-[#eee8dc] bg-transparent p-0 pb-3 max-sm:gap-0.5"
+                className="mb-4 flex h-auto! w-full justify-start gap-1 rounded-none border-b border-border bg-transparent p-0 pb-3 max-sm:gap-0.5"
               >
                 {data.tabs.map((tab) => (
                   <TabsTrigger key={tab.key} value={tab.key} className="workflowTabClass">
@@ -122,10 +122,10 @@ export function ConnectedSection({
                     <div
                       key={step.title}
                       className={cn(
-                        'relative mt-3 flex min-h-16 items-center justify-between gap-3 rounded-md border border-[#f1ede2] bg-card p-3 max-sm:gap-2 max-sm:p-2.5 max-md:gap-2 max-md:p-2.5',
+                        'relative mt-3 flex min-h-16 items-center justify-between gap-3 rounded-md border border-sand bg-card p-3 max-sm:gap-2 max-sm:p-2.5 max-md:gap-2 max-md:p-2.5',
                         index > 0 &&
-                          "before:absolute before:-top-3.5 before:right-8 before:h-3 before:w-px before:bg-[#d4c6ab] before:content-['']",
-                        index === steps.length - 1 && 'border-[#e5eee1] bg-[#eff5ee]',
+                          "before:absolute before:-top-3.5 before:right-8 before:h-3 before:w-px before:bg-border before:content-['']",
+                        index === steps.length - 1 && 'border-secondary bg-secondary',
                       )}
                     >
                       <div className="flex min-w-0 items-center gap-3 max-sm:gap-2 max-md:gap-2">
@@ -141,7 +141,7 @@ export function ConnectedSection({
                             <Span className="text-[length:inherit]">{step.title}</Span>
                           </strong>
 
-                          <Small className="mt-0.5 block text-xs text-[#746b60]">
+                          <Small className="mt-0.5 block text-xs text-muted-foreground">
                             {step.description}
                           </Small>
                         </div>
@@ -150,8 +150,8 @@ export function ConnectedSection({
                           className={cn(
                             'text-[length:inherit]',
                             cn(
-                              'grid h-9 w-10 shrink-0 place-items-center rounded-sm border border-[#eee7d9] bg-white text-[#b36b00] max-sm:h-8 max-sm:w-7 max-md:h-7 max-md:w-7 [&_svg]:size-4 max-sm:[&_svg]:size-3.5',
-                              index === steps.length - 1 && 'text-[#28765b]',
+                              'grid h-9 w-10 shrink-0 place-items-center rounded-sm border border-border bg-card text-brand-link max-sm:h-8 max-sm:w-7 max-md:h-7 max-md:w-7 [&_svg]:size-4 max-sm:[&_svg]:size-3.5',
+                              index === steps.length - 1 && 'text-muted-foreground',
                             ),
                           )}
                         >
@@ -164,7 +164,7 @@ export function ConnectedSection({
               ))}
             </Tabs>
 
-            <div className="mt-4 flex items-center justify-between text-xs text-[#746b60] [&>span]:flex [&>span]:items-center [&>span]:gap-1 [&_svg]:size-3 [&_svg]:text-[#28765b] max-sm:[&>span:last-child]:hidden max-md:[&>span:last-child]:hidden">
+            <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground [&>span]:flex [&>span]:items-center [&>span]:gap-1 [&_svg]:size-3 [&_svg]:text-muted-foreground max-sm:[&>span:last-child]:hidden max-md:[&>span:last-child]:hidden">
               <Span className="text-xs">
                 <LandingIcon name="shield" />
                 {data.securityLabel}

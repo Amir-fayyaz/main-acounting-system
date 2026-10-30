@@ -102,6 +102,9 @@ REDIS_INTEGRATION=1 pnpm --filter @accounting-saas/backend test   # + Redis-back
 
 # Transaction boundary and transactional outbox against a real MySQL server (SHR-005, SHR-006)
 MYSQL_INTEGRATION=1 pnpm --filter @accounting-saas/backend test   # + MySQL-backed transaction & outbox tests
+
+# Rate limiting on authentication endpoints (SEC-001)
+REDIS_INTEGRATION=1 pnpm --filter @accounting-saas/backend test   # + Redis-backed rate-limit tests
 ```
 
 From the repository root, `pnpm dev`, `pnpm typecheck`, `pnpm lint` and `pnpm test`
@@ -168,6 +171,51 @@ without opening a connection, so the API process starts even when the
 infrastructure is not running yet; `GET /api/health/ready` reports the actual
 state of each dependency. Start the local dependencies with `pnpm infra:up` from
 the repository root.
+
+## Rate limiting (SEC-001)
+
+Authentication endpoints are protected by a Redis-backed fixed-window rate
+limiter, enforced by `RateLimitGuard` via the `@RateLimit` decorator on each
+route. The guard is applied to the authentication controller only — it is not
+global.
+
+| Endpoint | Policy |
+| --- | --- |
+| `POST /api/v1/auth/sign-in` | Per client IP and per identity hint (email) |
+| `GET /api/v1/auth/session` | Per client IP |
+| `POST /api/v1/auth/sign-out` | Per client IP |
+
+Default window and thresholds (overridable via environment variables):
+
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `RATE_LIMIT_AUTH_WINDOW_MS` | `60000` | Fixed window length, in milliseconds |
+| `RATE_LIMIT_AUTH_MAX_PER_IP` | `20` | Max attempts per client IP per window |
+| `RATE_LIMIT_AUTH_MAX_PER_IDENTITY` | `5` | Max attempts per identity hint per window |
+
+When a limit is exceeded, the endpoint responds with HTTP **429** and the
+standard API error contract:
+
+```json
+{
+  "error": {
+    "code": "RATE_LIMITED",
+    "category": "client",
+    "message": "Rate limit exceeded for scope \"auth.sign-in\". Try again later.",
+    "correlationId": "..."
+  }
+}
+```
+
+Throttled responses also carry `Retry-After`, `X-RateLimit-Limit`,
+`X-RateLimit-Remaining` and `X-RateLimit-Reset` headers.
+
+The limiter **fails closed**: when Redis is unavailable, authentication
+attempts are refused with the same 429 error contract rather than being
+allowed through. No credential value (password, email, token) is logged or
+persisted by the limiter — only a hashed form of the subject is used as the
+Redis bucket key, and throttled requests are logged with scope, window and
+correlation id only.
 
 ## Endpoints
 
@@ -277,6 +325,44 @@ Contract notes for sign-up (IAM-008):
   in the transactional outbox (SHR-006) and `user.credential_changed` in the
   central audit trail (AUD-001). Sign-up invents no third audit or logging
   mechanism, and no audit record carries a secret.
+
+### Rate limiting (SEC-001)
+
+Authentication endpoints are protected by a Redis-backed sliding/fixed-window rate
+limiter applied per-route via `@RateLimit` and `RateLimitGuard`.
+
+**Protected endpoints:**
+
+| Method | Path                    | Policy                                              |
+| ------ | ----------------------- | --------------------------------------------------- |
+| POST   | `/api/v1/auth/sign-in`  | Per IP (`maxPerIp`) and per identity hint (`email`) |
+| GET    | `/api/v1/auth/session`  | Per IP only                                         |
+| POST   | `/api/v1/auth/sign-out` | Per IP only                                         |
+
+**Defaults (no default allows unlimited attempts):**
+
+| Key                          | Default | Purpose                                             |
+| ---------------------------- | ------- | --------------------------------------------------- |
+| `RATE_LIMIT_AUTH_WINDOW_MS`  | `60000` | Fixed window length in milliseconds                 |
+| `RATE_LIMIT_AUTH_MAX_PER_IP` | `20`    | Maximum requests per client IP per window           |
+| `RATE_LIMIT_AUTH_MAX_PER_IDENTITY` | `5` | Maximum requests per identity hint per window   |
+
+**429 error contract and headers:**
+
+- On throttling the API returns HTTP `429` with the standard error envelope
+  `{ error: { code: 'RATE_LIMITED', category: 'client', message, correlationId } }`.
+- Responses include `Retry-After` (seconds until window reset) and
+  `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset` (epoch
+  seconds) headers on throttled responses.
+- When the request carries `x-correlation-id` it is echoed in the response and
+  present in structured throttling logs.
+
+**Fail-closed behavior:**
+
+- If Redis is unavailable, credential-bearing authentication attempts are
+  **refused** (never allowed). The guard returns the same `RATE_LIMITED` error
+  contract. The refusal is logged in redacted form (subject values are never
+  logged or persisted). The limiter never logs or persists submitted credentials.
 
 ### Reference endpoints
 

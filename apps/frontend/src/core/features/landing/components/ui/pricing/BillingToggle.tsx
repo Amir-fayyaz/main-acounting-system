@@ -20,7 +20,7 @@ export function BillingToggle({
       <div
         role="group"
         aria-label="دوره پرداخت"
-        className="flex gap-1 rounded-full border border-[#dfd6c5] bg-[#eeeadf] p-1"
+        className="flex gap-1 rounded-full border border-border bg-sand p-1"
       >
         {periods.map((item) => {
           const selected = period === item.value;
@@ -33,9 +33,9 @@ export function BillingToggle({
               aria-pressed={selected}
               onClick={() => onPeriodChange(item.value)}
               className={cn(
-                'h-auto min-h-0 rounded-3xl bg-transparent px-5 py-1.5 text-xs leading-relaxed font-normal tracking-normal text-[#706147] shadow-none hover:scale-100 hover:bg-transparent hover:text-[#706147] active:scale-100 max-sm:px-4',
+                'h-auto min-h-0 rounded-3xl bg-transparent px-5 py-1.5 text-xs leading-relaxed font-normal tracking-normal text-muted-foreground shadow-none hover:scale-100 hover:bg-transparent hover:text-muted-foreground active:scale-100 max-sm:px-4',
                 selected &&
-                  'bg-[#fffdf6] font-semibold text-foreground shadow-[0_1px_5px_#5b39140c] hover:bg-[#fffdf6] hover:text-foreground',
+                  'bg-card font-semibold text-foreground shadow-[0_1px_5px_color-mix(in_srgb,var(--foreground)_5%,transparent)] hover:bg-card hover:text-foreground',
               )}
             >
               <Span className="text-[length:inherit]">{item.label}</Span>
@@ -46,7 +46,7 @@ export function BillingToggle({
 
       <Badge
         variant="outline"
-        className="rounded-sm border-0 bg-[#fff1d9] px-2 py-0.5 text-xs leading-relaxed font-normal text-[#76501c] max-sm:px-1.5"
+        className="rounded-sm border-0 bg-accent px-2 py-0.5 text-xs leading-relaxed font-normal text-muted-foreground max-sm:px-1.5"
       >
         <Span className="text-[length:inherit]">۲۰٪ تخفیف سالانه نمونه</Span>
       </Badge>

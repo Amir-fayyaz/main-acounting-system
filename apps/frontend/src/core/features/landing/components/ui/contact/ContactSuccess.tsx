@@ -26,7 +26,7 @@ export function ContactSuccess({ name, onReset }: ContactSuccessProps) {
         ، فرم شما بررسی شد. این یک پیش‌نمایش محلی است و پیام واقعاً ارسال نشده است.
       </P>
       <Button
-        className="min-h-12 rounded-lg border-border! px-6 text-xs text-ink! hover:bg-white!"
+        className="min-h-12 rounded-lg border-border! px-6 text-xs text-ink! hover:bg-card!"
         type="button"
         variant="outline"
         onClick={onReset}

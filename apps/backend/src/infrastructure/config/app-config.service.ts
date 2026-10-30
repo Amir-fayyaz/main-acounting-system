@@ -11,6 +11,7 @@ import type {
   JobsConfiguration,
   LoggingConfiguration,
   OutboxConfiguration,
+  RateLimitConfiguration,
   RedisConfiguration,
   SchedulerConfiguration,
   StorageConfiguration,
@@ -73,6 +74,10 @@ export class AppConfigService {
 
   get authentication(): AuthenticationConfiguration {
     return this.configuration.authentication;
+  }
+
+  get rateLimit(): RateLimitConfiguration {
+    return this.configuration.rateLimit;
   }
 
   get systemAdmin(): SystemAdminBootstrapConfiguration {

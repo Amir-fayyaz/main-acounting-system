@@ -12,18 +12,18 @@ export function Hero() {
       <div aria-labelledby="hero-title">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute top-20 left-1/2 h-180 w-280 -translate-x-1/2 rounded-full border border-[#e7dfce] opacity-65 max-sm:top-24 max-sm:h-144 max-sm:w-160 max-md:top-14 max-md:w-240"
+          className="pointer-events-none absolute top-20 left-1/2 h-180 w-280 -translate-x-1/2 rounded-full border border-border  opacity-65 max-sm:top-24 max-sm:h-144 max-sm:w-160 max-md:top-14 max-md:w-240"
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute top-1 left-1/2 h-240 w-360 -translate-x-1/2 rounded-full border border-dashed border-[#e7dfce] opacity-45 max-sm:top-12 max-sm:h-180 max-sm:w-200"
+          className="pointer-events-none absolute top-1 left-1/2 h-240 w-360 -translate-x-1/2 rounded-full border border-dashed border-border  opacity-45 max-sm:top-12 max-sm:h-180 max-sm:w-200"
         />
 
         <div
           aria-hidden="true"
           className={cn(
             'orbitIconClass',
-            'top-44 left-[10%] -rotate-[11deg] text-[#a86800] max-xl:left-[4%] max-md:top-32 max-md:left-[1%]',
+            'top-44 left-[10%] -rotate-[11deg] text-brand-link max-xl:left-[4%] max-md:top-32 max-md:left-[1%]',
           )}
         >
           <LandingIcon name="receipt" className="size-6" />
@@ -53,15 +53,15 @@ export function Hero() {
           aria-hidden="true"
           className={cn(
             'orbitIconClass',
-            'top-96 right-[17%] -rotate-[8deg] text-[#a86800] max-xl:right-[7%] max-md:hidden',
+            'top-96 right-[17%] -rotate-[8deg] text-brand-link max-xl:right-[7%] max-md:hidden',
           )}
         >
           <LandingIcon name="chart" className="size-6" />
         </div>
 
         <div className={cn('relative z-2 mx-auto max-w-4xl text-center')}>
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#e5dccb] bg-[#f7f6ee] px-3 py-1 text-xs text-[#5d5040] max-sm:gap-1.5 max-sm:px-2">
-            <Span className="inline-flex items-center gap-1 rounded-2xl bg-[#fff1d9] px-2 py-px text-[#875100] max-sm:px-1 max-sm:text-xs">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-xs text-muted-foreground  max-sm:gap-1.5 max-sm:px-2">
+            <Span className="inline-flex items-center gap-1 rounded-2xl bg-brand-soft px-2 py-px text-brand-link max-sm:px-1 max-sm:text-xs">
               <LandingIcon name="spark" className="size-3 shrink-0" />
               هوشمند، با اختیار شما
             </Span>
@@ -89,12 +89,12 @@ export function Hero() {
 
           <div className="mx-auto mt-5 flex w-fit items-center justify-center gap-2 sm:gap-5">
             <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-              <Check aria-hidden="true" className="shrink-0 text-[#28765b]" size={14} />
+              <Check aria-hidden="true" className="shrink-0 text-muted-foreground" size={14} />
               <Span className="text-xs text-muted-foreground">بدون نیاز به ثبت‌نام</Span>
             </div>
 
             <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-              <Check aria-hidden="true" className="shrink-0 text-[#28765b]" size={14} />
+              <Check aria-hidden="true" className="shrink-0 text-muted-foreground" size={14} />
               <Span className="text-xs text-muted-foreground">داده‌های نمونه، تجربه واقعی</Span>
             </div>
           </div>
@@ -102,7 +102,7 @@ export function Hero() {
 
         <HeroDashboard />
 
-        <div className="relative z-2 border-t border-[#e4dfd3] bg-[#f7f6ee] pt-5 max-sm:pt-4">
+        <div className="relative z-2 border-t border-border bg-background pt-5 max-sm:pt-4">
           <HeroBenefits />
         </div>
       </div>

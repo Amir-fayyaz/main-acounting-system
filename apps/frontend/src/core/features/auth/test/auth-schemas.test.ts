@@ -4,6 +4,7 @@ import {
   fieldErrors,
   forgotStep1Schema,
   forgotStep2Schema,
+  loginFormSchema,
   signUpSchema,
   signInSchema,
 } from '../lib/auth-schemas';
@@ -45,6 +46,20 @@ describe('signInSchema', () => {
     });
 
     expect(result.success && result.data.email).toBe('a@b.co');
+  });
+
+  it('schema فرم، مقدار remember را همراه داده‌ی parse شده نگه می‌دارد', () => {
+    const result = z.safeParse(loginFormSchema, {
+      email: '  a@b.co ',
+      password: '1',
+      remember: true,
+    });
+
+    expect(result.success && result.data).toEqual({
+      email: 'a@b.co',
+      password: '1',
+      remember: true,
+    });
   });
 });
 

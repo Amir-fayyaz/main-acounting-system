@@ -20,7 +20,7 @@ export function AssistantReview({
 
   return (
     <div aria-live="polite">
-      <P className="mt-4 mb-2.5 text-xs leading-loose text-[#625b4e] [&_strong]:font-semibold [&_strong]:text-foreground">
+      <P className="mt-4 mb-2.5 text-xs leading-loose text-muted-foreground [&_strong]:font-semibold [&_strong]:text-foreground">
         <strong>
           <Span className="text-[length:inherit]">{answer.strong}</Span>
         </strong>
@@ -28,7 +28,7 @@ export function AssistantReview({
         {answer.text}
       </P>
 
-      <div className="rounded-md border border-[#e8e2d6] bg-white p-3">
+      <div className="rounded-md border border-border bg-card p-3">
         <ReviewRows lines={preview.reviewLines} />
 
         <div className="review-line">
@@ -36,7 +36,7 @@ export function AssistantReview({
           <Badge
             className={cn(
               'text-xs',
-              approved ? 'bg-[#e7f4ed] text-[#28765b]' : 'bg-[#fff7e8] text-[#8a5708]',
+              approved ? 'bg-secondary text-muted-foreground' : 'bg-sand-soft text-muted-foreground',
             )}
           >
             <Span className="text-[length:inherit]">{status}</Span>
@@ -48,8 +48,8 @@ export function AssistantReview({
         className={cn(
           'my-3 flex items-start gap-1.5 rounded-sm border py-2 px-2.5 text-xs [&_svg]:mt-0.5 [&_svg]:size-3.5',
           approved
-            ? 'border-[#cfe3d8] bg-[#eef7f1] text-[#28765b]'
-            : 'border-[#f2e0b6] bg-[#fff5df] text-[#866016]',
+            ? 'border-border bg-secondary text-muted-foreground'
+            : 'border-border bg-accent text-muted-foreground',
         )}
       >
         <LandingIcon name="shield" />

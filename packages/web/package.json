@@ -20,6 +20,7 @@
     "./ui": "./ui/index.ts",
     "./ui/components/shadcn/ui/dialog/dialog": "./ui/components/shadcn/ui/dialog/dialog.tsx",
     "./styles/fonts/font": "./styles/fonts/font.ts",
+    "./api": "./api/index.ts",
     "./ui/panel": "./ui/panel.ts",
     "./ui/sidebar": "./ui/sidebar.ts",
     "./ui/utils/pagination": "./ui/utils/pagination.ts"
