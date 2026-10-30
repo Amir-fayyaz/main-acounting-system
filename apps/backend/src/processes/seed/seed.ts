@@ -1,13 +1,19 @@
 import 'reflect-metadata';
-import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 
 import { loadConfiguration } from '../../infrastructure/config/configuration.js';
 import { loadDotEnvFiles } from '../../infrastructure/config/dotenv.js';
-import { redactProcessSecrets } from '../../infrastructure/config/secrets.js';
-import { toNestLogLevels } from '../../infrastructure/logging/nest-log-levels.js';
+import { toLogError } from '../../infrastructure/logging/logger.js';
+import {
+  createProcessLogging,
+  startupProcessLogger,
+  type ProcessLogging,
+} from '../../infrastructure/logging/process-logging.js';
 import { DevelopmentSeedRunner, SeedEnvironmentRefusedError } from './development-seed.runner.js';
 import { SeedModule } from './seed.module.js';
+
+/** The logging layer, held outside `main` so the failure handler can reuse it. */
+let logging: ProcessLogging | undefined;
 
 /**
  * `pnpm seed` — the explicit development/test dataset command (DEV-001).
@@ -29,6 +35,7 @@ import { SeedModule } from './seed.module.js';
 async function main(): Promise<void> {
   loadDotEnvFiles();
   const configuration = loadConfiguration();
+  logging = createProcessLogging(configuration);
 
   if (!configuration.environment.isDevelopment && !configuration.environment.isTest) {
     process.stderr.write(
@@ -39,7 +46,7 @@ async function main(): Promise<void> {
   }
 
   const app = await NestFactory.createApplicationContext(SeedModule, {
-    logger: toNestLogLevels(configuration.logging.level),
+    logger: logging.bridge,
   });
 
   try {
@@ -64,8 +71,12 @@ async function main(): Promise<void> {
 }
 
 void main().catch((error: unknown) => {
+  const logger = logging?.logger ?? startupProcessLogger('seed');
   const details = error instanceof Error ? (error.stack ?? error.message) : String(error);
 
-  Logger.error(redactProcessSecrets(details), 'Seed');
+  logger.error('Seeding failed', {
+    error: toLogError(error),
+    detail: { context: 'Seed', stack: details },
+  });
   process.exitCode = 1;
 });

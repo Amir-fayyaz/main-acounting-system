@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
+import { RecordingLogger } from '../../../../test/support/logging-doubles.js';
 import { AppConfigService } from '../../config/app-config.service.js';
 import { loadConfiguration } from '../../config/configuration.js';
 import { RateLimitGuard } from './rate-limit.guard.js';
@@ -90,7 +91,7 @@ function setupGuard({
     getAllAndOverride: vi.fn(),
   } as unknown as Reflector;
 
-  const guard = new RateLimitGuard(reflector, limiter, config);
+  const guard = new RateLimitGuard(reflector, limiter, config, new RecordingLogger());
 
   return { guard, consume, config, reflector };
 }

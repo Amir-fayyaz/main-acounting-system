@@ -7,6 +7,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { configureApplication } from '../src/bootstrap.js';
 import { AppConfigModule } from '../src/infrastructure/config/app-config.module.js';
+import { LOGGER } from '../src/infrastructure/logging/logging.tokens.js';
+import { SILENT_LOGGER } from './support/logging-doubles.js';
 import { TRANSACTION_BOUNDARY } from '../src/infrastructure/database/database.tokens.js';
 import {
   AUTHENTICATION_AUDIT_RECORDER,
@@ -105,6 +107,7 @@ async function createHarness(): Promise<Harness> {
     imports: [AppConfigModule],
     controllers: [AuthenticationController],
     providers: [
+      { provide: LOGGER, useValue: SILENT_LOGGER },
       { provide: USER_REPOSITORY, useValue: users satisfies UserRepository },
       { provide: CREDENTIAL_REPOSITORY, useValue: credentials satisfies CredentialRepository },
       { provide: AUTH_SESSION_REPOSITORY, useValue: sessions satisfies AuthSessionRepository },

@@ -142,7 +142,7 @@ and scheduler processes call the same function:
 - every invalid value is collected and reported together, each message naming the
   variable and never echoing its value;
 - `NODE_ENV` must be one of `development`, `test`, `production`; `LOG_LEVEL` one of
-  `debug`, `info`, `warn`, `error`;
+  `debug`, `info`, `warn`, `error`; `LOG_FORMAT` one of `json`, `pretty`;
 - `MYSQL_PASSWORD`, `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` are mandatory when
   `NODE_ENV=production` and optional in development/test, so a fresh checkout boots
   and `GET /api/health/ready` reports the missing dependency instead;
@@ -157,7 +157,7 @@ committed or baked into an image (Engineering Principles, rule 10).
 **Grouping.** `configuration.types.ts` groups the values into `environment`
 (identification plus the derived `isDevelopment`/`isTest`/`isProduction` flags),
 `runtime` (`SERVICE_NAME`), `http`, `database`, `redis`, `storage`, `logging`
-(`LOG_LEVEL`), `jobs` (`WORKER_CONCURRENCY`, `WORKER_MAX_ATTEMPTS` — reserved for
+(`LOG_LEVEL`, `LOG_FORMAT` — see [Logging](#logging-fnd-011)), `jobs` (`WORKER_CONCURRENCY`, `WORKER_MAX_ATTEMPTS` — reserved for
 the worker process, ADR-008), `scheduler` (`SCHEDULER_INTERVAL_MS`) and `outbox`
 (`OUTBOX_BATCH_SIZE`, `OUTBOX_MAX_ATTEMPTS`, `OUTBOX_RETRY_*`,
 `OUTBOX_PUBLISH_INTERVAL_MS` — the publication contract of SHR-006), and
@@ -179,19 +179,19 @@ limiter, enforced by `RateLimitGuard` via the `@RateLimit` decorator on each
 route. The guard is applied to the authentication controller only — it is not
 global.
 
-| Endpoint | Policy |
-| --- | --- |
-| `POST /api/v1/auth/sign-in` | Per client IP and per identity hint (email) |
-| `GET /api/v1/auth/session` | Per client IP |
-| `POST /api/v1/auth/sign-out` | Per client IP |
+| Endpoint                     | Policy                                      |
+| ---------------------------- | ------------------------------------------- |
+| `POST /api/v1/auth/sign-in`  | Per client IP and per identity hint (email) |
+| `GET /api/v1/auth/session`   | Per client IP                               |
+| `POST /api/v1/auth/sign-out` | Per client IP                               |
 
 Default window and thresholds (overridable via environment variables):
 
-| Key | Default | Meaning |
-| --- | --- | --- |
-| `RATE_LIMIT_AUTH_WINDOW_MS` | `60000` | Fixed window length, in milliseconds |
-| `RATE_LIMIT_AUTH_MAX_PER_IP` | `20` | Max attempts per client IP per window |
-| `RATE_LIMIT_AUTH_MAX_PER_IDENTITY` | `5` | Max attempts per identity hint per window |
+| Key                                | Default | Meaning                                   |
+| ---------------------------------- | ------- | ----------------------------------------- |
+| `RATE_LIMIT_AUTH_WINDOW_MS`        | `60000` | Fixed window length, in milliseconds      |
+| `RATE_LIMIT_AUTH_MAX_PER_IP`       | `20`    | Max attempts per client IP per window     |
+| `RATE_LIMIT_AUTH_MAX_PER_IDENTITY` | `5`     | Max attempts per identity hint per window |
 
 When a limit is exceeded, the endpoint responds with HTTP **429** and the
 standard API error contract:
@@ -229,10 +229,10 @@ and an optional `lockedUntil` — persisted with the user record. It is separate
 from the lifecycle status: `status` is an administrator's decision, a lockout is
 a security outcome driven by failures.
 
-| Key | Default | Meaning |
-| --- | --- | --- |
-| `AUTH_LOCKOUT_THRESHOLD` | `5` | Consecutive failed attempts that lock the account |
-| `AUTH_LOCKOUT_DURATION_MS` | `900000` | How long the lockout lasts (15 minutes) |
+| Key                        | Default  | Meaning                                           |
+| -------------------------- | -------- | ------------------------------------------------- |
+| `AUTH_LOCKOUT_THRESHOLD`   | `5`      | Consecutive failed attempts that lock the account |
+| `AUTH_LOCKOUT_DURATION_MS` | `900000` | How long the lockout lasts (15 minutes)           |
 
 Both are validated fail-fast and must be positive integers, so no configuration
 can turn the lockout into "never lock" or "lock for no time".
@@ -257,10 +257,11 @@ Behavior:
 }
 ```
 
-  HTTP status is **401** (not 403/423), and the answer is identical whether the
-  supplied secret was right or wrong — the lockout never becomes an account
-  enumeration oracle. Neither the threshold nor the remaining lockout time is
-  disclosed.
+HTTP status is **401** (not 403/423), and the answer is identical whether the
+supplied secret was right or wrong — the lockout never becomes an account
+enumeration oracle. Neither the threshold nor the remaining lockout time is
+disclosed.
+
 - An attempt on an already-locked account does not extend the window; it records
   `LockedOutAccountTargeted` and one structured log line.
 - A successful sign-in clears the counter and the lockout in the same
@@ -277,6 +278,81 @@ The administrative unlock capability is intentionally out of scope for SEC-002;
 when it lands, it will clear `failedAuthAttempts` and `lockedUntil` through the
 same aggregate operation a successful sign-in uses. No credential value is
 stored in, or logged by, the lockout state.
+
+## Logging (FND-011)
+
+Every process writes through one contract, `Logger` in
+`src/infrastructure/logging/logger.ts`. It is the only logging interface the code
+is allowed to depend on: `debug`, `info`, `warn`, `error`, each taking a message
+and optional `LogFields`. No module imports an adapter, and no module chooses a
+format.
+
+**One line, one object.** In `LOG_FORMAT=json` a line is a single JSON object
+terminated by `\n`, written to `stdout` for `debug`/`info` and to `stderr` for
+`warn`/`error`:
+
+```json
+{
+  "timestamp": "2026-10-13T09:22:34.673Z",
+  "level": "info",
+  "service": "backend",
+  "message": "HTTP request completed",
+  "correlationId": "abc-123",
+  "tenantId": "tenant-42",
+  "userId": "user-7",
+  "error": { "name": "Error", "message": "...", "category": "technical" },
+  "detail": { "method": "GET", "path": "/api/health", "status": 200 }
+}
+```
+
+`timestamp`, `level`, `service` and `message` are always present; `correlationId`,
+`tenantId`, `userId`, `error` and `detail` are present when they apply. An error is
+never serialized as an `Error` instance — it is reduced to `{ name, message,
+category? }`, so the aggregator never receives a driver object.
+
+**Context follows the async chain.** Nothing is threaded through signatures:
+
+| Field           | Source                                                                           |
+| --------------- | -------------------------------------------------------------------------------- |
+| `correlationId` | `LogContext`, established by the HTTP correlation middleware (or a job's own id) |
+| `tenantId`      | `TenantScope`, the boundary that authorised the work                             |
+| `userId`        | `ActorScope`, the authenticated principal of the request                         |
+| `service`       | `SERVICE_NAME` of the process                                                    |
+
+An explicit field on a call always wins over the ambient one, and the scope is
+visible only inside the work it wraps — two concurrent requests never see each
+other's ids. NestJS's own output (bootstrap, module init, uncaught errors) is
+routed through the same logger by `NestLoggerBridge`, so a framework line has the
+same shape and the same redaction.
+
+**Redaction.** Every string a line carries — message, error message and every
+value inside `detail`, at any depth — passes through the process secret redactor
+(`SECRET_REDACTOR`), the same one built from `MYSQL_PASSWORD`,
+`MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY` and the other secret keys. A credential is
+therefore scrubbed by identity rather than by field name, and a malformed or
+cyclic value is cut (`[circular]`, `[too deep]`) instead of crashing the process.
+Logging never throws: a failed write cannot fail the request it was observing.
+
+**Configuration.**
+
+| Key          | Values                           | Default                                            | Meaning                                                          |
+| ------------ | -------------------------------- | -------------------------------------------------- | ---------------------------------------------------------------- |
+| `LOG_LEVEL`  | `debug`, `info`, `warn`, `error` | `info`                                             | Lowest severity that is written                                  |
+| `LOG_FORMAT` | `json`, `pretty`                 | `json` in production, `pretty` in development/test | Output shape only — never which fields or whether redaction runs |
+
+Both are validated fail-fast with the rest of the configuration. `pretty` prints
+the same fields as a readable line for local development and tests; the choice is
+made once at process bootstrap and no call site can see it.
+
+**What is preserved.** Behaviour did not change with the shape: `ApiExceptionFilter`
+still logs a 5xx with its (redacted) stack and still does not log a 4xx, and
+`NestJobLogger` still emits the same `detail` fields (`jobId`, `type`, `attempt`,
+`maxAttempts`, `correlationId`, `status`, `durationMs`, failure category), now
+inside the structured line.
+
+A log line is **not** an audit record: the durable, queryable trail belongs to
+AUD-001, and nothing in this layer writes to the database. Metrics, tracing and
+log aggregation are explicitly out of scope.
 
 ## Endpoints
 
@@ -402,11 +478,11 @@ limiter applied per-route via `@RateLimit` and `RateLimitGuard`.
 
 **Defaults (no default allows unlimited attempts):**
 
-| Key                          | Default | Purpose                                             |
-| ---------------------------- | ------- | --------------------------------------------------- |
-| `RATE_LIMIT_AUTH_WINDOW_MS`  | `60000` | Fixed window length in milliseconds                 |
-| `RATE_LIMIT_AUTH_MAX_PER_IP` | `20`    | Maximum requests per client IP per window           |
-| `RATE_LIMIT_AUTH_MAX_PER_IDENTITY` | `5` | Maximum requests per identity hint per window   |
+| Key                                | Default | Purpose                                       |
+| ---------------------------------- | ------- | --------------------------------------------- |
+| `RATE_LIMIT_AUTH_WINDOW_MS`        | `60000` | Fixed window length in milliseconds           |
+| `RATE_LIMIT_AUTH_MAX_PER_IP`       | `20`    | Maximum requests per client IP per window     |
+| `RATE_LIMIT_AUTH_MAX_PER_IDENTITY` | `5`     | Maximum requests per identity hint per window |
 
 **429 error contract and headers:**
 
@@ -848,10 +924,7 @@ For example, a tenant-owned query should include the central tenant predicate:
 await db
   .select()
   .from(memberships)
-  .where(and(
-    tenantEq(memberships.tenantId),
-    eq(memberships.id, id),
-  ));
+  .where(and(tenantEq(memberships.tenantId), eq(memberships.id, id)));
 ```
 
 The tenant predicate must be applied to every relevant query path. Checking ownership in the UI or relying only on a route parameter does not provide database isolation.
@@ -900,7 +973,6 @@ The following tests cover important parts of the tenant-isolation boundary:
 - `test/tenant-isolation.e2e-spec.ts` exercises the HTTP authorization and tenant-scope boundary.
 
 Run the relevant isolation tests when changing tenant ownership, repository filters, authorization, or tenant-scope behavior. See the [tenant isolation test guide](../../docs/testing/tenant-isolation.md) for the available commands.
-
 
 ## Optimistic concurrency (SHR-008)
 
@@ -1022,17 +1094,17 @@ pnpm --filter @accounting-saas/backend db:migrate:status # applied/pending count
 
 The Product Owner is the owner of the **whole product**, not a company
 administrator. That platform-wide authority is the `system-admin` role, and it
-is deliberately *not* a tenant role:
+is deliberately _not_ a tenant role:
 
-| | tenant roles (`Tenant Administrator`, …) | platform role (`system-admin`) |
-| --- | --- | --- |
-| Scope | one company, via a membership | every company, membership or not |
-| Stored | `roles` + `membership_roles` | `platform_authorizations` (no tenant column) |
-| Grants | the registered capabilities the role lists | every registered capability |
-| Created by | a company administrator | Product Owner bootstrap only |
+|            | tenant roles (`Tenant Administrator`, …)   | platform role (`system-admin`)               |
+| ---------- | ------------------------------------------ | -------------------------------------------- |
+| Scope      | one company, via a membership              | every company, membership or not             |
+| Stored     | `roles` + `membership_roles`               | `platform_authorizations` (no tenant column) |
+| Grants     | the registered capabilities the role lists | every registered capability                  |
+| Created by | a company administrator                    | Product Owner bootstrap only                 |
 
 The consequence is what the acceptance criteria ask for: platform access is
-independent of tenant membership, covers companies created *after* the
+independent of tenant membership, covers companies created _after_ the
 bootstrap, and automatically covers a capability the moment it is registered in
 `PERMISSION_CATALOG` — no re-seeding required. It is not an authorization
 bypass: the acting identity is still authenticated, the operation still resolves
@@ -1053,16 +1125,16 @@ SYSTEM_ADMIN_DISPLAY_NAME=Product Owner
 ```
 
 - `SYSTEM_ADMIN_ENABLED` is the only switch, and it is **off by default**:
-bootstrap is opt-in in every environment, and production never inherits a
-development credential.
+  bootstrap is opt-in in every environment, and production never inherits a
+  development credential.
 - With it enabled, a valid `SYSTEM_ADMIN_EMAIL` and a non-empty
-`SYSTEM_ADMIN_PASSWORD` are required; a missing or malformed value fails the
-process at startup, and the validation message names the variable without ever
-echoing the value.
+  `SYSTEM_ADMIN_PASSWORD` are required; a missing or malformed value fails the
+  process at startup, and the validation message names the variable without ever
+  echoing the value.
 - The email is normalized to lower case; `SYSTEM_ADMIN_DISPLAY_NAME` defaults to
-`Product Owner`.
+  `Product Owner`.
 - The same typed contract is available to the API, Worker, Scheduler and CLI
-processes (`configuration.systemAdmin`).
+  processes (`configuration.systemAdmin`).
 
 ### Startup provisioning
 
@@ -1080,7 +1152,7 @@ It is idempotent, and the rules are deliberately conservative:
 
 - the identity is looked up by its unique email first, so a restart never
   creates a second Product Owner;
-- an existing, fully provisioned Product Owner is *verified* and left untouched —
+- an existing, fully provisioned Product Owner is _verified_ and left untouched —
   in particular **the password is never reset because the environment variable
   changed**. Rotating the secret is an explicit credential-management operation
   (the credential endpoint), never a side effect of a restart;
@@ -1126,18 +1198,18 @@ The summary names fixture keys only — never an email, password, hash or token.
 
 ### The dataset
 
-| Fixture | What is created |
-| --- | --- |
-| Product Owner | the identity from `SYSTEM_ADMIN_*`, holding platform `system-admin` (not a member of any seeded company) |
-| Companies | `بازرگانی آریا` and `گروه صنعتی پارس`, each owned by its administrator |
-| Users | per company: an administrator and an accountant, on reserved `.test` addresses |
-| Memberships | one per seeded user, inside its own company |
-| Tenant roles | `Tenant Administrator` (company read/update, user and role administration, audit read) and `Accountant` (`company.read` only), per company |
-| Role assignments | administrator → `Tenant Administrator`, accountant → `Accountant` |
-| Accounting | the current Jalali year per company, with its twelve generated periods and the first open period active |
+| Fixture          | What is created                                                                                                                            |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Product Owner    | the identity from `SYSTEM_ADMIN_*`, holding platform `system-admin` (not a member of any seeded company)                                   |
+| Companies        | `بازرگانی آریا` and `گروه صنعتی پارس`, each owned by its administrator                                                                     |
+| Users            | per company: an administrator and an accountant, on reserved `.test` addresses                                                             |
+| Memberships      | one per seeded user, inside its own company                                                                                                |
+| Tenant roles     | `Tenant Administrator` (company read/update, user and role administration, audit read) and `Accountant` (`company.read` only), per company |
+| Role assignments | administrator → `Tenant Administrator`, accountant → `Accountant`                                                                          |
+| Accounting       | the current Jalali year per company, with its twelve generated periods and the first open period active                                    |
 
 Sign in as a seeded user with the fixture password `Seed-user-password-1!`
-(development/test only — it is applied when a user is *created* and never to an
+(development/test only — it is applied when a user is _created_ and never to an
 existing identity). The differences are the point: the accountant of `آریا` can
 read its own company and nothing else, the administrator of `آریا` has no access
 to `پارس`, and the Product Owner can exercise supported operations in both.
@@ -1151,7 +1223,7 @@ to `پارس`, and the Product Owner can exercise supported operations in both.
 - A seeded credential is set only when the user is created: re-running never
   resets a password or overwrites developer-managed data.
 - The dataset is created by application use cases, so each unit stays atomic; the
-  run as a whole is not one transaction. It is *retry-safe* instead: every
+  run as a whole is not one transaction. It is _retry-safe_ instead: every
   fixture is looked up before it is created, so re-running after a partial
   failure completes the missing pieces without destructive cleanup.
 - The command never truncates, drops or deletes anything. A conflict (for
@@ -1160,13 +1232,13 @@ to `پارس`, and the Product Owner can exercise supported operations in both.
 
 ### Troubleshooting
 
-| Symptom | Cause and fix |
-| --- | --- |
-| `Refusing to seed the "production" environment` | `NODE_ENV=production` (or unset in a production image): seeding is development/test only by design. |
-| `SYSTEM_ADMIN_ENABLED must be true to seed` | Set `SYSTEM_ADMIN_ENABLED=true` plus the email/password, or use a `.env` that already does. |
+| Symptom                                                              | Cause and fix                                                                                                                                                                    |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Refusing to seed the "production" environment`                      | `NODE_ENV=production` (or unset in a production image): seeding is development/test only by design.                                                                              |
+| `SYSTEM_ADMIN_ENABLED must be true to seed`                          | Set `SYSTEM_ADMIN_ENABLED=true` plus the email/password, or use a `.env` that already does.                                                                                      |
 | `Configured Product Owner email conflicts with an existing identity` | The configured email belongs to a user without the platform grant or without a credential. Resolve it through an audited operator workflow; the bootstrap will not self-promote. |
-| API fails to start with a bootstrap error | The configured Product Owner cannot be provisioned (conflict, unreachable database, refused credential). The message names the failing step and never a secret. |
-| `Failed query: … seed_fixtures` | Migrations are pending: run `pnpm --filter @accounting-saas/backend db:migrate`. |
+| API fails to start with a bootstrap error                            | The configured Product Owner cannot be provisioned (conflict, unreachable database, refused credential). The message names the failing step and never a secret.                  |
+| `Failed query: … seed_fixtures`                                      | Migrations are pending: run `pnpm --filter @accounting-saas/backend db:migrate`.                                                                                                 |
 
 ## Rules for new code
 

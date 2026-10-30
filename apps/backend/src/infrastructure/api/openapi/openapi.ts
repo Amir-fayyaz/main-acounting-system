@@ -1,6 +1,7 @@
-import { Logger, type INestApplication } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { AppConfigService } from '../../config/app-config.service.js';
+import type { Logger } from '../../logging/logger.js';
 import { API_VERSION, OPENAPI_DOCUMENT_PATH } from '../api.constants.js';
 
 /**
@@ -16,7 +17,11 @@ import { API_VERSION, OPENAPI_DOCUMENT_PATH } from '../api.constants.js';
  * internal contract is a security decision that belongs to the API-hardening
  * work, not to the baseline (06-security-engineering).
  */
-export function setupOpenApi(app: INestApplication, config: AppConfigService): void {
+export function setupOpenApi(
+  app: INestApplication,
+  config: AppConfigService,
+  logger: Logger,
+): void {
   if (config.environment.isProduction) {
     return;
   }
@@ -50,8 +55,7 @@ export function setupOpenApi(app: INestApplication, config: AppConfigService): v
     yamlDocumentUrl: `${path}-yaml`,
   });
 
-  Logger.log(
-    `OpenAPI documentation available at http://${config.host}:${config.port}${path}`,
-    'OpenApi',
-  );
+  logger.info(`OpenAPI documentation available at http://${config.host}:${config.port}${path}`, {
+    detail: { context: 'OpenApi' },
+  });
 }

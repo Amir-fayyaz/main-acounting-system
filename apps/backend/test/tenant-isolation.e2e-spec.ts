@@ -13,6 +13,7 @@ import { AppConfigModule } from '../src/infrastructure/config/app-config.module.
 import { AppConfigService } from '../src/infrastructure/config/app-config.service.js';
 import { loadConfiguration } from '../src/infrastructure/config/configuration.js';
 import { NO_REDACTION } from '../src/infrastructure/config/secrets.js';
+import { SILENT_LOGGER } from './support/logging-doubles.js';
 import { TRANSACTION_BOUNDARY } from '../src/infrastructure/database/database.tokens.js';
 import { JobDispatcher } from '../src/infrastructure/jobs/job-dispatcher.js';
 import type { RegisteredJob } from '../src/infrastructure/jobs/job.definition.js';
@@ -665,7 +666,7 @@ describe('tenant isolation (adversarial, e2e)', () => {
       const registry = new JobRegistry([definition]);
       const dispatcher = new JobDispatcher(
         registry,
-        new NestJobLogger(NO_REDACTION),
+        new NestJobLogger(SILENT_LOGGER),
         queue,
         new InMemoryIdempotencyGuard(),
         new AppConfigService(

@@ -29,7 +29,7 @@ describe('loadConfiguration', () => {
       secretKey: '',
       bucket: 'accounting-local',
     });
-    expect(configuration.logging).toEqual({ level: 'info' });
+    expect(configuration.logging).toEqual({ level: 'info', format: 'pretty' });
     expect(configuration.jobs).toEqual({
       concurrency: 4,
       maxAttempts: 3,
@@ -119,7 +119,7 @@ describe('loadConfiguration', () => {
       accessKey: 'minio-local',
       secretKey: 'minio-secret',
     });
-    expect(configuration.logging).toEqual({ level: 'debug' });
+    expect(configuration.logging).toEqual({ level: 'debug', format: 'pretty' });
     expect(configuration.jobs).toEqual({
       concurrency: 8,
       maxAttempts: 5,
@@ -251,6 +251,37 @@ describe('loadConfiguration', () => {
     });
 
     expect(configuration.environment.isProduction).toBe(true);
+  });
+
+  it('defaults the log format to json in production and pretty elsewhere', () => {
+    const production = loadConfiguration({
+      NODE_ENV: 'production',
+      MYSQL_PASSWORD: 'database-password',
+      MINIO_ACCESS_KEY: 'minio-access',
+      MINIO_SECRET_KEY: 'minio-secret',
+    });
+
+    expect(production.logging.format).toBe('json');
+    expect(loadConfiguration({ NODE_ENV: 'test' }).logging.format).toBe('pretty');
+    expect(loadConfiguration({ NODE_ENV: 'development' }).logging.format).toBe('pretty');
+  });
+
+  it('reads an explicit log format and rejects an unknown one', () => {
+    const configured = loadConfiguration({ NODE_ENV: 'test', LOG_FORMAT: 'json' });
+
+    expect(configured.logging.format).toBe('json');
+
+    let caught: unknown;
+
+    try {
+      loadConfiguration({ NODE_ENV: 'test', LOG_FORMAT: 'logfmt' });
+    } catch (error) {
+      caught = error;
+    }
+
+    expect((caught as ConfigurationValidationError).problems).toEqual([
+      'LOG_FORMAT must be one of: json, pretty',
+    ]);
   });
 
   it('rejects missing credentials in production by name', () => {

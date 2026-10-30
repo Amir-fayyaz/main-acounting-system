@@ -1,5 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { AppConfigService } from '../../config/app-config.service.js';
+import type { Logger } from '../../logging/logger.js';
+import { LOGGER } from '../../logging/logging.tokens.js';
 import { RedisConnectionService } from '../../redis/redis-connection.service.js';
 import { jobKeys, type JobKeys } from '../job-keys.js';
 import type { JobEnvelope, JobRecord } from '../job.types.js';
@@ -31,13 +33,13 @@ const STREAM_MAX_LENGTH = 100_000;
  */
 @Injectable()
 export class RedisJobQueue implements JobQueuePort {
-  private readonly logger = new Logger(RedisJobQueue.name);
   private readonly keys: JobKeys;
   private readonly consumerName: string;
 
   constructor(
     private readonly connection: RedisConnectionService,
     config: AppConfigService,
+    @Inject(LOGGER) private readonly logger: Logger,
   ) {
     this.keys = jobKeys(config.environment.name);
     // Unique per process, so two Workers never share a pending list.
@@ -255,7 +257,9 @@ export class RedisJobQueue implements JobQueuePort {
     }
 
     if (malformed.length > 0) {
-      this.logger.warn(`Discarding ${malformed.length} malformed job entry(ies) from the stream`);
+      this.logger.warn('Discarding malformed job entries from the stream', {
+        detail: { count: malformed.length },
+      });
       await (await this.client()).xAck(this.keys.stream, this.keys.group, malformed);
     }
 

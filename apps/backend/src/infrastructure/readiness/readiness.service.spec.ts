@@ -1,18 +1,40 @@
-import { Logger } from '@nestjs/common';
-import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
-import { NO_REDACTION, SecretRedactor } from '../config/secrets.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SecretRedactor } from '../config/secrets.js';
+import { createLogger } from '../logging/structured-logger.js';
 import { ReadinessService } from './readiness.service.js';
 import type { DependencyProbe } from './readiness.types.js';
 
 const readyProbe: DependencyProbe = { name: 'redis', check: async () => undefined };
 
-describe('ReadinessService', () => {
-  let warn: MockInstance;
+/**
+ * The real logger with captured sinks (FND-011).
+ *
+ * Using the real logger — not a spy on a framework method — is what makes the
+ * last test meaningful: it asserts the redaction the logging layer performs,
+ * not that some component happened to call a method.
+ */
+function captureLogger(secretValues: readonly string[] = []): {
+  logger: ReturnType<typeof createLogger>;
+  lines: string[];
+} {
+  const lines: string[] = [];
+  const logger = createLogger({
+    service: 'test',
+    level: 'debug',
+    format: 'json',
+    secrets: new SecretRedactor(secretValues),
+    sinks: {
+      out: (line) => lines.push(line),
+      err: (line) => lines.push(line),
+    },
+  });
 
+  return { logger, lines };
+}
+
+describe('ReadinessService', () => {
   beforeEach(() => {
-    // Failing probes log a warning on purpose; capture it so the suite stays
-    // quiet and the log content can be asserted where it matters.
-    warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+    vi.useRealTimers();
   });
 
   afterEach(() => {
@@ -27,7 +49,7 @@ describe('ReadinessService', () => {
         readyProbe,
         { name: 'object-storage', check: async () => undefined },
       ],
-      NO_REDACTION,
+      captureLogger().logger,
     );
 
     const report = await service.check();
@@ -53,7 +75,7 @@ describe('ReadinessService', () => {
           },
         },
       ],
-      NO_REDACTION,
+      captureLogger().logger,
     );
 
     const report = await service.check();
@@ -72,7 +94,7 @@ describe('ReadinessService', () => {
     vi.useFakeTimers();
     const service = new ReadinessService(
       [{ name: 'object-storage', check: () => new Promise<void>(() => undefined) }],
-      NO_REDACTION,
+      captureLogger().logger,
     );
 
     const pending = service.check();
@@ -84,6 +106,7 @@ describe('ReadinessService', () => {
   });
 
   it('keeps driver detail out of the report but logs it redacted', async () => {
+    const { logger, lines } = captureLogger(['secret-key-do-not-leak']);
     const service = new ReadinessService(
       [
         {
@@ -93,7 +116,7 @@ describe('ReadinessService', () => {
           },
         },
       ],
-      new SecretRedactor(['secret-key-do-not-leak']),
+      logger,
     );
 
     const report = await service.check();
@@ -101,7 +124,7 @@ describe('ReadinessService', () => {
     expect(JSON.stringify(report)).not.toContain('secret-key-do-not-leak');
     expect(report.checks[0]).toMatchObject({ status: 'down', reason: 'unavailable' });
 
-    const logged = warn.mock.calls.map((call) => String(call[0])).join('\n');
+    const logged = lines.join('\n');
     expect(logged).toContain('object-storage');
     expect(logged).toContain('[redacted]');
     expect(logged).not.toContain('secret-key-do-not-leak');

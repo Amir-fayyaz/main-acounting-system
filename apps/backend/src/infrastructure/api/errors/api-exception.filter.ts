@@ -1,6 +1,7 @@
-import { ArgumentsHost, Catch, ExceptionFilter, HttpStatus, Logger } from '@nestjs/common';
-import { redactProcessSecrets } from '../../config/secrets.js';
-import { CORRELATION_ID_HEADER, type CorrelatedRequest } from '../correlation/correlation-id.js';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpStatus, Inject } from '@nestjs/common';
+import { toLogError, type Logger } from '../../logging/logger.js';
+import { LOGGER } from '../../logging/logging.tokens.js';
+import type { CorrelatedRequest } from '../correlation/correlation-id.js';
 import { mapException } from './api-error.mapper.js';
 import type { ApiErrorBody } from './api-error.types.js';
 
@@ -19,13 +20,18 @@ const FALLBACK_CORRELATION_ID = 'unavailable';
  *
  * - The response body is built only from the mapped contract. A stack trace or
  *   an unexpected exception message can never be serialized.
- * - A 5xx is logged server-side with its stack, redacted through the same
- *   secret redactor the rest of the app uses, so operators keep the detail that
+ * - A 5xx is logged server-side with its stack, through the structured logger
+ *   (FND-011), which redacts every string it writes with the same redactor the
+ *   rest of the app uses. A 4xx is not logged: it is the client's mistake, and
+ *   logging it would let a caller fill the log. Operators keep the detail that
  *   the client must not see (06-security-engineering).
+ *
+ * The correlation id is no longer formatted into the message: the logger reads
+ * it from the ambient `LogContext`, so the line carries it as a field.
  */
 @Catch()
 export class ApiExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(ApiExceptionFilter.name);
+  constructor(@Inject(LOGGER) private readonly logger: Logger) {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const context = host.switchToHttp();
@@ -48,9 +54,23 @@ export class ApiExceptionFilter implements ExceptionFilter {
     };
 
     if (mapped.status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+      const stack = describe(exception);
+
       this.logger.error(
-        `${request.method ?? 'HTTP'} ${request.url ?? ''} failed with ${mapped.code} [${CORRELATION_ID_HEADER}: ${correlationId}]`,
-        redactProcessSecrets(describe(exception)),
+        `${request.method ?? 'HTTP'} ${request.url ?? ''} failed with ${mapped.code}`,
+        {
+          // The header fallback is only reachable outside a middleware-handled
+          // request (a test harness); the ambient context is the normal source.
+          ...(request.correlationId === undefined ? { correlationId } : {}),
+          error: toLogError(exception, mapped.category),
+          detail: {
+            method: request.method ?? 'HTTP',
+            path: request.url ?? '',
+            status: mapped.status,
+            code: mapped.code,
+            stack,
+          },
+        },
       );
     }
 

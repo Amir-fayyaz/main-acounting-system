@@ -87,3 +87,17 @@ export function createSecretRedactor(raw: Readonly<Record<string, unknown>>): Se
 export function redactProcessSecrets(text: string): string {
   return createSecretRedactor(process.env).redact(text);
 }
+
+/**
+ * The redactor of this process's environment, built once and reused.
+ *
+ * Used by a process boundary that must configure logging before the DI
+ * container exists (FND-011): the logging layer receives a `SecretHolder`, so
+ * this file stays the only one that reads the raw environment for secrets.
+ */
+let processRedactor: SecretRedactor | undefined;
+
+export function processSecretRedactor(): SecretHolder {
+  processRedactor ??= createSecretRedactor(process.env);
+  return processRedactor;
+}

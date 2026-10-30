@@ -1,4 +1,4 @@
-import type { Configuration, LogLevel, RuntimeEnvironment } from './configuration.types.js';
+import type { Configuration, LogFormat, LogLevel, RuntimeEnvironment } from './configuration.types.js';
 
 /**
  * Reads, validates and groups raw environment values into the typed
@@ -35,6 +35,12 @@ const SUPPORTED_ENVIRONMENTS: readonly RuntimeEnvironment[] = ['development', 't
 
 const SUPPORTED_LOG_LEVELS: readonly LogLevel[] = ['debug', 'info', 'warn', 'error'];
 
+/**
+ * Output shapes (FND-011). `json` is what an aggregator reads, `pretty` is what
+ * a developer reads; there is no third possibility and no auto-detection.
+ */
+const SUPPORTED_LOG_FORMATS: readonly LogFormat[] = ['json', 'pretty'];
+
 const DEFAULT_ENVIRONMENT: RuntimeEnvironment = 'development';
 const DEFAULT_SERVICE_NAME = 'backend';
 const DEFAULT_HTTP_HOST = '0.0.0.0';
@@ -50,6 +56,15 @@ const DEFAULT_STORAGE_ENDPOINT = '127.0.0.1';
 const DEFAULT_STORAGE_PORT = 9000;
 const DEFAULT_STORAGE_BUCKET = 'accounting-local';
 const DEFAULT_LOG_LEVEL: LogLevel = 'info';
+
+/**
+ * The format is chosen from the environment, never guessed from a TTY: a
+ * production process might well be attached to a terminal, and a human-readable
+ * line there would still be unparseable for the aggregator that needs it.
+ */
+function defaultLogFormat(environment: RuntimeEnvironment): LogFormat {
+  return environment === 'production' ? 'json' : 'pretty';
+}
 const DEFAULT_JOBS_CONCURRENCY = 4;
 const DEFAULT_JOBS_MAX_ATTEMPTS = 3;
 const DEFAULT_RETRY_BASE_DELAY_MS = 1000;
@@ -274,6 +289,13 @@ export function loadConfiguration(raw: RawConfiguration = process.env): Configur
     },
     logging: {
       level: readEnum(raw, 'LOG_LEVEL', SUPPORTED_LOG_LEVELS, DEFAULT_LOG_LEVEL, problems),
+      format: readEnum(
+        raw,
+        'LOG_FORMAT',
+        SUPPORTED_LOG_FORMATS,
+        defaultLogFormat(environmentName),
+        problems,
+      ),
     },
     authentication: {
       sessionTtlMinutes: readPositiveInteger(

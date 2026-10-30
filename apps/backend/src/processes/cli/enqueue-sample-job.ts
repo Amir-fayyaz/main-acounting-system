@@ -1,12 +1,18 @@
 import 'reflect-metadata';
-import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { loadConfiguration } from '../../infrastructure/config/configuration.js';
 import { loadDotEnvFiles } from '../../infrastructure/config/dotenv.js';
 import { JobEnqueuer } from '../../infrastructure/jobs/job-enqueuer.js';
-import { redactProcessSecrets } from '../../infrastructure/config/secrets.js';
-import { toNestLogLevels } from '../../infrastructure/logging/nest-log-levels.js';
+import { toLogError } from '../../infrastructure/logging/logger.js';
+import {
+  createProcessLogging,
+  startupProcessLogger,
+  type ProcessLogging,
+} from '../../infrastructure/logging/process-logging.js';
 import { CliModule } from './cli.module.js';
+
+/** The logging layer, held outside `main` so the failure handler can reuse it. */
+let logging: ProcessLogging | undefined;
 
 const USAGE = 'Usage: node dist/processes/cli/enqueue-sample-job.js <job-type> [payload-json]';
 
@@ -25,16 +31,17 @@ const USAGE = 'Usage: node dist/processes/cli/enqueue-sample-job.js <job-type> [
 async function main(): Promise<void> {
   loadDotEnvFiles();
   const configuration = loadConfiguration();
+  logging = createProcessLogging(configuration);
 
   const app = await NestFactory.createApplicationContext(CliModule, {
-    logger: toNestLogLevels(configuration.logging.level),
+    logger: logging.bridge,
   });
 
   try {
     const [type, payloadJson] = process.argv.slice(2);
 
     if (type === undefined || type.length === 0) {
-      Logger.error(USAGE, 'JobCli');
+      logging.logger.error(USAGE, { detail: { context: 'JobCli' } });
       process.exitCode = 1;
       return;
     }
@@ -42,9 +49,9 @@ async function main(): Promise<void> {
     const payload: unknown = payloadJson === undefined ? {} : JSON.parse(payloadJson);
     const envelope = await app.get(JobEnqueuer).enqueue({ type, payload, enqueuedBy: 'cli' });
 
-    Logger.log(
+    logging.logger.info(
       `Enqueued ${envelope.type} (jobId ${envelope.jobId}, attempt 1/${envelope.maxAttempts})`,
-      'JobCli',
+      { detail: { context: 'JobCli' } },
     );
   } finally {
     await app.close();
@@ -52,8 +59,12 @@ async function main(): Promise<void> {
 }
 
 void main().catch((error: unknown) => {
+  const logger = logging?.logger ?? startupProcessLogger('job-cli');
   const details = error instanceof Error ? (error.stack ?? error.message) : String(error);
 
-  Logger.error(redactProcessSecrets(details), 'JobCli');
+  logger.error('Job CLI failed', {
+    error: toLogError(error),
+    detail: { context: 'JobCli', stack: details },
+  });
   process.exitCode = 1;
 });

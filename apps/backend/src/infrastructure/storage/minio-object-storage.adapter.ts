@@ -1,6 +1,8 @@
-import { Injectable, Logger, type OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, type OnModuleInit } from '@nestjs/common';
 import { Client as MinioClient } from 'minio';
 import { AppConfigService } from '../config/app-config.service.js';
+import type { Logger } from '../logging/logger.js';
+import { LOGGER } from '../logging/logging.tokens.js';
 import type { ObjectStoragePort } from './object-storage.port.js';
 
 const MISSING_CREDENTIALS_MESSAGE =
@@ -18,11 +20,13 @@ const MISSING_CREDENTIALS_MESSAGE =
 export class MinioObjectStorageAdapter implements ObjectStoragePort, OnModuleInit {
   public readonly provider = 'minio';
 
-  private readonly logger = new Logger(MinioObjectStorageAdapter.name);
   private readonly client?: MinioClient;
   private readonly configurationProblem?: string;
 
-  constructor(config: AppConfigService) {
+  constructor(
+    config: AppConfigService,
+    @Inject(LOGGER) private readonly logger: Logger,
+  ) {
     const { endpoint, port, useSsl, accessKey, secretKey } = config.storage;
 
     if (!accessKey || !secretKey) {

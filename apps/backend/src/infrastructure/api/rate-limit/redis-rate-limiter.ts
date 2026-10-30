@@ -13,8 +13,10 @@
  * When Redis is unreachable the adapter returns `unavailable: true` instead
  * of throwing: the guard decides fail-closed (credential flows are refused).
  */
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { AppConfigService } from '../../config/app-config.service.js';
+import { toLogError, type Logger } from '../../logging/logger.js';
+import { LOGGER } from '../../logging/logging.tokens.js';
 import { RedisConnectionService } from '../../redis/redis-connection.service.js';
 import type { RateLimiter, RateLimitKey, RateLimitDecision } from './rate-limiter.js';
 
@@ -84,11 +86,10 @@ function resetAtMs(now: number, windowMs: number): number {
 
 @Injectable()
 export class RedisRateLimiter implements RateLimiter {
-  private readonly logger = new Logger(RedisRateLimiter.name);
-
   constructor(
     private readonly connection: RedisConnectionService,
     config: AppConfigService,
+    @Inject(LOGGER) private readonly logger: Logger,
   ) {
     this.environment = config.environment.name;
     this.windowMs = config.rateLimit.windowMs;
@@ -124,9 +125,13 @@ export class RedisRateLimiter implements RateLimiter {
         })(),
         DECISION_TIMEOUT_MS,
       );
-    } catch (_error) {
-      // Redis is down: fail-safe decision. No subject is logged.
-      this.logger.warn('Redis unavailable for rate-limit decision; returning unavailable.');
+    } catch (error) {
+      // Redis is down: fail-safe decision. The error is reduced to its message
+      // and the subject — the IP, email hash or token digest — is never logged.
+      this.logger.warn('Rate-limit store unavailable', {
+        error: toLogError(error),
+        detail: { dependency: 'redis', scope: key.scope },
+      });
       return {
         allowed: false,
         remaining: 0,

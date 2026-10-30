@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { AppConfigModule } from '../../infrastructure/config/app-config.module.js';
 import { AppConfigService } from '../../infrastructure/config/app-config.service.js';
 import { DatabaseModule } from '../../infrastructure/database/database.module.js';
+import { LoggingModule } from '../../infrastructure/logging/logging.module.js';
 import { SeedInfrastructureModule } from '../../infrastructure/seed/seed-infrastructure.module.js';
 import type { SeedRegistry } from '../../infrastructure/seed/seed-registry.port.js';
 import { SEED_REGISTRY } from '../../infrastructure/seed/seed.tokens.js';
@@ -46,6 +47,7 @@ import { DevelopmentSeedRunner } from './development-seed.runner.js';
 @Module({
   imports: [
     AppConfigModule,
+    LoggingModule,
     DatabaseModule,
     SeedInfrastructureModule,
     TenantModule,

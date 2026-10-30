@@ -19,6 +19,8 @@ import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { configureApplication } from '../src/bootstrap.js';
+import { LOGGER } from '../src/infrastructure/logging/logging.tokens.js';
+import { SILENT_LOGGER } from './support/logging-doubles.js';
 import { APP_CONFIGURATION } from '../src/infrastructure/config/app-config.tokens.js';
 import { AppConfigService } from '../src/infrastructure/config/app-config.service.js';
 import { loadConfiguration } from '../src/infrastructure/config/configuration.js';
@@ -119,6 +121,7 @@ async function createHarness(): Promise<Harness> {
   const moduleRef = await Test.createTestingModule({
     controllers: [AuthenticationController],
     providers: [
+      { provide: LOGGER, useValue: SILENT_LOGGER },
       { provide: APP_CONFIGURATION, useValue: loadConfiguration(CONFIGURATION) },
       AppConfigService,
       { provide: USER_REPOSITORY, useValue: users },
@@ -331,6 +334,8 @@ describe('account lockout on authentication endpoints (e2e, SEC-002)', () => {
     expect(harness.securityLog.attempts[0]?.userId).toBe(user.id);
   });
 
+  // Wall-clock test: it really waits out the lockout window and derives scrypt
+  // hashes on every attempt, so it needs more than the default 5s under load.
   it('accepts attempts again once the lockout duration has elapsed', async () => {
     const user = await seedUser(harness);
 
@@ -342,7 +347,7 @@ describe('account lockout on authentication endpoints (e2e, SEC-002)', () => {
     const recovered = await signIn(user.email, PASSWORD);
     expect(recovered.status).toBe(201);
     expect(recovered.body.token).toBeTruthy();
-  });
+  }, 15_000);
 
   it('resets the counter when a success happens before the threshold', async () => {
     const user = await seedUser(harness);

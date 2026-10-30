@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { LogContext } from '../../logging/log-context.js';
 
 /**
  * Correlation identifier for a request (FND-006, ADR-013 section 8).
@@ -47,6 +48,12 @@ export function resolveCorrelationId(header: string | string[] | undefined): str
  * Assigns the correlation id to the request and echoes it on the response.
  * Registered application-wide, before any route, so a failure thrown by the
  * framework itself (a 404, a malformed body) also carries one.
+ *
+ * The id is also published through `LogContext` for the rest of the request
+ * (FND-011): every line written while handling it — in the controller, a use
+ * case, a repository, the exception filter — carries the same id without being
+ * handed one. `next()` runs *inside* the scope, so the asynchronous work it
+ * starts inherits it and nothing outside the request ever sees it.
  */
 export function correlationIdMiddleware(
   request: CorrelatedRequest,
@@ -57,5 +64,5 @@ export function correlationIdMiddleware(
 
   request.correlationId = correlationId;
   response.setHeader(CORRELATION_ID_HEADER, correlationId);
-  next();
+  LogContext.run({ correlationId }, next);
 }
