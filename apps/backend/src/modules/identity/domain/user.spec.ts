@@ -204,8 +204,10 @@ describe('User aggregate', () => {
     it('carries no tenant, role, permission or company-specific data', () => {
       const keys = Object.keys(newUser().snapshot()).sort();
 
+      // `failedAuthAttempts` (and `lockedUntil` once a lockout exists) are the
+      // account's own security state (SEC-002), not tenant or role data.
       expect(keys).toEqual(
-        ['createdAt', 'displayName', 'email', 'id', 'status', 'updatedAt'].sort(),
+        ['createdAt', 'displayName', 'email', 'failedAuthAttempts', 'id', 'status', 'updatedAt'].sort(),
       );
       expect(keys).not.toContain('tenantId');
       expect(keys).not.toContain('tenant');

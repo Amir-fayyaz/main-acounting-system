@@ -36,7 +36,12 @@ describe('loadConfiguration', () => {
       retryBaseDelayMs: 1000,
       retryMaxDelayMs: 30000,
     });
-    expect(configuration.authentication).toEqual({ sessionTtlMinutes: 60 });
+    expect(configuration.authentication).toEqual({
+      sessionTtlMinutes: 60,
+      // SEC-002: safe defaults, never "never lock".
+      lockoutThreshold: 5,
+      lockoutDurationMs: 900_000,
+    });
     expect(configuration.systemAdmin).toEqual({ enabled: false, email: '', password: '', displayName: 'Product Owner' });
     expect(configuration.scheduler).toEqual({ intervalMs: 1000 });
     expect(configuration.outbox).toEqual({
@@ -80,6 +85,8 @@ describe('loadConfiguration', () => {
       WORKER_RETRY_MAX_DELAY_MS: '5000',
       SCHEDULER_INTERVAL_MS: '250',
       AUTH_SESSION_TTL_MINUTES: '15',
+      AUTH_LOCKOUT_THRESHOLD: '3',
+      AUTH_LOCKOUT_DURATION_MS: '120000',
       OUTBOX_BATCH_SIZE: '10',
       OUTBOX_MAX_ATTEMPTS: '7',
       OUTBOX_RETRY_BASE_DELAY_MS: '400',
@@ -119,7 +126,11 @@ describe('loadConfiguration', () => {
       retryBaseDelayMs: 200,
       retryMaxDelayMs: 5000,
     });
-    expect(configuration.authentication).toEqual({ sessionTtlMinutes: 15 });
+    expect(configuration.authentication).toEqual({
+      sessionTtlMinutes: 15,
+      lockoutThreshold: 3,
+      lockoutDurationMs: 120_000,
+    });
     expect(configuration.systemAdmin).toEqual({
       enabled: true,
       email: 'owner@example.com',
@@ -134,6 +145,26 @@ describe('loadConfiguration', () => {
       retryMaxDelayMs: 12000,
       publishIntervalMs: 500,
     });
+  });
+
+  it('rejects a lockout policy that would never lock or lock for no time', () => {
+    let caught: unknown;
+
+    try {
+      loadConfiguration({
+        NODE_ENV: 'development',
+        AUTH_LOCKOUT_THRESHOLD: '0',
+        AUTH_LOCKOUT_DURATION_MS: '-1',
+      });
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(ConfigurationValidationError);
+    expect((caught as ConfigurationValidationError).problems).toEqual([
+      'AUTH_LOCKOUT_THRESHOLD must be an integer greater than or equal to 1',
+      'AUTH_LOCKOUT_DURATION_MS must be an integer greater than or equal to 1',
+    ]);
   });
 
   it('rejects a retry base delay above the ceiling', () => {

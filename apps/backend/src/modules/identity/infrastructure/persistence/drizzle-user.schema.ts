@@ -27,6 +27,11 @@ import type { Database } from '../../../../infrastructure/database/database.modu
  *   value, so a stale write affects zero rows.
  * - `created_at` / `updated_at` — UTC instants. `created_at` never changes;
  *   `updated_at` advances on every accepted write.
+ * - `failed_auth_attempts` / `locked_until` — the durable security state of
+ *   SEC-002. They are separate from `status` on purpose: `status` is the
+ *   administrative lifecycle, while these two are the outcome of failed
+ *   authentication attempts and are written only by the sign-in flow. No other
+ *   module reads or writes them.
  *
  * There are deliberately no foreign keys here: a user is a tenant-independent
  * identity root, and the architecture forbids cross-module foreign keys
@@ -44,6 +49,8 @@ export const users = mysqlTable(
     revision: int('revision').notNull(),
     createdAt: datetime('created_at', { fsp: 3 }).notNull(),
     updatedAt: datetime('updated_at', { fsp: 3 }).notNull(),
+    failedAuthAttempts: int('failed_auth_attempts').notNull().default(0),
+    lockedUntil: datetime('locked_until', { fsp: 3 }),
   },
   // The unique constraint on `email` is the only index it needs: a second
   // non-unique index on the same column would be redundant.
@@ -58,7 +65,7 @@ export const users = mysqlTable(
  * type-level truth, this is the executable one. Idempotent (`IF NOT EXISTS`),
  * so provisioning runs safely on any environment, any number of times.
  */
-export const USER_SCHEMA_VERSION = 1;
+export const USER_SCHEMA_VERSION = 2;
 
 export const USER_DDL: readonly string[] = [
   `CREATE TABLE IF NOT EXISTS ${USER_TABLE_NAME} (
@@ -69,6 +76,8 @@ export const USER_DDL: readonly string[] = [
     revision INT NOT NULL,
     created_at DATETIME(3) NOT NULL,
     updated_at DATETIME(3) NOT NULL,
+    failed_auth_attempts INT NOT NULL DEFAULT 0,
+    locked_until DATETIME(3) NULL,
     PRIMARY KEY (id),
     UNIQUE KEY users_email_unique (email)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,

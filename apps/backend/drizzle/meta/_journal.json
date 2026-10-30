@@ -43,6 +43,13 @@
       "when": 1793300000000,
       "tag": "0005_many_ricochet",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1793348841746,
+      "tag": "0006_loud_longshot",
+      "breakpoints": true
     }
   ]
 }

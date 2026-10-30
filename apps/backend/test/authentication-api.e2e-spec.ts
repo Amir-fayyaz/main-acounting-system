@@ -48,6 +48,7 @@ import {
   InMemoryAuthSessionRepository,
   InMemoryCredentialRepository,
   RecordingAuthenticationAudit,
+  RecordingSecurityLogger,
 } from './support/authentication-doubles.js';
 import {
   InMemoryUserRepository,
@@ -113,7 +114,22 @@ async function createHarness(): Promise<Harness> {
           a: AuthenticationAuditRecorder,
           b: TransactionBoundary,
           config: AppConfigService,
-        ) => new SignInUseCase(u, c, s, h, t, a, b, config.authentication.sessionTtlMinutes),
+        ) =>
+          new SignInUseCase(
+            u,
+            c,
+            s,
+            h,
+            t,
+            a,
+            b,
+            config.authentication.sessionTtlMinutes,
+            {
+              threshold: config.authentication.lockoutThreshold,
+              durationMs: config.authentication.lockoutDurationMs,
+            },
+            new RecordingSecurityLogger(),
+          ),
         inject: [
           USER_REPOSITORY,
           CREDENTIAL_REPOSITORY,

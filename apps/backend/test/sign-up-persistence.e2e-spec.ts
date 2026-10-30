@@ -32,6 +32,8 @@ import { DrizzleUserRepository } from '../src/modules/identity/infrastructure/pe
 import { ensureUserSchema } from '../src/modules/identity/infrastructure/persistence/drizzle-user.schema.js';
 import { CryptoSessionTokenService } from '../src/modules/identity/infrastructure/security/crypto-session-token-service.js';
 import { ScryptPasswordHasher } from '../src/modules/identity/infrastructure/security/scrypt-password-hasher.js';
+import { RecordingSecurityLogger } from './support/authentication-doubles.js';
+import { TEST_LOCKOUT_POLICY } from './support/authentication-harness.js';
 import {
   PersistenceError,
   PersistenceFailureKind,
@@ -209,6 +211,8 @@ describe.skipIf(!integrationEnabled)('sign-up persistence (integration)', () => 
       audit,
       boundary,
       60,
+      TEST_LOCKOUT_POLICY,
+      new RecordingSecurityLogger(),
     );
     signUp = new SignUpUseCase(
       new CreateUserUseCase(users, userEvents, boundary),

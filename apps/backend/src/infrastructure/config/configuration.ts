@@ -56,6 +56,8 @@ const DEFAULT_RETRY_BASE_DELAY_MS = 1000;
 const DEFAULT_RETRY_MAX_DELAY_MS = 30000;
 const DEFAULT_SCHEDULER_INTERVAL_MS = 1000;
 const DEFAULT_SESSION_TTL_MINUTES = 60;
+const DEFAULT_LOCKOUT_THRESHOLD = 5;
+const DEFAULT_LOCKOUT_DURATION_MS = 900_000;
 const DEFAULT_OUTBOX_BATCH_SIZE = 25;
 const DEFAULT_OUTBOX_MAX_ATTEMPTS = 5;
 const DEFAULT_OUTBOX_RETRY_BASE_DELAY_MS = 1000;
@@ -278,6 +280,20 @@ export function loadConfiguration(raw: RawConfiguration = process.env): Configur
         raw,
         'AUTH_SESSION_TTL_MINUTES',
         DEFAULT_SESSION_TTL_MINUTES,
+        problems,
+      ),
+      // SEC-002: neither value may be zero, so no configuration can turn the
+      // lockout into "never lock" or "lock for no time".
+      lockoutThreshold: readPositiveInteger(
+        raw,
+        'AUTH_LOCKOUT_THRESHOLD',
+        DEFAULT_LOCKOUT_THRESHOLD,
+        problems,
+      ),
+      lockoutDurationMs: readPositiveInteger(
+        raw,
+        'AUTH_LOCKOUT_DURATION_MS',
+        DEFAULT_LOCKOUT_DURATION_MS,
         problems,
       ),
     },

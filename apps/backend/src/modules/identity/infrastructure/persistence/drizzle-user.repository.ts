@@ -63,6 +63,8 @@ export class DrizzleUserRepository implements UserRepository {
         revision: Revision.initial().value,
         createdAt: user.createdAt.toDate(),
         updatedAt: user.updatedAt.toDate(),
+        failedAuthAttempts: user.failedAuthAttempts,
+        lockedUntil: user.lockedUntil?.toDate() ?? null,
       });
     } catch (error) {
       // A duplicate key is a conflict — someone already owns this email or id —
@@ -87,6 +89,8 @@ export class DrizzleUserRepository implements UserRepository {
         status: user.status.value,
         revision: expectedRevision.value + 1,
         updatedAt: user.updatedAt.toDate(),
+        failedAuthAttempts: user.failedAuthAttempts,
+        lockedUntil: user.lockedUntil?.toDate() ?? null,
       })
       .where(and(eq(users.id, user.id.value), eq(users.revision, expectedRevision.value)));
 
@@ -142,6 +146,8 @@ function toUser(row: UserRow): User {
     status: row.status,
     createdAt: DateTime.from(row.createdAt),
     updatedAt: DateTime.from(row.updatedAt),
+    failedAuthAttempts: row.failedAuthAttempts,
+    ...(row.lockedUntil === null ? {} : { lockedUntil: DateTime.from(row.lockedUntil) }),
   });
 }
 

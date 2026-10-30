@@ -100,6 +100,15 @@ export interface JobsConfiguration {
 export interface AuthenticationConfiguration {
   /** How long an authenticated session stays valid after it is established, in minutes. */
   readonly sessionTtlMinutes: number;
+  /**
+   * Consecutive failed sign-in attempts that lock an account (SEC-002).
+   *
+   * Never unlimited: the value must be a positive integer, so a misconfigured
+   * installation cannot silently disable the lockout.
+   */
+  readonly lockoutThreshold: number;
+  /** How long the temporary lockout lasts, in milliseconds (SEC-002). */
+  readonly lockoutDurationMs: number;
 }
 
 /** Explicit platform Product Owner bootstrap input. Secret material is never logged. */

@@ -40,7 +40,9 @@ import {
   InMemoryAuthSessionRepository,
   InMemoryCredentialRepository,
   RecordingAuthenticationAudit,
+  RecordingSecurityLogger,
 } from './support/authentication-doubles.js';
+import { TEST_LOCKOUT_POLICY } from './support/authentication-harness.js';
 import {
   InMemoryUserRepository,
   PassthroughTransactionBoundary,
@@ -127,6 +129,8 @@ async function createHarness(): Promise<Harness> {
           audit,
           boundary,
           60,
+          TEST_LOCKOUT_POLICY,
+          new RecordingSecurityLogger(),
         ),
       },
       { provide: SignOutUseCase, useValue: new SignOutUseCase(sessions, audit, boundary) },

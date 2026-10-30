@@ -10,11 +10,13 @@ import type { User } from '../../src/modules/identity/domain/aggregates/user.js'
 import { PlainPassword } from '../../src/modules/identity/domain/value-objects/plain-password.js';
 import { CryptoSessionTokenService } from '../../src/modules/identity/infrastructure/security/crypto-session-token-service.js';
 import { DateTime } from '../../src/shared/time/date-time.js';
+import type { LockoutPolicy } from '../../src/modules/identity/domain/aggregates/user.js';
 import {
   FastPasswordHasher,
   InMemoryAuthSessionRepository,
   InMemoryCredentialRepository,
   RecordingAuthenticationAudit,
+  RecordingSecurityLogger,
 } from './authentication-doubles.js';
 import { InMemoryUserRepository, PassthroughTransactionBoundary, aUser } from './user-doubles.js';
 
@@ -32,6 +34,9 @@ import { InMemoryUserRepository, PassthroughTransactionBoundary, aUser } from '.
 /** The default password every seeded user is given. */
 export const TEST_PASSWORD = 'correct horse battery staple';
 
+/** The default lockout policy these specs exercise (SEC-002). */
+export const TEST_LOCKOUT_POLICY: LockoutPolicy = { threshold: 5, durationMs: 900_000 };
+
 export interface AuthenticationHarness {
   readonly users: InMemoryUserRepository;
   readonly credentials: InMemoryCredentialRepository;
@@ -39,6 +44,7 @@ export interface AuthenticationHarness {
   readonly hasher: FastPasswordHasher;
   readonly tokens: CryptoSessionTokenService;
   readonly audit: RecordingAuthenticationAudit;
+  readonly securityLog: RecordingSecurityLogger;
   readonly boundary: PassthroughTransactionBoundary;
   readonly signIn: SignInUseCase;
   readonly signOut: SignOutUseCase;
@@ -46,14 +52,21 @@ export interface AuthenticationHarness {
   readonly setCredential: SetUserCredentialUseCase;
 }
 
-/** Builds the harness; `sessionTtlMinutes` is the configured session lifetime. */
-export function createAuthenticationHarness(sessionTtlMinutes = 60): AuthenticationHarness {
+/**
+ * Builds the harness; `sessionTtlMinutes` is the configured session lifetime and
+ * `lockout` the configured lockout policy (SEC-002).
+ */
+export function createAuthenticationHarness(
+  sessionTtlMinutes = 60,
+  lockout: LockoutPolicy = TEST_LOCKOUT_POLICY,
+): AuthenticationHarness {
   const users = new InMemoryUserRepository();
   const credentials = new InMemoryCredentialRepository();
   const sessions = new InMemoryAuthSessionRepository();
   const hasher = new FastPasswordHasher();
   const tokens = new CryptoSessionTokenService();
   const audit = new RecordingAuthenticationAudit();
+  const securityLog = new RecordingSecurityLogger();
   const boundary = new PassthroughTransactionBoundary();
 
   return {
@@ -63,6 +76,7 @@ export function createAuthenticationHarness(sessionTtlMinutes = 60): Authenticat
     hasher,
     tokens,
     audit,
+    securityLog,
     boundary,
     signIn: new SignInUseCase(
       users,
@@ -73,6 +87,8 @@ export function createAuthenticationHarness(sessionTtlMinutes = 60): Authenticat
       audit,
       boundary,
       sessionTtlMinutes,
+      lockout,
+      securityLog,
     ),
     signOut: new SignOutUseCase(sessions, audit, boundary),
     getAuthenticatedSession: new GetAuthenticatedSessionUseCase(users, sessions, tokens, audit),

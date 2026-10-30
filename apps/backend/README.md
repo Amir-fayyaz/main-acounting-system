@@ -217,6 +217,67 @@ persisted by the limiter — only a hashed form of the subject is used as the
 Redis bucket key, and throttled requests are logged with scope, window and
 correlation id only.
 
+## Account lockout (SEC-002)
+
+Rate limiting protects the endpoint; lockout protects the **account**. They are
+complementary and run side by side: an attacker who spreads attempts across many
+source addresses still hits a bounded window for the specific account they are
+targeting.
+
+The `User` aggregate carries the durable security state — `failedAuthAttempts`
+and an optional `lockedUntil` — persisted with the user record. It is separate
+from the lifecycle status: `status` is an administrator's decision, a lockout is
+a security outcome driven by failures.
+
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `AUTH_LOCKOUT_THRESHOLD` | `5` | Consecutive failed attempts that lock the account |
+| `AUTH_LOCKOUT_DURATION_MS` | `900000` | How long the lockout lasts (15 minutes) |
+
+Both are validated fail-fast and must be positive integers, so no configuration
+can turn the lockout into "never lock" or "lock for no time".
+
+Behavior:
+
+- A wrong password increments the counter; reaching the threshold sets
+  `lockedUntil = now + AUTH_LOCKOUT_DURATION_MS`, records `UserAccountLocked` in
+  the audit trail and emits one structured log line (threshold, duration,
+  correlation id — never a credential).
+- A locked account is refused **before** any password comparison, with the
+  standard error contract:
+
+```json
+{
+  "error": {
+    "code": "ACCOUNT_LOCKED_OUT",
+    "category": "client",
+    "message": "This account is temporarily unavailable. Try again later or reset the password.",
+    "correlationId": "..."
+  }
+}
+```
+
+  HTTP status is **401** (not 403/423), and the answer is identical whether the
+  supplied secret was right or wrong — the lockout never becomes an account
+  enumeration oracle. Neither the threshold nor the remaining lockout time is
+  disclosed.
+- An attempt on an already-locked account does not extend the window; it records
+  `LockedOutAccountTargeted` and one structured log line.
+- A successful sign-in clears the counter and the lockout in the same
+  transaction that creates the session, so a success can never leave the failures
+  that preceded it counted.
+- A locked user is refused even with a valid, unexpired session: session
+  validation reads the same aggregate state, so a lockout that only affected new
+  sign-ins would not be a lockout.
+- Lifecycle refusals (inactive account) do **not** increment the counter, so an
+  administrator's decision cannot lock an account out of its own recovery path.
+
+Today an account leaves a lockout only by waiting out `AUTH_LOCKOUT_DURATION_MS`.
+The administrative unlock capability is intentionally out of scope for SEC-002;
+when it lands, it will clear `failedAuthAttempts` and `lockedUntil` through the
+same aggregate operation a successful sign-in uses. No credential value is
+stored in, or logged by, the lockout state.
+
 ## Endpoints
 
 Operational endpoints only — no business rule lives here (ADR-002, section 16),

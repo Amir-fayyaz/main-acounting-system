@@ -20,3 +20,6 @@ export const SESSION_TOKEN_SERVICE = 'SESSION_TOKEN_SERVICE';
 
 /** The authentication audit boundary, as the authentication flow uses it (AUD-001). */
 export const AUTHENTICATION_AUDIT_RECORDER = 'AUTHENTICATION_AUDIT_RECORDER';
+
+/** The structured security signal for lockout facts (SEC-002). */
+export const AUTHENTICATION_SECURITY_LOGGER = 'AUTHENTICATION_SECURITY_LOGGER';

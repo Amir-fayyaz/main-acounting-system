@@ -10,6 +10,8 @@ import {
   SignInFailed,
   UserAuthenticated,
   UserCredentialEstablished,
+  UserAccountLocked,
+  LockedOutAccountTargeted,
   type AuthenticationStateRejectedData,
 } from '../../domain/events/authentication.events.js';
 
@@ -29,6 +31,8 @@ import {
  * AuthenticationEnded            → user.signed_out         success
  * AuthenticationStateRejected    → authentication.denied   denied
  * UserCredentialEstablished      → user.credential_changed success
+ * UserAccountLocked                  → user.locked_out          failure
+ * LockedOutAccountTargeted           → user.locked_out_attempt  denied
  * ```
  *
  * Three properties are the point:
@@ -106,6 +110,28 @@ function toAuditEntry(event: DomainEvent<unknown>): AuditEntry {
         reason: event.data.reason,
         ...(event.data.userId === undefined ? { attemptedEmail: event.data.email } : {}),
       },
+      ...correlation,
+    };
+  }
+
+  if (event instanceof UserAccountLocked) {
+    // The transition itself, and nothing about how long it lasts: the record
+    // states that the account is locked, not when it becomes usable again.
+    return {
+      action: 'user.locked_out',
+      outcome: 'failure',
+      actorUserId: event.data.userId,
+      target: { type: 'user', id: event.data.userId },
+      ...correlation,
+    };
+  }
+
+  if (event instanceof LockedOutAccountTargeted) {
+    return {
+      action: 'user.locked_out_attempt',
+      outcome: 'denied',
+      actorUserId: event.data.userId,
+      target: { type: 'user', id: event.data.userId },
       ...correlation,
     };
   }

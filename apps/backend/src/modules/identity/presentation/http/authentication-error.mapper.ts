@@ -40,6 +40,9 @@ const UNAUTHORIZED_CODES: readonly string[] = [
   'ACCOUNT_NOT_AUTHENTICATABLE',
   'SESSION_EXPIRED',
   'SESSION_REVOKED',
+  // SEC-002: a lockout is answered as "not authenticated", never as a
+  // forbidden-but-recognised account.
+  'ACCOUNT_LOCKED_OUT',
 ];
 
 /** Raises the transport failure that matches `error`; never returns. */
