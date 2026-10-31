@@ -89,36 +89,5 @@ export class PeriodClosedError extends DomainError {
     super('PERIOD_CLOSED', message, {
       category: ErrorCategory.CONFLICT,
     });
- * The fiscal period is in an invalid state for the requested transition (FIS-005).
- * Maps to HTTP 409 CONFLICT.
- */
-export class PeriodStateInvalidError extends DomainError {
-  public constructor(message = 'The fiscal period is in an invalid state for this operation.') {
-    super('PERIOD_STATE_INVALID', message, {
-      category: ErrorCategory.CONFLICT,
-    });
-  }
-}
-
-/**
- * Reopening a closed period requires a non-empty business justification (FIS-005).
- * Maps to HTTP 400 BAD_REQUEST.
- */
-export class ReopenReasonRequiredError extends DomainError {
-  public constructor() {
-    super(
-      'REOPEN_REASON_REQUIRED',
-      'A non-empty reason is required to reopen a closed fiscal period.',
-      {
-        category: ErrorCategory.VALIDATION,
-        details: [
-          {
-            code: 'REOPEN_REASON_REQUIRED',
-            field: 'reason',
-            message: 'reason must be a non-empty string',
-          },
-        ],
-      },
-    );
   }
 }
