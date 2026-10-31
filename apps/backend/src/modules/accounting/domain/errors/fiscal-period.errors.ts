@@ -102,3 +102,27 @@ export class ReopenReasonRequiredError extends DomainError {
     );
   }
 }
+
+/**
+ * A posting was requested on a date that falls outside every configured fiscal period (FIS-006).
+ */
+export class PeriodNotDefinedError extends DomainError {
+  public constructor(message = 'No fiscal period is defined for that date.') {
+    super('PERIOD_NOT_DEFINED', message, {
+      category: ErrorCategory.NOT_FOUND,
+    });
+  }
+}
+
+/**
+ * A posting was requested on a date whose fiscal period is already closed (FIS-006).
+ */
+export class PeriodClosedError extends DomainError {
+  public constructor(
+    message = 'The fiscal period for that date is closed and cannot be posted into.',
+  ) {
+    super('PERIOD_CLOSED', message, {
+      category: ErrorCategory.CONFLICT,
+    });
+  }
+}

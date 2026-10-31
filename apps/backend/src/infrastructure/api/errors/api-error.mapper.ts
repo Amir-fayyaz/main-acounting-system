@@ -28,10 +28,12 @@ export function mapException(exception: unknown): MappedApiError {
   if (exception instanceof DomainError) {
     let status = API_ERROR_DEFINITIONS[API_ERROR_CODES.DOMAIN_ERROR].status;
 
-    if (exception.code === 'PERIOD_STATE_INVALID') {
+    if (exception.code === 'PERIOD_STATE_INVALID' || exception.code === 'PERIOD_CLOSED') {
       status = HttpStatus.CONFLICT;
     } else if (exception.code === 'REOPEN_REASON_REQUIRED') {
       status = HttpStatus.BAD_REQUEST;
+    } else if (exception.code === 'PERIOD_NOT_DEFINED') {
+      status = HttpStatus.NOT_FOUND;
     }
 
     return {

@@ -18,50 +18,28 @@ import {
 import { Revision } from '../../src/shared/persistence/revision.js';
 import type { Loaded, WriteReceipt } from '../../src/shared/persistence/repository-ports.js';
 import { DateTime } from '../../src/shared/time/date-time.js';
+import { BusinessDate } from '../../src/shared/time/business-date.js';
 
-/**
- * Test doubles for the fiscal period ports (FIS-004).
- *
- * They implement the module's own ports, never the Drizzle adapter, so the
- * application tests run without a database while still exercising the real use
- * cases and the real shared kernel. Like the fiscal year double, the
- * repositories store snapshots and hand back rehydrated copies.
- *
- * The in-memory repositories do not enforce the ambient tenant scope: that is
- * the adapter's job, and it is proven in the MySQL integration spec instead.
- */
-
-/** A deterministic instant for tests that must not depend on the wall clock. */
 export const FIXED_PERIOD_NOW = DateTime.parse('2026-10-03T08:00:00.000Z');
 
-/** In-memory `FiscalPeriodRepository` with compare-and-swap semantics. */
 export class InMemoryFiscalPeriodRepository implements FiscalPeriodRepository {
   private readonly records = new Map<
     string,
     { snapshot: FiscalPeriodSnapshot; revision: Revision }
   >();
 
-  /** Counts mutations, so a test can prove nothing was written on a decline. */
   public addCalls = 0;
   public updateCalls = 0;
-
-  /**
-   * The next `add` fails with this error instead of storing — how a test
-   * simulates the database refusing a write (a duplicate month) without one.
-   */
   public nextAddFailure?: unknown;
 
-  /** Seeds a period without going through `add` (for read/decline tests). */
   public seed(fiscalPeriod: FiscalPeriod, revision: Revision = Revision.initial()): void {
     this.records.set(fiscalPeriod.id.value, { snapshot: fiscalPeriod.snapshot(), revision });
   }
 
-  /** The stored revision, to assert what actually landed. */
   public revisionOf(id: FiscalPeriodId): Revision | undefined {
     return this.records.get(id.value)?.revision;
   }
 
-  /** Every stored period of one tenant and year, in sequence order. */
   public storedBySequence(tenantId: TenantReference, fiscalYearId: FiscalYearId): FiscalPeriod[] {
     return [...this.records.values()]
       .filter(
@@ -88,6 +66,26 @@ export class InMemoryFiscalPeriodRepository implements FiscalPeriodRepository {
       aggregate,
       revision: this.records.get(aggregate.id.value)?.revision ?? Revision.initial(),
     }));
+  }
+
+  public async findPeriodForDate(
+    tenantId: TenantReference,
+    date: BusinessDate,
+    _options?: { readonly forShare?: boolean },
+  ): Promise<Loaded<FiscalPeriod> | undefined> {
+    const isoDate = date.toIsoString();
+    const matching = [...this.records.values()].find(
+      (record) =>
+        record.snapshot.tenantId === tenantId.value &&
+        record.snapshot.startDate <= isoDate &&
+        record.snapshot.endDate >= isoDate,
+    );
+    return matching === undefined
+      ? undefined
+      : {
+          aggregate: FiscalPeriod.rehydrate(matching.snapshot),
+          revision: matching.revision,
+        };
   }
 
   public async add(fiscalPeriod: FiscalPeriod): Promise<WriteReceipt> {
@@ -137,18 +135,8 @@ export class InMemoryFiscalPeriodRepository implements FiscalPeriodRepository {
   }
 }
 
-/**
- * In-memory `ActivePeriodRepository`: one pointer row per tenant, `activate`
- * executed in one synchronous step — the shape that makes the atomicity
- * property provable without a database while staying honest about sequencing.
- */
 export class InMemoryActivePeriodRepository implements ActivePeriodRepository {
   private readonly pointers = new Map<string, FiscalPeriodId>();
-
-  /**
-   * Holds every `activate` call until cleared: each overlapping call awaits it
-   * before writing, so a test can arrange two selections racing first.
-   */
   public barrier?: { promise: Promise<void>; release(): void };
 
   public async periodIdFor(tenantId: TenantReference): Promise<FiscalPeriodId | undefined> {
@@ -162,17 +150,11 @@ export class InMemoryActivePeriodRepository implements ActivePeriodRepository {
     this.pointers.set(tenantId.value, periodId);
   }
 
-  /** The pointer of a tenant, read without a scope (test-only view). */
   public pointerOf(tenantId: string): FiscalPeriodId | undefined {
     return this.pointers.get(tenantId);
   }
 }
 
-/**
- * Builds a fiscal period for seeding, bypassing the generation policy — with
- * an optional closed state, the only shape the business rules and use cases
- * need in tests.
- */
 export function aFiscalPeriod(input: {
   readonly tenantId: TenantReference;
   readonly fiscalYearId: FiscalYearId;
@@ -198,5 +180,4 @@ export function aFiscalPeriod(input: {
   return FiscalPeriod.rehydrate(snapshot);
 }
 
-/** Re-exported so application specs need one import for identity wrapping. */
 export { fiscalPeriodIdFrom };
