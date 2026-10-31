@@ -61,7 +61,9 @@ function harness(): Harness {
     activePeriods,
     events,
     boundary,
-    createFiscalYear: new CreateFiscalYearUseCase(repository, events, boundary, generatePeriods),
+    createFiscalYear: new CreateFiscalYearUseCase(repository, events, boundary, generatePeriods, {
+      record: async () => undefined,
+    }),
   };
 }
 

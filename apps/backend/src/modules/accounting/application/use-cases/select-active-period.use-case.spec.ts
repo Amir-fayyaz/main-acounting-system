@@ -41,6 +41,7 @@ function harness(): Harness {
       activePeriods,
       { record: async () => undefined },
       new PassthroughTransactionBoundary(),
+      { record: async () => undefined },
     ),
   };
 }

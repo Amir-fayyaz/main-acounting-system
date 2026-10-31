@@ -17,6 +17,7 @@ import {
 import { FiscalYearCreated } from '../../domain/events/fiscal-year.events.js';
 import type { FiscalYearRepository } from '../../domain/repositories/fiscal-year.repository.js';
 import { tenantReferenceFrom } from '../../domain/value-objects/tenant-reference.js';
+import type { AuditRecorder } from '../../../audit/application/ports/audit-recorder.port.js';
 import type { CreateFiscalYear } from '../commands/create-fiscal-year.command.js';
 import type { FiscalYearEventRecorder } from '../ports/fiscal-year-event-recorder.port.js';
 import { parseFiscalYearLabel, parseFiscalYearRange } from '../services/fiscal-year-input.js';
@@ -59,6 +60,11 @@ import type { GenerateFiscalPeriodsUseCase } from './generate-fiscal-periods.use
  * `PersistenceError(CONFLICT)` whose cause is the module's own domain error,
  * so the use case maps them to the *same* codes either way and no driver
  * vocabulary leaks upward (design section 6.5).
+ *
+ * The creation is audited through the published Audit contract (AUD-001), in
+ * the same boundary as the write, so the trail records every fiscal year that
+ * came to exist. The actor is the ambient actor scope the HTTP boundary
+ * established — never a field of the payload (ADR-003 section 21).
  */
 export class CreateFiscalYearUseCase {
   public constructor(
@@ -66,6 +72,7 @@ export class CreateFiscalYearUseCase {
     private readonly events: FiscalYearEventRecorder,
     private readonly boundary: TransactionBoundary,
     private readonly generatePeriods: GenerateFiscalPeriodsUseCase,
+    private readonly audit: AuditRecorder,
   ) {}
 
   public async execute(command: CreateFiscalYear): Promise<Result<FiscalYearView, DomainError>> {
@@ -160,6 +167,18 @@ export class CreateFiscalYearUseCase {
       if (periods.isFail()) {
         return Result.fail(periods.errorOrThrow());
       }
+
+      await this.audit.record({
+        action: 'accounting.fiscal_year.create',
+        outcome: 'success',
+        target: { type: 'fiscal_year', id: fiscalYear.id.value },
+        metadata: {
+          label: fiscalYear.label.value,
+          startDate: fiscalYear.range.startDate.toIsoString(),
+          endDate: fiscalYear.range.endDate.toIsoString(),
+          status: fiscalYear.status.value,
+        },
+      });
 
       return Result.ok(toFiscalYearView({ aggregate: fiscalYear, revision: receipt.revision }));
     });
