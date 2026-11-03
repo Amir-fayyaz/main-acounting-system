@@ -12,6 +12,7 @@ import {
 } from 'drizzle-orm/mysql-core';
 import type { Database } from '../../../../infrastructure/database/database.module.js';
 import { FISCAL_YEAR_STATUS_VALUES } from '../../domain/value-objects/fiscal-year-status.js';
+import { ACCOUNTS_DDL } from './account.schema.js';
 import { FISCAL_PERIOD_DDL } from './fiscal-period.schema.js';
 
 /**
@@ -180,6 +181,7 @@ export async function ensureAccountingSchema(database: Database): Promise<void> 
   for (const statement of [
     ...FISCAL_YEAR_DDL,
     ...FISCAL_PERIOD_DDL,
+    ...ACCOUNTS_DDL,
     ...FISCAL_YEAR_TRIGGER_DDL,
   ]) {
     await database.execute(sql.raw(statement));
