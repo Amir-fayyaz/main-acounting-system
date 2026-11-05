@@ -2,43 +2,70 @@ import type { PanelConfiguration } from '@repo/web/ui/panel';
 
 export const accountingPanelConfig = {
   type: 'business-owner',
-  title: 'پنل مدیریت',
-  subtitle: 'حسابداری یکپارچه تراز',
+  title: 'مین‌حساب',
+  subtitle: 'شرکت نمونه · سال مالی ۱۴۰۵',
   homeHref: '/panel',
-  monogram: 'ت',
+  monogram: 'م',
   navigation: [
     {
-      id: 'workspace',
-      label: 'میز کار',
-      items: [{ label: 'میز کار', href: '/panel', icon: 'CiGrid41' }],
-    },
-    {
-      id: 'daily',
-      label: 'عملیات روزانه',
+      id: 'general',
+      label: 'عمومی',
       items: [
-        { label: 'خرید', href: '/panel/purchases', icon: 'CiShoppingCart' },
-        { label: 'فروش', href: '/panel/sales', icon: 'CiShoppingBasket' },
-        { label: 'دریافت / پرداخت', href: '/panel/payments', icon: 'CiCreditCard1' },
-        { label: 'چک‌ها', href: '/panel/checks', icon: 'CiMoneyCheck1' },
-      ],
-    },
-    {
-      id: 'finance',
-      label: 'مالی',
-      items: [
-        { label: 'انبار', href: '/panel/inventory', icon: 'CiBoxes' },
-        { label: 'حسابداری', href: '/panel/accounting', icon: 'CiCalculator1' },
-        { label: 'مغایرت‌گیری', href: '/panel/reconciliation', icon: 'CiRepeat' },
-        { label: 'صندوق اسناد', href: '/panel/documents', icon: 'CiBank' },
-      ],
-    },
-    {
-      id: 'support',
-      label: 'پشتیبان',
-      items: [
-        { label: 'اشخاص', href: '/panel/people', icon: 'CiUser' },
+        { label: 'داشبورد', href: '/panel', icon: 'CiGrid41' },
         { label: 'گزارش‌ها', href: '/panel/reports', icon: 'CiReceipt' },
-        { label: 'Audit Trail', href: '/panel/audit-trail', icon: 'CiFileOn' },
+      ],
+    },
+    {
+      id: 'accounting',
+      label: 'حسابداری',
+      items: [
+        {
+          id: 'accounting-documents',
+          label: 'اسناد حسابداری',
+          icon: 'CiCalculator1',
+          defaultOpen: true,
+          children: [
+            { label: 'دفتر روزنامه', href: '/panel/journal' },
+            { label: 'ثبت سند مرکب', href: '/panel/new-journal' },
+            { label: 'تراز آزمایشی', href: '/panel/trial' },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'treasury',
+      label: 'خزانه',
+      items: [
+        { label: 'بانک و صندوق', href: '/panel/accounts', icon: 'CiBank' },
+        { label: 'چک‌ها', href: '/panel/cheques', icon: 'CiMoneyCheck1' },
+        { label: 'دستگاه‌های POS', href: '/panel/pos', icon: 'CiCreditCard1' },
+      ],
+    },
+    {
+      id: 'sales-purchases',
+      label: 'فروش و خرید',
+      items: [
+        {
+          id: 'sales',
+          label: 'فروش',
+          icon: 'CiShoppingCart',
+          defaultOpen: true,
+          children: [
+            { label: 'فاکتورهای فروش', href: '/panel/invoices' },
+            { label: 'فاکتور جدید', href: '/panel/new-invoice' },
+          ],
+        },
+        { label: 'خرید', href: '/panel/purchases', icon: 'CiShoppingBasket' },
+        { label: 'مشتریان و تأمین‌کنندگان', href: '/panel/people', icon: 'CiUser' },
+      ],
+    },
+    {
+      id: 'organization',
+      label: 'سازمان',
+      items: [
+        { label: 'شعب', href: '/panel/branches', icon: 'CiShop' },
+        { label: 'کاربران و نقش‌ها', href: '/panel/users', icon: 'CiUser' },
+        { label: 'تاریخچه تغییرات', href: '/panel/audit', icon: 'CiFileOn' },
         { label: 'تنظیمات', href: '/panel/settings', icon: 'CiSettings' },
       ],
     },
