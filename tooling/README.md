@@ -42,6 +42,46 @@ Deliberate choices:
 - **Still out of scope (FND-005):** deployment, dependency/security scanning and
   release gates, per `09-ci-cd-and-development-workflow.md`.
 
+## Pre-commit hooks (FND-014)
+
+Cheap, local feedback on the files a commit actually changes. The hooks are a
+convenience; CI stays the authority (`09-ci-cd-and-development-workflow.md`).
+
+| Asset                                      | Purpose                                                                                                                    |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| `.husky/pre-commit`                        | Runs `lint-staged`, then the staged secret scan                                                                            |
+| `.husky/commit-msg`                        | Runs `commitlint` on the message file git passes as `$1`                                                                   |
+| `.husky/pre-push`                          | Runs `pnpm verify` — the same gate CI runs, once per push                                                                  |
+| `lint-staged.config.mjs`                   | Which staged files get `eslint --fix` / `prettier --write`                                                                 |
+| `commitlint.config.mjs`                    | The accepted commit types and header rules, mirroring `CONTRIBUTING.md`                                                    |
+| `tooling/scripts/check-staged-secrets.mjs` | Refuses a staged private key, AWS key id, inline-password connection string or `.env` file; never prints the matched value |
+| root `package.json` `prepare`              | `husky` — a fresh `pnpm install` installs the hooks                                                                        |
+
+Every dev dependency behind these hooks is pinned to an exact version, because a
+tool that decides whether a commit is refused must not change behavior on its own.
+
+Deliberate choices:
+
+- **The secret scan is a Node script, not a shell pipeline.** It reads the staged
+  blob (`git show :path`) rather than the working tree, so it checks what will
+  really be committed, and it behaves identically on Windows, macOS and Linux.
+- **The credential variable names are not duplicated.** The scan parses
+  `SECRET_ENVIRONMENT_KEYS` out of
+  `apps/backend/src/infrastructure/config/secrets.ts`, the single declaration of
+  which variables carry credentials; a unit test fails if that parse stops
+  finding the real list.
+- **Placeholders are not secrets.** `changeme`, `${MYSQL_PASSWORD}` and
+  `your-password` do not block a commit, so `.env.example` and the documentation
+  stay committable and contributors are not trained to bypass the hook.
+- **`pnpm verify` is not on the commit path.** It runs per push; a broken commit
+  is cheap to fix locally, a broken push is not.
+- **The escape hatch is documented, not prevented.** `--no-verify` and `HUSKY=0`
+  work, and `CONTRIBUTING.md` requires disclosing any use in the pull request.
+
+`pnpm test:tooling` (also part of `pnpm test`, and therefore of `pnpm verify`)
+runs the tooling suite, including real-git integration tests that stage a
+secret, run the hook and assert the commit was refused with no value printed.
+
 ## Direction
 
 `tooling/` hosts anything that must run across the workspace rather than inside one

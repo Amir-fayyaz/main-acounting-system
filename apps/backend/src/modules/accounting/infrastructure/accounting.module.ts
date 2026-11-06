@@ -13,11 +13,13 @@ import type { AuditRecorder } from '../../audit/application/ports/audit-recorder
 import { AUTHORIZATION } from '../../identity/application/authorization/authorization.tokens.js';
 import type { Authorization } from '../../identity/application/ports/authorization.port.js';
 import {
+  ACCOUNT_REPOSITORY,
   ACTIVE_PERIOD_REPOSITORY,
   FISCAL_PERIOD_EVENT_RECORDER,
   FISCAL_PERIOD_REPOSITORY,
   FISCAL_YEAR_EVENT_RECORDER,
   FISCAL_YEAR_REPOSITORY,
+  PERIOD_GUARD,
 } from '../application/accounting.tokens.js';
 import type { FiscalPeriodEventRecorder } from '../application/ports/fiscal-period-event-recorder.port.js';
 import type { FiscalYearEventRecorder } from '../application/ports/fiscal-year-event-recorder.port.js';
@@ -29,47 +31,17 @@ import { ReopenFiscalPeriodUseCase } from '../application/use-cases/reopen-fisca
 import { GetFiscalYearUseCase } from '../application/use-cases/get-fiscal-year.use-case.js';
 import { ListFiscalYearsUseCase } from '../application/use-cases/list-fiscal-years.use-case.js';
 import { ListFiscalPeriodsUseCase } from '../application/use-cases/list-fiscal-periods.use-case.js';
+import { DefaultPeriodGuard } from '../application/services/default-period-guard.service.js';
+import type { PeriodGuard } from '../application/ports/period-guard.port.js';
 import type { ActivePeriodRepository } from '../domain/repositories/active-period.repository.js';
+import type { AccountRepository } from '../domain/repositories/account.repository.js';
 import type { FiscalPeriodRepository } from '../domain/repositories/fiscal-period.repository.js';
 import type { FiscalYearRepository } from '../domain/repositories/fiscal-year.repository.js';
-import { FiscalYearsController } from '../presentation/controllers/fiscal-years.controller.js';
-import { FiscalPeriodsController } from '../presentation/controllers/fiscal-periods.controller.js';
+import { DrizzleAccountRepository } from './persistence/drizzle-account.repository.js';
 import { DrizzleActivePeriodRepository } from './persistence/drizzle-active-period.repository.js';
 import { DrizzleFiscalPeriodRepository } from './persistence/drizzle-fiscal-period.repository.js';
 import { DrizzleFiscalYearRepository } from './persistence/drizzle-fiscal-year.repository.js';
 
-/**
- * The accounting module (FIS-002, FIS-004).
- *
- * It wires the module's own ports to their adapters and its use cases to the
- * shared infrastructure they need:
- *
- * - `FISCAL_YEAR_REPOSITORY` → `DrizzleFiscalYearRepository` (this module's table);
- * - `FISCAL_PERIOD_REPOSITORY` → `DrizzleFiscalPeriodRepository` (ditto);
- * - `ACTIVE_PERIOD_REPOSITORY` → `DrizzleActivePeriodRepository` — the
- *   per-tenant pointer row whose single upsert statement makes the
- *   exactly-one-active rule atomic;
- * - the event recorders → the shared outbox recorder, so the module's events
- *   commit with the state change that raised them (SHR-006);
- * - `TRANSACTION_BOUNDARY` → the shared boundary the use cases open (SHR-005).
- *
- * The adapters stay behind their tokens, so the use cases never reach past a
- * port — and the module owns its persistence, exposing the Drizzle tables and
- * adapters to no one else (ADR-002 sections 8 and 12).
- *
- * The fiscal year and period REST resources live in this module's
- * `presentation/` (ADR-013 section 2: endpoints belong to the module that owns
- * the domain). Close and reopen additionally wire the two *published* contracts
- * they need — `AUDIT_RECORDER` (AUD-001) and `AUTHORIZATION` (IAM-006) — both
- * provided application-wide by their owning modules, so this module sees the
- * contracts and never the tables or use cases behind them.
- *
- * The module is deliberately **not** `@Global` and exports only
- * `CreateFiscalYearUseCase`, for the development seeder (DEV-001): seeding
- * creates its fixture year through the same use case the API calls, so the
- * overlap rule, the generated periods, the audit entry and the active-period
- * pointer all apply.
- */
 @Module({
   imports: [DatabaseModule, OutboxModule],
   controllers: [FiscalYearsController, FiscalPeriodsController],
@@ -93,13 +65,22 @@ import { DrizzleFiscalYearRepository } from './persistence/drizzle-fiscal-year.r
       inject: [DATABASE],
     },
     {
-      // The outbox recorder already satisfies the application ports structurally.
+      provide: ACCOUNT_REPOSITORY,
+      useFactory: (database: Database): AccountRepository => new DrizzleAccountRepository(database),
+      inject: [DATABASE],
+    },
+    {
       provide: FISCAL_YEAR_EVENT_RECORDER,
       useExisting: OUTBOX_RECORDER,
     },
     {
       provide: FISCAL_PERIOD_EVENT_RECORDER,
       useExisting: OUTBOX_RECORDER,
+    },
+    {
+      provide: PERIOD_GUARD,
+      useFactory: (periods: FiscalPeriodRepository): PeriodGuard => new DefaultPeriodGuard(periods),
+      inject: [FISCAL_PERIOD_REPOSITORY],
     },
     {
       provide: GenerateFiscalPeriodsUseCase,
@@ -214,9 +195,6 @@ import { DrizzleFiscalYearRepository } from './persistence/drizzle-fiscal-year.r
       inject: [FISCAL_YEAR_REPOSITORY, FISCAL_PERIOD_REPOSITORY],
     },
   ],
-  // Exported for the development seeder (DEV-001): a fixture fiscal year is
-  // created through the same use case a later HTTP resource will call, so the
-  // overlap rule, the generated periods and the active-period pointer all apply.
-  exports: [CreateFiscalYearUseCase],
+  exports: [CreateFiscalYearUseCase, PERIOD_GUARD],
 })
 export class AccountingModule {}
