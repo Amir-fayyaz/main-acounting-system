@@ -1,5 +1,6 @@
 import type { Person } from '../assets/@types';
 import { createMockPeople } from '../assets/mock/organization';
+import { personKindLabel } from '../utils/status-label';
 import { createMockResource } from './mock-api-utils';
 
 export type CreatePersonInput = Omit<Person, 'id'>;
@@ -7,7 +8,10 @@ export type CreatePersonInput = Omit<Person, 'id'>;
 const peopleApi = createMockResource<Person, CreatePersonInput>({
   initialData: createMockPeople(),
   idPrefix: 'person',
-  getSearchText: (person) => [person.name, person.kind, person.phone, person.branchName].join(' '),
+  getSearchText: (person) =>
+    [person.name, person.kind, person.phone, person.branchName, personKindLabel(person.kind)].join(
+      ' ',
+    ),
   createEntity: (input, id) => ({ ...input, id }),
 });
 

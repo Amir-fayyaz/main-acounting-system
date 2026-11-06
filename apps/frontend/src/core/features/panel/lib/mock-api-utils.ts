@@ -15,6 +15,35 @@ export interface MockResource<T, TCreate> {
   create: (input: TCreate) => Promise<T>;
 }
 
+interface ListRowsOptions<T> {
+  getSearchText: (row: T) => string;
+  getStatus?: (row: T) => string;
+}
+
+export async function listMockRows<T>(
+  rows: readonly T[],
+  params: ListParams,
+  { getSearchText, getStatus }: ListRowsOptions<T>,
+): Promise<PaginatedResponse<T>> {
+  let filtered = filterMockRows(rows, params.search, getSearchText);
+  const requestedStatus = params.status?.trim().toLowerCase();
+  if (getStatus && requestedStatus) {
+    filtered = filtered.filter((row) => getStatus(row).trim().toLowerCase() === requestedStatus);
+  }
+  if (params.noPage) {
+    return waitForMockResponse({
+      data: filtered,
+      meta: {
+        page: 1,
+        limit: filtered.length,
+        total: filtered.length,
+        totalPages: filtered.length > 0 ? 1 : 0,
+      },
+    });
+  }
+  return waitForMockResponse(paginateMockRows(filtered, params));
+}
+
 export function createMockResource<T extends { id: string }, TCreate>({
   initialData,
   getSearchText,
@@ -27,12 +56,7 @@ export function createMockResource<T extends { id: string }, TCreate>({
 
   return {
     async list(params = {}) {
-      let rows = filterMockRows(records, params.search, getSearchText);
-      const requestedStatus = params.status?.trim().toLowerCase();
-      if (getStatus && requestedStatus) {
-        rows = rows.filter((row) => getStatus(row).trim().toLowerCase() === requestedStatus);
-      }
-      return waitForMockResponse(paginateMockRows(rows, params));
+      return listMockRows(records, params, { getSearchText, getStatus });
     },
     async create(input) {
       const created = createEntity(input, `${idPrefix}-${String(nextId).padStart(4, '0')}`);
