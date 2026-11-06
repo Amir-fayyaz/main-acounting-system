@@ -1,4 +1,5 @@
 import type { BankAccount, Cheque, Invoice, JournalEntry, Purchase } from '../@types';
+import { padFaDay } from '../../utils/persian-digits';
 import { createId, makeMoney } from './mock-utils';
 
 const branches = ['دفتر مرکزی', 'شعبه ونک', 'شعبه اصفهان', 'شعبه تبریز'];
@@ -85,7 +86,7 @@ export function createMockJournalEntries(): JournalEntry[] {
   return Array.from({ length: 24 }, (_, index) => ({
     id: createId('journal', index + 1),
     number: String(1405000 + 24 - index),
-    date: `۱۴۰۵/۰۸/${String(5 - (index % 5)).padStart(2, '۰')}`,
+    date: `۱۴۰۵/۰۸/${padFaDay(5 - (index % 5))}`,
     description: descriptions[index % descriptions.length],
     amount: makeMoney(['25000000.00', '84000000.00', '125000000.00', '46000000.00'][index % 4]),
     currency: 'IRR',
@@ -110,7 +111,7 @@ export function createMockCheques(): Cheque[] {
     counterparty: people[index % people.length],
     bankName: banks[index % banks.length],
     amount: makeMoney(['85000000.00', '120000000.00', '45000000.00', '210000000.00'][index % 4]),
-    dueDate: `۱۴۰۵/۰۸/${String(8 + (index % 20)).padStart(2, '۰')}`,
+    dueDate: `۱۴۰۵/۰۸/${padFaDay(8 + (index % 20))}`,
     currency: 'IRR',
     status: statuses[index % statuses.length],
   }));
@@ -128,7 +129,7 @@ export function createMockInvoices(): Invoice[] {
       id: createId('invoice', index + 1),
       number: String(2200 + 18 - index),
       customerName: people[index % people.length],
-      issueDate: `۱۴۰۵/۰۸/${String(5 - (index % 5)).padStart(2, '۰')}`,
+      issueDate: `۱۴۰۵/۰۸/${padFaDay(5 - (index % 5))}`,
       total: makeMoney(total),
       paid: makeMoney(paid),
       remaining: makeMoney(remaining),
@@ -143,10 +144,10 @@ export function createMockPurchases(): Purchase[] {
     id: createId('purchase', index + 1),
     number: String(830 + 16 - index),
     supplierName: people[(index + 3) % people.length],
-    issueDate: `۱۴۰۵/۰۸/${String(4 - (index % 4)).padStart(2, '۰')}`,
+    issueDate: `۱۴۰۵/۰۸/${padFaDay(4 - (index % 4))}`,
     total: makeMoney(['72000000.00', '165000000.00', '94000000.00'][index % 3]),
     currency: 'IRR',
-    dueDate: `۱۴۰۵/۰۹/${String(2 + (index % 20)).padStart(2, '۰')}`,
+    dueDate: `۱۴۰۵/۰۹/${padFaDay(2 + (index % 20))}`,
     status: invoiceStatuses[index % invoiceStatuses.length],
   }));
 }
@@ -160,7 +161,7 @@ export function createMockPosTerminals(): import('../@types').PosTerminal[] {
     bankName: banks[index % banks.length],
     feePercentage: ['۰٫۵', '۰٫۷', '۱'][index % 3],
     settlementAccount: `IR${String(index + 20).padStart(24, '0')}`,
-    activatedAt: `۱۴۰۵/۰۷/${String(10 + index).padStart(2, '۰')}`,
+    activatedAt: `۱۴۰۵/۰۷/${padFaDay(10 + index)}`,
     status: index === 6 ? 'inactive' : 'active',
   }));
 }

@@ -84,7 +84,7 @@ describe('Reusable panel shell', () => {
     state.pathname = '/panel/sales';
     renderPanel();
     const nav = screen.getByRole('navigation', { name: 'منوی پنل' });
-    expect(within(nav).getAllByRole('link')).toHaveLength(13);
+    expect(within(nav).getAllByRole('link')).toHaveLength(19);
     for (const item of getSidebarLinks(accountingPanelConfig.navigation)) {
       expect(within(nav).getByRole('link', { name: item.label })).toHaveAttribute(
         'href',

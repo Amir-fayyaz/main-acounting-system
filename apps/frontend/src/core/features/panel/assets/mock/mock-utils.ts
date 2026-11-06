@@ -45,9 +45,3 @@ export function waitForMockResponse<T>(value: T): Promise<T> {
     setTimeout(() => resolve(value), 220);
   });
 }
-
-export function formatMoney(amount: string): string {
-  const integerPart = amount.split('.')[0];
-  const integerValue = BigInt(integerPart || '0');
-  return new Intl.NumberFormat('fa-IR').format(integerValue);
-}

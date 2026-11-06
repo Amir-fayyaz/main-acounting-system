@@ -7,6 +7,7 @@ interface MockResourceOptions<T extends { id: string }, TCreate> {
   getSearchText: (row: T) => string;
   createEntity: (input: TCreate, id: string) => T;
   idPrefix: string;
+  getStatus?: (row: T) => string;
 }
 
 export interface MockResource<T, TCreate> {
@@ -19,14 +20,19 @@ export function createMockResource<T extends { id: string }, TCreate>({
   getSearchText,
   createEntity,
   idPrefix,
+  getStatus,
 }: MockResourceOptions<T, TCreate>): MockResource<T, TCreate> {
   let records = [...initialData];
   let nextId = records.length + 1;
 
   return {
     async list(params = {}) {
-      const filtered = filterMockRows(records, params.search, getSearchText);
-      return waitForMockResponse(paginateMockRows(filtered, params));
+      let rows = filterMockRows(records, params.search, getSearchText);
+      const requestedStatus = params.status?.trim().toLowerCase();
+      if (getStatus && requestedStatus) {
+        rows = rows.filter((row) => getStatus(row).trim().toLowerCase() === requestedStatus);
+      }
+      return waitForMockResponse(paginateMockRows(rows, params));
     },
     async create(input) {
       const created = createEntity(input, `${idPrefix}-${String(nextId).padStart(4, '0')}`);

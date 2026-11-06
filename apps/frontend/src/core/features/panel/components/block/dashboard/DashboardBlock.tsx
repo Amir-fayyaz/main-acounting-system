@@ -13,7 +13,8 @@ import {
   P,
 } from '@repo/web/ui';
 import type { ActivityItem, DashboardSnapshot } from '../../../assets/@types';
-import { formatMoney } from '../../../assets/mock/mock-utils';
+import { formatMoney } from '../../../utils/format-money';
+import { activityStatusLabel } from '../../../utils/status-label';
 import { getDashboardSnapshot, listRecentActivity } from '../../../lib/dashboard-api';
 
 type DashboardState =
@@ -99,13 +100,13 @@ function DashboardContent({
         </div>
         <div className="flex flex-wrap gap-2">
           <Link
-            href="/panel/new-journal"
+            href="/panel/journal"
             className="inline-flex min-h-10 items-center justify-center rounded-md border border-border px-4 text-sm font-medium transition-colors hover:bg-accent"
           >
             ثبت سند جدید
           </Link>
           <Link
-            href="/panel/new-invoice"
+            href="/panel/sales"
             className="inline-flex min-h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90"
           >
             فاکتور جدید
@@ -217,11 +218,7 @@ function DashboardContent({
                   <div className="flex items-center gap-3">
                     <span className="text-xs text-muted-foreground">{item.occurredAt}</span>
                     <span className="rounded-full bg-muted px-2.5 py-1 text-xs">
-                      {item.status === 'success'
-                        ? 'موفق'
-                        : item.status === 'pending'
-                          ? 'در انتظار'
-                          : 'نیازمند بررسی'}
+                      {activityStatusLabel(item.status)}
                     </span>
                   </div>
                 </li>
