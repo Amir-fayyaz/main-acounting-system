@@ -34,7 +34,7 @@ const CHEQUE_STATUS_LABELS = {
   endorsed: 'ظهرنویسی‌شده',
 } as const satisfies Record<Cheque['status'], string>;
 
-const JOURNAL_STATUS_LABELS = {
+export const JOURNAL_STATUS_LABELS = {
   balanced: 'تراز',
   draft: 'پیش‌نویس',
 } as const satisfies Record<JournalEntry['status'], string>;
