@@ -125,6 +125,7 @@ describe.skipIf(!integrationEnabled)('fiscal period persistence (integration)', 
       activePeriods,
       { record: async () => undefined },
       boundary,
+      { record: async () => undefined },
     );
   });
 

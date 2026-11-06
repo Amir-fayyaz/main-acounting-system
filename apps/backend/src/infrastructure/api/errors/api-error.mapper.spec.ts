@@ -1,6 +1,7 @@
 import { InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { describe, expect, it } from 'vitest';
 import { DomainError } from '../../../shared/errors/domain-error.js';
+import { ErrorCategory } from '../../../shared/errors/error-category.js';
 import {
   TenantContextMissingError,
   TenantIsolationViolationError,
@@ -14,6 +15,47 @@ class PeriodAlreadyClosedError extends DomainError {
   }
 }
 
+/** Representative fiscal failures: the module's codes, the shared categories. */
+class FiscalYearOverlapError extends DomainError {
+  constructor() {
+    super('FISCAL_YEAR_OVERLAP', 'A fiscal year already covers that range.', {
+      category: ErrorCategory.CONFLICT,
+    });
+  }
+}
+
+class FiscalPeriodNotFoundError extends DomainError {
+  constructor() {
+    super('FISCAL_PERIOD_NOT_FOUND', 'No fiscal period with that identity exists.', {
+      category: ErrorCategory.NOT_FOUND,
+    });
+  }
+}
+
+class PeriodStateInvalidError extends DomainError {
+  constructor() {
+    super('PERIOD_STATE_INVALID', 'The fiscal period is in an invalid state.', {
+      category: ErrorCategory.CONFLICT,
+    });
+  }
+}
+
+class ReopenReasonRequiredError extends DomainError {
+  constructor() {
+    super('REOPEN_REASON_REQUIRED', 'A non-empty reason is required to reopen.', {
+      category: ErrorCategory.VALIDATION,
+    });
+  }
+}
+
+class FiscalPeriodNotOpenError extends DomainError {
+  constructor() {
+    super('FISCAL_PERIOD_NOT_OPEN', 'Only an open period can be the active one.', {
+      category: ErrorCategory.STATE_VIOLATION,
+    });
+  }
+}
+
 describe('mapException', () => {
   it('classifies a DomainError as a domain failure and keeps its own code', () => {
     expect(mapException(new PeriodAlreadyClosedError())).toEqual({
@@ -21,6 +63,38 @@ describe('mapException', () => {
       code: 'PERIOD_ALREADY_CLOSED',
       category: 'domain',
       message: 'The accounting period is already closed.',
+    });
+  });
+
+  it('answers each fiscal failure with its category status and its own code (doc 13)', () => {
+    // A conflict is 409 — not the generic 422 a DomainError used to default to.
+    expect(mapException(new FiscalYearOverlapError())).toEqual({
+      status: 409,
+      code: 'FISCAL_YEAR_OVERLAP',
+      category: 'domain',
+      message: 'A fiscal year already covers that range.',
+    });
+    expect(mapException(new PeriodStateInvalidError())).toMatchObject({
+      status: 409,
+      code: 'PERIOD_STATE_INVALID',
+    });
+
+    // A missing resource is 404, with the module's code, not a generic NOT_FOUND.
+    expect(mapException(new FiscalPeriodNotFoundError())).toMatchObject({
+      status: 404,
+      code: 'FISCAL_PERIOD_NOT_FOUND',
+    });
+
+    // Rejected input is 400 — the code the two hard-coded branches used to carry.
+    expect(mapException(new ReopenReasonRequiredError())).toMatchObject({
+      status: 400,
+      code: 'REOPEN_REASON_REQUIRED',
+    });
+
+    // A lifecycle violation stays 422.
+    expect(mapException(new FiscalPeriodNotOpenError())).toMatchObject({
+      status: 422,
+      code: 'FISCAL_PERIOD_NOT_OPEN',
     });
   });
 

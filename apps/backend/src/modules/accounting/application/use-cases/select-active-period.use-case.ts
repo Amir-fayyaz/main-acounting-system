@@ -4,6 +4,7 @@ import { tenantScopedMessageOptions } from '../../../../shared/tenant/tenant-mes
 import { TenantScope } from '../../../../shared/tenant/tenant-scope.js';
 import type { TransactionBoundary } from '../../../../shared/transaction/transaction-boundary.js';
 import { ActivePeriodSelected } from '../../domain/events/fiscal-period.events.js';
+import type { AuditRecorder } from '../../../audit/application/ports/audit-recorder.port.js';
 import type { ActivePeriodRepository } from '../../domain/repositories/active-period.repository.js';
 import type { FiscalPeriodRepository } from '../../domain/repositories/fiscal-period.repository.js';
 import {
@@ -38,7 +39,8 @@ import type { FiscalPeriodView } from '../views/fiscal-period.view.js';
  *    c. switch the pointer in one atomic statement — two concurrent select
  *       requests still leave exactly one active period, because the pointer
  *       is a single per-tenant row;
- *    d. record `ActivePeriodSelected` in the outbox;
+ *    d. record `ActivePeriodSelected` in the outbox and the move in the
+ *       central audit trail (AUD-001), in the same boundary as the write;
  * 4. return the now-active period as a view.
  */
 export class SelectActivePeriodUseCase {
@@ -47,6 +49,7 @@ export class SelectActivePeriodUseCase {
     private readonly activePeriods: ActivePeriodRepository,
     private readonly events: FiscalPeriodEventRecorder,
     private readonly boundary: TransactionBoundary,
+    private readonly audit: AuditRecorder,
   ) {}
 
   public async execute(
@@ -91,6 +94,16 @@ export class SelectActivePeriodUseCase {
           tenantScopedMessageOptions(),
         ),
       );
+
+      await this.audit.record({
+        action: 'accounting.period.select',
+        outcome: 'success',
+        target: { type: 'fiscal_period', id: fiscalPeriod.id.value },
+        metadata: {
+          fiscalYearId: fiscalPeriod.fiscalYearId.value,
+          sequence: fiscalPeriod.sequence,
+        },
+      });
 
       return Result.ok(toFiscalPeriodView(fiscalPeriod));
     });
