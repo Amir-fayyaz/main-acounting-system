@@ -8,6 +8,11 @@ export const businessPanelConfig = {
   monogram: 'ک',
   navigation: [
     {
+      id: 'finance',
+      label: 'مالی',
+      items: [{ label: 'دوره‌های مالی', href: '/fiscal-periods', icon: 'CiCalculator1' }],
+    },
+    {
       id: 'management',
       label: 'مدیریت',
       items: [
