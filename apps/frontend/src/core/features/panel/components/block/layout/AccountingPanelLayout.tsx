@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { accountingPanelConfig } from '../../../assets/mock/navigation';
 import { PanelLayout } from '@repo/web/ui/panel';
+import { PanelLogoutControl } from '../../ui/PanelLogoutControl';
 
 export function AccountingPanelLayout({
   children,
@@ -14,7 +15,7 @@ export function AccountingPanelLayout({
       config={accountingPanelConfig}
       defaultSidebarOpen={defaultSidebarOpen}
       account={{ name: 'علی رضایی', description: 'مدیر مالی' }}
-      logoutHref="/login"
+      logoutControl={<PanelLogoutControl />}
     >
       {children}
     </PanelLayout>

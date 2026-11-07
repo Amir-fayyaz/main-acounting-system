@@ -35,7 +35,7 @@ export function AppSidebar({ navigation, activeHref, header, footer, ...props }:
   return (
     <Sidebar {...props}>
       {header && (
-        <SidebarHeader className="h-16 border-b px-4 py-0 [--radius:inherit]">
+        <SidebarHeader className="h-16 border-b px-4 py-3 [--radius:inherit]">
           {header}
         </SidebarHeader>
       )}

@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { Button } from '../../../../../shadcn/ui/button/button';
 import { P, Span } from '../../../../ui/typography/Typography';
 import { Popover, PopoverContent, PopoverTrigger } from '../../../../../shadcn/ui/popover/popover';
-import { CiBellOn, CiDark, CiSun } from 'react-icons/ci';
+import { Bell, Moon, Sun } from 'lucide-react';
 import type { SidebarNavigationGroup } from '../../../../ui/sidebar/assets/@types/sidebar';
 import { usePanelTheme } from '../../../hook/usePanelTheme';
 import { PanelSearch } from '../../ui/search/PanelSearch';
@@ -23,6 +23,7 @@ export function PanelHeader({
     <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2.5 border-b bg-background/88 px-5 backdrop-blur-[10px]">
       <PanelSidebarToggle className="lg:hidden" restoreFocus />
       <PanelSearch navigation={navigation} />
+
       <div className="ms-auto flex shrink-0 items-center gap-1">
         <Button
           type="button"
@@ -30,14 +31,16 @@ export function PanelHeader({
           size="icon"
           onClick={toggleTheme}
           aria-label="تغییر حالت تاریک و روشن"
+          title={isDark ? 'تم روشن' : 'تم تاریک'}
           className="size-[38px] rounded-md text-muted-foreground hover:bg-accent"
         >
           {isDark ? (
-            <CiDark className="size-5" aria-hidden="true" />
+            <Sun className="size-5" aria-hidden="true" />
           ) : (
-            <CiSun className="size-5" aria-hidden="true" />
+            <Moon className="size-5" aria-hidden="true" />
           )}
         </Button>
+
         <Popover>
           <PopoverTrigger asChild>
             <Button
@@ -47,9 +50,10 @@ export function PanelHeader({
               aria-label="اعلان‌ها"
               className="relative size-[38px] rounded-md text-muted-foreground hover:bg-accent after:absolute after:top-2 after:start-[9px] after:size-2 after:rounded-full after:border-2 after:border-background after:bg-primary"
             >
-              <CiBellOn className="size-5" aria-hidden="true" />
+              <Bell className="size-5" aria-hidden="true" />
             </Button>
           </PopoverTrigger>
+
           <PopoverContent
             align="end"
             dir="rtl"
@@ -59,6 +63,7 @@ export function PanelHeader({
             <P className="text-sm text-muted-foreground">اعلان تازه‌ای ندارید.</P>
           </PopoverContent>
         </Popover>
+
         {actions}
       </div>
     </header>

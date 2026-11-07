@@ -1,15 +1,14 @@
-import Link from 'next/link';
+import type { ReactNode } from 'react';
 import { ImgNormalCustom } from '../../../../ui/image/ImgNormalCustom';
 import { Small, Span } from '../../../../ui/typography/Typography';
-import { CiLogout } from 'react-icons/ci';
 import type { PanelAccount as PanelAccountDetails } from '../../../assets/@types/panel';
 
 export function PanelAccount({
   account,
-  logoutHref,
+  logoutControl,
 }: {
   account?: PanelAccountDetails;
-  logoutHref?: string;
+  logoutControl?: ReactNode;
 }) {
   const name = account?.name ?? 'حساب کاربری';
 
@@ -36,16 +35,7 @@ export function PanelAccount({
           {account?.description ?? 'حسابداری تراز'}
         </Small>
       </div>
-      {logoutHref && (
-        <Link
-          href={logoutHref}
-          aria-label="خروج"
-          title="خروج"
-          className="grid size-[38px] shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground group-data-[collapsible=icon]:hidden"
-        >
-          <CiLogout className="size-5" aria-hidden="true" />
-        </Link>
-      )}
+      {logoutControl}
     </div>
   );
 }
