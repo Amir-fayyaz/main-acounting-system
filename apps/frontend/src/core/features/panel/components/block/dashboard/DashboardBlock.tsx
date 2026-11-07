@@ -2,78 +2,100 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Skeleton,
-  H1,
-  P,
-} from '@repo/web/ui';
-import type { ActivityItem, DashboardSnapshot } from '../../../assets/@types';
-import { formatMoney } from '../../../utils/format-money';
-import { activityStatusLabel } from '../../../utils/status-label';
-import { getDashboardSnapshot, listRecentActivity } from '../../../lib/dashboard-api';
+import { Plus } from 'lucide-react';
+
+import { Card, CardContent, SectionLayout, Skeleton } from '@repo/web/ui';
+import { cn } from '@repo/web/ui/utils/cn';
+
+import type { Cheque, DashboardMetric, DashboardSnapshot, Invoice } from '../../../assets/@types';
+import { listCheques } from '../../../lib/cheques-api';
+import { getDashboardSnapshot } from '../../../lib/dashboard-api';
+import { listInvoices } from '../../../lib/invoices-api';
+import { formatShortMoney, splitShortMoney } from '../../../utils/format-short-money';
+import { PageHeader } from '../../ui';
+import { DashboardCharts } from './DashboardCharts';
+import { DashboardLists } from './DashboardLists';
 
 type DashboardState =
   | { status: 'loading' }
   | { status: 'error' }
-  | { status: 'success'; snapshot: DashboardSnapshot; activity: ActivityItem[] };
+  | { status: 'success'; snapshot: DashboardSnapshot; invoices: Invoice[]; cheques: Cheque[] };
+
+const SECONDARY_ACTION_CLASS =
+  'inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-border px-4 text-sm font-semibold transition-colors hover:bg-accent';
+
+const PRIMARY_ACTION_CLASS =
+  'inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-brand-dark';
+
+const ERROR_MESSAGE = 'دریافت اطلاعات داشبورد با مشکل مواجه شد. لطفاً دوباره تلاش کنید.';
 
 function DashboardLoading() {
   return (
-    <div className="space-y-6" aria-label="در حال بارگذاری داشبورد" aria-busy="true">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="space-y-4" aria-label="در حال بارگذاری داشبورد" aria-busy="true">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {Array.from({ length: 8 }, (_, index) => (
-          <Card key={index}>
-            <CardContent className="space-y-3 pt-6">
+          <Card key={index} className="rounded-lg">
+            <CardContent className="space-y-3">
               <Skeleton className="h-4 w-2/3" />
-              <Skeleton className="h-8 w-1/2" />
+              <Skeleton className="h-7 w-1/2" />
               <Skeleton className="h-3 w-1/3" />
             </CardContent>
           </Card>
         ))}
       </div>
-      <div className="grid gap-4 xl:grid-cols-2">
-        <Card>
-          <CardContent className="space-y-3 pt-6">
+      <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
+        <Card className="rounded-lg">
+          <CardContent className="space-y-3">
             <Skeleton className="h-5 w-1/3" />
-            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-44 w-full" />
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="space-y-3 pt-6">
+        <Card className="rounded-lg">
+          <CardContent className="space-y-3">
             <Skeleton className="h-5 w-1/3" />
-            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-44 w-full" />
           </CardContent>
         </Card>
+      </div>
+      <div className="grid gap-4 lg:grid-cols-3">
+        {Array.from({ length: 3 }, (_, index) => (
+          <Card key={index} className="rounded-lg">
+            <CardContent className="space-y-3">
+              <Skeleton className="h-5 w-1/2" />
+              <Skeleton className="h-4 w-2/3" />
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-4 w-3/5" />
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );
 }
 
-function MetricCard({ label, value, description, trend }: DashboardSnapshot['metrics'][number]) {
+function MetricCard({ label, value, description, trend, highlight }: DashboardMetric) {
+  const { amount, unit } = splitShortMoney(formatShortMoney(value));
+
   return (
-    <Card>
-      <CardContent className="space-y-2 pt-6">
-        <P className="text-sm text-muted-foreground">{label}</P>
-        <p className="text-xl font-bold tabular-nums sm:text-2xl">
-          {formatMoney(value)}
-          <span className="ms-1 text-xs font-medium text-muted-foreground">ریال</span>
-        </p>
-        <p
-          className={
-            trend === 'negative'
-              ? 'text-xs text-destructive'
-              : trend === 'positive'
-                ? 'text-xs text-primary'
-                : 'text-xs text-muted-foreground'
-          }
-        >
-          {description}
-        </p>
+    <Card className={cn('rounded-lg', highlight && 'bg-accent')}>
+      <CardContent className="space-y-1.5">
+        <span className="block text-[13px] text-muted-foreground">{label}</span>
+        <b className="block text-[17px] font-bold leading-snug tabular-nums sm:text-[21px]">
+          <span>{amount}</span>
+          {unit ? (
+            <span className="ms-1 text-xs font-medium text-muted-foreground">{unit}</span>
+          ) : null}
+        </b>
+        {description ? (
+          <span
+            className={cn(
+              'block text-xs',
+              trend === 'negative' ? 'text-destructive' : 'text-success',
+            )}
+          >
+            {description}
+          </span>
+        ) : null}
       </CardContent>
     </Card>
   );
@@ -81,152 +103,26 @@ function MetricCard({ label, value, description, trend }: DashboardSnapshot['met
 
 function DashboardContent({
   snapshot,
-  activity,
+  invoices,
+  cheques,
 }: {
   snapshot: DashboardSnapshot;
-  activity: ActivityItem[];
+  invoices: Invoice[];
+  cheques: Cheque[];
 }) {
-  const maxCashflow = Math.max(
-    ...snapshot.cashflow.map((item) => Number(BigInt(item.income.split('.')[0]))),
-    1,
-  );
+  const dueCheques = cheques
+    .filter((cheque) => cheque.status === 'near-due' || cheque.status === 'pending')
+    .slice(0, 4);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div className="space-y-1">
-          <H1 className="text-start text-xl font-bold sm:text-2xl">داشبورد</H1>
-          <P className="text-sm text-muted-foreground">خلاصه‌ای از وضعیت مالی امروز</P>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Link
-            href="/panel/journal"
-            className="inline-flex min-h-10 items-center justify-center rounded-md border border-border px-4 text-sm font-medium transition-colors hover:bg-accent"
-          >
-            ثبت سند جدید
-          </Link>
-          <Link
-            href="/panel/sales"
-            className="inline-flex min-h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90"
-          >
-            فاکتور جدید
-          </Link>
-        </div>
-      </div>
-
-      <section aria-label="شاخص‌های مالی" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="space-y-4">
+      <section aria-label="شاخص‌های مالی" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {snapshot.metrics.map((metric) => (
           <MetricCard key={metric.id} {...metric} />
         ))}
       </section>
-
-      <section className="grid gap-4 xl:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>درآمد و هزینه</CardTitle>
-            <CardDescription>مقایسه شش ماه اخیر · میلیارد ریال</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-2">
-                <span className="size-2 rounded-full bg-primary" /> درآمد
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <span className="size-2 rounded-full bg-secondary-foreground" /> هزینه
-              </span>
-            </div>
-            <div className="space-y-4">
-              {snapshot.cashflow.map((item) => {
-                const income = Number(BigInt(item.income.split('.')[0]));
-                const expense = Number(BigInt(item.expense.split('.')[0]));
-                return (
-                  <div key={item.month} className="grid grid-cols-[3.5rem_1fr] items-center gap-3">
-                    <span className="text-xs text-muted-foreground">{item.month}</span>
-                    <div className="space-y-1.5">
-                      <div className="h-2.5 overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full rounded-full bg-primary"
-                          style={{ width: `${(income / maxCashflow) * 100}%` }}
-                        />
-                      </div>
-                      <div className="h-2.5 overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full rounded-full bg-secondary-foreground"
-                          style={{ width: `${(expense / maxCashflow) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>روش‌های پرداخت</CardTitle>
-            <CardDescription>سهم هر روش از کل پرداخت‌ها</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            {snapshot.paymentMethods.map((method) => (
-              <div key={method.id} className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span>{method.label}</span>
-                  <span className="font-semibold tabular-nums">{method.percentage}٪</span>
-                </div>
-                <div
-                  className="h-2.5 overflow-hidden rounded-full bg-muted"
-                  role="progressbar"
-                  aria-label={method.label}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={method.percentage}
-                >
-                  <div
-                    className="h-full rounded-full bg-primary"
-                    style={{ width: `${method.percentage}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </section>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>آخرین فعالیت‌ها</CardTitle>
-          <CardDescription>رویدادهای اخیر ثبت‌شده در پنل</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {activity.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-border px-4 py-10 text-center">
-              <p className="text-sm text-muted-foreground">هنوز فعالیتی برای نمایش وجود ندارد.</p>
-            </div>
-          ) : (
-            <ul className="divide-y divide-border">
-              {activity.map((item) => (
-                <li
-                  key={item.id}
-                  className="flex flex-col gap-2 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="space-y-1">
-                    <p className="text-sm font-semibold">{item.title}</p>
-                    <p className="text-sm text-muted-foreground">{item.description}</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted-foreground">{item.occurredAt}</span>
-                    <span className="rounded-full bg-muted px-2.5 py-1 text-xs">
-                      {activityStatusLabel(item.status)}
-                    </span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+      <DashboardCharts cashflow={snapshot.cashflow} paymentMethods={snapshot.paymentMethods} />
+      <DashboardLists invoices={invoices} cheques={dueCheques} tasks={snapshot.tasks} />
     </div>
   );
 }
@@ -237,13 +133,18 @@ export function DashboardBlock() {
   useEffect(() => {
     let isMounted = true;
 
-    Promise.all([getDashboardSnapshot(), listRecentActivity({ page: 1, limit: 5 })])
-      .then(([snapshot, activityResponse]) => {
+    Promise.all([
+      getDashboardSnapshot(),
+      listInvoices({ page: 1, limit: 5 }),
+      listCheques({ noPage: true }),
+    ])
+      .then(([snapshot, invoiceResponse, chequeResponse]) => {
         if (isMounted) {
           setState({
             status: 'success',
             snapshot,
-            activity: activityResponse.data,
+            invoices: invoiceResponse.data,
+            cheques: chequeResponse.data,
           });
         }
       })
@@ -256,18 +157,40 @@ export function DashboardBlock() {
     };
   }, []);
 
-  if (state.status === 'loading') return <DashboardLoading />;
-
-  if (state.status === 'error') {
-    return (
-      <div
-        role="alert"
-        className="rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-sm text-destructive"
-      >
-        دریافت اطلاعات داشبورد با مشکل مواجه شد. لطفاً دوباره تلاش کنید.
-      </div>
-    );
-  }
-
-  return <DashboardContent snapshot={state.snapshot} activity={state.activity} />;
+  return (
+    <SectionLayout>
+      <PageHeader
+        title="داشبورد"
+        description="خلاصه‌ای از وضعیت مالی امروز"
+        actions={
+          <>
+            <Link href="/panel/journal" className={SECONDARY_ACTION_CLASS}>
+              <Plus aria-hidden="true" className="size-5" strokeWidth={1.8} />
+              سند جدید
+            </Link>
+            <Link href="/panel/sales" className={PRIMARY_ACTION_CLASS}>
+              <Plus aria-hidden="true" className="size-5" strokeWidth={1.8} />
+              فاکتور جدید
+            </Link>
+          </>
+        }
+      />
+      {state.status === 'loading' ? <DashboardLoading /> : null}
+      {state.status === 'error' ? (
+        <div
+          role="alert"
+          className="rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-sm text-destructive"
+        >
+          {ERROR_MESSAGE}
+        </div>
+      ) : null}
+      {state.status === 'success' ? (
+        <DashboardContent
+          snapshot={state.snapshot}
+          invoices={state.invoices}
+          cheques={state.cheques}
+        />
+      ) : null}
+    </SectionLayout>
+  );
 }

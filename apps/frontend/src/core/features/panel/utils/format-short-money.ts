@@ -64,3 +64,9 @@ export function formatShortMoney(amount: string | number): string {
 
   return negative && abs > ZERO ? `-${body}` : body;
 }
+
+export function splitShortMoney(label: string): { amount: string; unit: string } {
+  const separator = label.indexOf(' ');
+  if (separator === -1) return { amount: label, unit: '' };
+  return { amount: label.slice(0, separator), unit: label.slice(separator + 1) };
+}

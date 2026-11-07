@@ -10,7 +10,12 @@ export function AccountingPanelLayout({
   defaultSidebarOpen?: boolean;
 }) {
   return (
-    <PanelLayout config={accountingPanelConfig} defaultSidebarOpen={defaultSidebarOpen}>
+    <PanelLayout
+      config={accountingPanelConfig}
+      defaultSidebarOpen={defaultSidebarOpen}
+      account={{ name: 'علی رضایی', description: 'مدیر مالی' }}
+      logoutHref="/login"
+    >
       {children}
     </PanelLayout>
   );

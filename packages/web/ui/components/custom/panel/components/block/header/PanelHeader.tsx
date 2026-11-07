@@ -20,8 +20,8 @@ export function PanelHeader({
   const { isDark, toggleTheme } = usePanelTheme();
 
   return (
-    <header className="sticky top-0 z-30 flex shrink-0 items-center gap-2 border-b bg-background/90 px-3 py-3 backdrop-blur-sm sm:gap-3 sm:px-5">
-      <PanelSidebarToggle className="md:hidden" restoreFocus />
+    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2.5 border-b bg-background/88 px-5 backdrop-blur-[10px]">
+      <PanelSidebarToggle className="lg:hidden" restoreFocus />
       <PanelSearch navigation={navigation} />
       <div className="ms-auto flex shrink-0 items-center gap-1">
         <Button
@@ -29,8 +29,8 @@ export function PanelHeader({
           variant="ghost"
           size="icon"
           onClick={toggleTheme}
-          aria-label={isDark ? 'فعال کردن حالت روشن' : 'فعال کردن حالت تاریک'}
-          className="size-11 rounded-lg text-muted-foreground hover:bg-accent"
+          aria-label="تغییر حالت تاریک و روشن"
+          className="size-[38px] rounded-md text-muted-foreground hover:bg-accent"
         >
           {isDark ? (
             <CiDark className="size-5" aria-hidden="true" />
@@ -45,7 +45,7 @@ export function PanelHeader({
               variant="ghost"
               size="icon"
               aria-label="اعلان‌ها"
-              className="size-11 rounded-lg text-muted-foreground hover:bg-accent"
+              className="relative size-[38px] rounded-md text-muted-foreground hover:bg-accent after:absolute after:top-2 after:start-[9px] after:size-2 after:rounded-full after:border-2 after:border-background after:bg-primary"
             >
               <CiBellOn className="size-5" aria-hidden="true" />
             </Button>

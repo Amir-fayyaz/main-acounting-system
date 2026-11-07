@@ -80,18 +80,23 @@ describe('Reusable panel shell', () => {
     expect(structuredClone(accountingPanelConfig)).toEqual(accountingPanelConfig);
   });
 
-  it('renders every configured route and marks only the current destination active', () => {
+  it('renders every configured route and marks only the current destination active', async () => {
     state.pathname = '/panel/sales';
+    const user = userEvent.setup();
     renderPanel();
+    await user.click(screen.getByRole('button', { name: 'اسناد حسابداری' }));
     const nav = screen.getByRole('navigation', { name: 'منوی پنل' });
-    expect(within(nav).getAllByRole('link')).toHaveLength(19);
+    expect(within(nav).getAllByRole('link')).toHaveLength(14);
     for (const item of getSidebarLinks(accountingPanelConfig.navigation)) {
       expect(within(nav).getByRole('link', { name: item.label })).toHaveAttribute(
         'href',
         item.href,
       );
     }
-    expect(within(nav).getByRole('link', { name: 'فروش' })).toHaveAttribute('aria-current', 'page');
+    expect(within(nav).getByRole('link', { name: 'فاکتورهای فروش' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
     expect(nav.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
     expect(screen.getAllByRole('main')).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('میز کار');
@@ -136,14 +141,16 @@ describe('Reusable panel shell', () => {
       '/admin/profile',
     );
     expect(
-      getSidebarLinks(accountingPanelConfig.navigation).find((item) => item.label === 'فروش')?.href,
+      getSidebarLinks(accountingPanelConfig.navigation).find(
+        (item) => item.label === 'فاکتورهای فروش',
+      )?.href,
     ).toBe('/panel/sales');
   });
 
   it('collapses on desktop and persists the preference using the existing sidebar cookie', async () => {
     const user = userEvent.setup();
     const { container } = renderPanel();
-    await user.click(screen.getAllByRole('button', { name: 'بستن منو' })[0]);
+    await user.click(screen.getAllByRole('button', { name: 'جمع کردن منو' })[0]);
     expect(container.querySelector('[data-slot="sidebar"]')).toHaveAttribute(
       'data-state',
       'collapsed',
@@ -166,8 +173,8 @@ describe('Reusable panel shell', () => {
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'باز کردن منو' }));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'فروش' })).toBeVisible();
-    await user.click(screen.getByRole('link', { name: 'فروش' }));
+    expect(screen.getByRole('link', { name: 'خرید' })).toBeVisible();
+    await user.click(screen.getByRole('link', { name: 'خرید' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     await user.click(screen.getByRole('button', { name: 'باز کردن منو' }));
     await user.keyboard('{Escape}');
@@ -179,10 +186,10 @@ describe('Reusable panel shell', () => {
     const user = userEvent.setup();
     renderPanel();
     const input = screen.getByRole('searchbox', { name: 'جستجو در پنل' });
-    await user.type(input, 'مغایرت');
-    expect(screen.getAllByRole('link', { name: 'مغایرت‌گیری' })).toHaveLength(2);
+    await user.type(input, 'چک‌ها');
+    expect(screen.getAllByRole('link', { name: 'چک‌ها' })).toHaveLength(2);
     await user.keyboard('{Enter}');
-    expect(state.push).toHaveBeenCalledWith('/panel/reconciliation');
+    expect(state.push).toHaveBeenCalledWith('/panel/checks');
     expect(input).toHaveValue('');
     await user.type(input, 'خريد');
     await user.keyboard('{ArrowDown}');
@@ -197,16 +204,14 @@ describe('Reusable panel shell', () => {
   it('switches theme and restores the saved preference when mounted again', async () => {
     const user = userEvent.setup();
     const { unmount } = renderPanel();
-    await user.click(screen.getByRole('button', { name: 'فعال کردن حالت تاریک' }));
+    await user.click(screen.getByRole('button', { name: 'تغییر حالت تاریک و روشن' }));
     await waitFor(() => expect(document.documentElement).toHaveClass('dark'));
     expect(localStorage.getItem('panel-theme')).toBe('dark');
     unmount();
     document.documentElement.classList.remove('dark');
     renderPanel();
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'فعال کردن حالت روشن' })).toBeInTheDocument(),
-    );
-    await user.click(screen.getByRole('button', { name: 'فعال کردن حالت روشن' }));
+    await waitFor(() => expect(document.documentElement).toHaveClass('dark'));
+    await user.click(screen.getByRole('button', { name: 'تغییر حالت تاریک و روشن' }));
     expect(localStorage.getItem('panel-theme')).toBe('light');
   });
 });
@@ -239,12 +244,12 @@ describe('Configurable sidebar sublinks', () => {
     expect(screen.getByRole('link', { name: 'تخفیف‌ها' })).toBeVisible();
   });
 
-  it('opens a matching submenu when the current child route changes and marks its parent', async () => {
+  it('opens a matching submenu when the current child route changes without highlighting the parent', async () => {
     const user = userEvent.setup();
     state.pathname = '/panel/store/orders/123';
     const { rerender } = renderPanel(true, panelWithSublinks);
     const store = screen.getByRole('button', { name: 'فروشگاه' });
-    expect(store).toHaveAttribute('data-active', 'true');
+    expect(store).not.toHaveAttribute('data-active');
     expect(screen.getByRole('link', { name: 'سفارش‌ها' })).toHaveAttribute('aria-current', 'page');
     await user.click(store);
     expect(store).toHaveAttribute('aria-expanded', 'false');

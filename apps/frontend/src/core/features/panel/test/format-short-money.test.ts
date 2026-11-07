@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatShortMoney } from '../utils/format-short-money';
+import { formatShortMoney, splitShortMoney } from '../utils/format-short-money';
 
 describe('formatShortMoney', () => {
   it('formats billion-scale amounts with one Persian decimal digit', () => {
@@ -57,5 +57,25 @@ describe('formatShortMoney', () => {
 
   it('groups huge values without precision loss beyond safe integers', () => {
     expect(formatShortMoney('9007199254740993000')).toBe('۹٬۰۰۷٬۱۹۹٬۲۵۴٫۷ میلیارد ریال');
+  });
+});
+
+describe('splitShortMoney', () => {
+  it('splits the amount from the unit at the first space', () => {
+    expect(splitShortMoney('۴۸٫۲ میلیارد ریال')).toEqual({
+      amount: '۴۸٫۲',
+      unit: 'میلیارد ریال',
+    });
+    expect(splitShortMoney('۶۱۲ میلیون ریال')).toEqual({ amount: '۶۱۲', unit: 'میلیون ریال' });
+    expect(splitShortMoney('۹۹۹٬۹۹۹ ریال')).toEqual({ amount: '۹۹۹٬۹۹۹', unit: 'ریال' });
+    expect(splitShortMoney('-۱٫۵ میلیارد ریال')).toEqual({
+      amount: '-۱٫۵',
+      unit: 'میلیارد ریال',
+    });
+  });
+
+  it('keeps a unit-less label as the amount', () => {
+    expect(splitShortMoney('بدون-فاصله')).toEqual({ amount: 'بدون-فاصله', unit: '' });
+    expect(splitShortMoney('')).toEqual({ amount: '', unit: '' });
   });
 });
