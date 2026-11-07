@@ -19,5 +19,6 @@ export * from '../../modules/identity/infrastructure/persistence/drizzle-platfor
 export * from '../../modules/audit/infrastructure/persistence/audit-record.schema.js';
 export * from '../../modules/accounting/infrastructure/persistence/fiscal-year.schema.js';
 export * from '../../modules/accounting/infrastructure/persistence/fiscal-period.schema.js';
+export * from '../../modules/accounting/infrastructure/persistence/account.schema.js';
 export * from '../outbox/persistence/outbox.schema.js';
 export * from '../seed/persistence/seed-fixture.schema.js';

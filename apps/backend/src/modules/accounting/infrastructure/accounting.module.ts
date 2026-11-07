@@ -9,6 +9,7 @@ import { OutboxModule } from '../../../infrastructure/outbox/outbox.module.js';
 import { OUTBOX_RECORDER } from '../../../infrastructure/outbox/outbox.tokens.js';
 import type { TransactionBoundary } from '../../../shared/transaction/transaction-boundary.js';
 import {
+  ACCOUNT_REPOSITORY,
   ACTIVE_PERIOD_REPOSITORY,
   FISCAL_PERIOD_EVENT_RECORDER,
   FISCAL_PERIOD_REPOSITORY,
@@ -24,8 +25,10 @@ import { CreateFiscalYearUseCase } from '../application/use-cases/create-fiscal-
 import { DefaultPeriodGuard } from '../application/services/default-period-guard.service.js';
 import type { PeriodGuard } from '../application/ports/period-guard.port.js';
 import type { ActivePeriodRepository } from '../domain/repositories/active-period.repository.js';
+import type { AccountRepository } from '../domain/repositories/account.repository.js';
 import type { FiscalPeriodRepository } from '../domain/repositories/fiscal-period.repository.js';
 import type { FiscalYearRepository } from '../domain/repositories/fiscal-year.repository.js';
+import { DrizzleAccountRepository } from './persistence/drizzle-account.repository.js';
 import { DrizzleActivePeriodRepository } from './persistence/drizzle-active-period.repository.js';
 import { DrizzleFiscalPeriodRepository } from './persistence/drizzle-fiscal-period.repository.js';
 import { DrizzleFiscalYearRepository } from './persistence/drizzle-fiscal-year.repository.js';
@@ -49,6 +52,11 @@ import { DrizzleFiscalYearRepository } from './persistence/drizzle-fiscal-year.r
       provide: ACTIVE_PERIOD_REPOSITORY,
       useFactory: (database: Database): ActivePeriodRepository =>
         new DrizzleActivePeriodRepository(database),
+      inject: [DATABASE],
+    },
+    {
+      provide: ACCOUNT_REPOSITORY,
+      useFactory: (database: Database): AccountRepository => new DrizzleAccountRepository(database),
       inject: [DATABASE],
     },
     {
