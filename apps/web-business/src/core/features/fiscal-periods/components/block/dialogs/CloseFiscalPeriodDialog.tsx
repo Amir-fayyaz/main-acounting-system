@@ -49,9 +49,10 @@ export function CloseFiscalPeriodDialog({
     >
       <div className="space-y-4">
         <FiscalNotice tone="warning">
-          بستن دوره یعنی ثبت سند، فاکتور و دریافت/پرداخت در این دوره{' '}
-          <Span className="text-xs font-bold sm:text-[13px]">متوقف</Span> می‌شود. این کار قابل
-          بازگشت است، اما بازگشایی نیاز به ثبت دلیل دارد و در ممیزی ثبت می‌شود.
+          پس از بستن،
+          <Span className="text-xs font-bold sm:text-[13px]"> ثبت یا ویرایش مستقیم</Span> سند،
+          فاکتور، دریافت و پرداخت با تاریخ این دوره مجاز نیست. تغییر فقط با بازگشایی کنترل‌شده ممکن
+          است.
         </FiscalNotice>
 
         <label className="flex items-start justify-between gap-2 rounded-lg px-3 py-2.5 text-xs leading-6 text-foreground sm:text-[13px]">
