@@ -10,7 +10,6 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
-    testTimeout: 10_000,
     server: {
       deps: {
         // Keep the shared OTP input on the same React instance as the test renderer.
