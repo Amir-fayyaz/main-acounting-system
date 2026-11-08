@@ -5,10 +5,7 @@ export type SidebarIconName =
   | 'CiCreditCard1'
   | 'CiFileOn'
   | 'CiGrid41'
-  | 'CiHome'
-  | 'CiLock'
   | 'CiMoneyCheck1'
-  | 'CiRead'
   | 'CiReceipt'
   | 'CiRepeat'
   | 'CiSettings'
@@ -21,8 +18,6 @@ export interface SidebarNavigationLink {
   label: string;
   href: string;
   icon?: SidebarIconName;
-  /** Optional count pill rendered at the item's inline end, hidden on the icon rail. */
-  badge?: number;
 }
 
 export interface SidebarNavigationBranch {

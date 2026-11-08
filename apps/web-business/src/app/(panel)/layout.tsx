@@ -1,17 +1,7 @@
-import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { AccountingPanelLayout } from '@/core/features/panel/components/block/layout/AccountingPanelLayout';
-import './panel.css';
+import { PanelLayout } from '@repo/web/ui/panel';
+import { businessPanelConfig } from '@/core/features/panel/assets/mock/navigation';
 
-export const metadata: Metadata = {
-  title: { default: 'پنل کسب‌وکار | تراز', template: '%s | تراز' },
-  robots: { index: false, follow: false },
-};
-
-export default function PanelRouteLayout({ children }: { children: ReactNode }) {
-  return (
-    <div className="panel-preview">
-      <AccountingPanelLayout>{children}</AccountingPanelLayout>
-    </div>
-  );
+export default function BusinessPanelLayout({ children }: { children: ReactNode }) {
+  return <PanelLayout config={businessPanelConfig}>{children}</PanelLayout>;
 }

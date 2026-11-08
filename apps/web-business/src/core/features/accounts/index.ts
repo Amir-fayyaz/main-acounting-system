@@ -1,2 +1,0 @@
-// Public API for accounts. Add page components and hooks here as they are implemented.
-export {};

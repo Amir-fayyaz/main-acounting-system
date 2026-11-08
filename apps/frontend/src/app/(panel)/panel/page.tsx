@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { DashboardBlock } from '@/core/features/panel/components/block/dashboard/DashboardBlock';
+import { PanelPlaceholder } from '@/core/features/panel/components/block/placeholder/PanelPlaceholder';
 
 export const metadata: Metadata = { title: 'میز کار' };
 
 export default function PanelPage() {
-  return <DashboardBlock />;
+  return <PanelPlaceholder title="میز کار" />;
 }

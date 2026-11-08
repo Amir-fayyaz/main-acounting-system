@@ -33,19 +33,11 @@ export function PanelSidebarToggle({
       type="button"
       variant="ghost"
       size="icon"
-      aria-label={
-        isMobile
-          ? openMobile
-            ? 'بستن منو'
-            : 'باز کردن منو'
-          : state === 'expanded'
-            ? 'جمع کردن منو'
-            : 'باز کردن منو'
-      }
+      aria-label={expanded ? 'بستن منو' : 'باز کردن منو'}
       aria-expanded={expanded}
       onClick={toggleSidebar}
       className={cn(
-        'size-[38px] rounded-md text-muted-foreground transition-transform hover:bg-accent [&_svg]:size-5 group-data-[collapsible=icon]:rotate-180',
+        'size-11 rounded-lg text-muted-foreground hover:bg-accent [&_svg]:size-5',
         className,
       )}
     >

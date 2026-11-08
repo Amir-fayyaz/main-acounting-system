@@ -27,7 +27,7 @@ export function PanelSearch({ navigation }: { navigation: readonly SidebarNaviga
     <form
       role="search"
       ref={formRef}
-      className="relative min-w-0 flex-1 sm:max-w-[380px]"
+      className="relative min-w-0 flex-1 sm:max-w-sm"
       onFocus={() => setFocused(true)}
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false);
@@ -68,10 +68,10 @@ export function PanelSearch({ navigation }: { navigation: readonly SidebarNaviga
           setQuery(event.target.value);
           setFocused(true);
         }}
-        placeholder="رفتن به صفحه… (مثلاً چک‌ها)"
+        placeholder="جستجو در پنل…"
         autoComplete="off"
         aria-controls={showResults ? resultsId : undefined}
-        className="h-10 rounded-md border-border bg-card ps-10 pe-3.5 text-sm shadow-none"
+        className="h-11 rounded-lg border-border bg-card ps-10 pe-3 text-sm shadow-none"
       />
       {showResults && (
         <div
