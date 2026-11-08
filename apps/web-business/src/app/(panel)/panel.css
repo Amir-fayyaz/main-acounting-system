@@ -1,5 +1,8 @@
+/* panel.css */
 @import 'tailwindcss/utilities.css' layer(utilities);
-@reference '../globals.css';
+
+@reference "tailwindcss";
+
 @source '../../../../../packages/web/ui';
 
 /* Keep panel styling inside its route without changing the site's layout. */
