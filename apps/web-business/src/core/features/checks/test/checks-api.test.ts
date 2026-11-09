@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CreateChequeRequest } from '../assets/@types/cheque.types';
+import { MOCK_CHEQUE_FORM_RULES } from '../assets/mock/checks.mock';
 import { createChecksApi } from '../lib/checks-api';
 
 function freshApi() {
@@ -148,6 +149,26 @@ describe('checksApi.create', () => {
     const otherBank = await api.create(payload({ number: '100000', bank: 'ملت' }));
     expect(otherBank.number).toBe('100000');
     expect(otherBank.bank).toBe('ملت');
+  });
+
+  it('honors a global duplicate-number scope declared by the API rules', async () => {
+    const api = createChecksApi({
+      latencyMs: 0,
+      rules: { ...MOCK_CHEQUE_FORM_RULES, duplicateNumberScope: 'global' },
+    });
+
+    const conflict = await api.findConflict({
+      number: '100000',
+      bank: 'ملت',
+      sayadId: '9999999999999999',
+    });
+    expect(conflict.number?.id).toBe('cheque-1001');
+
+    await expect(api.create(payload({ number: '100000', bank: 'ملت' }))).rejects.toMatchObject({
+      code: 'DUPLICATE_NUMBER',
+      status: 409,
+      fieldErrors: { number: 'چکی با این شماره قبلاً ثبت شده است.' },
+    });
   });
 
   it('rejects a duplicate Sayad globally', async () => {

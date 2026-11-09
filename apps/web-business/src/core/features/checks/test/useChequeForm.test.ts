@@ -34,13 +34,13 @@ function formValues(overrides: Partial<ChequeFormValues> = {}): ChequeFormValues
   };
 }
 
-function setup(cheque: Cheque | null = null) {
+function setup(cheque: Cheque | null = null, rules = MOCK_CHEQUE_FORM_RULES) {
   const findConflict = vi.fn().mockResolvedValue({ number: null, sayadId: null });
   const onValidSubmit = vi.fn().mockResolvedValue(undefined);
   const view = renderHook(() =>
     useChequeForm({
       cheque,
-      rules: MOCK_CHEQUE_FORM_RULES,
+      rules,
       onValidSubmit,
       conflictApi: { findConflict },
     }),
@@ -128,7 +128,25 @@ describe('useChequeForm', () => {
     });
 
     expect(submitted).toBe(false);
-    expect(result.current.errors.number).toContain('قبلاً ثبت شده');
+    expect(result.current.errors.number).toBe('چکی با این شماره برای همین بانک قبلاً ثبت شده است.');
+    expect(onValidSubmit).not.toHaveBeenCalled();
+  });
+
+  it('uses the global duplicate-number wording when the API declares a global scope', async () => {
+    const globalRules = {
+      ...MOCK_CHEQUE_FORM_RULES,
+      duplicateNumberScope: 'global' as const,
+    };
+    const { result, findConflict, onValidSubmit } = setup(null, globalRules);
+    findConflict.mockResolvedValue({ number: EXISTING_CHEQUE, sayadId: null });
+
+    let submitted = true;
+    await act(async () => {
+      submitted = await result.current.submit();
+    });
+
+    expect(submitted).toBe(false);
+    expect(result.current.errors.number).toBe('چکی با این شماره قبلاً ثبت شده است.');
     expect(onValidSubmit).not.toHaveBeenCalled();
   });
 

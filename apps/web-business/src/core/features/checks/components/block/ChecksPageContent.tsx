@@ -24,7 +24,9 @@ import { useCheques } from '../../hook/useCheques';
 import { useChequeFilters } from '../../hook/useChequeFilters';
 import { CHEQUE_DIRECTION_OPTIONS, CHEQUE_STATUS_OPTIONS } from '../../lib/checks.config';
 import { toPersianDigits } from '../../utils/format';
+import { ChequePrintButton } from '../ui/ChequePrintButton';
 import { ChequeStatCard } from '../ui/ChequeStatCard';
+import { ChecksPrintStyles } from './ChecksPrintStyles';
 import { ChecksTable } from './ChecksTable';
 import { ChequeFormDialog } from './dialogs/ChequeFormDialog';
 
@@ -56,7 +58,8 @@ export function ChecksPageContent() {
 
   return (
     <SectionLayout>
-      <div className="flex flex-col gap-5">
+      <ChecksPrintStyles />
+      <div data-checks-print className="flex flex-col gap-5">
         <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-1">
             <H1 className="text-start text-xl font-bold tracking-tight sm:text-2xl">چک‌ها</H1>
@@ -65,15 +68,19 @@ export function ChecksPageContent() {
             </Muted>
           </div>
 
-          <Button
-            className="gap-1.5"
-            onClick={() => {
-              setDialog({ mode: 'create' });
-            }}
-          >
-            <Plus className="size-4" aria-hidden />
-            ثبت چک
-          </Button>
+          <div data-checks-actions className="flex flex-wrap items-center gap-2 print:hidden">
+            <ChequePrintButton />
+
+            <Button
+              className="gap-1.5"
+              onClick={() => {
+                setDialog({ mode: 'create' });
+              }}
+            >
+              <Plus className="size-4" aria-hidden />
+              ثبت چک
+            </Button>
+          </div>
         </header>
 
         <section aria-label="خلاصه‌ی وضعیت چک‌ها" className="grid gap-3 sm:grid-cols-3">
@@ -97,7 +104,10 @@ export function ChecksPageContent() {
           />
         </section>
 
-        <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center">
+        <div
+          data-checks-toolbar
+          className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center print:hidden"
+        >
           <div className="w-full sm:max-w-xs">
             <SearchInput title="جستجو در جدول…" />
           </div>

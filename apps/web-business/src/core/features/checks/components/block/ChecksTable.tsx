@@ -140,8 +140,8 @@ export function ChecksTable({
     {
       key: 'actions',
       header: 'عملیات',
-      headerClassName: cn(HEADER_CLASS, 'w-20'),
-      className: 'w-20',
+      headerClassName: cn(HEADER_CLASS, 'w-20 print:hidden'),
+      className: 'w-20 print:hidden',
       cell: (cheque: Cheque) => (
         <Button
           type="button"

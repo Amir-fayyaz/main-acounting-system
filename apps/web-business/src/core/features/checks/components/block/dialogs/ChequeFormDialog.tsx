@@ -102,8 +102,9 @@ function ChequeFormContent({ mode, cheque, rules, onOpenChange, onSaved }: Chequ
   return (
     <form noValidate onSubmit={handleSubmit} className="space-y-4" aria-label="فرم چک">
       <ChequeNotice icon={<Info className="size-4" />}>
-        شماره چک در هر بانک و شناسه صیادی در کل سامانه باید یکتا باشد. قواعد شماره و شناسه از سرور
-        خوانده می‌شود.
+        {rules.duplicateNumberScope === 'global'
+          ? 'شماره چک و شناسه صیادی در کل سامانه باید یکتا باشند. قواعد شماره و شناسه از سرور خوانده می‌شود.'
+          : 'شماره چک در هر بانک و شناسه صیادی در کل سامانه باید یکتا باشد. قواعد شماره و شناسه از سرور خوانده می‌شود.'}
       </ChequeNotice>
 
       {formError ? (

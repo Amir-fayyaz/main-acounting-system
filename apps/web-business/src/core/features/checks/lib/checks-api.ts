@@ -306,7 +306,7 @@ export function createChecksApi(options: ChecksApiOptions = {}): ChecksApi {
   const create = async (payload: CreateChequeRequest): Promise<Cheque> => {
     await delay(latencyMs);
     const { fieldErrors, duplicateNumber, duplicateSayad } = validatePayload(payload, rules, dtos);
-    throwConflictError(duplicateNumber, duplicateSayad, fieldErrors);
+    throwConflictError(duplicateNumber, duplicateSayad, fieldErrors, rules.duplicateNumberScope);
     throwValidationError(fieldErrors);
 
     const registeredDate = normalizeJalaliDate(payload.registeredDate) ?? '';
@@ -371,7 +371,7 @@ export function createChecksApi(options: ChecksApiOptions = {}): ChecksApi {
       dtos,
       payload.id,
     );
-    throwConflictError(duplicateNumber, duplicateSayad, fieldErrors);
+    throwConflictError(duplicateNumber, duplicateSayad, fieldErrors, rules.duplicateNumberScope);
     throwValidationError(fieldErrors);
 
     const registeredDate = normalizeJalaliDate(payload.registeredDate) ?? '';

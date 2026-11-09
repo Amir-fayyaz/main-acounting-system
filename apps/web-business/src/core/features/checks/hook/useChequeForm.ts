@@ -41,8 +41,13 @@ export interface UseChequeFormResult {
 }
 
 const SUBMIT_FALLBACK_ERROR = 'ذخیره‌ی چک انجام نشد. لطفاً دوباره تلاش کنید.';
-const DUPLICATE_NUMBER_MESSAGE = 'چکی با این شماره برای همین بانک قبلاً ثبت شده است.';
 const DUPLICATE_SAYAD_MESSAGE = 'این شناسه صیادی قبلاً ثبت شده است.';
+
+function resolveDuplicateNumberMessage(scope: ChequeFormRules['duplicateNumberScope']): string {
+  return scope === 'global'
+    ? 'چکی با این شماره قبلاً ثبت شده است.'
+    : 'چکی با این شماره برای همین بانک قبلاً ثبت شده است.';
+}
 
 /**
  * وضعیت فرم چک: اعتبارسنجی Zod بر پایه‌ی قواعد API، بررسی تکرار در لایه‌ی فرم
@@ -110,7 +115,9 @@ export function useChequeForm({
       });
 
       const conflictErrors: ChequeFormErrors = {};
-      if (conflict.number) conflictErrors.number = DUPLICATE_NUMBER_MESSAGE;
+      if (conflict.number) {
+        conflictErrors.number = resolveDuplicateNumberMessage(rules.duplicateNumberScope);
+      }
       if (conflict.sayadId) conflictErrors.sayadId = DUPLICATE_SAYAD_MESSAGE;
 
       if (Object.keys(conflictErrors).length > 0) {
@@ -136,7 +143,7 @@ export function useChequeForm({
       submittingRef.current = false;
       setSubmitting(false);
     }
-  }, [chequeId, conflictSource, onValidSubmit, schema, values]);
+  }, [chequeId, conflictSource, onValidSubmit, rules.duplicateNumberScope, schema, values]);
 
   return {
     values,
