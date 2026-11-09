@@ -8,8 +8,13 @@ body:has(.panel-preview) > footer {
   display: none;
 }
 
+/* The prototype sets Vazirmatn for the whole shell; scope it to the panel only. */
+.panel-preview {
+  font-family: var(--font-vazirmatn, sans-serif);
+}
+
 .panel-preview .section-layout {
-  padding-block: --spacing(6);
+  padding-block: --spacing(5);
 }
 
 .panel-preview .pages-container {
@@ -17,7 +22,7 @@ body:has(.panel-preview) > footer {
   flex: 1;
   flex-direction: column;
   gap: --spacing(6);
-  padding-inline: --spacing(4);
+  padding-inline: --spacing(3.5);
 }
 
 .panel-preview .pages-container > * {
@@ -26,10 +31,10 @@ body:has(.panel-preview) > footer {
 
 @media (width >= 40rem) {
   .panel-preview .section-layout {
-    padding-block: --spacing(8);
+    padding-block: --spacing(7);
   }
 
   .panel-preview .pages-container {
-    padding-inline: --spacing(6);
+    padding-inline: --spacing(5);
   }
 }

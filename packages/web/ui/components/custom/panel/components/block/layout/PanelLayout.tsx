@@ -18,6 +18,8 @@ export interface PanelLayoutProps {
   account?: PanelAccountDetails;
   headerActions?: ReactNode;
   defaultSidebarOpen?: boolean;
+  logoutHref?: string;
+  logoutControl?: ReactNode;
 }
 
 /** Server-rendered shell; interactive controls live in their own client components. */
@@ -27,6 +29,8 @@ export function PanelLayout({
   account,
   headerActions,
   defaultSidebarOpen = true,
+  logoutHref,
+  logoutControl,
 }: PanelLayoutProps) {
   return (
     <TooltipProvider>
@@ -42,6 +46,7 @@ export function PanelLayout({
         >
           <Span className="text-sm">رفتن به محتوای صفحه</Span>
         </Link>
+
         <PanelSidebar
           side="right"
           dir="rtl"
@@ -52,28 +57,49 @@ export function PanelLayout({
               <Link
                 href={config.homeHref}
                 aria-label={config.title}
-                className="flex min-w-0 flex-1 items-center gap-3 group-data-[collapsible=icon]:hidden"
+                className="flex min-w-0 flex-1 items-center gap-2.5 group-data-[collapsible=icon]:hidden"
               >
                 <Span
                   aria-hidden="true"
-                  className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary text-lg font-bold text-primary-foreground"
+                  className="grid size-[38px] shrink-0 place-items-center rounded-md bg-primary text-lg font-bold text-primary-foreground"
                 >
                   {config.monogram}
                 </Span>
-                <div className="flex min-w-0 flex-col gap-1">
-                  <Span className="truncate text-sm font-bold">{config.title}</Span>
-                  <Small className="truncate text-xs text-muted-foreground">
+
+                <div className="flex min-w-0 flex-col">
+                  <Span className="truncate text-[15px] font-bold">{config.title}</Span>
+                  <Small className="truncate text-[11.5px] text-muted-foreground">
                     {config.subtitle}
                   </Small>
                 </div>
               </Link>
+
               <PanelSidebarToggle />
             </div>
           }
-          footer={<PanelAccount account={account} />}
+          footer={
+            <PanelAccount
+              account={account}
+              logoutControl={
+                logoutControl ??
+                (logoutHref ? (
+                  <Link
+                    href={logoutHref}
+                    aria-label="خروج"
+                    title="خروج"
+                    className="grid size-[38px] shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground group-data-[collapsible=icon]:hidden"
+                  >
+                    خروج
+                  </Link>
+                ) : undefined)
+              }
+            />
+          }
         />
+
         <div className="flex min-w-0 flex-1 flex-col">
           <PanelHeader navigation={config.navigation} actions={headerActions} />
+
           <main
             id="panel-content"
             tabIndex={-1}
