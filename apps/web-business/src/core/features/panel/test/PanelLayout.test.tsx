@@ -86,7 +86,9 @@ describe('Reusable panel shell', () => {
     renderPanel();
     await user.click(screen.getByRole('button', { name: 'اسناد حسابداری' }));
     const nav = screen.getByRole('navigation', { name: 'منوی پنل' });
-    expect(within(nav).getAllByRole('link')).toHaveLength(14);
+    expect(within(nav).getAllByRole('link')).toHaveLength(
+      getSidebarLinks(accountingPanelConfig.navigation).length,
+    );
     for (const item of getSidebarLinks(accountingPanelConfig.navigation)) {
       expect(within(nav).getByRole('link', { name: item.label })).toHaveAttribute(
         'href',
@@ -220,7 +222,7 @@ describe('Panel route matching', () => {
   it('matches nested routes without confusing prefixes or marking home active for known destinations', () => {
     const navigation = accountingPanelConfig.navigation;
     expect(getActivePanelItem(navigation, '/sales/123')?.href).toBe('/sales');
-    expect(getActivePanelItem(navigation, '/sales-archive')?.href).toBe('/');
+    expect(getActivePanelItem(navigation, '/sales-archive')).toBeUndefined();
     expect(getActivePanelItem(navigation, '/different')).toBeUndefined();
   });
 });

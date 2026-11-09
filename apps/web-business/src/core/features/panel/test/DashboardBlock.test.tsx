@@ -239,7 +239,7 @@ describe('DashboardBlock', () => {
     const invoiceCta = screen.getByRole('link', { name: 'فاکتور جدید' });
     expect(journalCta).toHaveAttribute('href', '/journal');
     expect(invoiceCta).toHaveAttribute('href', '/sales');
-    expect(existsSync(path.join(PANEL_ROUTES_DIR, 'panel/journal/page.tsx'))).toBe(true);
-    expect(existsSync(path.join(PANEL_ROUTES_DIR, 'panel/sales/page.tsx'))).toBe(true);
+    expect(existsSync(path.join(PANEL_ROUTES_DIR, 'journal/page.tsx'))).toBe(true);
+    expect(existsSync(path.join(PANEL_ROUTES_DIR, 'sales/page.tsx'))).toBe(true);
   });
 });
