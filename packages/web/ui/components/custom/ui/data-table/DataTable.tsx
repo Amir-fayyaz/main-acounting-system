@@ -12,7 +12,6 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 
 import { ActionDialog, resolveReason } from './actions/ActionDialog';
 import { BulkBar } from './actions/BulkBar';
-import { getRaw, statusLabel } from './columns/resolve-columns';
 import { DataTableContext, type DataTableContextValue } from './context';
 import type { DataTableProps, PaginationMeta, ToolbarOptions } from './data-table.types';
 import { ActiveFilters } from './filters/ActiveFilters';
@@ -23,9 +22,11 @@ import { useColumnResolve } from './hooks/useColumnResolve';
 import { useInlineEdit } from './hooks/useInlineEdit';
 import { useRowSelection } from './hooks/useRowSelection';
 import { useTableActions } from './hooks/useTableActions';
+import { useTableReorder } from './hooks/useTableReorder';
 import { useTableViewHandlers } from './hooks/useTableViewHandlers';
 import { useDndModule } from './hooks/useDndModule';
-import { toCsv, downloadCsv } from './lib/csv';
+import { downloadCsv } from './lib/csv';
+import { buildCsv } from './lib/export';
 import { cx } from './lib/text';
 import { toFaDigits } from './date/jalali';
 import { PaginationControls } from './PaginationControls';
@@ -275,53 +276,21 @@ export function DataTable<T>(props: DataTableProps<T>) {
 
   /* ------------------------ drag & drop (lazy chunk) ------------------------ */
 
-  const onRowsReorder = (activeId: string, overId: string) => {
-    if (!dndMod || !props.onRowReorder) return;
-    const oldIndex = rowIds.indexOf(activeId);
-    const newIndex = rowIds.indexOf(overId);
-    if (oldIndex < 0 || newIndex < 0) return;
-    props.onRowReorder({
-      activeId,
-      overId,
-      oldIndex,
-      newIndex,
-      rows: dndMod.arrayMove(pageData, oldIndex, newIndex),
-    });
-  };
-
-  const onColumnsReorder = (activeId: string, overId: string) => {
-    if (!dndMod || !byId[overId]?.reorderable) return;
-    const all = table.getAllLeafColumns().map((c) => c.id);
-    const from = all.indexOf(activeId);
-    const to = all.indexOf(overId);
-    if (from < 0 || to < 0) return;
-    setColumnOrder(dndMod.arrayMove(all, from, to));
-  };
+  const { onRowsReorder, onColumnsReorder } = useTableReorder<T>({
+    dndMod,
+    rowIds,
+    pageData,
+    byId,
+    table,
+    onRowReorder: props.onRowReorder,
+    setColumnOrder,
+  });
 
   /* --------------------------------- export --------------------------------- */
 
   const exportCsv = () => {
-    const source = isServer ? pageRows : table.getPrePaginationRowModel().rows;
-    const cols = visibleColumns.filter((rc) => rc.def.key || rc.def.exportValue);
-    const body = source.map((r) =>
-      cols.map((rc) => {
-        if (rc.def.exportValue) return rc.def.exportValue(r.original);
-        const raw = getRaw(rc.def, r.original);
-        if (rc.type === 'status') return statusLabel(rc.def.status, raw);
-        return raw === null || raw === undefined
-          ? ''
-          : typeof raw === 'object'
-            ? String(raw)
-            : (raw as string | number | boolean);
-      }),
-    );
-    downloadCsv(
-      exportFileName ?? 'export',
-      toCsv(
-        cols.map((c) => c.label),
-        body,
-      ),
-    );
+    const rows = isServer ? pageRows : table.getPrePaginationRowModel().rows;
+    downloadCsv(exportFileName ?? 'export', buildCsv(visibleColumns, rows));
   };
 
   /* ------------------------- stable callbacks for rows ------------------------- */
