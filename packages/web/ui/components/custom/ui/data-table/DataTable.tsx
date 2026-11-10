@@ -14,13 +14,7 @@ import { ActionDialog, resolveReason } from './actions/ActionDialog';
 import { BulkBar } from './actions/BulkBar';
 import { getRaw, statusLabel } from './columns/resolve-columns';
 import { DataTableContext, type DataTableContextValue } from './context';
-import type {
-  BulkAction,
-  DataTableProps,
-  PaginationMeta,
-  RowAction,
-  ToolbarOptions,
-} from './data-table.types';
+import type { DataTableProps, PaginationMeta, ToolbarOptions } from './data-table.types';
 import { ActiveFilters } from './filters/ActiveFilters';
 import { MAX_SORT_COLUMNS, useClientTablePipeline } from './hooks/useClientTablePipeline';
 import { useActionDialog } from './hooks/useActionDialog';
@@ -28,6 +22,7 @@ import { useColumnPersistence } from './hooks/useColumnPersistence';
 import { useColumnResolve } from './hooks/useColumnResolve';
 import { useInlineEdit } from './hooks/useInlineEdit';
 import { useRowSelection } from './hooks/useRowSelection';
+import { useTableActions } from './hooks/useTableActions';
 import { useTableViewHandlers } from './hooks/useTableViewHandlers';
 import { useDndModule } from './hooks/useDndModule';
 import { toCsv, downloadCsv } from './lib/csv';
@@ -270,54 +265,13 @@ export function DataTable<T>(props: DataTableProps<T>) {
 
   /* -------------------------------- actions -------------------------------- */
 
-  const runAction = (action: RowAction<T>, row: T, rowId: string) => {
-    if (action.kind === 'edit') {
-      startEdit(row, rowId);
-      return;
-    }
-    const reason = resolveReason(action.reason);
-    if (!action.confirm && !reason) {
-      Promise.resolve(action.onSelect?.(row, {})).catch((err) =>
-        reportError(err, `«${action.label}» انجام نشد.`),
-      );
-      return;
-    }
-    const desc = action.confirm?.description;
-    openDialog({
-      title: action.confirm?.title ?? action.label,
-      description: typeof desc === 'function' ? desc(row) : desc,
-      confirmLabel: action.confirm?.confirmLabel ?? action.label,
-      destructive: action.variant === 'destructive',
-      reason,
-      onConfirm: (r) => action.onSelect?.(row, { reason: r }),
-    });
-  };
-
-  const runBulk = (action: BulkAction<T>) => {
-    const reason = resolveReason(action.reason);
-    const rowsNow = selectedRows;
-    if (!action.confirm && !reason) {
-      Promise.resolve(action.onSelect(rowsNow, {})).then(clearSelection, (err) =>
-        reportError(err, `«${action.label}» انجام نشد.`),
-      );
-      return;
-    }
-    const desc = action.confirm?.description;
-    openDialog({
-      title: action.confirm?.title ?? action.label,
-      description:
-        typeof desc === 'function'
-          ? desc(rowsNow)
-          : (desc ?? `${toFaDigits(rowsNow.length)} مورد انتخاب‌شده`),
-      confirmLabel: action.confirm?.confirmLabel ?? action.label,
-      destructive: action.variant === 'destructive',
-      reason,
-      onConfirm: async (r) => {
-        await action.onSelect(rowsNow, { reason: r });
-        clearSelection();
-      },
-    });
-  };
+  const { runAction, runBulk } = useTableActions<T>({
+    selectedRows,
+    clearSelection,
+    startEdit,
+    openDialog,
+    reportError,
+  });
 
   /* ------------------------ drag & drop (lazy chunk) ------------------------ */
 
