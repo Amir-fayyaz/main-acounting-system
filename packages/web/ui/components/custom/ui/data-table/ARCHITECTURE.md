@@ -20,26 +20,27 @@ index.ts                    the only public barrel
 
 ## File responsibilities
 
-| File                              | Responsibility                                                                                                           |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `DataTable.tsx`                   | Wires hooks and composes chrome/surface/dialog. No table markup or state logic.                                          |
-| `hooks/useDataTableModel.ts`      | Data source, mode, toolbar defaults, column resolution, visibility/order/density, TanStack pipeline.                     |
-| `hooks/useClientTablePipeline.ts` | Server/client row pipeline: sorting, filtering, search, paging, row ids, view key.                                       |
-| `hooks/useColumnResolve.ts`       | Normalizes `DataTableColumn[]` into resolved columns, ids, labels, visibility defaults.                                  |
-| `hooks/useColumnPersistence.ts`   | Controlled/uncontrolled visibility, order, and density, with `persistKey` storage.                                       |
-| `hooks/useTableLayout.ts`         | Derived flags: search/filters empty state, DnD wants, sticky header, leading cells, colSpan, loading/error/empty states. |
-| `hooks/useTableVirtualizer.ts`    | Scroll container ref + row virtualizer, disabled unless `virtualize`.                                                    |
-| `hooks/useRowSelection.ts`        | Selection map, shift-range select, select-all, clears when `viewKey` changes.                                            |
-| `hooks/useInlineEdit.ts`          | Edit draft/errors/saving, validation, reason-gated save, cancel.                                                         |
-| `hooks/useActionDialog.ts`        | Shared confirm/reason dialog plus the dismissible error notice.                                                          |
-| `hooks/useTableActions.ts`        | Row and bulk action execution; direct vs dialog paths.                                                                   |
-| `hooks/useTableViewHandlers.ts`   | Sort toggle, column filter set, view-change reset (page + selection).                                                    |
-| `hooks/useTableReorder.ts`        | dnd-kit active/over ids → public row/column reorder callbacks.                                                           |
-| `hooks/useRowCallbacks.ts`        | Identity-stable row callbacks + table context for memoized rows.                                                         |
-| `table/TableSurface.tsx`          | `<table>`, header/body/footer, scroll frame, lazy DnD root, pagination slot.                                             |
-| `table/TableChrome.tsx`           | Toolbar, active filters, bulk bar, error notice.                                                                         |
-| `table/RowView.tsx`               | Memoized row: selection, inline edit, actions, display cells.                                                            |
-| `lib/export.ts`                   | Pure CSV row building from resolved columns (raw Gregorian values).                                                      |
+| File                              | Responsibility                                                                                               |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `DataTable.tsx`                   | Wires hooks and composes chrome/surface/dialog. No table markup or state logic.                              |
+| `hooks/useDataTableModel.ts`      | Data source, mode, toolbar defaults, column resolution, visibility/order/density, TanStack pipeline.         |
+| `hooks/useClientTablePipeline.ts` | Server/client row pipeline: sorting, filtering, search, paging, row ids, view key.                           |
+| `hooks/useColumnResolve.ts`       | Normalizes `DataTableColumn[]` into resolved columns, ids, labels, visibility defaults.                      |
+| `hooks/useColumnPersistence.ts`   | Controlled/uncontrolled visibility, order, and density, with `persistKey` storage.                           |
+| `hooks/useTableLayout.ts`         | Derived flags: empty state, DnD wants, sticky header, leading cells, colSpan, row click/edit, loading/error. |
+| `hooks/useTableVirtualizer.ts`    | Scroll container ref + row virtualizer, disabled unless `virtualize`.                                        |
+| `hooks/useRowSelection.ts`        | Selection map, shift-range select, select-all, clears when `viewKey` changes.                                |
+| `hooks/useInlineEdit.ts`          | Edit draft/errors/saving, validation, reason-gated save, cancel.                                             |
+| `hooks/useActionDialog.ts`        | Shared confirm/reason dialog plus the dismissible error notice.                                              |
+| `hooks/useTableActions.ts`        | Row and bulk action execution; direct vs dialog paths.                                                       |
+| `hooks/useTableViewHandlers.ts`   | Sort toggle, column filter set, view-change reset (page + selection).                                        |
+| `hooks/useTableReorder.ts`        | dnd-kit active/over ids → public row/column reorder callbacks.                                               |
+| `hooks/useRowCallbacks.ts`        | Identity-stable row callbacks + table context for memoized rows.                                             |
+| `table/TableSurface.tsx`          | `<table>`, header/body/footer, scroll frame, lazy DnD root, pagination slot.                                 |
+| `table/TableChrome.tsx`           | Toolbar, active filters, bulk bar, error notice.                                                             |
+| `table/RowView.tsx`               | Memoized row: selection, inline edit, actions, display cells.                                                |
+| `lib/export.ts`                   | Pure CSV row building from resolved columns (raw Gregorian values).                                          |
+| `lib/pagination.ts`               | Pure server/client pagination-meta resolution shared by the pagination slot.                                 |
 
 ## Rules
 
