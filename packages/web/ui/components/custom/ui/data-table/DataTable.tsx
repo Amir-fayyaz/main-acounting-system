@@ -13,7 +13,6 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { ActionDialog, resolveReason, type ActionDialogState } from './actions/ActionDialog';
 import { BulkBar } from './actions/BulkBar';
 import { getRaw, statusLabel } from './columns/resolve-columns';
-import { createSearchIndex } from './columns/search';
 import { DataTableContext, type DataTableContextValue } from './context';
 import type {
   BulkAction,
@@ -24,9 +23,9 @@ import type {
 } from './data-table.types';
 import { ActiveFilters } from './filters/ActiveFilters';
 import { isFilterActive, type FilterValue } from './filters/filter-types';
+import { MAX_SORT_COLUMNS, useClientTablePipeline } from './hooks/useClientTablePipeline';
 import { useColumnPersistence } from './hooks/useColumnPersistence';
 import { useColumnResolve } from './hooks/useColumnResolve';
-import { useControllableState } from './hooks/useControllableState';
 import { useDndModule } from './hooks/useDndModule';
 import { toCsv, downloadCsv } from './lib/csv';
 import { cx } from './lib/text';
@@ -42,7 +41,6 @@ export const DEFAULT_EMPTY_MESSAGE = 'موردی یافت نشد';
 export const DEFAULT_SEARCH_EMPTY_MESSAGE = 'برای این جستجو نتیجه‌ای یافت نشد';
 
 const EMPTY: never[] = [];
-const MAX_SORT_COLUMNS = 3;
 const DEFAULT_TOOLBAR: Required<ToolbarOptions> = {
   search: true,
   columns: true,
@@ -142,23 +140,6 @@ export function DataTable<T>(props: DataTableProps<T>) {
 
   /* ------------------------------ state ------------------------------ */
 
-  const [sorting, setSorting] = useControllableState<SortItem[]>(
-    props.sorting,
-    [],
-    props.onSortingChange,
-  );
-  const [filters, setFilters] = useControllableState<Record<string, FilterValue>>(
-    props.columnFilters,
-    {},
-    props.onColumnFiltersChange,
-  );
-  const [search, setSearch] = useControllableState<string>(props.search, '', props.onSearchChange);
-  const [page, setPage] = useControllableState<number>(props.page, 1, props.onPageChange);
-  const [limit, setLimit] = useControllableState<number>(
-    props.limit,
-    defaultPageSize,
-    props.onLimitChange,
-  );
   const { visibility, setVisibility, columnOrder, setColumnOrder, density, setDensity } =
     useColumnPersistence({
       persistKey,
@@ -180,76 +161,53 @@ export function DataTable<T>(props: DataTableProps<T>) {
 
   /* ------------------------- client-mode pipeline ------------------------- */
 
-  const searchRows = React.useMemo(
-    () => createSearchIndex<T & object>(resolved as never),
-    [resolved],
-  );
-  const searched = React.useMemo(
-    () =>
-      isServer || !search.trim()
-        ? source
-        : (searchRows(source as Array<T & object>, search) as T[]),
-    [isServer, source, search, searchRows],
-  );
-
-  const filtersList = React.useMemo(
-    () =>
-      Object.entries(filters)
-        .filter(([, v]) => isFilterActive(v))
-        .map(([id, value]) => ({ id, value })),
-    [filters],
-  );
-
-  const table = useReactTable<T>({
-    data: searched,
-    columns: tsColumns as never,
-    getRowId: (row, index) => String(rowKey(row, index)),
-    state: {
-      sorting,
-      columnFilters: filtersList,
-      columnVisibility: visibility,
-      columnOrder,
-      pagination: { pageIndex: Math.max(0, page - 1), pageSize: limit },
-    },
-    manualSorting: isServer,
-    manualFiltering: isServer,
-    manualPagination: isServer || !paginate,
-    enableMultiSort: true,
-    maxMultiSortColCount: MAX_SORT_COLUMNS,
-    enableSortingRemoval: true,
-    autoResetPageIndex: false,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+  const {
+    sorting,
+    setSorting,
+    filters,
+    setFilters,
+    search,
+    setSearch,
+    page,
+    setPage,
+    limit,
+    setLimit,
+    table,
+    pageRows,
+    visibleColumns,
+    rowIds,
+    pageData,
+    total,
+    totalPages,
+    filtersList,
+    hasFilters,
+    viewKey,
+  } = useClientTablePipeline<T>({
+    source,
+    isServer,
+    paginate,
+    defaultPageSize,
+    rowKey,
+    resolved,
+    tsColumns,
+    byId,
+    visibility,
+    columnOrder,
+    meta,
+    sorting: props.sorting,
+    onSortingChange: props.onSortingChange,
+    columnFilters: props.columnFilters,
+    onColumnFiltersChange: props.onColumnFiltersChange,
+    search: props.search,
+    onSearchChange: props.onSearchChange,
+    page: props.page,
+    onPageChange: props.onPageChange,
+    limit: props.limit,
+    onLimitChange: props.onLimitChange,
   });
-
-  const pageRows = table.getRowModel().rows;
-  const visibleColumns = React.useMemo(
-    () =>
-      table
-        .getVisibleLeafColumns()
-        .map((c) => byId[c.id])
-        .filter(Boolean),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [table, visibility, columnOrder, byId],
-  );
-  const rowIds = React.useMemo(() => pageRows.map((r) => r.id), [pageRows]);
-  const pageData = React.useMemo(() => pageRows.map((r) => r.original), [pageRows]);
-
-  const total = isServer
-    ? (meta?.total ?? pageRows.length)
-    : table.getPrePaginationRowModel().rows.length;
-  const totalPages = Math.max(1, Math.ceil(total / Math.max(1, limit)));
-
-  // Client mode: keep the page inside range after filtering or deleting rows.
-  React.useEffect(() => {
-    if (!isServer && paginate && page > totalPages) setPage(totalPages);
-  }, [isServer, paginate, page, totalPages, setPage]);
 
   /* ------------------------ feature flags & layout ------------------------ */
 
-  const hasFilters = filtersList.length > 0;
   const hasSearch = (searchTerm ?? search).trim().length > 0;
   const rowNumbers = props.rowNumbers === true;
   const hasActionsColumn =
@@ -361,8 +319,6 @@ export function DataTable<T>(props: DataTableProps<T>) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedIds.join('|')]);
 
-  // Acting on rows the user can no longer see is dangerous in accounting: reset on any view change.
-  const viewKey = `${page}|${limit}|${search}|${JSON.stringify(sorting)}|${JSON.stringify(filters)}`;
   React.useEffect(() => {
     clearSelection();
     // eslint-disable-next-line react-hooks/exhaustive-deps
