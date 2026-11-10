@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { PanelPlaceholder } from '@/core/features/panel/components/block/placeholder/PanelPlaceholder';
+import { ReportsPage } from '@/core/features/reports';
 
 export const metadata: Metadata = { title: 'گزارش‌ها' };
 
 export default function PanelPage() {
-  return <PanelPlaceholder title="گزارش‌ها" />;
+  return <ReportsPage />;
 }
