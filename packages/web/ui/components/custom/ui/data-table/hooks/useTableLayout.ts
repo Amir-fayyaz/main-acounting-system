@@ -11,6 +11,7 @@ export interface TableLayoutOptions<T> {
   rowNumbersProp?: boolean;
   rowActions?: RowAction<T>[];
   onRowSave?: unknown;
+  onRowClick?: unknown;
   editTrigger: 'action' | 'doubleClick';
   reorderableRows: boolean;
   reorderableColumns: boolean;
@@ -31,6 +32,7 @@ export function useTableLayout<T>({
   rowNumbersProp,
   rowActions,
   onRowSave,
+  onRowClick,
   editTrigger,
   reorderableRows,
   reorderableColumns,
@@ -58,6 +60,9 @@ export function useTableLayout<T>({
     () => visibleColumns.filter((rc) => rc.reorderable).map((rc) => rc.id),
     [visibleColumns],
   );
+  const columnDnd = reorderableColumns && Boolean(dndMod);
+  const editOnDoubleClick = editTrigger === 'doubleClick' && Boolean(onRowSave);
+  const clickable = Boolean(onRowClick);
   const isError = hasContent(error);
   const isLoading = !isError && loading;
   const isEmpty = !isError && !isLoading && pageRowCount === 0;
@@ -74,6 +79,9 @@ export function useTableLayout<T>({
     leading,
     colSpan,
     reorderableIds,
+    columnDnd,
+    editOnDoubleClick,
+    clickable,
     isError,
     isLoading,
     isEmpty,

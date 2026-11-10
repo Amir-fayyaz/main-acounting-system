@@ -3,6 +3,7 @@
 import * as React from 'react';
 
 import type { PaginationMeta } from '../data-table.types';
+import { resolvePaginationMeta } from '../lib/pagination';
 import { TablePagination } from './TablePagination';
 
 export interface TablePaginationSlotProps {
@@ -39,19 +40,19 @@ export function TablePaginationSlot({
   onClientPageChange,
   onClientLimitChange,
 }: TablePaginationSlotProps) {
-  const paginationMeta: PaginationMeta | null = (() => {
-    if (isServer) {
-      const ok =
-        Boolean(meta) &&
-        serverPage !== undefined &&
-        serverLimit !== undefined &&
-        typeof onServerPageChange === 'function' &&
-        typeof onServerLimitChange === 'function';
-      return ok ? meta! : null;
-    }
-    if (!paginate || total === 0) return null;
-    return { page, limit, total, totalPages };
-  })();
+  const paginationMeta: PaginationMeta | null = resolvePaginationMeta({
+    isServer,
+    meta,
+    paginate,
+    total,
+    page,
+    limit,
+    totalPages,
+    serverPage,
+    serverLimit,
+    onServerPageChange,
+    onServerLimitChange,
+  });
 
   if (!paginationMeta) return null;
 

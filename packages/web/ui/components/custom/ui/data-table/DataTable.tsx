@@ -121,6 +121,9 @@ export function DataTable<T>(props: DataTableProps<T>) {
     leading,
     colSpan,
     reorderableIds,
+    columnDnd,
+    editOnDoubleClick,
+    clickable,
     isError,
     isLoading,
     isEmpty,
@@ -131,6 +134,7 @@ export function DataTable<T>(props: DataTableProps<T>) {
     rowNumbersProp: props.rowNumbers,
     rowActions,
     onRowSave,
+    onRowClick: props.onRowClick,
     editTrigger,
     reorderableRows,
     reorderableColumns,
@@ -221,8 +225,6 @@ export function DataTable<T>(props: DataTableProps<T>) {
 
   /* --------------------------------- render --------------------------------- */
 
-  const columnDnd = reorderableColumns && Boolean(dndMod);
-
   const pagination = (
     <TablePaginationSlot
       isServer={isServer}
@@ -312,8 +314,8 @@ export function DataTable<T>(props: DataTableProps<T>) {
           selection={selection}
           editing={editing}
           rowActions={rowActions}
-          editOnDoubleClick={editTrigger === 'doubleClick' && Boolean(onRowSave)}
-          clickable={Boolean(props.onRowClick)}
+          editOnDoubleClick={editOnDoubleClick}
+          clickable={clickable}
           rowDragDisabled={rowDragDisabled}
           rowClassName={props.rowClassName}
           cb={cb}
