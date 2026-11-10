@@ -10,7 +10,7 @@ import {
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
-import { ActionDialog, resolveReason, type ActionDialogState } from './actions/ActionDialog';
+import { ActionDialog, resolveReason } from './actions/ActionDialog';
 import { BulkBar } from './actions/BulkBar';
 import { getRaw, statusLabel } from './columns/resolve-columns';
 import { DataTableContext, type DataTableContextValue } from './context';
@@ -23,8 +23,10 @@ import type {
 } from './data-table.types';
 import { ActiveFilters } from './filters/ActiveFilters';
 import { MAX_SORT_COLUMNS, useClientTablePipeline } from './hooks/useClientTablePipeline';
+import { useActionDialog } from './hooks/useActionDialog';
 import { useColumnPersistence } from './hooks/useColumnPersistence';
 import { useColumnResolve } from './hooks/useColumnResolve';
+import { useInlineEdit } from './hooks/useInlineEdit';
 import { useRowSelection } from './hooks/useRowSelection';
 import { useTableViewHandlers } from './hooks/useTableViewHandlers';
 import { useDndModule } from './hooks/useDndModule';
@@ -32,7 +34,7 @@ import { toCsv, downloadCsv } from './lib/csv';
 import { cx } from './lib/text';
 import { toFaDigits } from './date/jalali';
 import { PaginationControls } from './PaginationControls';
-import { HeaderCell, RowView, type EditingState, type RowCallbacks } from './TableParts';
+import { HeaderCell, RowView, type RowCallbacks } from './TableParts';
 import { Toolbar } from './Toolbar';
 import { Button, Checkbox, TableBody, TableCell, TableFooter, TableHeader, TableRow } from './ui';
 
@@ -75,10 +77,6 @@ function StateRow({
     </TableRow>
   );
 }
-
-const sameValue = (a: unknown, b: unknown) =>
-  a === b ||
-  ((a === null || a === undefined || a === '') && (b === null || b === undefined || b === ''));
 
 /**
  * Reusable data table for accounting screens.
@@ -152,10 +150,6 @@ export function DataTable<T>(props: DataTableProps<T>) {
       density: props.density,
       onDensityChange: props.onDensityChange,
     });
-  const [editing, setEditing] = React.useState<EditingState | null>(null);
-  const [dialog, setDialog] = React.useState<ActionDialogState | null>(null);
-  const [notice, setNotice] = React.useState<string | null>(null);
-  const dialogKey = React.useRef(0);
 
   /* ------------------------- client-mode pipeline ------------------------- */
 
@@ -202,6 +196,18 @@ export function DataTable<T>(props: DataTableProps<T>) {
     onPageChange: props.onPageChange,
     limit: props.limit,
     onLimitChange: props.onLimitChange,
+  });
+
+  /* ----------------------------- inline editing ----------------------------- */
+
+  const dialogApi = useActionDialog();
+  const { dialog, openDialog, closeDialog, notice, setNotice, reportError } = dialogApi;
+  const { editing, startEdit, cancelEdit, setDraft, saveEdit } = useInlineEdit<T>({
+    resolved,
+    pageRows,
+    onRowSave,
+    editReason,
+    openDialog,
   });
 
   /* ------------------------ feature flags & layout ------------------------ */
@@ -262,97 +268,6 @@ export function DataTable<T>(props: DataTableProps<T>) {
     clearSelection,
   });
 
-  /* ----------------------------- inline editing ----------------------------- */
-
-  const startEdit = (row: T, rowId: string) => {
-    if (!onRowSave) {
-      if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
-        console.warn('[DataTable] inline edit requested but `onRowSave` is not provided.');
-      }
-      return;
-    }
-    const draft: Record<string, unknown> = {};
-    for (const rc of resolved)
-      if (rc.editable && rc.def.key) draft[rc.def.key] = getRaw(rc.def, row);
-    setEditing((cur) => (cur?.saving ? cur : { id: rowId, draft, errors: {}, saving: false }));
-  };
-
-  const cancelEdit = () => setEditing((cur) => (cur?.saving ? cur : null));
-
-  const setDraft = (key: string, columnId: string, value: unknown) =>
-    setEditing((cur) => {
-      if (!cur) return cur;
-      const errors = { ...cur.errors };
-      delete errors[columnId];
-      return { ...cur, draft: { ...cur.draft, [key]: value }, errors, error: undefined };
-    });
-
-  const saveEdit = () => {
-    const cur = editing;
-    if (!cur || cur.saving || !onRowSave) return;
-    const pageRow = pageRows.find((r) => r.id === cur.id);
-    if (!pageRow) {
-      setEditing(null); // the row disappeared (refetch / filter change)
-      return;
-    }
-    const row = pageRow.original;
-
-    const errors: Record<string, string> = {};
-    const patch: Record<string, unknown> = {};
-    for (const rc of resolved) {
-      const ed = rc.editable;
-      if (!ed || !rc.def.key || ed.disabled?.(row)) continue;
-      const value = cur.draft[rc.def.key];
-      const empty =
-        value === null ||
-        value === undefined ||
-        value === '' ||
-        (typeof value === 'string' && !value.trim());
-      const message =
-        ed.required && empty
-          ? 'این فیلد الزامی است'
-          : ed.validate?.(value, cur.draft as Partial<T>, row);
-      if (message) errors[rc.id] = message;
-      if (!sameValue(value, getRaw(rc.def, row)))
-        patch[rc.def.key] = typeof value === 'string' ? value.trim() : value;
-    }
-    if (Object.keys(errors).length) {
-      setEditing({ ...cur, errors });
-      return;
-    }
-    if (Object.keys(patch).length === 0) {
-      setEditing(null);
-      return;
-    }
-
-    const persist = async (reason: string | undefined, rethrow: boolean) => {
-      setEditing((c) => (c ? { ...c, saving: true, error: undefined } : c));
-      try {
-        await onRowSave(row, patch as Partial<T>, { reason });
-        setEditing(null);
-      } catch (err) {
-        const message =
-          err instanceof Error && err.message ? err.message : 'ذخیره انجام نشد. دوباره تلاش کنید.';
-        setEditing((c) => (c ? { ...c, saving: false, error: message } : c));
-        if (rethrow) throw err;
-      }
-    };
-
-    const reason = resolveReason(editReason);
-    if (reason) {
-      setDialog({
-        key: ++dialogKey.current,
-        title: 'ثبت ویرایش',
-        description: 'دلیل این ویرایش در تاریخچه‌ی تغییرات ثبت می‌شود.',
-        confirmLabel: 'ذخیره',
-        reason: { label: 'دلیل ویرایش', ...reason },
-        onConfirm: (r) => persist(r, true),
-      });
-    } else {
-      void persist(undefined, false);
-    }
-  };
-
   /* -------------------------------- actions -------------------------------- */
 
   const runAction = (action: RowAction<T>, row: T, rowId: string) => {
@@ -363,15 +278,12 @@ export function DataTable<T>(props: DataTableProps<T>) {
     const reason = resolveReason(action.reason);
     if (!action.confirm && !reason) {
       Promise.resolve(action.onSelect?.(row, {})).catch((err) =>
-        setNotice(
-          err instanceof Error && err.message ? err.message : `«${action.label}» انجام نشد.`,
-        ),
+        reportError(err, `«${action.label}» انجام نشد.`),
       );
       return;
     }
     const desc = action.confirm?.description;
-    setDialog({
-      key: ++dialogKey.current,
+    openDialog({
       title: action.confirm?.title ?? action.label,
       description: typeof desc === 'function' ? desc(row) : desc,
       confirmLabel: action.confirm?.confirmLabel ?? action.label,
@@ -386,15 +298,12 @@ export function DataTable<T>(props: DataTableProps<T>) {
     const rowsNow = selectedRows;
     if (!action.confirm && !reason) {
       Promise.resolve(action.onSelect(rowsNow, {})).then(clearSelection, (err) =>
-        setNotice(
-          err instanceof Error && err.message ? err.message : `«${action.label}» انجام نشد.`,
-        ),
+        reportError(err, `«${action.label}» انجام نشد.`),
       );
       return;
     }
     const desc = action.confirm?.description;
-    setDialog({
-      key: ++dialogKey.current,
+    openDialog({
       title: action.confirm?.title ?? action.label,
       description:
         typeof desc === 'function'
@@ -838,7 +747,7 @@ export function DataTable<T>(props: DataTableProps<T>) {
         </div>
       </div>
 
-      <ActionDialog state={dialog} onClose={() => setDialog(null)} />
+      <ActionDialog state={dialog} onClose={closeDialog} />
     </DataTableContext.Provider>
   );
 }
