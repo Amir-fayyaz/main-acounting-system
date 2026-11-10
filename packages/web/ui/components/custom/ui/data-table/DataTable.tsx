@@ -30,11 +30,11 @@ import { downloadCsv } from './lib/csv';
 import { buildCsv } from './lib/export';
 import { cx } from './lib/text';
 import { toFaDigits } from './date/jalali';
-import { PaginationControls } from './PaginationControls';
 import { RowView } from './table/RowView';
 import { TableBodyRows } from './table/TableBodyRows';
 import { TableFooterRow } from './table/TableFooterRow';
 import { TableHeaderRow } from './table/TableHeaderRow';
+import { TablePagination } from './table/TablePagination';
 import { Toolbar } from './Toolbar';
 import { TableHeader } from './ui';
 
@@ -403,7 +403,7 @@ export function DataTable<T>(props: DataTableProps<T>) {
     </table>
   );
 
-  const pagination = ((): React.ReactNode => {
+  const paginationMeta: PaginationMeta | null = (() => {
     if (isServer) {
       const ok =
         Boolean(meta) &&
@@ -411,33 +411,25 @@ export function DataTable<T>(props: DataTableProps<T>) {
         props.limit !== undefined &&
         typeof props.onPageChange === 'function' &&
         typeof props.onLimitChange === 'function';
-      return ok && meta ? (
-        <PaginationControls
-          meta={meta}
-          page={props.page!}
-          limit={props.limit!}
-          onPageChange={props.onPageChange!}
-          onLimitChange={props.onLimitChange!}
-          pageSizes={pageSizes}
-        />
-      ) : null;
+      return ok ? meta! : null;
     }
     if (!paginate || total === 0) return null;
-    const m: PaginationMeta = { page, limit, total, totalPages };
-    return (
-      <PaginationControls
-        meta={m}
-        page={page}
-        limit={limit}
-        onPageChange={setPage}
-        onLimitChange={(l) => {
-          setLimit(l);
-          setPage(1);
-        }}
-        pageSizes={pageSizes}
-      />
-    );
+    return { page, limit, total, totalPages };
   })();
+
+  const pagination = paginationMeta ? (
+    <div className="pb-3">
+      <TablePagination
+        meta={paginationMeta}
+        page={isServer ? props.page : page}
+        limit={isServer ? props.limit : limit}
+        onPageChange={isServer ? props.onPageChange : setPage}
+        onLimitChange={isServer ? props.onLimitChange : setLimit}
+        pageSizes={pageSizes}
+        resetPageOnLimitChange={!isServer}
+      />
+    </div>
+  ) : null;
 
   return (
     <DataTableContext.Provider value={ctx}>
@@ -522,7 +514,7 @@ export function DataTable<T>(props: DataTableProps<T>) {
               tableEl
             )}
           </div>
-          {pagination ? <div className="pb-3">{pagination}</div> : null}
+          {pagination}
         </div>
 
         <div role="status" aria-live="polite" className="sr-only">
