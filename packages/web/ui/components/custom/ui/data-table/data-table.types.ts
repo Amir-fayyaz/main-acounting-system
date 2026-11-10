@@ -169,6 +169,32 @@ export interface BulkAction<T> {
 }
 
 /* ------------------------------------------------------------------ */
+/* Internal table pieces (shared by hooks and presentational modules)  */
+/* ------------------------------------------------------------------ */
+
+export interface EditingState {
+  id: string;
+  /** Pending values keyed by the column's data key. */
+  draft: Record<string, unknown>;
+  /** Validation messages keyed by column id. */
+  errors: Record<string, string>;
+  saving: boolean;
+  /** Error thrown by onRowSave. */
+  error?: string;
+}
+
+/** Stable (identity never changes) callbacks so memoized rows don't re-render. */
+export interface RowCallbacks<T> {
+  select: (rowId: string, checked: boolean, shift: boolean) => void;
+  startEdit: (row: T, rowId: string) => void;
+  setDraft: (key: string, columnId: string, value: unknown) => void;
+  save: () => void;
+  cancel: () => void;
+  runAction: (action: RowAction<T>, row: T, rowId: string) => void;
+  rowClick: (row: T) => void;
+}
+
+/* ------------------------------------------------------------------ */
 /* Events                                                              */
 /* ------------------------------------------------------------------ */
 

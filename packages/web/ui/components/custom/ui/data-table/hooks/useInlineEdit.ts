@@ -3,18 +3,7 @@ import type { Row } from '@tanstack/react-table';
 
 import { resolveReason, type ActionDialogState } from '../actions/ActionDialog';
 import { getRaw, type ResolvedColumn } from '../columns/resolve-columns';
-import type { DataTableProps } from '../data-table.types';
-
-export interface EditingState {
-  id: string;
-  /** Pending values keyed by the column's data key. */
-  draft: Record<string, unknown>;
-  /** Validation messages keyed by column id. */
-  errors: Record<string, string>;
-  saving: boolean;
-  /** Error thrown by onRowSave. */
-  error?: string;
-}
+import type { DataTableProps, EditingState } from '../data-table.types';
 
 export interface InlineEditOptions<T> {
   resolved: ResolvedColumn<T>[];

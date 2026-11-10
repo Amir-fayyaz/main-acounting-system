@@ -13,7 +13,12 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { ActionDialog, resolveReason } from './actions/ActionDialog';
 import { BulkBar } from './actions/BulkBar';
 import { DataTableContext, type DataTableContextValue } from './context';
-import type { DataTableProps, PaginationMeta, ToolbarOptions } from './data-table.types';
+import type {
+  DataTableProps,
+  PaginationMeta,
+  RowCallbacks,
+  ToolbarOptions,
+} from './data-table.types';
 import { ActiveFilters } from './filters/ActiveFilters';
 import { MAX_SORT_COLUMNS, useClientTablePipeline } from './hooks/useClientTablePipeline';
 import { useActionDialog } from './hooks/useActionDialog';
@@ -30,9 +35,12 @@ import { buildCsv } from './lib/export';
 import { cx } from './lib/text';
 import { toFaDigits } from './date/jalali';
 import { PaginationControls } from './PaginationControls';
-import { HeaderCell, RowView, type RowCallbacks } from './TableParts';
+import { RowView } from './table/RowView';
+import { TableBodyRows } from './table/TableBodyRows';
+import { TableFooterRow } from './table/TableFooterRow';
+import { TableHeaderRow } from './table/TableHeaderRow';
 import { Toolbar } from './Toolbar';
-import { Button, Checkbox, TableBody, TableCell, TableFooter, TableHeader, TableRow } from './ui';
+import { TableHeader } from './ui';
 
 export const DEFAULT_LOADING_MESSAGE = 'در حال بارگذاری…';
 export const DEFAULT_EMPTY_MESSAGE = 'موردی یافت نشد';
@@ -49,29 +57,6 @@ const defaultRowKey = (_row: unknown, index: number): React.Key => index;
 
 function hasContent(value: React.ReactNode): boolean {
   return value !== undefined && value !== null && value !== false && value !== '';
-}
-
-function StateRow({
-  state,
-  colSpan,
-  children,
-  role,
-}: {
-  state: string;
-  colSpan: number;
-  children: React.ReactNode;
-  role?: string;
-}) {
-  return (
-    <TableRow data-state={state}>
-      <TableCell
-        colSpan={colSpan}
-        className="whitespace-normal py-10 text-center text-muted-foreground"
-      >
-        {role ? <div role={role}>{children}</div> : children}
-      </TableCell>
-    </TableRow>
-  );
 }
 
 /**
@@ -326,73 +311,29 @@ export function DataTable<T>(props: DataTableProps<T>) {
 
   /* --------------------------------- render --------------------------------- */
 
-  const sortOf = (id: string) => {
-    const i = sorting.findIndex((s) => s.id === id);
-    return i < 0
-      ? { dir: false as const, index: undefined }
-      : {
-          dir: sorting[i].desc ? ('desc' as const) : ('asc' as const),
-          index: sorting.length > 1 ? i + 1 : undefined,
-        };
-  };
-
   const columnDnd = reorderableColumns && Boolean(dndMod);
-  const headerCells = visibleColumns.map((rc) => {
-    const s = sortOf(rc.id);
-    return (
-      <HeaderCell
-        key={rc.id}
-        column={rc}
-        sort={s.dir}
-        sortIndex={s.index}
-        onSort={toggleSort}
-        filterValue={filters[rc.id]}
-        onFilter={setColumnFilter}
-        density={density}
-        sticky={stickyHeader}
-        dnd={dndMod}
-        columnDnd={columnDnd}
-      />
-    );
-  });
 
-  const headStick = cx(
-    'whitespace-nowrap bg-muted text-xs font-semibold text-muted-foreground',
-    stickyHeader && 'sticky top-0 z-20',
-  );
   const headerRow = (
-    <TableRow className="hover:bg-transparent">
-      {rowDndWanted ? (
-        <th scope="col" className={cx(headStick, 'w-10')}>
-          <span className="sr-only">جابجایی</span>
-        </th>
-      ) : null}
-      {selectable ? (
-        <th scope="col" className={cx(headStick, 'w-10 px-3.5')}>
-          <Checkbox
-            checked={allSelected ? true : someSelected ? 'indeterminate' : false}
-            aria-label="انتخاب همه‌ی ردیف‌های این صفحه"
-            disabled={pageRows.length === 0}
-            onCheckedChange={(v: boolean | 'indeterminate') => toggleAll(v === true)}
-          />
-        </th>
-      ) : null}
-      {rowNumbers ? (
-        <th scope="col" className={cx(headStick, 'w-12 px-3.5 text-start')}>
-          ردیف
-        </th>
-      ) : null}
-      {dndMod && columnDnd ? (
-        <dndMod.ColumnsContext ids={reorderableIds}>{headerCells}</dndMod.ColumnsContext>
-      ) : (
-        headerCells
-      )}
-      {hasActionsColumn ? (
-        <th scope="col" className={cx(headStick, 'sticky end-0 z-20 w-px px-3.5')}>
-          <span className="sr-only">عملیات</span>
-        </th>
-      ) : null}
-    </TableRow>
+    <TableHeaderRow<T>
+      visibleColumns={visibleColumns}
+      sorting={sorting}
+      filters={filters}
+      onSort={toggleSort}
+      onFilter={setColumnFilter}
+      density={density}
+      stickyHeader={stickyHeader}
+      dnd={dndMod}
+      columnDnd={columnDnd}
+      reorderableIds={reorderableIds}
+      rowDndWanted={rowDndWanted}
+      selectable={selectable}
+      allSelected={allSelected}
+      someSelected={someSelected}
+      onToggleAll={toggleAll}
+      pageRowCount={pageRows.length}
+      rowNumbers={rowNumbers}
+      hasActionsColumn={hasActionsColumn}
+    />
   );
 
   const renderRow = (idx: number, virtualItem?: { index: number }) => {
@@ -429,103 +370,46 @@ export function DataTable<T>(props: DataTableProps<T>) {
     );
   };
 
-  let body: React.ReactNode;
-  if (isError) {
-    body = (
-      <StateRow state="error" colSpan={colSpan} role="alert">
-        {error}
-      </StateRow>
-    );
-  } else if (isLoading && !refreshing) {
-    body = (
-      <StateRow state="loading" colSpan={colSpan} role="status">
-        {loadingMessage}
-      </StateRow>
-    );
-  } else if (isEmpty) {
-    const filtered = hasSearch || hasFilters;
-    body = (
-      <StateRow state={filtered ? 'empty-search' : 'empty'} colSpan={colSpan}>
-        <div className="grid justify-items-center gap-3">
-          <span>{filtered ? searchEmptyMessage : emptyMessage}</span>
-          {hasFilters ? (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                setFilters({});
-                viewChanged();
-              }}
-            >
-              پاک کردن فیلترها
-            </Button>
-          ) : null}
-        </div>
-      </StateRow>
-    );
-  } else if (virtualize) {
-    const items = virtualizer.getVirtualItems();
-    const padTop = items.length ? items[0].start : 0;
-    const padBottom = items.length ? virtualizer.getTotalSize() - items[items.length - 1].end : 0;
-    body = (
-      <>
-        {padTop > 0 ? (
-          <tr aria-hidden style={{ height: padTop }}>
-            <td colSpan={colSpan} />
-          </tr>
-        ) : null}
-        {items.map((v) => renderRow(v.index, v))}
-        {padBottom > 0 ? (
-          <tr aria-hidden style={{ height: padBottom }}>
-            <td colSpan={colSpan} />
-          </tr>
-        ) : null}
-      </>
-    );
-  } else {
-    const rowEls = pageRows.map((_, i) => renderRow(i));
-    body =
-      dndMod && rowDndWanted ? (
-        <dndMod.RowsContext ids={rowIds}>{rowEls}</dndMod.RowsContext>
-      ) : (
-        rowEls
-      );
-  }
+  const body = (
+    <TableBodyRows
+      isError={isError}
+      error={error}
+      isLoading={isLoading}
+      refreshing={refreshing}
+      isEmpty={isEmpty}
+      hasSearch={hasSearch}
+      hasFilters={hasFilters}
+      loadingMessage={loadingMessage}
+      emptyMessage={emptyMessage}
+      searchEmptyMessage={searchEmptyMessage}
+      colSpan={colSpan}
+      onClearFilters={() => {
+        setFilters({});
+        viewChanged();
+      }}
+      virtualize={virtualize}
+      virtualizer={virtualizer}
+      pageRowCount={pageRows.length}
+      renderRow={renderRow}
+      dnd={dndMod}
+      rowDndWanted={rowDndWanted}
+      rowIds={rowIds}
+    />
+  );
 
   const showFooter =
     !isError &&
     !isEmpty &&
     visibleColumns.some((rc) => summary?.[rc.id] !== undefined || rc.def.footer);
   const footer = showFooter ? (
-    <TableFooter className="sticky bottom-0 z-10 border-t border-border bg-muted font-semibold">
-      <TableRow className="hover:bg-transparent">
-        {leading > 0 ? (
-          <TableCell colSpan={leading} className="px-3.5 py-2.5">
-            {summaryLabel}
-          </TableCell>
-        ) : null}
-        {visibleColumns.map((rc, i) => {
-          const content = summary?.[rc.id] ?? rc.def.footer?.(pageData);
-          return (
-            <TableCell
-              key={rc.id}
-              className={cx(
-                'px-3.5 py-2.5',
-                rc.align === 'end'
-                  ? 'text-end'
-                  : rc.align === 'center'
-                    ? 'text-center'
-                    : 'text-start',
-              )}
-            >
-              {content ?? (i === 0 && leading === 0 ? summaryLabel : null)}
-            </TableCell>
-          );
-        })}
-        {hasActionsColumn ? <TableCell className="sticky end-0 bg-muted" /> : null}
-      </TableRow>
-    </TableFooter>
+    <TableFooterRow<T>
+      visibleColumns={visibleColumns}
+      leading={leading}
+      summaryLabel={summaryLabel}
+      summary={summary}
+      pageData={pageData}
+      hasActionsColumn={hasActionsColumn}
+    />
   ) : null;
 
   const tableEl = (
@@ -536,9 +420,7 @@ export function DataTable<T>(props: DataTableProps<T>) {
       aria-rowcount={isServer ? total : undefined}
     >
       <TableHeader className="[&_tr]:border-b [&_tr]:border-border">{headerRow}</TableHeader>
-      <TableBody className={cx(refreshing && 'pointer-events-none opacity-60 transition-opacity')}>
-        {body}
-      </TableBody>
+      {body}
       {footer}
     </table>
   );
