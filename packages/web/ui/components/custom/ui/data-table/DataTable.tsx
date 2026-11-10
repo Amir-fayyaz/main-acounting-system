@@ -1,23 +1,10 @@
 'use client';
 
-import * as React from 'react';
-import {
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-
-import { ActionDialog, resolveReason } from './actions/ActionDialog';
-import { BulkBar } from './actions/BulkBar';
+import { ActionDialog } from './actions/ActionDialog';
 import { DataTableContext } from './context';
-import type { DataTableProps, PaginationMeta, ToolbarOptions } from './data-table.types';
-import { ActiveFilters } from './filters/ActiveFilters';
-import { MAX_SORT_COLUMNS, useClientTablePipeline } from './hooks/useClientTablePipeline';
+import type { DataTableProps, PaginationMeta } from './data-table.types';
 import { useActionDialog } from './hooks/useActionDialog';
-import { useColumnPersistence } from './hooks/useColumnPersistence';
-import { useColumnResolve } from './hooks/useColumnResolve';
+import { useDataTableModel } from './hooks/useDataTableModel';
 import { useInlineEdit } from './hooks/useInlineEdit';
 import { useRowCallbacks } from './hooks/useRowCallbacks';
 import { useRowSelection } from './hooks/useRowSelection';
@@ -26,31 +13,16 @@ import { useTableLayout } from './hooks/useTableLayout';
 import { useTableReorder } from './hooks/useTableReorder';
 import { useTableVirtualizer } from './hooks/useTableVirtualizer';
 import { useTableViewHandlers } from './hooks/useTableViewHandlers';
-import { useDndModule } from './hooks/useDndModule';
 import { downloadCsv } from './lib/csv';
 import { buildCsv } from './lib/export';
-import { cx } from './lib/text';
 import { toFaDigits } from './date/jalali';
-import { RowView } from './table/RowView';
-import { TableBodyRows } from './table/TableBodyRows';
-import { TableFooterRow } from './table/TableFooterRow';
-import { TableHeaderRow } from './table/TableHeaderRow';
+import { TableChrome } from './table/TableChrome';
 import { TablePagination } from './table/TablePagination';
-import { Toolbar } from './Toolbar';
-import { TableHeader } from './ui';
+import { TableSurface } from './table/TableSurface';
 
 export const DEFAULT_LOADING_MESSAGE = 'در حال بارگذاری…';
 export const DEFAULT_EMPTY_MESSAGE = 'موردی یافت نشد';
 export const DEFAULT_SEARCH_EMPTY_MESSAGE = 'برای این جستجو نتیجه‌ای یافت نشد';
-
-const EMPTY: never[] = [];
-const DEFAULT_TOOLBAR: Required<ToolbarOptions> = {
-  search: true,
-  columns: true,
-  density: true,
-  export: true,
-};
-const defaultRowKey = (_row: unknown, index: number): React.Key => index;
 
 /**
  * Reusable data table for accounting screens.
@@ -64,14 +36,7 @@ const defaultRowKey = (_row: unknown, index: number): React.Key => index;
  */
 export function DataTable<T>(props: DataTableProps<T>) {
   const {
-    columns,
-    data,
-    rows,
-    rowKey = defaultRowKey,
-    meta,
     pageSizes,
-    paginate = true,
-    defaultPageSize = 20,
     error,
     loading = false,
     searchTerm,
@@ -93,41 +58,23 @@ export function DataTable<T>(props: DataTableProps<T>) {
     exportFileName,
     summary,
     summaryLabel = 'جمع',
-    persistKey,
   } = props;
 
-  const source = data ?? rows ?? (EMPTY as T[]);
-  const isServer = (props.mode ?? (meta ? 'server' : 'client')) === 'server';
-  const toolbar: Required<ToolbarOptions> | null =
-    props.toolbar === false
-      ? null
-      : {
-          ...DEFAULT_TOOLBAR,
-          ...(props.toolbar === true || props.toolbar === undefined ? {} : props.toolbar),
-        };
-
-  /* ----------------------------- columns ----------------------------- */
-
-  const { resolved, byId, tsColumns, initialVisibility, columnLabels } = useColumnResolve(columns);
-
-  /* ------------------------------ state ------------------------------ */
-
-  const { visibility, setVisibility, columnOrder, setColumnOrder, density, setDensity } =
-    useColumnPersistence({
-      persistKey,
-      initialVisibility,
-      byId,
-      columnVisibility: props.columnVisibility,
-      onColumnVisibilityChange: props.onColumnVisibilityChange,
-      columnOrder: props.columnOrder,
-      onColumnOrderChange: props.onColumnOrderChange,
-      density: props.density,
-      onDensityChange: props.onDensityChange,
-    });
-
-  /* ------------------------- client-mode pipeline ------------------------- */
-
   const {
+    meta,
+    paginate,
+    isServer,
+    toolbar,
+    resolved,
+    byId,
+    columnLabels,
+    initialVisibility,
+    visibility,
+    setVisibility,
+    columnOrder,
+    setColumnOrder,
+    density,
+    setDensity,
     sorting,
     setSorting,
     filters,
@@ -145,32 +92,9 @@ export function DataTable<T>(props: DataTableProps<T>) {
     pageData,
     total,
     totalPages,
-    filtersList,
     hasFilters,
     viewKey,
-  } = useClientTablePipeline<T>({
-    source,
-    isServer,
-    paginate,
-    defaultPageSize,
-    rowKey,
-    resolved,
-    tsColumns,
-    byId,
-    visibility,
-    columnOrder,
-    meta,
-    sorting: props.sorting,
-    onSortingChange: props.onSortingChange,
-    columnFilters: props.columnFilters,
-    onColumnFiltersChange: props.onColumnFiltersChange,
-    search: props.search,
-    onSearchChange: props.onSearchChange,
-    page: props.page,
-    onPageChange: props.onPageChange,
-    limit: props.limit,
-    onLimitChange: props.onLimitChange,
-  });
+  } = useDataTableModel<T>(props);
 
   /* ----------------------------- inline editing ----------------------------- */
 
@@ -299,118 +223,6 @@ export function DataTable<T>(props: DataTableProps<T>) {
 
   const columnDnd = reorderableColumns && Boolean(dndMod);
 
-  const headerRow = (
-    <TableHeaderRow<T>
-      visibleColumns={visibleColumns}
-      sorting={sorting}
-      filters={filters}
-      onSort={toggleSort}
-      onFilter={setColumnFilter}
-      density={density}
-      stickyHeader={stickyHeader}
-      dnd={dndMod}
-      columnDnd={columnDnd}
-      reorderableIds={reorderableIds}
-      rowDndWanted={rowDndWanted}
-      selectable={selectable}
-      allSelected={allSelected}
-      someSelected={someSelected}
-      onToggleAll={toggleAll}
-      pageRowCount={pageRows.length}
-      rowNumbers={rowNumbers}
-      hasActionsColumn={hasActionsColumn}
-    />
-  );
-
-  const renderRow = (idx: number, virtualItem?: { index: number }) => {
-    const r = pageRows[idx];
-    return (
-      <RowView<T>
-        key={r.id}
-        original={r.original}
-        rowId={r.id}
-        index={idx}
-        rowNumber={
-          rowNumbers
-            ? (isServer ? (page - 1) * limit : paginate ? (page - 1) * limit : 0) + idx + 1
-            : undefined
-        }
-        columns={visibleColumns}
-        selectable={selectable}
-        selected={Boolean(selection[r.id])}
-        editing={editing?.id === r.id ? editing : null}
-        locked={editing !== null}
-        actions={rowActions}
-        hasActionsColumn={hasActionsColumn}
-        editOnDoubleClick={editTrigger === 'doubleClick' && Boolean(onRowSave)}
-        clickable={Boolean(props.onRowClick)}
-        density={density}
-        dnd={dndMod}
-        rowDnd={rowDndWanted}
-        dragDisabled={rowDragDisabled}
-        className={props.rowClassName?.(r.original)}
-        cb={cb}
-        dataIndex={virtualItem?.index}
-        measureRef={virtualItem ? virtualizer.measureElement : undefined}
-      />
-    );
-  };
-
-  const body = (
-    <TableBodyRows
-      isError={isError}
-      error={error}
-      isLoading={isLoading}
-      refreshing={refreshing}
-      isEmpty={isEmpty}
-      hasSearch={hasSearch}
-      hasFilters={hasFilters}
-      loadingMessage={loadingMessage}
-      emptyMessage={emptyMessage}
-      searchEmptyMessage={searchEmptyMessage}
-      colSpan={colSpan}
-      onClearFilters={() => {
-        setFilters({});
-        viewChanged();
-      }}
-      virtualize={virtualize}
-      virtualizer={virtualizer}
-      pageRowCount={pageRows.length}
-      renderRow={renderRow}
-      dnd={dndMod}
-      rowDndWanted={rowDndWanted}
-      rowIds={rowIds}
-    />
-  );
-
-  const showFooter =
-    !isError &&
-    !isEmpty &&
-    visibleColumns.some((rc) => summary?.[rc.id] !== undefined || rc.def.footer);
-  const footer = showFooter ? (
-    <TableFooterRow<T>
-      visibleColumns={visibleColumns}
-      leading={leading}
-      summaryLabel={summaryLabel}
-      summary={summary}
-      pageData={pageData}
-      hasActionsColumn={hasActionsColumn}
-    />
-  ) : null;
-
-  const tableEl = (
-    <table
-      className={cx('w-full caption-bottom text-sm', className)}
-      aria-label={ariaLabel}
-      aria-busy={isLoading || undefined}
-      aria-rowcount={isServer ? total : undefined}
-    >
-      <TableHeader className="[&_tr]:border-b [&_tr]:border-border">{headerRow}</TableHeader>
-      {body}
-      {footer}
-    </table>
-  );
-
   const paginationMeta: PaginationMeta | null = (() => {
     if (isServer) {
       const ok =
@@ -442,88 +254,110 @@ export function DataTable<T>(props: DataTableProps<T>) {
   return (
     <DataTableContext.Provider value={ctx}>
       <div data-slot="data-table" dir="rtl" className="flex flex-col gap-3">
-        {toolbar ? (
-          <Toolbar<T>
-            options={toolbar}
-            search={search}
-            onSearch={(v) => {
-              setSearch(v);
-              viewChanged();
-            }}
-            searchPlaceholder={props.searchPlaceholder}
-            columns={resolved}
-            visibility={visibility}
-            onToggleColumn={(id, v) => setVisibility((prev) => ({ ...prev, [id]: v }))}
-            onResetColumns={() => {
-              setVisibility(initialVisibility);
-              setColumnOrder([]);
-            }}
-            density={density}
-            onDensity={setDensity}
-            onExport={exportFileName ? exportCsv : undefined}
-            start={props.toolbarStart}
-            end={props.toolbarEnd}
-          />
-        ) : null}
-
-        <ActiveFilters
+        <TableChrome<T>
+          toolbar={toolbar}
+          search={search}
+          onSearch={(value) => {
+            setSearch(value);
+            viewChanged();
+          }}
+          searchPlaceholder={props.searchPlaceholder}
           columns={resolved}
+          visibility={visibility}
+          onToggleColumn={(id, value) => setVisibility((prev) => ({ ...prev, [id]: value }))}
+          onResetColumns={() => {
+            setVisibility(initialVisibility);
+            setColumnOrder([]);
+          }}
+          density={density}
+          onDensity={setDensity}
+          onExport={exportFileName ? exportCsv : undefined}
+          toolbarStart={props.toolbarStart}
+          toolbarEnd={props.toolbarEnd}
           filters={filters}
-          onRemove={(id) => setColumnFilter(id, undefined)}
-          onClearAll={() => {
+          onRemoveFilter={(id) => setColumnFilter(id, undefined)}
+          onClearFilters={() => {
             setFilters({});
             viewChanged();
           }}
+          bulk={
+            selectable && bulkActions?.length
+              ? {
+                  count: selectedIds.length,
+                  rows: selectedRows,
+                  actions: bulkActions,
+                  onRun: runBulk,
+                  onClear: clearSelection,
+                }
+              : null
+          }
+          notice={notice}
+          onDismissNotice={() => setNotice(null)}
         />
 
-        {selectable && bulkActions?.length ? (
-          <BulkBar
-            count={selectedIds.length}
-            rows={selectedRows}
-            actions={bulkActions}
-            onRun={runBulk}
-            onClear={clearSelection}
-          />
-        ) : null}
-
-        {notice ? (
-          <div
-            role="alert"
-            className="flex items-center justify-between gap-2 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
-          >
-            <span>{notice}</span>
-            <button
-              type="button"
-              onClick={() => setNotice(null)}
-              className="text-xs underline underline-offset-4"
-            >
-              بستن
-            </button>
-          </div>
-        ) : null}
-
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
-          <div
-            ref={scrollRef}
-            className="overflow-auto"
-            style={{ maxHeight: maxHeight ?? (virtualize ? 600 : undefined) }}
-          >
-            {dndMod && (rowDndWanted || columnDnd) ? (
-              <dndMod.DndRoot
-                rowIds={rowIds}
-                columnIds={reorderableIds}
-                columnLabels={columnLabels}
-                onRowsReorder={onRowsReorder}
-                onColumnsReorder={onColumnsReorder}
-              >
-                {tableEl}
-              </dndMod.DndRoot>
-            ) : (
-              tableEl
-            )}
-          </div>
-          {pagination}
-        </div>
+        <TableSurface<T>
+          visibleColumns={visibleColumns}
+          sorting={sorting}
+          filters={filters}
+          onSort={toggleSort}
+          onFilter={setColumnFilter}
+          density={density}
+          stickyHeader={stickyHeader}
+          dnd={dndMod}
+          columnDnd={columnDnd}
+          reorderableIds={reorderableIds}
+          rowDndWanted={rowDndWanted}
+          selectable={selectable}
+          allSelected={allSelected}
+          someSelected={someSelected}
+          onToggleAll={toggleAll}
+          rowNumbers={rowNumbers}
+          hasActionsColumn={hasActionsColumn}
+          pageRows={pageRows}
+          isServer={isServer}
+          paginate={paginate}
+          page={page}
+          limit={limit}
+          selection={selection}
+          editing={editing}
+          rowActions={rowActions}
+          editOnDoubleClick={editTrigger === 'doubleClick' && Boolean(onRowSave)}
+          clickable={Boolean(props.onRowClick)}
+          rowDragDisabled={rowDragDisabled}
+          rowClassName={props.rowClassName}
+          cb={cb}
+          virtualizer={virtualizer}
+          virtualize={virtualize}
+          rowIds={rowIds}
+          isError={isError}
+          error={error}
+          isLoading={isLoading}
+          refreshing={refreshing}
+          isEmpty={isEmpty}
+          hasSearch={hasSearch}
+          hasFilters={hasFilters}
+          loadingMessage={loadingMessage}
+          emptyMessage={emptyMessage}
+          searchEmptyMessage={searchEmptyMessage}
+          colSpan={colSpan}
+          onClearFilters={() => {
+            setFilters({});
+            viewChanged();
+          }}
+          leading={leading}
+          summaryLabel={summaryLabel}
+          summary={summary}
+          pageData={pageData}
+          className={className}
+          ariaLabel={ariaLabel}
+          total={total}
+          scrollRef={scrollRef}
+          maxHeight={maxHeight}
+          onRowsReorder={onRowsReorder}
+          onColumnsReorder={onColumnsReorder}
+          columnLabels={columnLabels}
+          pagination={pagination}
+        />
 
         <div role="status" aria-live="polite" className="sr-only">
           {isLoading ? 'در حال بارگذاری' : `${toFaDigits(total)} مورد`}
