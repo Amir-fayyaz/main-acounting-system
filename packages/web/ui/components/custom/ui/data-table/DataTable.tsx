@@ -25,6 +25,7 @@ import { ActiveFilters } from './filters/ActiveFilters';
 import { MAX_SORT_COLUMNS, useClientTablePipeline } from './hooks/useClientTablePipeline';
 import { useColumnPersistence } from './hooks/useColumnPersistence';
 import { useColumnResolve } from './hooks/useColumnResolve';
+import { useRowSelection } from './hooks/useRowSelection';
 import { useTableViewHandlers } from './hooks/useTableViewHandlers';
 import { useDndModule } from './hooks/useDndModule';
 import { toCsv, downloadCsv } from './lib/csv';
@@ -151,12 +152,10 @@ export function DataTable<T>(props: DataTableProps<T>) {
       density: props.density,
       onDensityChange: props.onDensityChange,
     });
-  const [selection, setSelection] = React.useState<Record<string, boolean>>({});
   const [editing, setEditing] = React.useState<EditingState | null>(null);
   const [dialog, setDialog] = React.useState<ActionDialogState | null>(null);
   const [notice, setNotice] = React.useState<string | null>(null);
   const dialogKey = React.useRef(0);
-  const lastSelected = React.useRef<string | null>(null);
 
   /* ------------------------- client-mode pipeline ------------------------- */
 
@@ -239,10 +238,22 @@ export function DataTable<T>(props: DataTableProps<T>) {
 
   /* ------------------------------- handlers ------------------------------- */
 
-  const clearSelection = () => {
-    lastSelected.current = null;
-    setSelection((prev) => (Object.keys(prev).length ? {} : prev));
-  };
+  const {
+    selection,
+    clearSelection,
+    select,
+    toggleAll,
+    selectedIds,
+    selectedRows,
+    allSelected,
+    someSelected,
+  } = useRowSelection<T>({
+    rowIds,
+    pageRows,
+    viewKey,
+    onSelectionChange: props.onSelectionChange,
+  });
+
   const { viewChanged, toggleSort, setColumnFilter } = useTableViewHandlers<T>({
     byId,
     setSorting,
@@ -250,50 +261,6 @@ export function DataTable<T>(props: DataTableProps<T>) {
     setPage,
     clearSelection,
   });
-
-  const select = (rowId: string, checked: boolean, shift: boolean) => {
-    setSelection((prev) => {
-      const next = { ...prev };
-      const anchor = lastSelected.current;
-      if (shift && anchor && anchor !== rowId) {
-        const a = rowIds.indexOf(anchor);
-        const b = rowIds.indexOf(rowId);
-        if (a >= 0 && b >= 0) {
-          for (const id of rowIds.slice(Math.min(a, b), Math.max(a, b) + 1)) {
-            if (checked) next[id] = true;
-            else delete next[id];
-          }
-          return next;
-        }
-      }
-      if (checked) next[rowId] = true;
-      else delete next[rowId];
-      return next;
-    });
-    lastSelected.current = rowId;
-  };
-
-  const selectedIds = React.useMemo(
-    () => rowIds.filter((id) => selection[id]),
-    [rowIds, selection],
-  );
-  const selectedRows = React.useMemo(
-    () => pageRows.filter((r) => selection[r.id]).map((r) => r.original),
-    [pageRows, selection],
-  );
-  const allSelected = pageRows.length > 0 && selectedIds.length === pageRows.length;
-  const someSelected = selectedIds.length > 0 && !allSelected;
-
-  const onSelectionChangeProp = props.onSelectionChange;
-  React.useEffect(() => {
-    onSelectionChangeProp?.(selectedRows, selectedIds);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedIds.join('|')]);
-
-  React.useEffect(() => {
-    clearSelection();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewKey]);
 
   /* ----------------------------- inline editing ----------------------------- */
 
@@ -574,10 +541,7 @@ export function DataTable<T>(props: DataTableProps<T>) {
             checked={allSelected ? true : someSelected ? 'indeterminate' : false}
             aria-label="انتخاب همه‌ی ردیف‌های این صفحه"
             disabled={pageRows.length === 0}
-            onCheckedChange={(v: boolean | 'indeterminate') => {
-              setSelection(v === true ? Object.fromEntries(rowIds.map((id) => [id, true])) : {});
-              lastSelected.current = null;
-            }}
+            onCheckedChange={(v: boolean | 'indeterminate') => toggleAll(v === true)}
           />
         </th>
       ) : null}
