@@ -18,13 +18,13 @@ import { DataTableContext, type DataTableContextValue } from './context';
 import type {
   BulkAction,
   DataTableProps,
-  Density,
   PaginationMeta,
   RowAction,
   ToolbarOptions,
 } from './data-table.types';
 import { ActiveFilters } from './filters/ActiveFilters';
 import { isFilterActive, type FilterValue } from './filters/filter-types';
+import { useColumnPersistence } from './hooks/useColumnPersistence';
 import { useColumnResolve } from './hooks/useColumnResolve';
 import { useControllableState } from './hooks/useControllableState';
 import { useDndModule } from './hooks/useDndModule';
@@ -50,7 +50,6 @@ const DEFAULT_TOOLBAR: Required<ToolbarOptions> = {
   export: true,
 };
 const defaultRowKey = (_row: unknown, index: number): React.Key => index;
-const STORAGE_PREFIX = 'data-table:v1:';
 
 function hasContent(value: React.ReactNode): boolean {
   return value !== undefined && value !== null && value !== false && value !== '';
@@ -160,72 +159,24 @@ export function DataTable<T>(props: DataTableProps<T>) {
     defaultPageSize,
     props.onLimitChange,
   );
-  const [visibility, setVisibility] = useControllableState<Record<string, boolean>>(
-    props.columnVisibility,
-    initialVisibility,
-    props.onColumnVisibilityChange,
-  );
-  const [columnOrder, setColumnOrder] = useControllableState<string[]>(
-    props.columnOrder,
-    [],
-    props.onColumnOrderChange,
-  );
-  const [density, setDensity] = useControllableState<Density>(
-    props.density,
-    'comfortable',
-    props.onDensityChange,
-  );
+  const { visibility, setVisibility, columnOrder, setColumnOrder, density, setDensity } =
+    useColumnPersistence({
+      persistKey,
+      initialVisibility,
+      byId,
+      columnVisibility: props.columnVisibility,
+      onColumnVisibilityChange: props.onColumnVisibilityChange,
+      columnOrder: props.columnOrder,
+      onColumnOrderChange: props.onColumnOrderChange,
+      density: props.density,
+      onDensityChange: props.onDensityChange,
+    });
   const [selection, setSelection] = React.useState<Record<string, boolean>>({});
   const [editing, setEditing] = React.useState<EditingState | null>(null);
   const [dialog, setDialog] = React.useState<ActionDialogState | null>(null);
   const [notice, setNotice] = React.useState<string | null>(null);
   const dialogKey = React.useRef(0);
   const lastSelected = React.useRef<string | null>(null);
-
-  /* Persisted per-user view preferences (visibility, order, density). */
-  const storageKey = persistKey ? STORAGE_PREFIX + persistKey : null;
-  const [hydrated, setHydrated] = React.useState(false);
-  React.useEffect(() => {
-    if (!storageKey) return;
-    try {
-      const raw = window.localStorage.getItem(storageKey);
-      if (raw) {
-        const saved = JSON.parse(raw) as {
-          visibility?: Record<string, boolean>;
-          order?: string[];
-          density?: Density;
-        };
-        if (saved.visibility && typeof saved.visibility === 'object') {
-          setVisibility(
-            Object.fromEntries(
-              Object.entries(saved.visibility).filter(
-                ([id, v]) => id in byId && typeof v === 'boolean',
-              ),
-            ),
-          );
-        }
-        if (Array.isArray(saved.order))
-          setColumnOrder(saved.order.filter((id) => typeof id === 'string' && id in byId));
-        if (saved.density === 'compact' || saved.density === 'comfortable')
-          setDensity(saved.density);
-      }
-    } catch {
-      /* corrupted or unavailable storage: ignore */
-    }
-    setHydrated(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storageKey]);
-  React.useEffect(() => {
-    if (!storageKey || !hydrated) return;
-    try {
-      window.localStorage.setItem(
-        storageKey,
-        JSON.stringify({ visibility, order: columnOrder, density }),
-      );
-    } catch {
-      /* quota / private mode */
-    }
-  }, [storageKey, hydrated, visibility, columnOrder, density]);
 
   /* ------------------------- client-mode pipeline ------------------------- */
 
