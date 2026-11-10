@@ -8,7 +8,6 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { useVirtualizer } from '@tanstack/react-virtual';
 
 import { ActionDialog, resolveReason } from './actions/ActionDialog';
 import { BulkBar } from './actions/BulkBar';
@@ -23,7 +22,9 @@ import { useInlineEdit } from './hooks/useInlineEdit';
 import { useRowCallbacks } from './hooks/useRowCallbacks';
 import { useRowSelection } from './hooks/useRowSelection';
 import { useTableActions } from './hooks/useTableActions';
+import { useTableLayout } from './hooks/useTableLayout';
 import { useTableReorder } from './hooks/useTableReorder';
+import { useTableVirtualizer } from './hooks/useTableVirtualizer';
 import { useTableViewHandlers } from './hooks/useTableViewHandlers';
 import { useDndModule } from './hooks/useDndModule';
 import { downloadCsv } from './lib/csv';
@@ -50,10 +51,6 @@ const DEFAULT_TOOLBAR: Required<ToolbarOptions> = {
   export: true,
 };
 const defaultRowKey = (_row: unknown, index: number): React.Key => index;
-
-function hasContent(value: React.ReactNode): boolean {
-  return value !== undefined && value !== null && value !== false && value !== '';
-}
 
 /**
  * Reusable data table for accounting screens.
@@ -189,34 +186,45 @@ export function DataTable<T>(props: DataTableProps<T>) {
 
   /* ------------------------ feature flags & layout ------------------------ */
 
-  const hasSearch = (searchTerm ?? search).trim().length > 0;
-  const rowNumbers = props.rowNumbers === true;
-  const hasActionsColumn =
-    Boolean(rowActions?.length) || Boolean(onRowSave && editTrigger === 'doubleClick');
-  const rowDndWanted = reorderableRows && !virtualize;
-  const dndMod = useDndModule(rowDndWanted || reorderableColumns);
-  const rowDragDisabled = sorting.length > 0 || editing !== null;
-  const stickyHeader = maxHeight !== undefined || virtualize;
-  const leading = (rowDndWanted ? 1 : 0) + (selectable ? 1 : 0) + (rowNumbers ? 1 : 0);
-  const colSpan = visibleColumns.length + leading + (hasActionsColumn ? 1 : 0);
-  const reorderableIds = React.useMemo(
-    () => visibleColumns.filter((rc) => rc.reorderable).map((rc) => rc.id),
-    [visibleColumns],
-  );
-  const isError = hasContent(error);
-  const isLoading = !isError && loading;
-  const isEmpty = !isError && !isLoading && pageRows.length === 0;
-  const refreshing = isLoading && pageRows.length > 0;
+  const {
+    hasSearch,
+    rowNumbers,
+    hasActionsColumn,
+    rowDndWanted,
+    dndMod,
+    rowDragDisabled,
+    stickyHeader,
+    leading,
+    colSpan,
+    reorderableIds,
+    isError,
+    isLoading,
+    isEmpty,
+    refreshing,
+  } = useTableLayout<T>({
+    searchTerm,
+    search,
+    rowNumbersProp: props.rowNumbers,
+    rowActions,
+    onRowSave,
+    editTrigger,
+    reorderableRows,
+    reorderableColumns,
+    virtualize,
+    maxHeight,
+    selectable,
+    sorting,
+    editing,
+    visibleColumns,
+    error,
+    loading,
+    pageRowCount: pageRows.length,
+  });
 
-  /* ----------------------------- virtualization ----------------------------- */
-
-  const scrollRef = React.useRef<HTMLDivElement>(null);
-  const virtualizer = useVirtualizer({
-    count: virtualize ? pageRows.length : 0,
-    getScrollElement: () => scrollRef.current,
-    estimateSize: () => (density === 'compact' ? 37 : 53),
-    overscan: 10,
-    enabled: virtualize,
+  const { scrollRef, virtualizer } = useTableVirtualizer({
+    virtualize,
+    count: pageRows.length,
+    density,
   });
 
   /* ------------------------------- handlers ------------------------------- */
