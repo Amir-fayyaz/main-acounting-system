@@ -167,6 +167,7 @@ export function InvoicesView() {
     >
       <DataTable
         aria-label="فاکتورهای فروش"
+        reorderableColumns
         columns={columns}
         data={data}
         rowKey={(row) => row.id}
