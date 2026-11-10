@@ -2,7 +2,7 @@
 
 import { ActionDialog } from './actions/ActionDialog';
 import { DataTableContext } from './context';
-import type { DataTableProps, PaginationMeta } from './data-table.types';
+import type { DataTableProps } from './data-table.types';
 import { useActionDialog } from './hooks/useActionDialog';
 import { useDataTableModel } from './hooks/useDataTableModel';
 import { useInlineEdit } from './hooks/useInlineEdit';
@@ -17,7 +17,7 @@ import { downloadCsv } from './lib/csv';
 import { buildCsv } from './lib/export';
 import { toFaDigits } from './date/jalali';
 import { TableChrome } from './table/TableChrome';
-import { TablePagination } from './table/TablePagination';
+import { TablePaginationSlot } from './table/TablePaginationSlot';
 import { TableSurface } from './table/TableSurface';
 
 export const DEFAULT_LOADING_MESSAGE = 'در حال بارگذاری…';
@@ -223,33 +223,24 @@ export function DataTable<T>(props: DataTableProps<T>) {
 
   const columnDnd = reorderableColumns && Boolean(dndMod);
 
-  const paginationMeta: PaginationMeta | null = (() => {
-    if (isServer) {
-      const ok =
-        Boolean(meta) &&
-        props.page !== undefined &&
-        props.limit !== undefined &&
-        typeof props.onPageChange === 'function' &&
-        typeof props.onLimitChange === 'function';
-      return ok ? meta! : null;
-    }
-    if (!paginate || total === 0) return null;
-    return { page, limit, total, totalPages };
-  })();
-
-  const pagination = paginationMeta ? (
-    <div className="pb-3">
-      <TablePagination
-        meta={paginationMeta}
-        page={isServer ? props.page : page}
-        limit={isServer ? props.limit : limit}
-        onPageChange={isServer ? props.onPageChange : setPage}
-        onLimitChange={isServer ? props.onLimitChange : setLimit}
-        pageSizes={pageSizes}
-        resetPageOnLimitChange={!isServer}
-      />
-    </div>
-  ) : null;
+  const pagination = (
+    <TablePaginationSlot
+      isServer={isServer}
+      meta={meta}
+      paginate={paginate}
+      total={total}
+      page={page}
+      limit={limit}
+      totalPages={totalPages}
+      pageSizes={pageSizes}
+      serverPage={props.page}
+      serverLimit={props.limit}
+      onServerPageChange={props.onPageChange}
+      onServerLimitChange={props.onLimitChange}
+      onClientPageChange={setPage}
+      onClientLimitChange={setLimit}
+    />
+  );
 
   return (
     <DataTableContext.Provider value={ctx}>
