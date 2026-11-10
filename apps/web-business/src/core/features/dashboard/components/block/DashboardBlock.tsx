@@ -10,7 +10,7 @@ import type { DashboardMetric, DashboardSnapshot } from '../../assets/@types';
 import type { Cheque, Invoice } from '../../../panel/assets/@types/finance';
 import { useDashboard } from '../../hook/useDashboard';
 import { PageHeader } from '../../../panel/components/ui/PageHeader';
-import { formatShortMoney, splitShortMoney } from '../../../panel/utils/format-short-money';
+import { formatShortMoney, splitShortMoney } from '../../../shared/utils/format-short-money';
 import { DashboardCharts } from './DashboardCharts';
 import { DashboardLists } from './DashboardLists';
 

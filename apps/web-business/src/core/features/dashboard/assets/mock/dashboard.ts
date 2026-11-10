@@ -1,6 +1,6 @@
 import type { ActivityItem } from '../../../panel/assets/@types';
 import type { DashboardSnapshot } from '../@types/dashboard';
-import { createId, makeMoney } from '../../../panel/assets/mock/mock-utils';
+import { createId, makeMoney } from '../../../shared/assets/mock/mock-utils';
 
 export function createMockDashboardSnapshot(): DashboardSnapshot {
   return {
