@@ -227,3 +227,64 @@ test('reorderById moves inside the full list', () => {
     l,
   );
 });
+
+import { buildCsv } from '../lib/export';
+import { resolvePaginationMeta } from '../lib/pagination';
+
+test('csv export uses labels, raw Gregorian dates, numeric money and status labels', () => {
+  const exportCols = resolveColumns<Inv>([
+    { key: 'id', header: 'شناسه' },
+    { key: 'date', header: 'تاریخ', type: 'date' },
+    { key: 'amount', header: 'مبلغ', type: 'money' },
+    { key: 'status', header: 'وضعیت', type: 'status', status },
+  ]);
+  const csv = buildCsv(exportCols, [
+    {
+      original: {
+        id: 'INV-1',
+        customer: 'علی',
+        date: '2026-10-19',
+        amount: 1234.5,
+        status: 'paid',
+      },
+    },
+  ]);
+  assert.ok(csv.includes('INV-1'));
+  assert.ok(csv.includes('2026-10-19'));
+  assert.ok(csv.includes('1234.5'));
+  assert.ok(csv.includes('پرداخت‌شده'));
+});
+
+test('pagination meta: client hides empty, server hides incomplete wiring', () => {
+  const base = {
+    isServer: false,
+    paginate: true,
+    total: 12,
+    page: 2,
+    limit: 10,
+    totalPages: 2,
+  };
+  assert.deepEqual(resolvePaginationMeta(base), {
+    page: 2,
+    limit: 10,
+    total: 12,
+    totalPages: 2,
+  });
+  assert.equal(resolvePaginationMeta({ ...base, total: 0 }), null);
+  assert.equal(resolvePaginationMeta({ ...base, paginate: false }), null);
+
+  const meta = { page: 2, limit: 10, total: 12, totalPages: 2 };
+  assert.equal(resolvePaginationMeta({ ...base, isServer: true, meta }), null);
+  assert.deepEqual(
+    resolvePaginationMeta({
+      ...base,
+      isServer: true,
+      meta,
+      serverPage: 2,
+      serverLimit: 10,
+      onServerPageChange: () => {},
+      onServerLimitChange: () => {},
+    }),
+    meta,
+  );
+});
