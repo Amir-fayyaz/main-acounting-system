@@ -12,12 +12,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 
 import { ActionDialog, resolveReason, type ActionDialogState } from './actions/ActionDialog';
 import { BulkBar } from './actions/BulkBar';
-import {
-  buildTanstackColumns,
-  getRaw,
-  resolveColumns,
-  statusLabel,
-} from './columns/resolve-columns';
+import { getRaw, statusLabel } from './columns/resolve-columns';
 import { createSearchIndex } from './columns/search';
 import { DataTableContext, type DataTableContextValue } from './context';
 import type {
@@ -30,6 +25,7 @@ import type {
 } from './data-table.types';
 import { ActiveFilters } from './filters/ActiveFilters';
 import { isFilterActive, type FilterValue } from './filters/filter-types';
+import { useColumnResolve } from './hooks/useColumnResolve';
 import { useControllableState } from './hooks/useControllableState';
 import { useDndModule } from './hooks/useDndModule';
 import { toCsv, downloadCsv } from './lib/csv';
@@ -143,19 +139,7 @@ export function DataTable<T>(props: DataTableProps<T>) {
 
   /* ----------------------------- columns ----------------------------- */
 
-  const resolved = React.useMemo(() => resolveColumns(columns), [columns]);
-  const byId = React.useMemo(
-    () => Object.fromEntries(resolved.map((rc) => [rc.id, rc])),
-    [resolved],
-  );
-  const tsColumns = React.useMemo(() => buildTanstackColumns(resolved), [resolved]);
-  const initialVisibility = React.useMemo(
-    () =>
-      Object.fromEntries(
-        resolved.filter((rc) => rc.def.defaultHidden).map((rc) => [rc.id, false]),
-      ) as Record<string, boolean>,
-    [resolved],
-  );
+  const { resolved, byId, tsColumns, initialVisibility, columnLabels } = useColumnResolve(columns);
 
   /* ------------------------------ state ------------------------------ */
 
@@ -329,11 +313,6 @@ export function DataTable<T>(props: DataTableProps<T>) {
     () => visibleColumns.filter((rc) => rc.reorderable).map((rc) => rc.id),
     [visibleColumns],
   );
-  const columnLabels = React.useMemo(
-    () => Object.fromEntries(resolved.map((rc) => [rc.id, rc.label])),
-    [resolved],
-  );
-
   const isError = hasContent(error);
   const isLoading = !isError && loading;
   const isEmpty = !isError && !isLoading && pageRows.length === 0;
