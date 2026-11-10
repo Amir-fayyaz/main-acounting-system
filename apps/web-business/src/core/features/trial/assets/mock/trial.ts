@@ -1,0 +1,86 @@
+import type { TrialBalanceRow } from '../@types';
+
+export function createInitialTrialBalance(): TrialBalanceRow[] {
+  return [
+    {
+      id: 'trial-01',
+      code: '۱۱۰۱',
+      name: 'صندوق',
+      debit: '125000000.00',
+      credit: '0.00',
+      currency: 'IRR',
+    },
+    {
+      id: 'trial-02',
+      code: '۱۱۰۲',
+      name: 'بانک ملت',
+      debit: '84000000.00',
+      credit: '0.00',
+      currency: 'IRR',
+    },
+    {
+      id: 'trial-03',
+      code: '۱۱۰۳',
+      name: 'بانک ملی',
+      debit: '46000000.00',
+      credit: '0.00',
+      currency: 'IRR',
+    },
+    {
+      id: 'trial-04',
+      code: '۱۲۰۱',
+      name: 'حساب‌های دریافتنی',
+      debit: '125000000.00',
+      credit: '0.00',
+      currency: 'IRR',
+    },
+    {
+      id: 'trial-05',
+      code: '۱۳۰۱',
+      name: 'موجودی کالا',
+      debit: '84000000.00',
+      credit: '0.00',
+      currency: 'IRR',
+    },
+    {
+      id: 'trial-06',
+      code: '۲۱۰۱',
+      name: 'حساب‌های پرداختنی',
+      debit: '0.00',
+      credit: '125000000.00',
+      currency: 'IRR',
+    },
+    {
+      id: 'trial-07',
+      code: '۳۱۰۱',
+      name: 'سرمایه',
+      debit: '0.00',
+      credit: '339000000.00',
+      currency: 'IRR',
+    },
+    {
+      id: 'trial-08',
+      code: '۴۱۰۱',
+      name: 'فروش کالا',
+      debit: '0.00',
+      credit: '150000000.00',
+      currency: 'IRR',
+    },
+    {
+      id: 'trial-09',
+      code: '۵۱۰۱',
+      name: 'بهای تمام‌شده کالای فروش‌رفته',
+      debit: '100000000.00',
+      credit: '0.00',
+      currency: 'IRR',
+    },
+    {
+      id: 'trial-10',
+      code: '۵۲۰۱',
+      name: 'هزینه اجاره',
+      debit: '50000000.00',
+      credit: '0.00',
+      currency: 'IRR',
+    },
+  ];
+}
