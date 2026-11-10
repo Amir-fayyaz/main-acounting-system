@@ -1,39 +1,31 @@
 'use client';
 
-import { Card, CardContent, CardHeader } from '@repo/web/ui';
-import { CiCalculator1, CiBank, CiShoppingCart, CiFileOn } from 'react-icons/ci';
+import { Card, H2 } from '@repo/web/ui';
+import { cn } from '@repo/web/ui/utils/cn';
 
-import type { ReportGroup } from '../../assets/@types/reports';
-
-const CARD_TITLE_CLASS = 'text-[15px] font-bold';
-
-const ICON_MAP: Record<string, React.ElementType> = {
-  CiCalculator1,
-  CiBank,
-  CiShoppingCart,
-  CiFileOn,
-};
-
-function ReportGroupIcon({ iconName }: { iconName: string }) {
-  const Icon = ICON_MAP[iconName];
-  if (!Icon) return null;
-  return <Icon className="size-4 text-muted-foreground" />;
-}
-
-export function ReportGroupCard({ group }: { group: ReportGroup }) {
+export function ReportGroupCard({
+  group,
+  onReportSelect,
+}: {
+  group: { title: string; items: readonly { id: string; label: string }[] };
+  onReportSelect: (reportId: string) => void;
+}) {
   return (
-    <Card className="gap-4 rounded-lg border border-border hover:border-brand/30 transition-colors cursor-pointer">
-      <CardHeader>
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <ReportGroupIcon iconName={group.icon} />
-            <h2 className={CARD_TITLE_CLASS}>{group.title}</h2>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <p className="text-sm text-muted-foreground">{group.description}</p>
-      </CardContent>
+    <Card className={cn('rounded-xl border border-border rep-group p-[18px] gap-0')}>
+      <H2 className="text-[15px] font-bold mb-2">{group.title}</H2>
+      <div className="flex flex-col gap-0">
+        {group.items.map((report) => (
+          <button
+            key={report.id}
+            type="button"
+            className="flex w-full items-center justify-between gap-2 px-[10px] py-[9px] rounded-md text-start transition-colors hover:bg-muted"
+            onClick={() => onReportSelect(report.id)}
+          >
+            <span>{report.label}</span>
+            <span className="text-muted-foreground text-xs">باز کردن</span>
+          </button>
+        ))}
+      </div>
     </Card>
   );
 }

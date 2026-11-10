@@ -9,11 +9,19 @@ import { ReportGroupCard } from '../ui/ReportGroupCard';
 import { DateRangeDialog } from '../ui/DateRangeDialog';
 
 const PAGE_TITLE = 'گزارش‌ها';
-const PAGE_DESCRIPTION = 'گروه‌های گزارش قابل دسترسی در پنل کسب‌وکار';
+const PAGE_DESCRIPTION = 'گزارش‌های مالی، خزانه‌داری، فروش و مدیریتی';
 
 export function ReportsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedRange, setSelectedRange] = useState<{ from: string; to: string } | null>(null);
+  const [selectedReportLabel, setSelectedReportLabel] = useState<string | null>(null);
+
+  const findReport = (reportId: string) => {
+    for (const group of reportGroups) {
+      const report = group.items.find((item) => item.id === reportId);
+      if (report) return report.label;
+    }
+    return null;
+  };
 
   return (
     <SectionLayout className="flex flex-1 flex-col py-6 sm:py-8 [&>.pages-container]:flex [&>.pages-container]:flex-1 [&>.pages-container]:flex-col [&>.pages-container]:gap-6 [&>.pages-container]:space-y-0 [&>.pages-container]:px-4 sm:[&>.pages-container]:px-6">
@@ -22,25 +30,36 @@ export function ReportsPage() {
           <H1 className="text-start text-xl font-bold sm:text-2xl">{PAGE_TITLE}</H1>
           <P className="text-sm text-muted-foreground">{PAGE_DESCRIPTION}</P>
         </div>
-        <DateRangeDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          onConfirm={(range) => {
-            setSelectedRange(range);
-            setDialogOpen(false);
-          }}
-        />
-        {selectedRange && (
-          <span className="text-sm text-muted-foreground">
-            بازه elect شده: {selectedRange.from} تا {selectedRange.to}
-          </span>
-        )}
       </div>
-      <div className="mt-6 grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-5 grid gap-4 lg:grid-cols-2">
         {reportGroups.map((group) => (
-          <ReportGroupCard key={group.id} group={group} />
+          <ReportGroupCard
+            key={group.id}
+            group={group}
+            onReportSelect={(reportId) => {
+              const label = findReport(reportId);
+              if (label) {
+                setSelectedReportLabel(label);
+                setDialogOpen(true);
+              }
+            }}
+          />
         ))}
       </div>
+      {selectedReportLabel && (
+        <DateRangeDialog
+          open={dialogOpen}
+          onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) setSelectedReportLabel(null);
+          }}
+          reportLabel={selectedReportLabel}
+          onConfirm={() => {
+            setDialogOpen(false);
+            setSelectedReportLabel(null);
+          }}
+        />
+      )}
     </SectionLayout>
   );
 }

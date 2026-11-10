@@ -1,8 +1,12 @@
+export interface ReportItem {
+  id: string;
+  label: string;
+}
+
 export interface ReportGroup {
   id: string;
   title: string;
-  description: string;
-  icon: string;
+  items: readonly ReportItem[];
 }
 
 export interface ReportDateRange {

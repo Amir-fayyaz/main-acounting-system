@@ -1,1 +1,1 @@
-export type { ReportGroup, ReportDateRange } from './reports';
+export type { ReportGroup, ReportItem, ReportDateRange } from './reports';
