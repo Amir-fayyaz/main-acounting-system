@@ -12,19 +12,15 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 
 import { ActionDialog, resolveReason } from './actions/ActionDialog';
 import { BulkBar } from './actions/BulkBar';
-import { DataTableContext, type DataTableContextValue } from './context';
-import type {
-  DataTableProps,
-  PaginationMeta,
-  RowCallbacks,
-  ToolbarOptions,
-} from './data-table.types';
+import { DataTableContext } from './context';
+import type { DataTableProps, PaginationMeta, ToolbarOptions } from './data-table.types';
 import { ActiveFilters } from './filters/ActiveFilters';
 import { MAX_SORT_COLUMNS, useClientTablePipeline } from './hooks/useClientTablePipeline';
 import { useActionDialog } from './hooks/useActionDialog';
 import { useColumnPersistence } from './hooks/useColumnPersistence';
 import { useColumnResolve } from './hooks/useColumnResolve';
 import { useInlineEdit } from './hooks/useInlineEdit';
+import { useRowCallbacks } from './hooks/useRowCallbacks';
 import { useRowSelection } from './hooks/useRowSelection';
 import { useTableActions } from './hooks/useTableActions';
 import { useTableReorder } from './hooks/useTableReorder';
@@ -280,34 +276,16 @@ export function DataTable<T>(props: DataTableProps<T>) {
 
   /* ------------------------- stable callbacks for rows ------------------------- */
 
-  const live = {
+  const { cb, ctx } = useRowCallbacks<T>({
     select,
     startEdit,
     setDraft,
     save: saveEdit,
     cancel: cancelEdit,
     runAction,
-    rowClick: (row: T) => props.onRowClick?.(row),
+    onRowClick: props.onRowClick,
     setColumnFilter,
-  };
-  const liveRef = React.useRef(live);
-  liveRef.current = live;
-  const cb = React.useMemo<RowCallbacks<T>>(
-    () => ({
-      select: (...a) => liveRef.current.select(...a),
-      startEdit: (...a) => liveRef.current.startEdit(...a),
-      setDraft: (...a) => liveRef.current.setDraft(...a),
-      save: () => liveRef.current.save(),
-      cancel: () => liveRef.current.cancel(),
-      runAction: (...a) => liveRef.current.runAction(...a),
-      rowClick: (row) => liveRef.current.rowClick(row),
-    }),
-    [],
-  );
-  const ctx = React.useMemo<DataTableContextValue>(
-    () => ({ setColumnFilter: (id, value) => liveRef.current.setColumnFilter(id, value) }),
-    [],
-  );
+  });
 
   /* --------------------------------- render --------------------------------- */
 
