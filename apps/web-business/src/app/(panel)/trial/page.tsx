@@ -1,8 +1,13 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
-import { PanelPlaceholder } from '@/core/features/panel/components/block/placeholder/PanelPlaceholder';
+import { TrialPage } from '@/core/features/trial';
 
 export const metadata: Metadata = { title: 'تراز آزمایشی' };
 
-export default function PanelPage() {
-  return <PanelPlaceholder title="تراز آزمایشی" />;
+export default function Page() {
+  return (
+    <Suspense fallback={null}>
+      <TrialPage />
+    </Suspense>
+  );
 }
