@@ -4,9 +4,10 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader } from '@repo/web/ui';
 import { cn } from '@repo/web/ui/utils/cn';
 
-import type { Cheque, ChequeStatus, DashboardTask, Invoice } from '../../../assets/@types';
-import { toFaDigits } from '../../../utils/persian-digits';
-import { chequeStatusLabel } from '../../../utils/status-label';
+import type { DashboardTask } from '../../assets/@types';
+import type { Cheque, ChequeStatus, Invoice } from '../../../panel/assets/@types/finance';
+import { toFaDigits } from '../../../panel/utils/persian-digits';
+import { chequeStatusLabel } from '../../../panel/utils/status-label';
 
 const CARD_TITLE_CLASS = 'text-[15px] font-bold';
 

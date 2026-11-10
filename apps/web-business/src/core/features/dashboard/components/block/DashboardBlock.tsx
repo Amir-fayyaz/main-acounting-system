@@ -1,25 +1,18 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 
 import { Card, CardContent, SectionLayout, Skeleton } from '@repo/web/ui';
 import { cn } from '@repo/web/ui/utils/cn';
 
-import type { Cheque, DashboardMetric, DashboardSnapshot, Invoice } from '../../../assets/@types';
-import { listCheques } from '../../../lib/cheques-api';
-import { getDashboardSnapshot } from '../../../lib/dashboard-api';
-import { listInvoices } from '../../../lib/invoices-api';
-import { formatShortMoney, splitShortMoney } from '../../../utils/format-short-money';
-import { PageHeader } from '../../ui';
+import type { DashboardMetric, DashboardSnapshot } from '../../assets/@types';
+import type { Cheque, Invoice } from '../../../panel/assets/@types/finance';
+import { useDashboard } from '../../hook/useDashboard';
+import { PageHeader } from '../../../panel/components/ui/PageHeader';
+import { formatShortMoney, splitShortMoney } from '../../../panel/utils/format-short-money';
 import { DashboardCharts } from './DashboardCharts';
 import { DashboardLists } from './DashboardLists';
-
-type DashboardState =
-  | { status: 'loading' }
-  | { status: 'error' }
-  | { status: 'success'; snapshot: DashboardSnapshot; invoices: Invoice[]; cheques: Cheque[] };
 
 const SECONDARY_ACTION_CLASS =
   'inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-border px-4 text-sm font-semibold transition-colors hover:bg-accent';
@@ -128,34 +121,7 @@ function DashboardContent({
 }
 
 export function DashboardBlock() {
-  const [state, setState] = useState<DashboardState>({ status: 'loading' });
-
-  useEffect(() => {
-    let isMounted = true;
-
-    Promise.all([
-      getDashboardSnapshot(),
-      listInvoices({ page: 1, limit: 5 }),
-      listCheques({ noPage: true }),
-    ])
-      .then(([snapshot, invoiceResponse, chequeResponse]) => {
-        if (isMounted) {
-          setState({
-            status: 'success',
-            snapshot,
-            invoices: invoiceResponse.data,
-            cheques: chequeResponse.data,
-          });
-        }
-      })
-      .catch(() => {
-        if (isMounted) setState({ status: 'error' });
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const state = useDashboard();
 
   return (
     <SectionLayout>

@@ -12,12 +12,5 @@ export type {
   RecordStatus,
 } from './finance';
 export type { AuditEvent, Branch, PanelUser, Person } from './organization';
-export type {
-  ActivityItem,
-  CashflowMonth,
-  DashboardMetric,
-  DashboardSnapshot,
-  DashboardTask,
-  PaymentMethodShare,
-} from './dashboard';
+export type { ActivityItem } from './dashboard';
 export type { ReportDefinition } from './reports';

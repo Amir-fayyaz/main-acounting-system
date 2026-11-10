@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { DashboardBlock } from '@/core/features/panel/components/block/dashboard/DashboardBlock';
+import { DashboardBlock } from '@/core/features/dashboard';
 
 export const metadata: Metadata = { title: 'میز کار' };
 
