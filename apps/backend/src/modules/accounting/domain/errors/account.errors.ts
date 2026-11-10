@@ -30,11 +30,9 @@ export class AccountInvalidParentError extends DomainError {
  */
 export class AccountCycleError extends DomainError {
   public constructor() {
-    super(
-      'ACCOUNT_CYCLE',
-      'Adding this account would create a cycle in the hierarchy.',
-      { category: ErrorCategory.CONFLICT },
-    );
+    super('ACCOUNT_CYCLE', 'Adding this account would create a cycle in the hierarchy.', {
+      category: ErrorCategory.CONFLICT,
+    });
   }
 }
 
@@ -45,7 +43,7 @@ export class AccountLevelMismatchError extends DomainError {
   public constructor(childLevel: number, parentLevel: number) {
     super(
       'ACCOUNT_LEVEL_MISMATCH',
-      'A child\'s level must be exactly one more than its parent\'s level.',
+      "A child's level must be exactly one more than its parent's level.",
       {
         category: ErrorCategory.VALIDATION,
         details: [
@@ -67,22 +65,18 @@ export class AccountLevelMismatchError extends DomainError {
  */
 export class AccountTypeMismatchError extends DomainError {
   public constructor(childType: string, parentType: string) {
-    super(
-      'ACCOUNT_TYPE_MISMATCH',
-      'A child account must have the same type as its parent.',
-      {
-        category: ErrorCategory.VALIDATION,
-        details: [
-          {
-            code: 'ACCOUNT_TYPE_MISMATCH',
-            field: 'type',
-            message: 'Child type must equal parent type',
-            childType,
-            parentType,
-          },
-        ],
-      },
-    );
+    super('ACCOUNT_TYPE_MISMATCH', 'A child account must have the same type as its parent.', {
+      category: ErrorCategory.VALIDATION,
+      details: [
+        {
+          code: 'ACCOUNT_TYPE_MISMATCH',
+          field: 'type',
+          message: 'Child type must equal parent type',
+          childType,
+          parentType,
+        },
+      ],
+    });
   }
 }
 
@@ -142,11 +136,9 @@ export class AccountPostableNotLeafError extends DomainError {
  */
 export class AccountSystemProtectedError extends DomainError {
   public constructor() {
-    super(
-      'ACCOUNT_SYSTEM_PROTECTED',
-      'System accounts cannot be structurally modified.',
-      { category: ErrorCategory.STATE_VIOLATION },
-    );
+    super('ACCOUNT_SYSTEM_PROTECTED', 'System accounts cannot be structurally modified.', {
+      category: ErrorCategory.STATE_VIOLATION,
+    });
   }
 }
 
@@ -155,10 +147,85 @@ export class AccountSystemProtectedError extends DomainError {
  */
 export class AccountActiveProtectedError extends DomainError {
   public constructor() {
+    super('ACCOUNT_ACTIVE_PROTECTED', 'Active accounts cannot be structurally modified.', {
+      category: ErrorCategory.STATE_VIOLATION,
+    });
+  }
+}
+
+export class AccountNotFoundError extends DomainError {
+  public constructor(accountId: string) {
+    super('ACCOUNT_NOT_FOUND', 'The account could not be found in the current tenant.', {
+      category: ErrorCategory.NOT_FOUND,
+      details: [
+        { code: 'ACCOUNT_NOT_FOUND', field: 'id', message: 'Account not found', accountId },
+      ],
+    });
+  }
+}
+
+export class AccountCodeDuplicateError extends DomainError {
+  public constructor(code: string) {
+    super('ACCOUNT_CODE_DUPLICATE', 'An account with this code already exists in the tenant.', {
+      category: ErrorCategory.CONFLICT,
+      details: [
+        {
+          code: 'ACCOUNT_CODE_DUPLICATE',
+          field: 'code',
+          message: 'Duplicate account code',
+          accountCode: code,
+        },
+      ],
+    });
+  }
+}
+
+export class AccountInUseError extends DomainError {
+  public constructor() {
+    super('ACCOUNT_IN_USE', 'This account is in use and cannot be structurally changed.', {
+      category: ErrorCategory.BUSINESS_RULE,
+    });
+  }
+}
+
+export class AccountHasChildrenError extends DomainError {
+  public constructor() {
     super(
-      'ACCOUNT_ACTIVE_PROTECTED',
-      'Active accounts cannot be structurally modified.',
+      'ACCOUNT_HAS_CHILDREN',
+      'This account cannot be deleted while it still has child accounts.',
+      {
+        category: ErrorCategory.BUSINESS_RULE,
+      },
+    );
+  }
+}
+
+export class AccountHasActiveChildrenError extends DomainError {
+  public constructor() {
+    super(
+      'ACCOUNT_HAS_ACTIVE_CHILDREN',
+      'This account cannot be deactivated while it still has active child accounts.',
       { category: ErrorCategory.STATE_VIOLATION },
     );
+  }
+}
+
+export class AccountParentInactiveError extends DomainError {
+  public constructor() {
+    super(
+      'ACCOUNT_PARENT_INACTIVE',
+      'The parent account must be active before this action is allowed.',
+      {
+        category: ErrorCategory.STATE_VIOLATION,
+      },
+    );
+  }
+}
+
+export class AccountDeletionForbiddenError extends DomainError {
+  public constructor() {
+    super('ACCOUNT_CANNOT_DELETE', 'This account cannot be deleted.', {
+      category: ErrorCategory.BUSINESS_RULE,
+    });
   }
 }
