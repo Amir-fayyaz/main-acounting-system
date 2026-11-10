@@ -22,10 +22,10 @@ import type {
   ToolbarOptions,
 } from './data-table.types';
 import { ActiveFilters } from './filters/ActiveFilters';
-import { isFilterActive, type FilterValue } from './filters/filter-types';
 import { MAX_SORT_COLUMNS, useClientTablePipeline } from './hooks/useClientTablePipeline';
 import { useColumnPersistence } from './hooks/useColumnPersistence';
 import { useColumnResolve } from './hooks/useColumnResolve';
+import { useTableViewHandlers } from './hooks/useTableViewHandlers';
 import { useDndModule } from './hooks/useDndModule';
 import { toCsv, downloadCsv } from './lib/csv';
 import { cx } from './lib/text';
@@ -34,7 +34,6 @@ import { PaginationControls } from './PaginationControls';
 import { HeaderCell, RowView, type EditingState, type RowCallbacks } from './TableParts';
 import { Toolbar } from './Toolbar';
 import { Button, Checkbox, TableBody, TableCell, TableFooter, TableHeader, TableRow } from './ui';
-import type { SortItem } from './lib/url-state';
 
 export const DEFAULT_LOADING_MESSAGE = 'در حال بارگذاری…';
 export const DEFAULT_EMPTY_MESSAGE = 'موردی یافت نشد';
@@ -244,41 +243,13 @@ export function DataTable<T>(props: DataTableProps<T>) {
     lastSelected.current = null;
     setSelection((prev) => (Object.keys(prev).length ? {} : prev));
   };
-  const viewChanged = () => {
-    setPage(1);
-    clearSelection();
-  };
-
-  const toggleSort = (columnId: string, multi: boolean) => {
-    const rc = byId[columnId];
-    if (!rc?.sortable) return;
-    const firstDesc = rc.def.sortDescFirst ?? false;
-    setSorting((prev) => {
-      const current = prev.find((s) => s.id === columnId);
-      let next: SortItem | null;
-      if (!current) next = { id: columnId, desc: firstDesc };
-      else if (current.desc === firstDesc) next = { id: columnId, desc: !firstDesc };
-      else next = null; // third click removes the sort
-      if (!multi) return next ? [next] : [];
-      const without = prev.filter((s) => s.id !== columnId);
-      if (!next) return without;
-      const merged = current
-        ? prev.map((s) => (s.id === columnId ? next! : s))
-        : [...without, next];
-      return merged.slice(0, MAX_SORT_COLUMNS);
-    });
-    viewChanged();
-  };
-
-  const setColumnFilter = (columnId: string, value: FilterValue | undefined) => {
-    setFilters((prev) => {
-      const next = { ...prev };
-      if (value === undefined || !isFilterActive(value)) delete next[columnId];
-      else next[columnId] = value;
-      return next;
-    });
-    viewChanged();
-  };
+  const { viewChanged, toggleSort, setColumnFilter } = useTableViewHandlers<T>({
+    byId,
+    setSorting,
+    setFilters,
+    setPage,
+    clearSelection,
+  });
 
   const select = (rowId: string, checked: boolean, shift: boolean) => {
     setSelection((prev) => {
