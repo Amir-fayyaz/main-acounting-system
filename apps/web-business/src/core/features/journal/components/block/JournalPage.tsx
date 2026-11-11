@@ -46,14 +46,17 @@ const columns: DataTableColumn<JournalEntry>[] = [
     key: 'number',
     header: 'شماره سند',
     cell: (entry) => toPersianDigits(entry.number),
+    sortable: false,
   },
   {
     key: 'date',
     header: 'تاریخ',
+    sortable: false,
   },
   {
     key: 'description',
     header: 'شرح',
+    sortable: false,
   },
   {
     key: 'amount',
@@ -61,11 +64,13 @@ const columns: DataTableColumn<JournalEntry>[] = [
     className: 'text-end tabular-nums',
     headerClassName: 'text-end',
     cell: (entry) => formatMoneyAmount(entry.amount),
+    sortable: false,
   },
   {
     key: 'status',
     header: 'وضعیت',
     cell: (entry) => <JournalStatusBadge status={entry.status} />,
+    sortable: false,
   },
 ];
 
@@ -166,6 +171,7 @@ export function JournalPage() {
         limit={limit}
         onPageChange={setPage}
         onLimitChange={setLimit}
+        toolbar={{ search: false }}
       />
     </ListPage>
   );
