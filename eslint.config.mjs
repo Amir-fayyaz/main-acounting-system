@@ -32,6 +32,7 @@ export default [
       // documents, not workspace code. They are not part of any application's
       // build or runtime, so the workspace lint does not apply to them.
       '**/.agents/**',
+      'docs/frontend/mvp-design/**',
     ],
   },
   {

@@ -195,7 +195,7 @@ describe('JournalView', () => {
     const { rerender } = render(<JournalView />);
 
     await screen.findByText('۱۴۰۵۰۲۴');
-    expect(screen.getByText('۲۵ مورد')).toBeInTheDocument();
+    expect(screen.getByText('۲۵ مورد', { selector: '[data-slot="data-table-pagination-total"]' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('link', { name: 'Go to next page' }));
     await waitFor(() => expect(nav.replace).toHaveBeenCalledWith('/panel/journal?page=2'));

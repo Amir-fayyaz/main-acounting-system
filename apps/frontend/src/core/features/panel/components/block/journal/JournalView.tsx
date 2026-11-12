@@ -36,15 +36,16 @@ const SECONDARY_ACTION_CLASS =
   'inline-flex min-h-10 items-center justify-center rounded-md border border-border px-4 text-sm font-medium transition-colors hover:bg-accent';
 
 const columns: DataTableColumn<JournalEntry>[] = [
-  { key: 'number', header: 'شماره سند', cell: (entry) => toFaDigits(entry.number) },
-  { key: 'date', header: 'تاریخ' },
-  { key: 'description', header: 'شرح' },
+  { key: 'number', header: 'شماره سند', cell: (entry) => toFaDigits(entry.number), sortable: false },
+  { key: 'date', header: 'تاریخ', sortable: false },
+  { key: 'description', header: 'شرح', sortable: false },
   {
     key: 'amount',
     header: 'مبلغ (ریال)',
     className: 'text-end tabular-nums',
     headerClassName: 'text-end',
     cell: (entry) => formatMoney(entry.amount),
+    sortable: false,
   },
   {
     key: 'status',
@@ -54,6 +55,7 @@ const columns: DataTableColumn<JournalEntry>[] = [
         {journalStatusLabel(entry.status)}
       </span>
     ),
+    sortable: false,
   },
 ];
 
@@ -157,6 +159,7 @@ export function JournalView() {
         onPageChange={setPage}
         onLimitChange={setLimit}
         pageSizes={PANEL_PAGE_SIZES}
+        toolbar={{ search: false }}
       />
     </ListPage>
   );

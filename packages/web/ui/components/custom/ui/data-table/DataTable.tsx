@@ -1,183 +1,364 @@
 'use client';
 
-import * as React from 'react';
-
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@repo/web/ui/components/shadcn/ui/table/table';
-
-import { PaginationControls } from './PaginationControls';
+import { ActionDialog } from './actions/ActionDialog';
+import { DataTableContext } from './context';
 import type { DataTableProps } from './data-table.types';
+import { useActionDialog } from './hooks/useActionDialog';
+import { useDataTableModel } from './hooks/useDataTableModel';
+import { useInlineEdit } from './hooks/useInlineEdit';
+import { useRowCallbacks } from './hooks/useRowCallbacks';
+import { useRowSelection } from './hooks/useRowSelection';
+import { useTableActions } from './hooks/useTableActions';
+import { useTableLayout } from './hooks/useTableLayout';
+import { useTableReorder } from './hooks/useTableReorder';
+import { useTableVirtualizer } from './hooks/useTableVirtualizer';
+import { useTableViewHandlers } from './hooks/useTableViewHandlers';
+import { downloadCsv } from './lib/csv';
+import { buildCsv } from './lib/export';
+import { toFaDigits } from './date/jalali';
+import { TableChrome } from './table/TableChrome';
+import { TablePaginationSlot } from './table/TablePaginationSlot';
+import { TableSurface } from './table/TableSurface';
 
 export const DEFAULT_LOADING_MESSAGE = 'در حال بارگذاری…';
 export const DEFAULT_EMPTY_MESSAGE = 'موردی یافت نشد';
 export const DEFAULT_SEARCH_EMPTY_MESSAGE = 'برای این جستجو نتیجه‌ای یافت نشد';
 
-function hasContent(value: React.ReactNode): boolean {
-  return value !== undefined && value !== null && value !== false && value !== '';
-}
-
-function readCellValue<T>(row: T, key: string): React.ReactNode {
-  const value = (row as Record<string, unknown>)[key];
-
-  if (value === null || value === undefined) {
-    return null;
-  }
-
-  if (
-    typeof value === 'string' ||
-    typeof value === 'number' ||
-    typeof value === 'boolean' ||
-    React.isValidElement(value)
-  ) {
-    return value;
-  }
-
-  return String(value);
-}
-
-interface StateRowProps {
-  state: string;
-  colSpan: number;
-  children: React.ReactNode;
-  role?: string;
-}
-
-function StateRow({ state, colSpan, children, role }: StateRowProps) {
-  return (
-    <TableRow data-state={state}>
-      <TableCell colSpan={colSpan} className="whitespace-normal text-center">
-        {role ? <div role={role}>{children}</div> : children}
-      </TableCell>
-    </TableRow>
-  );
-}
-
 /**
- * Reusable, presentational data table.
+ * Reusable data table for accounting screens.
  *
- * - Owns only visual states (loading / error / empty / data)
- * - Does not touch the URL or fetch data
- * - When `meta` is provided, pagination controls are rendered and must be
- *   driven via controlled `page` / `limit` / `onPageChange` / `onLimitChange`
+ * - Server mode (pass `meta`): sorting / filtering / paging are delegated to your API through
+ *   controlled props — use `useDataTableUrlState()` to wire them to the URL in one line.
+ * - Client mode: everything runs in the browser (search, multi-column sort, column filters, paging).
+ * - Dates are shown in Jalali but stored, filtered and exported as Gregorian ISO strings.
+ * - Opt-in features: selection + bulk actions, row actions (confirm / reason), inline editing,
+ *   row & column drag-and-drop (lazy-loaded), column visibility, density, persistence, virtualization.
  */
-export function DataTable<T>({
-  columns,
-  data,
-  rows,
-  rowKey = (_row, index) => index,
-  error,
-  loading = false,
-  searchTerm,
-  loadingMessage = DEFAULT_LOADING_MESSAGE,
-  emptyMessage = DEFAULT_EMPTY_MESSAGE,
-  searchEmptyMessage = DEFAULT_SEARCH_EMPTY_MESSAGE,
-  className,
-  'aria-label': ariaLabel,
-  meta,
-  page,
-  limit,
-  onPageChange,
-  onLimitChange,
-  pageSizes,
-}: DataTableProps<T>) {
-  const tableData = data ?? rows ?? [];
-  const isError = hasContent(error);
-  const isLoading = !isError && loading;
-  const isEmpty = !isError && !isLoading && tableData.length === 0;
-  const hasSearchTerm = (searchTerm?.trim().length ?? 0) > 0;
-  const colSpan = columns.length;
+export function DataTable<T>(props: DataTableProps<T>) {
+  const {
+    pageSizes,
+    error,
+    loading = false,
+    searchTerm,
+    loadingMessage = DEFAULT_LOADING_MESSAGE,
+    emptyMessage = DEFAULT_EMPTY_MESSAGE,
+    searchEmptyMessage = DEFAULT_SEARCH_EMPTY_MESSAGE,
+    className,
+    'aria-label': ariaLabel,
+    selectable = false,
+    rowActions,
+    bulkActions,
+    onRowSave,
+    editReason,
+    editTrigger = 'action',
+    reorderableRows = false,
+    reorderableColumns = false,
+    virtualize = false,
+    maxHeight,
+    exportFileName,
+    summary,
+    summaryLabel = 'جمع',
+  } = props;
 
-  const showPagination =
-    Boolean(meta) &&
-    page !== undefined &&
-    limit !== undefined &&
-    typeof onPageChange === 'function' &&
-    typeof onLimitChange === 'function';
+  const {
+    meta,
+    paginate,
+    isServer,
+    toolbar,
+    resolved,
+    byId,
+    columnLabels,
+    initialVisibility,
+    visibility,
+    setVisibility,
+    columnOrder,
+    setColumnOrder,
+    density,
+    setDensity,
+    sorting,
+    setSorting,
+    filters,
+    setFilters,
+    search,
+    setSearch,
+    page,
+    setPage,
+    limit,
+    setLimit,
+    table,
+    pageRows,
+    visibleColumns,
+    rowIds,
+    pageData,
+    total,
+    totalPages,
+    hasFilters,
+    viewKey,
+  } = useDataTableModel<T>(props);
 
-  let body: React.ReactNode;
+  /* ----------------------------- inline editing ----------------------------- */
 
-  if (isError) {
-    body = (
-      <StateRow state="error" colSpan={colSpan} role="alert">
-        {error}
-      </StateRow>
-    );
-  } else if (isLoading) {
-    body = (
-      <StateRow state="loading" colSpan={colSpan} role="status">
-        {loadingMessage}
-      </StateRow>
-    );
-  } else if (isEmpty) {
-    body = (
-      <StateRow
-        state={hasSearchTerm ? 'empty-search' : 'empty'}
-        colSpan={colSpan}
-      >
-        {hasSearchTerm ? searchEmptyMessage : emptyMessage}
-      </StateRow>
-    );
-  } else {
-    body = tableData.map((row, rowIndex) => (
-      <TableRow key={rowKey(row, rowIndex)}>
-        {columns.map((column, columnIndex) => (
-          <TableCell
-            key={column.key ?? `column-${columnIndex}`}
-            className={column.className}
-          >
-            {column.cell
-              ? column.cell(row, rowIndex)
-              : readCellValue(row, column.key ?? '')}
-          </TableCell>
-        ))}
-      </TableRow>
-    ));
-  }
+  const dialogApi = useActionDialog();
+  const { dialog, openDialog, closeDialog, notice, setNotice, reportError } = dialogApi;
+  const { editing, startEdit, cancelEdit, setDraft, saveEdit } = useInlineEdit<T>({
+    resolved,
+    pageRows,
+    onRowSave,
+    editReason,
+    openDialog,
+  });
 
-  const table = (
-    <Table
-      className={className}
-      aria-label={ariaLabel}
-      aria-busy={isLoading || undefined}
-    >
-      <TableHeader>
-        <TableRow>
-          {columns.map((column, index) => (
-            <TableHead
-              key={column.key ?? `column-${index}`}
-              className={column.headerClassName}
-            >
-              {column.header}
-            </TableHead>
-          ))}
-        </TableRow>
-      </TableHeader>
-      <TableBody>{body}</TableBody>
-    </Table>
+  /* ------------------------ feature flags & layout ------------------------ */
+
+  const {
+    hasSearch,
+    rowNumbers,
+    hasActionsColumn,
+    rowDndWanted,
+    dndMod,
+    rowDragDisabled,
+    stickyHeader,
+    leading,
+    colSpan,
+    reorderableIds,
+    columnDnd,
+    editOnDoubleClick,
+    clickable,
+    isError,
+    isLoading,
+    isEmpty,
+    refreshing,
+  } = useTableLayout<T>({
+    searchTerm,
+    search,
+    rowNumbersProp: props.rowNumbers,
+    rowActions,
+    onRowSave,
+    onRowClick: props.onRowClick,
+    editTrigger,
+    reorderableRows,
+    reorderableColumns,
+    virtualize,
+    maxHeight,
+    selectable,
+    sorting,
+    editing,
+    visibleColumns,
+    error,
+    loading,
+    pageRowCount: pageRows.length,
+  });
+
+  const { scrollRef, virtualizer } = useTableVirtualizer({
+    virtualize,
+    count: pageRows.length,
+    density,
+  });
+
+  /* ------------------------------- handlers ------------------------------- */
+
+  const {
+    selection,
+    clearSelection,
+    select,
+    toggleAll,
+    selectedIds,
+    selectedRows,
+    allSelected,
+    someSelected,
+  } = useRowSelection<T>({
+    rowIds,
+    pageRows,
+    viewKey,
+    onSelectionChange: props.onSelectionChange,
+  });
+
+  const { viewChanged, toggleSort, setColumnFilter } = useTableViewHandlers<T>({
+    byId,
+    setSorting,
+    setFilters,
+    setPage,
+    clearSelection,
+  });
+
+  /* -------------------------------- actions -------------------------------- */
+
+  const { runAction, runBulk } = useTableActions<T>({
+    selectedRows,
+    clearSelection,
+    startEdit,
+    openDialog,
+    reportError,
+  });
+
+  /* ------------------------ drag & drop (lazy chunk) ------------------------ */
+
+  const { onRowsReorder, onColumnsReorder } = useTableReorder<T>({
+    dndMod,
+    rowIds,
+    pageData,
+    byId,
+    table,
+    onRowReorder: props.onRowReorder,
+    setColumnOrder,
+  });
+
+  /* --------------------------------- export --------------------------------- */
+
+  const exportCsv = () => {
+    const rows = isServer ? pageRows : table.getPrePaginationRowModel().rows;
+    downloadCsv(exportFileName ?? 'export', buildCsv(visibleColumns, rows));
+  };
+
+  /* ------------------------- stable callbacks for rows ------------------------- */
+
+  const { cb, ctx } = useRowCallbacks<T>({
+    select,
+    startEdit,
+    setDraft,
+    save: saveEdit,
+    cancel: cancelEdit,
+    runAction,
+    onRowClick: props.onRowClick,
+    setColumnFilter,
+  });
+
+  /* --------------------------------- render --------------------------------- */
+
+  const pagination = (
+    <TablePaginationSlot
+      isServer={isServer}
+      meta={meta}
+      paginate={paginate}
+      total={total}
+      page={page}
+      limit={limit}
+      totalPages={totalPages}
+      pageSizes={pageSizes}
+      serverPage={props.page}
+      serverLimit={props.limit}
+      onServerPageChange={props.onPageChange}
+      onServerLimitChange={props.onLimitChange}
+      onClientPageChange={setPage}
+      onClientLimitChange={setLimit}
+    />
   );
 
-  if (!showPagination || !meta) {
-    return table;
-  }
-
   return (
-    <>
-      {table}
-      <PaginationControls
-        meta={meta}
-        page={page!}
-        limit={limit!}
-        onPageChange={onPageChange!}
-        onLimitChange={onLimitChange!}
-        pageSizes={pageSizes}
-      />
-    </>
+    <DataTableContext.Provider value={ctx}>
+      <div data-slot="data-table" dir="rtl" className="flex flex-col gap-3">
+        <TableChrome<T>
+          toolbar={toolbar}
+          search={search}
+          onSearch={(value) => {
+            setSearch(value);
+            viewChanged();
+          }}
+          searchPlaceholder={props.searchPlaceholder}
+          columns={resolved}
+          visibility={visibility}
+          onToggleColumn={(id, value) => setVisibility((prev) => ({ ...prev, [id]: value }))}
+          onResetColumns={() => {
+            setVisibility(initialVisibility);
+            setColumnOrder([]);
+          }}
+          density={density}
+          onDensity={setDensity}
+          onExport={exportFileName ? exportCsv : undefined}
+          toolbarStart={props.toolbarStart}
+          toolbarEnd={props.toolbarEnd}
+          filters={filters}
+          onRemoveFilter={(id) => setColumnFilter(id, undefined)}
+          onClearFilters={() => {
+            setFilters({});
+            viewChanged();
+          }}
+          bulk={
+            selectable && bulkActions?.length
+              ? {
+                  count: selectedIds.length,
+                  rows: selectedRows,
+                  actions: bulkActions,
+                  onRun: runBulk,
+                  onClear: clearSelection,
+                }
+              : null
+          }
+          notice={notice}
+          onDismissNotice={() => setNotice(null)}
+        />
+
+        <TableSurface<T>
+          visibleColumns={visibleColumns}
+          sorting={sorting}
+          filters={filters}
+          onSort={toggleSort}
+          onFilter={setColumnFilter}
+          density={density}
+          stickyHeader={stickyHeader}
+          dnd={dndMod}
+          columnDnd={columnDnd}
+          reorderableIds={reorderableIds}
+          rowDndWanted={rowDndWanted}
+          selectable={selectable}
+          allSelected={allSelected}
+          someSelected={someSelected}
+          onToggleAll={toggleAll}
+          rowNumbers={rowNumbers}
+          hasActionsColumn={hasActionsColumn}
+          pageRows={pageRows}
+          isServer={isServer}
+          paginate={paginate}
+          page={page}
+          limit={limit}
+          selection={selection}
+          editing={editing}
+          rowActions={rowActions}
+          editOnDoubleClick={editOnDoubleClick}
+          clickable={clickable}
+          rowDragDisabled={rowDragDisabled}
+          rowClassName={props.rowClassName}
+          cb={cb}
+          virtualizer={virtualizer}
+          virtualize={virtualize}
+          rowIds={rowIds}
+          isError={isError}
+          error={error}
+          isLoading={isLoading}
+          refreshing={refreshing}
+          isEmpty={isEmpty}
+          hasSearch={hasSearch}
+          hasFilters={hasFilters}
+          loadingMessage={loadingMessage}
+          emptyMessage={emptyMessage}
+          searchEmptyMessage={searchEmptyMessage}
+          colSpan={colSpan}
+          onClearFilters={() => {
+            setFilters({});
+            viewChanged();
+          }}
+          leading={leading}
+          summaryLabel={summaryLabel}
+          summary={summary}
+          pageData={pageData}
+          className={className}
+          ariaLabel={ariaLabel}
+          total={total}
+          scrollRef={scrollRef}
+          maxHeight={maxHeight}
+          onRowsReorder={onRowsReorder}
+          onColumnsReorder={onColumnsReorder}
+          columnLabels={columnLabels}
+          pagination={pagination}
+        />
+
+        <div role="status" aria-live="polite" className="sr-only">
+          {isLoading ? 'در حال بارگذاری' : `${toFaDigits(total)} مورد`}
+        </div>
+      </div>
+
+      <ActionDialog state={dialog} onClose={closeDialog} />
+    </DataTableContext.Provider>
   );
 }
 
