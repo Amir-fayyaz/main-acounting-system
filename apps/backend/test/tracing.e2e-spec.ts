@@ -23,10 +23,14 @@ describe('Distributed tracing (e2e)', () => {
   beforeAll(
     async () => {
       // A test fixture, not application configuration: the spec simulates the
-      // environment variable a deployment sets, because the tracing bootstrap
+      // environment variables a deployment sets, because the tracing bootstrap
       // is a side-effect import whose defaults must not be changed for tests.
+      // The endpoint is required when tracing is on (FND-016); this suite
+      // exports through the in-memory seam below, not through this URL.
       // eslint-disable-next-line no-restricted-properties
       process.env['TRACING_ENABLED'] = 'true';
+      // eslint-disable-next-line no-restricted-properties
+      process.env['OTEL_EXPORTER_OTLP_ENDPOINT'] = 'http://127.0.0.1:4318';
 
       await import('../src/tracing.js');
       const { AppModule } = await import('../src/app.module.js');

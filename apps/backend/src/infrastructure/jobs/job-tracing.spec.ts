@@ -7,7 +7,7 @@ import {
   TracerProvider,
 } from '@opentelemetry/sdk-trace';
 import { afterEach, describe, expect, it } from 'vitest';
-import { captureJobTraceContext, runWithJobTraceContext } from './job-tracing.js';
+import { captureJobTraceContext, runWithJobTraceContext, traceIdFromTraceContext } from './job-tracing.js';
 
 /**
  * A real in-memory tracer provider, so capture/restore run against live
@@ -43,6 +43,20 @@ describe('captureJobTraceContext', () => {
     });
 
     span.end();
+  });
+});
+
+describe('traceIdFromTraceContext', () => {
+  it('extracts the trace id from a well-formed traceparent', () => {
+    expect(traceIdFromTraceContext('00-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-bbbbbbbbbbbbbbbb-01')).toBe(
+      'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    );
+  });
+
+  it('rejects a malformed or absent context instead of guessing', () => {
+    expect(traceIdFromTraceContext(undefined)).toBeUndefined();
+    expect(traceIdFromTraceContext('not-a-traceparent')).toBeUndefined();
+    expect(traceIdFromTraceContext('00-short-bbbbbbbbbbbbbbbb-01')).toBeUndefined();
   });
 });
 

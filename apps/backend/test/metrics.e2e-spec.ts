@@ -1,5 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import { env } from 'node:process';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
@@ -20,12 +21,28 @@ async function createApp(): Promise<INestApplication> {
 
   return app;
 }
-
 describe('Metrics endpoint (e2e)', () => {
   let app: INestApplication;
   let secrets: readonly string[];
 
+  /** The scrape credential this spec configures; never a real secret. */
+  const SCRAPE_TOKEN = 'e2e-scrape-token';
+
+  /** A scrape carrying the configured token. */
+  async function scrape() {
+    return request(app.getHttpServer())
+      .get('/api/metrics')
+      .set('Authorization', `Bearer ${SCRAPE_TOKEN}`)
+      .expect(200);
+  }
+
   beforeAll(async () => {
+    // A test fixture, not application configuration: the spec simulates the
+    // environment variable a deployment sets, so the endpoint is exercised
+    // behind the same token boundary as production (FND-016).
+    // eslint-disable-next-line no-restricted-properties
+    env['METRICS_TOKEN'] = SCRAPE_TOKEN;
+
     app = await createApp();
 
     const config = app.get(AppConfigService);
@@ -38,12 +55,34 @@ describe('Metrics endpoint (e2e)', () => {
     await app.close();
   });
 
-  it('serves the Prometheus text exposition under the API prefix without authentication', async () => {
-    const response = await request(app.getHttpServer()).get('/api/metrics').expect(200);
+  it('serves the Prometheus text exposition under the API prefix to a token-bearing scrape', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/metrics')
+      .set('Authorization', `Bearer ${SCRAPE_TOKEN}`)
+      .expect(200);
 
     expect(response.headers['content-type']).toContain('text/plain');
     expect(response.headers['cache-control']).toBe('no-store');
     expect(response.text).toContain('http_request_duration_seconds');
+  });
+
+  it('refuses an anonymous scrape (deny-by-default, FND-016)', async () => {
+    const response = await request(app.getHttpServer()).get('/api/metrics').expect(401);
+
+    expect(response.text).not.toContain('http_request_duration_seconds');
+    expect(response.text).not.toContain(SCRAPE_TOKEN);
+    expect(response.text).toContain('correlationId');
+  });
+
+  it('refuses a scrape with the wrong token and never echoes it', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/metrics')
+      .set('Authorization', 'Bearer wrong-token')
+      .expect(401);
+
+    expect(response.text).not.toContain('http_request_duration_seconds');
+    expect(response.text).not.toContain('wrong-token');
+    expect(response.text).not.toContain(SCRAPE_TOKEN);
   });
 
   it('does not serve the endpoint outside the API prefix', async () => {
@@ -51,7 +90,7 @@ describe('Metrics endpoint (e2e)', () => {
   });
 
   it('exports the default Node.js process metrics', async () => {
-    const response = await request(app.getHttpServer()).get('/api/metrics').expect(200);
+    const response = await scrape();
 
     expect(response.text).toMatch(/^nodejs_[a-z_]+ /m);
     expect(response.text).toMatch(/^process_[a-z_]+ /m);
@@ -62,7 +101,7 @@ describe('Metrics endpoint (e2e)', () => {
     // does not depend on any infrastructure being up.
     await request(app.getHttpServer()).get('/api/health').expect(200);
 
-    const response = await request(app.getHttpServer()).get('/api/metrics').expect(200);
+    const response = await scrape();
     const sample = response.text
       .split('\n')
       .find((line) =>
@@ -78,7 +117,7 @@ describe('Metrics endpoint (e2e)', () => {
   });
 
   it('exposes the database pool gauges', async () => {
-    const response = await request(app.getHttpServer()).get('/api/metrics').expect(200);
+    const response = await scrape();
 
     expect(response.text).toContain('database_pool_connections{state="active"}');
     expect(response.text).toContain('database_pool_connections{state="idle"}');
@@ -86,14 +125,14 @@ describe('Metrics endpoint (e2e)', () => {
   });
 
   it('exposes job execution and queue-depth metrics', async () => {
-    const response = await request(app.getHttpServer()).get('/api/metrics').expect(200);
+    const response = await scrape();
 
     expect(response.text).toContain('job_execution_duration_seconds');
     expect(response.text).toContain('job_queue_depth');
   });
 
   it('never exposes credentials or connection details', async () => {
-    const response = await request(app.getHttpServer()).get('/api/metrics').expect(200);
+    const response = await scrape();
 
     for (const secret of secrets) {
       expect(response.text).not.toContain(secret);
@@ -102,8 +141,14 @@ describe('Metrics endpoint (e2e)', () => {
     expect(response.text).not.toContain('password=');
   });
 
+  it('does not expose the scrape token itself in the exposition', async () => {
+    const response = await scrape();
+
+    expect(response.text).not.toContain(SCRAPE_TOKEN);
+  });
+
   it('does not expose business or tenant data in the exposition', async () => {
-    const response = await request(app.getHttpServer()).get('/api/metrics').expect(200);
+    const response = await scrape();
 
     // The only route label present is the operational endpoint itself plus the
     // scrape route — no ids, no tenant or business payloads.

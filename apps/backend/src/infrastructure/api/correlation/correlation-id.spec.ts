@@ -7,6 +7,7 @@ import {
   TracerProvider,
 } from '@opentelemetry/sdk-trace';
 import { afterEach, describe, expect, it } from 'vitest';
+import { LogContext } from '../../logging/log-context.js';
 import { correlationIdMiddleware, resolveCorrelationId } from './correlation-id.js';
 
 /**
@@ -111,5 +112,56 @@ describe('correlationIdMiddleware', () => {
     });
 
     expect(seen).toBe('known-id');
+  });
+
+  it('records the trace id alongside a caller correlation id, never instead of it (FND-016)', async () => {
+    const tracer = trace.getTracer('spec');
+    const span = tracer.startSpan('request');
+    const request: { headers: Record<string, string>; correlationId?: string } = {
+      headers: { 'x-correlation-id': 'upstream-id' },
+    };
+    const response = { setHeader: () => undefined };
+
+    await context.with(trace.setSpan(context.active(), span), () => {
+      correlationIdMiddleware(request, response, () => {
+        // The caller's value wins for the correlation id...
+        expect(request.correlationId).toBe('upstream-id');
+        // ...and the trace id rides alongside in the ambient log scope.
+        expect(LogContext.current()?.traceId).toBe(span.spanContext().traceId);
+        expect(LogContext.current()?.correlationId).toBe('upstream-id');
+      });
+    });
+
+    span.end();
+  });
+
+  it('makes the trace id the correlation id when no header is supplied (FND-016)', async () => {
+    const tracer = trace.getTracer('spec');
+    const span = tracer.startSpan('request');
+    const request: { headers: Record<string, string>; correlationId?: string } = {
+      headers: {},
+    };
+    const response = { setHeader: () => undefined };
+
+    await context.with(trace.setSpan(context.active(), span), () => {
+      correlationIdMiddleware(request, response, () => {
+        expect(LogContext.current()?.correlationId).toBe(span.spanContext().traceId);
+        expect(LogContext.current()?.traceId).toBe(span.spanContext().traceId);
+      });
+    });
+
+    span.end();
+  });
+
+  it('records no trace id when tracing is off', () => {
+    const request: { headers: Record<string, string>; correlationId?: string } = {
+      headers: {},
+    };
+    const response = { setHeader: () => undefined };
+
+    correlationIdMiddleware(request, response, () => {
+      expect(LogContext.current()?.traceId).toBeUndefined();
+      expect(LogContext.current()?.correlationId).toMatch(/^[0-9a-f-]{36}$/);
+    });
   });
 });

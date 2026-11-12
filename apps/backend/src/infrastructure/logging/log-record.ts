@@ -16,6 +16,11 @@ export interface LogRecord {
   readonly service: string;
   readonly message: string;
   readonly correlationId?: string;
+  /**
+   * The OpenTelemetry trace id of the work, recorded alongside the
+   * correlation id (FND-016). Equal to it when no caller id was supplied.
+   */
+  readonly traceId?: string;
   readonly tenantId?: string;
   readonly userId?: string;
   readonly error?: LogError;

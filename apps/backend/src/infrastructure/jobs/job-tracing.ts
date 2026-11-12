@@ -21,6 +21,24 @@ import { context, propagation, trace, type Context, type Span } from '@opentelem
 /** The envelope field that carries the serialized span context. */
 export const JOB_TRACE_CONTEXT_FIELD = 'traceContext';
 
+/** A W3C `traceparent`: `00-<32-hex trace id>-<16-hex span id>-<flags>`. */
+const TRACE_PARENT = /^00-([0-9a-f]{32})-[0-9a-f]{16}-[0-9a-f]{2}$/;
+
+/**
+ * The trace id inside a serialized `traceparent`, or `undefined` when the
+ * value is absent or malformed (FND-016).
+ *
+ * The Worker records it in `LogContext` *alongside* the envelope's
+ * `correlationId` — the same rule the HTTP boundary applies — so a log line of
+ * a background execution can be tied to the trace it links to without
+ * overwriting the caller's correlation id.
+ */
+export function traceIdFromTraceContext(traceContext: string | undefined): string | undefined {
+  const traceId = TRACE_PARENT.exec(traceContext ?? '')?.[1];
+
+  return traceId ?? undefined;
+}
+
 /**
  * Serializes the current span context into a W3C `traceparent`, or `undefined`
  * when no span is active (tracing off, or a system path with no request).

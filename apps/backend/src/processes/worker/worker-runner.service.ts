@@ -10,7 +10,10 @@ import { toLogError, type Logger } from '../../infrastructure/logging/logger.js'
 import { LOGGER } from '../../infrastructure/logging/logging.tokens.js';
 import { JOB_VISIBILITY_TIMEOUT_MS } from '../../infrastructure/jobs/job-keys.js';
 import { JobDispatcher } from '../../infrastructure/jobs/job-dispatcher.js';
-import { runWithJobTraceContext } from '../../infrastructure/jobs/job-tracing.js';
+import {
+  runWithJobTraceContext,
+  traceIdFromTraceContext,
+} from '../../infrastructure/jobs/job-tracing.js';
 import { JOB_QUEUE } from '../../infrastructure/jobs/job.tokens.js';
 import type { ClaimedJob, JobQueuePort } from '../../infrastructure/jobs/queue/job-queue.port.js';
 import { DelayedJobPromoter } from '../../infrastructure/jobs/scheduling/delayed-job-promoter.js';
@@ -112,10 +115,19 @@ export class WorkerRunnerService implements OnApplicationBootstrap, OnApplicatio
         // The envelope's correlation id becomes the ambient log id, so every
         // line the handler writes carries the same id the producer's request
         // logged (FND-011), even though the trace itself is linked, not shared.
-        () =>
-          LogContext.run({ correlationId: envelope.correlationId }, () =>
-            this.dispatcher.dispatch(job),
-          ),
+        // The producing trace id is recorded alongside it (FND-016) — the
+        // same precedence rule the HTTP boundary applies — never instead of it.
+        () => {
+          const traceId = traceIdFromTraceContext(envelope.traceContext);
+
+          return LogContext.run(
+            {
+              correlationId: envelope.correlationId,
+              ...(traceId === undefined ? {} : { traceId }),
+            },
+            () => this.dispatcher.dispatch(job),
+          );
+        },
       );
     } catch (error) {
       // The job stays pending in the stream and is reclaimed later, so nothing
