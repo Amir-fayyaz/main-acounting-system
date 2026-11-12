@@ -41,3 +41,73 @@ body:has(.panel-preview) > footer {
     padding-inline: --spacing(5);
   }
 }
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  [data-slot='sidebar'],
+  [data-slot='sidebar-gap'],
+  [data-slot='sidebar-rail'],
+  [data-slot='sidebar-trigger'],
+  [data-slot='sidebar-wrapper'] > div > header {
+    display: none;
+  }
+
+  .panel-preview .section-layout,
+  .panel-preview .pages-container {
+    padding: 0;
+    gap: 0;
+  }
+
+  .branches-print-report {
+    color-scheme: light;
+    --card: #ffffff;
+    --card-foreground: #1a120a;
+    --foreground: #1a120a;
+    --muted: #f4f3e7;
+    --muted-foreground: #786b5c;
+    --border: #e7dfcf;
+    --accent: #fff1d9;
+    --accent-foreground: #241a12;
+
+    background: var(--card);
+    padding-block-start: 0.5rem;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .branches-print-report [data-slot='table'] {
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .branches-print-report [data-slot='table-head'],
+  .branches-print-report [data-slot='table-cell'] {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  /* Interactive DataTable chrome (search, density, columns, paging) never prints. */
+  [data-slot='data-table'] > div:has([role='search']),
+  [data-slot='data-table-pagination'],
+  [data-slot='data-table'] [role='search'],
+  [data-slot='data-table'] button[aria-label='ستون‌ها'],
+  [data-slot='data-table'] button[aria-label='فشرده‌سازی ردیف‌ها'] {
+    display: none;
+  }
+
+  [data-slot='table-container'] {
+    overflow: visible;
+  }
+
+  [data-slot='table-header'] {
+    display: table-header-group;
+  }
+
+  [data-slot='table-row'] {
+    break-inside: avoid;
+  }
+}

@@ -54,6 +54,10 @@ class FakeQueue implements JobQueuePort {
   async promoteDue(): Promise<number> {
     return 0;
   }
+
+  async pendingCount(): Promise<number> {
+    return this.states.size;
+  }
 }
 
 class FakeIdempotency implements IdempotencyGuard {

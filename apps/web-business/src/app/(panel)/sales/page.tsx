@@ -1,8 +1,13 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
-import { PanelPlaceholder } from '@/core/features/panel/components/block/placeholder/PanelPlaceholder';
+import { SalesPage } from '@/core/features/sales';
 
-export const metadata: Metadata = { title: 'فروش' };
+export const metadata: Metadata = { title: 'فاکتورهای فروش' };
 
-export default function PanelPage() {
-  return <PanelPlaceholder title="فروش" />;
+export default function Page() {
+  return (
+    <Suspense fallback={null}>
+      <SalesPage />
+    </Suspense>
+  );
 }

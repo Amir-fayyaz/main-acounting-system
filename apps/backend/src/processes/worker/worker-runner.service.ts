@@ -5,10 +5,15 @@ import {
   type OnApplicationShutdown,
 } from '@nestjs/common';
 import { AppConfigService } from '../../infrastructure/config/app-config.service.js';
+import { LogContext } from '../../infrastructure/logging/log-context.js';
 import { toLogError, type Logger } from '../../infrastructure/logging/logger.js';
 import { LOGGER } from '../../infrastructure/logging/logging.tokens.js';
 import { JOB_VISIBILITY_TIMEOUT_MS } from '../../infrastructure/jobs/job-keys.js';
 import { JobDispatcher } from '../../infrastructure/jobs/job-dispatcher.js';
+import {
+  runWithJobTraceContext,
+  traceIdFromTraceContext,
+} from '../../infrastructure/jobs/job-tracing.js';
 import { JOB_QUEUE } from '../../infrastructure/jobs/job.tokens.js';
 import type { ClaimedJob, JobQueuePort } from '../../infrastructure/jobs/queue/job-queue.port.js';
 import { DelayedJobPromoter } from '../../infrastructure/jobs/scheduling/delayed-job-promoter.js';
@@ -96,15 +101,41 @@ export class WorkerRunnerService implements OnApplicationBootstrap, OnApplicatio
   }
 
   private async settleOne(job: ClaimedJob): Promise<void> {
+    const { envelope } = job;
+
     try {
-      await this.dispatcher.dispatch(job);
+      await runWithJobTraceContext(
+        envelope.traceContext,
+        envelope.type,
+        {
+          'job.id': envelope.jobId,
+          'job.attempt': envelope.attempt,
+          'job.correlation_id': envelope.correlationId,
+        },
+        // The envelope's correlation id becomes the ambient log id, so every
+        // line the handler writes carries the same id the producer's request
+        // logged (FND-011), even though the trace itself is linked, not shared.
+        // The producing trace id is recorded alongside it (FND-016) — the
+        // same precedence rule the HTTP boundary applies — never instead of it.
+        () => {
+          const traceId = traceIdFromTraceContext(envelope.traceContext);
+
+          return LogContext.run(
+            {
+              correlationId: envelope.correlationId,
+              ...(traceId === undefined ? {} : { traceId }),
+            },
+            () => this.dispatcher.dispatch(job),
+          );
+        },
+      );
     } catch (error) {
       // The job stays pending in the stream and is reclaimed later, so nothing
       // is lost; the process stays up.
       this.logger.error('Job could not be dispatched', {
-        correlationId: job.envelope.correlationId,
+        correlationId: envelope.correlationId,
         error: toLogError(error),
-        detail: { jobId: job.envelope.jobId, type: job.envelope.type },
+        detail: { jobId: envelope.jobId, type: envelope.type },
       });
     }
   }
