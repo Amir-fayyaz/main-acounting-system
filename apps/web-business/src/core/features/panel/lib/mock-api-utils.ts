@@ -1,6 +1,10 @@
 import type { PaginatedResponse } from '@repo/web';
-import type { ListParams } from '../assets/@types';
-import { filterMockRows, paginateMockRows, waitForMockResponse } from '../assets/mock/mock-utils';
+import type { ListParams } from '../../shared/assets/@types';
+import {
+  filterMockRows,
+  paginateMockRows,
+  waitForMockResponse,
+} from '../../shared/assets/mock/mock-utils';
 
 interface MockResourceOptions<T extends { id: string }, TCreate> {
   initialData: T[];

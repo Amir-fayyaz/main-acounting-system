@@ -1,8 +1,13 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
-import { PanelPlaceholder } from '@/core/features/panel/components/block/placeholder/PanelPlaceholder';
+import { NewJournalPage } from '@/core/features/journal';
 
 export const metadata: Metadata = { title: 'ثبت سند مرکب' };
 
 export default function Page() {
-  return <PanelPlaceholder title="ثبت سند مرکب" />;
+  return (
+    <Suspense fallback={null}>
+      <NewJournalPage />
+    </Suspense>
+  );
 }

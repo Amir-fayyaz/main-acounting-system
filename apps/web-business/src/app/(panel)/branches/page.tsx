@@ -1,8 +1,13 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
-import { PanelPlaceholder } from '@/core/features/panel/components/block/placeholder/PanelPlaceholder';
+import { BranchesPage } from '@/core/features/branches';
 
 export const metadata: Metadata = { title: 'شعب' };
 
-export default function PanelPage() {
-  return <PanelPlaceholder title="شعب" />;
+export default function BranchesPageRoute() {
+  return (
+    <Suspense fallback={null}>
+      <BranchesPage />
+    </Suspense>
+  );
 }

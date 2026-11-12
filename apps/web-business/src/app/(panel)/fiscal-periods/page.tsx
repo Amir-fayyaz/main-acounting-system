@@ -1,8 +1,13 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
-import { PanelPlaceholder } from '@/core/features/panel/components/block/placeholder/PanelPlaceholder';
+import { FiscalPeriodsPage } from '@/core/features/fiscal-periods';
 
 export const metadata: Metadata = { title: 'دوره‌های مالی' };
 
-export default function FiscalPeriodsPage() {
-  return <PanelPlaceholder title="دوره‌های مالی" />;
+export default function Page() {
+  return (
+    <Suspense fallback={null}>
+      <FiscalPeriodsPage />
+    </Suspense>
+  );
 }

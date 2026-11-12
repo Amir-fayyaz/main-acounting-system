@@ -232,7 +232,11 @@ describe('pre-push hook', () => {
       join(fakeBin, 'pnpm'),
       '#!/bin/sh\necho FND_014_FAKE_VERIFY_FAILED >&2\nexit 1\n',
     );
-    chmodSync(join(fakeBin, 'pnpm'), 0o755);
+    try {
+      chmodSync(join(fakeBin, 'pnpm'), 0o755);
+    } catch {
+      // Windows has no executable bit
+    }
 
     const environment = {
       ...process.env,

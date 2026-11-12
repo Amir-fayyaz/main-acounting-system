@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { PanelPlaceholder } from '@/core/features/panel/components/block/placeholder/PanelPlaceholder';
+import { SettingsPage } from '@/core/features/settings';
 
 export const metadata: Metadata = { title: 'تنظیمات' };
 
-export default function PanelPage() {
-  return <PanelPlaceholder title="تنظیمات" />;
+export default function SettingsRoutePage() {
+  return <SettingsPage />;
 }
