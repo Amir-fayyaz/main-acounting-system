@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { PanelPlaceholder } from '@/core/features/panel/components/block/placeholder/PanelPlaceholder';
+import { PurchasesPage } from '@/core/features/purchases';
 
-export const metadata: Metadata = { title: 'خرید' };
+export const metadata: Metadata = { title: 'فاکتورهای خرید' };
 
-export default function PanelPage() {
-  return <PanelPlaceholder title="خرید" />;
+export default function Page() {
+  return <PurchasesPage />;
 }

@@ -1,71 +1,41 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-
-import { Button, H1, P, SectionLayout, usePagination } from '@repo/web';
+import { usePagination } from '@repo/web';
+import { Button, H1, P, SectionLayout } from '@repo/web';
 import { Plus, Printer } from 'lucide-react';
 import { toast } from 'sonner';
+import { useSearchParams } from 'next/navigation';
 
 import type { Branch, CreateBranchInput } from '../../assets/@types/branch';
-import {
-  createBranch,
-  listAllBranches,
-  listBranches,
-  type BranchListResponse,
-} from '../../lib/branches.service';
+import { createBranch, listAllBranches } from '../../lib/branches.service';
+import { useBranches } from '../../hook/useBranches';
+import { useBranchFilters } from '../../hook/useBranchFilters';
 import { BranchesToolbar } from '../ui/BranchesToolbar';
 import { BranchesPrintView } from './BranchesPrintView';
 import { BranchesTable } from './BranchesTable';
 import { AddBranchDialog } from './dialogs/AddBranchDialog';
-
-type LoadResult =
-  | { key: string; status: 'success'; response: BranchListResponse }
-  | { key: string; status: 'error' };
 
 type PrintSnapshot = {
   branches: Branch[];
   generatedAt: Date;
 };
 
-const LOAD_ERROR_MESSAGE = 'دریافت فهرست شعب با مشکل مواجه شد. لطفاً دوباره تلاش کنید.';
 const PRINT_ERROR_MESSAGE = 'آماده‌سازی گزارش چاپ با مشکل مواجه شد. لطفاً دوباره تلاش کنید.';
 
 export function BranchesPage() {
   const { page, limit, setPage, setLimit, queryParams } = usePagination();
   const searchParams = useSearchParams();
-  const pathname = usePathname();
-  const router = useRouter();
+  const { status, setStatus } = useBranchFilters();
 
   const search = searchParams.get('search') ?? '';
-  const status = searchParams.get('status') ?? '';
 
-  const [result, setResult] = useState<LoadResult | null>(null);
+  const { state, refresh } = useBranches({ ...queryParams, search, status });
+
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [refreshIndex, setRefreshIndex] = useState(0);
   const [printSnapshot, setPrintSnapshot] = useState<PrintSnapshot | null>(null);
   const [isPreparingPrint, setIsPreparingPrint] = useState(false);
 
-  const requestKey = JSON.stringify({ ...queryParams, search, status, refreshIndex });
-
-  useEffect(() => {
-    let isActive = true;
-
-    listBranches({ ...queryParams, search, status })
-      .then((response) => {
-        if (isActive) setResult({ key: requestKey, status: 'success', response });
-      })
-      .catch(() => {
-        if (isActive) setResult({ key: requestKey, status: 'error' });
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, [requestKey, queryParams, search, status]);
-
-  // Prints once the report has been committed to the DOM, then drops the
-  // snapshot so nothing stale can be printed from a later Ctrl+P.
   useEffect(() => {
     if (!printSnapshot) return;
 
@@ -84,30 +54,16 @@ export function BranchesPage() {
     };
   }, [printSnapshot]);
 
-  const settled = result !== null && result.key === requestKey ? result : null;
-  const isLoading = settled === null;
-  const response = settled?.status === 'success' ? settled.response : undefined;
-  const errorMessage = settled?.status === 'error' ? LOAD_ERROR_MESSAGE : undefined;
-
-  const handleStatusChange = useCallback(
-    (nextStatus: string) => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (nextStatus) {
-        params.set('status', nextStatus);
-      } else {
-        params.delete('status');
-      }
-      params.delete('page');
-
-      const nextQuery = params.toString();
-      router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname);
-    },
-    [pathname, router, searchParams],
-  );
+  const isLoading = state.status === 'loading';
+  const response = state.status === 'success' ? state.response : undefined;
+  const errorMessage =
+    state.status === 'error'
+      ? 'دریافت فهرست شعب با مشکل مواجه شد. لطفاً دوباره تلاش کنید.'
+      : undefined;
 
   async function handleCreate(input: CreateBranchInput) {
     await createBranch(input);
-    setRefreshIndex((current) => current + 1);
+    refresh();
   }
 
   async function handlePrint() {
@@ -123,6 +79,13 @@ export function BranchesPage() {
       setIsPreparingPrint(false);
     }
   }
+
+  const handleStatusChange = useCallback(
+    (nextStatus: string) => {
+      setStatus(nextStatus);
+    },
+    [setStatus],
+  );
 
   return (
     <SectionLayout>

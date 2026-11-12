@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { PanelPlaceholder } from '@/core/features/panel/components/block/placeholder/PanelPlaceholder';
+import { PeoplePage } from '@/core/features/people';
 
-export const metadata: Metadata = { title: 'اشخاص' };
+export const metadata: Metadata = { title: 'مشتریان و تأمین‌کنندگان' };
 
-export default function PanelPage() {
-  return <PanelPlaceholder title="اشخاص" />;
+export default function Page() {
+  return <PeoplePage />;
 }

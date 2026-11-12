@@ -16,10 +16,11 @@ import {
 } from '@repo/web';
 
 import type { CreateBranchInput } from '../../../assets/@types/branch';
+import { validateBranchForm, type BranchFormErrors } from '../../../lib/branches.validation';
 
 type FieldName = keyof CreateBranchInput;
 
-type FormErrors = Partial<Record<FieldName, string>>;
+type FormErrors = BranchFormErrors;
 
 const INITIAL_VALUES: CreateBranchInput = {
   code: '',
@@ -40,14 +41,6 @@ const FIELD_PLACEHOLDERS: Record<FieldName, string> = {
 };
 
 const FORM_ID = 'add-branch-form';
-
-function validate(values: CreateBranchInput): FormErrors {
-  const errors: FormErrors = {};
-  if (!values.code.trim()) errors.code = 'کد شعبه الزامی است.';
-  if (!values.name.trim()) errors.name = 'نام شعبه الزامی است.';
-  if (!values.managerName.trim()) errors.managerName = 'نام مدیر شعبه الزامی است.';
-  return errors;
-}
 
 export type AddBranchDialogProps = {
   open: boolean;
@@ -91,7 +84,7 @@ export function AddBranchDialog({ open, onOpenChange, onCreate }: AddBranchDialo
     event.preventDefault();
     if (submitting) return;
 
-    const nextErrors = validate(values);
+    const nextErrors = validateBranchForm(values);
     setErrors(nextErrors);
     setFormError(undefined);
 
