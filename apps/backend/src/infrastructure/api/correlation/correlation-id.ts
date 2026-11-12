@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { context, trace } from '@opentelemetry/api';
 import { LogContext } from '../../logging/log-context.js';
 
 /**
@@ -8,15 +9,22 @@ import { LogContext } from '../../logging/log-context.js';
  * server-side log line, so a support report can be tied back to the exact
  * failure without the client ever seeing internal detail.
  *
+ * With tracing on (FND-015) the id *is* the OpenTelemetry trace id when no
+ * caller supplies one, so a structured log line and the spans of the same
+ * request carry the same value and a trace can be found from a log — and the
+ * other way around. A caller-supplied `x-correlation-id` still wins: it is an
+ * explicit upstream intent that the response contract echoes back.
+ *
  * A caller-supplied `x-correlation-id` is accepted only when it is short and
- * made of a safe character set; anything else is replaced by a generated id, so
- * a client cannot inject an unbounded or structured value into logs and
- * responses.
+ * made of a safe character set; anything else is replaced, so a client cannot
+ * inject an unbounded or structured value into logs and responses.
  */
 export const CORRELATION_ID_HEADER = 'x-correlation-id';
 
 const MAX_CORRELATION_ID_LENGTH = 128;
 const SAFE_CORRELATION_ID = /^[A-Za-z0-9._:-]+$/;
+/** A valid W3C trace id: 32 lowercase hex characters. */
+const VALID_TRACE_ID = /^[0-9a-f]{32}$/;
 
 /** The subset of the HTTP request the middleware needs. */
 export interface CorrelatedRequest {
@@ -29,7 +37,19 @@ export interface CorrelationResponse {
   setHeader(name: string, value: string): void;
 }
 
-export function resolveCorrelationId(header: string | string[] | undefined): string {
+/**
+ * The correlation id of this request, in precedence order:
+ *
+ * 1. the caller's validated `x-correlation-id` header (explicit intent);
+ * 2. the trace id of the active OpenTelemetry span (tracing on — FND-015),
+ *    so logs and traces carry the same id;
+ * 3. a fresh UUID (no tracing, or no active span).
+ *
+ * Returns `undefined` when none of the three apply; the caller decides what a
+ * missing id means (the HTTP middleware generates one, a test asserts on the
+ * absence).
+ */
+export function resolveCorrelationId(header: string | string[] | undefined): string | undefined {
   const candidate = Array.isArray(header) ? header[0] : header;
 
   if (
@@ -41,7 +61,10 @@ export function resolveCorrelationId(header: string | string[] | undefined): str
     return candidate;
   }
 
-  return randomUUID();
+  const span = trace.getSpan(context.active());
+  const traceId = span?.spanContext().traceId;
+
+  return traceId !== undefined && VALID_TRACE_ID.test(traceId) ? traceId : undefined;
 }
 
 /**
@@ -60,7 +83,8 @@ export function correlationIdMiddleware(
   response: CorrelationResponse,
   next: () => void,
 ): void {
-  const correlationId = resolveCorrelationId(request.headers[CORRELATION_ID_HEADER]);
+  const correlationId =
+    resolveCorrelationId(request.headers[CORRELATION_ID_HEADER]) ?? randomUUID();
 
   request.correlationId = correlationId;
   response.setHeader(CORRELATION_ID_HEADER, correlationId);

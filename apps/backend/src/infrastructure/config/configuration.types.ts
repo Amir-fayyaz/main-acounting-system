@@ -172,6 +172,22 @@ export interface RateLimitConfiguration {
   readonly maxPerIdentity: number;
 }
 
+/**
+ * Distributed-tracing settings (FND-015, 10-observability).
+ *
+ * They live with every other contract so all three processes (HTTP, worker,
+ * scheduler) validate the same values; no process reads a raw variable itself.
+ */
+export interface TracingConfiguration {
+  /**
+   * Whether the OpenTelemetry SDK starts in this process. Defaults to `true`
+   * only in production, so a fresh checkout instruments nothing until asked.
+   */
+  readonly enabled: boolean;
+  /** Where completed spans are exported (an OTLP/HTTP collector). */
+  readonly exporterEndpoint: string;
+}
+
 export interface Configuration {
   readonly environment: EnvironmentIdentification;
   readonly runtime: ApplicationRuntime;
@@ -179,6 +195,7 @@ export interface Configuration {
   readonly database: DatabaseConfiguration;
   readonly redis: RedisConfiguration;
   readonly storage: StorageConfiguration;
+  readonly tracing: TracingConfiguration;
   readonly logging: LoggingConfiguration;
   readonly authentication: AuthenticationConfiguration;
   readonly rateLimit: RateLimitConfiguration;
