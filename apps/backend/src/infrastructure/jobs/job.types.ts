@@ -53,6 +53,13 @@ export interface JobEnvelope<TPayload = unknown> {
   /** Trace id carried from the caller to the Worker (ADR-008, section 13). */
   readonly correlationId: string;
   readonly companyId?: string;
+  /**
+   * W3C `traceparent` of the span that produced the job (FND-015). The Worker
+   * extracts it and links its execution span to it, so one trace connects the
+   * HTTP request that triggered the work to the background execution. Absent
+   * when the producer had no active span (tracing off).
+   */
+  readonly traceContext?: string;
   readonly createdAt: string;
   /** Which process produced the job: `api`, `worker`, `scheduler`, ... */
   readonly enqueuedBy: string;
