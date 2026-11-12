@@ -15,6 +15,7 @@ import type {
   RedisConfiguration,
   SchedulerConfiguration,
   StorageConfiguration,
+  TracingConfiguration,
 } from './configuration.types.js';
 
 /**
@@ -66,6 +67,10 @@ export class AppConfigService {
 
   get storage(): StorageConfiguration {
     return this.configuration.storage;
+  }
+
+  get tracing(): TracingConfiguration {
+    return this.configuration.tracing;
   }
 
   get logging(): LoggingConfiguration {

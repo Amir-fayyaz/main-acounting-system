@@ -17,6 +17,8 @@ No business domain is implemented yet — this is the FND-001/FND-002 workspace 
 ```text
 src/
 ├── main.ts                     Web/API process entry point
+├── tracing.ts                  OpenTelemetry bootstrap, imported first by every
+│                               process entry point (FND-015)
 ├── bootstrap.ts                Runtime configuration shared by the API and tests
 ├── app.module.ts               Root module (shared infrastructure + platform endpoints)
 ├── processes/                  Non-HTTP process entry points (FND-009)
@@ -46,7 +48,7 @@ src/
     ├── observability/          Process metrics: registry, HTTP/job/pool/queue collectors (FND-014)
     ├── jobs/                   Background-job infrastructure: queue port + Redis Streams
     │                           adapter, dispatcher, retry policy, idempotency, scheduling,
-    │                           sample jobs (FND-007)
+    │                           sample jobs, trace-context propagation (FND-007, FND-015)
     ├── outbox/                 Transactional outbox: recorder, store, publisher, Redis
     │                           event bus adapter, outbox job/schedule (SHR-006)
     ├── api/                    Cross-cutting REST baseline: versioning, error contract,
@@ -434,6 +436,69 @@ configured secrets.
   `MetricsEndpointModule`.
 - Distributed tracing (OpenTelemetry), Grafana dashboards and alert rules are
   explicitly out of scope for FND-014.
+
+## Distributed tracing (FND-015)
+
+Every process exports OpenTelemetry traces to an external OTLP/HTTP collector
+(Tempo, Jaeger, …). The collector itself is external infrastructure and out of
+scope; the exporter posts to `<OTEL_EXPORTER_OTLP_ENDPOINT>/v1/traces`.
+
+### Bootstrap
+
+`src/tracing.ts` is the OTel bootstrap, imported **first** (before any other
+import) by `main.ts`, `processes/worker/worker.ts` and
+`processes/scheduler/scheduler.ts`. The auto-instrumentations patch the HTTP,
+Express, Nest, MySQL2 and Redis modules at require time, so the SDK must start
+before the framework is loaded — a late start silently misses every span.
+
+What is wired per process:
+
+- `NodeSDK` with an `AsyncLocalStorageContextManager`, so trace context flows
+  the same way `LogContext`, `TenantScope` and the transaction boundary do.
+- Auto-instrumentations (exported by `buildInstrumentations()`): HTTP
+  (server + client), Express and NestJS (route spans), **MySQL2** — the driver
+  Drizzle actually uses; the issue's "PostgreSQL" wording translates to it —
+  and **Redis** (node-redis via `instrumentation-redis`; the issue's "ioredis"
+  wording translates to the client in use).
+- An `OTLPTraceExporter` pointed at the configured collector, plus SIGTERM /
+  SIGINT flush hooks so a graceful stop does not lose the last spans.
+
+### Configuration
+
+| Key                           | Meaning                                 | Default                                            |
+| ----------------------------- | --------------------------------------- | -------------------------------------------------- |
+| `TRACING_ENABLED`             | Whether the SDK starts in this process. | `true` only in production; off in development/test |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | Base URL of the OTLP/HTTP collector.    | `http://localhost:4318`                            |
+
+Both go through the shared validation layer (`loadConfiguration`), like every
+other key: a non-HTTP(S) endpoint stops the process at boot instead of
+silently dropping every span. Setting `TRACING_ENABLED=false` (or leaving it
+unset in dev) leaves the API at its no-op defaults and boots the application
+exactly as before this file existed.
+
+### Correlation alignment
+
+`resolveCorrelationId` (`src/infrastructure/api/correlation/`) resolves the id
+in this order: a validated caller `x-correlation-id` header wins; otherwise
+the **trace id of the active span** is used; the HTTP middleware generates a
+UUID only when neither applies. With tracing on, the `correlationId` echoed in
+error responses and written to every structured log line (FND-011) is the same
+32-hex value the spans carry — a trace can be found from a log and the other
+way around.
+
+### Background-job propagation
+
+A job crosses a process boundary (Redis stream), so its trace context must be
+serialized, not inherited:
+
+- `JobEnqueuer.enqueue` captures the W3C `traceparent` of the producing span
+  into the envelope (`traceContext`, `src/infrastructure/jobs/job-tracing.ts`).
+- The Worker (`worker-runner.service.ts`) extracts it and runs the dispatch
+  inside a span **linked** to that context — a link, not a parent, because the
+  producing span has already ended. The envelope's `correlationId` becomes the
+  ambient `LogContext` id for the handler's log lines.
+
+A malformed or missing `traceparent` costs the link, never the job.
 
 ## REST API and OpenAPI baseline (FND-006)
 

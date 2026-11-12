@@ -1,4 +1,9 @@
-import type { Configuration, LogFormat, LogLevel, RuntimeEnvironment } from './configuration.types.js';
+import type {
+  Configuration,
+  LogFormat,
+  LogLevel,
+  RuntimeEnvironment,
+} from './configuration.types.js';
 
 /**
  * Reads, validates and groups raw environment values into the typed
@@ -55,6 +60,8 @@ const DEFAULT_REDIS_PORT = 6379;
 const DEFAULT_STORAGE_ENDPOINT = '127.0.0.1';
 const DEFAULT_STORAGE_PORT = 9000;
 const DEFAULT_STORAGE_BUCKET = 'accounting-local';
+/** The OTLP/HTTP receiver an SDK points at when none is configured (FND-015). */
+const DEFAULT_TRACING_EXPORTER_ENDPOINT = 'http://localhost:4318';
 const DEFAULT_LOG_LEVEL: LogLevel = 'info';
 
 /**
@@ -159,13 +166,30 @@ function readBoolean(
   if (value === 'true' || value === '1') {
     return true;
   }
-
   if (value === 'false' || value === '0') {
     return false;
   }
 
   problems.push(`${key} must be "true" or "false"`);
   return fallback;
+}
+
+/**
+ * Reads the OTLP exporter endpoint (FND-015).
+ *
+ * An unset value falls back to the local collector default; a set value that is
+ * not an HTTP(S) URL is invalid — the SDK cannot build a usable exporter from
+ * it, and a typo must fail the boot, not silently drop every span.
+ */
+function readTracingEndpoint(raw: RawConfiguration, problems: string[]): string {
+  const endpoint =
+    readText(raw, 'OTEL_EXPORTER_OTLP_ENDPOINT') ?? DEFAULT_TRACING_EXPORTER_ENDPOINT;
+
+  if (!/^https?:\/\//i.test(endpoint)) {
+    problems.push('OTEL_EXPORTER_OTLP_ENDPOINT must be an http(s) URL');
+  }
+
+  return endpoint;
 }
 
 function readEnum<T extends string>(
@@ -191,11 +215,15 @@ function readEnvironmentName(raw: RawConfiguration, problems: string[]): Runtime
   return readEnum(raw, 'NODE_ENV', SUPPORTED_ENVIRONMENTS, DEFAULT_ENVIRONMENT, problems);
 }
 
-function readSystemAdminBootstrap(raw: RawConfiguration, problems: string[]): Configuration['systemAdmin'] {
+function readSystemAdminBootstrap(
+  raw: RawConfiguration,
+  problems: string[],
+): Configuration['systemAdmin'] {
   const enabled = readBoolean(raw, 'SYSTEM_ADMIN_ENABLED', false, problems);
   const email = readText(raw, 'SYSTEM_ADMIN_EMAIL') ?? '';
   const password = readText(raw, 'SYSTEM_ADMIN_PASSWORD') ?? '';
-  const displayName = readText(raw, 'SYSTEM_ADMIN_DISPLAY_NAME', 'Product Owner') ?? 'Product Owner';
+  const displayName =
+    readText(raw, 'SYSTEM_ADMIN_DISPLAY_NAME', 'Product Owner') ?? 'Product Owner';
 
   if (enabled) {
     if (email.trim() === '') {
@@ -286,6 +314,10 @@ export function loadConfiguration(raw: RawConfiguration = process.env): Configur
       accessKey: readText(raw, 'MINIO_ACCESS_KEY') ?? '',
       secretKey: readText(raw, 'MINIO_SECRET_KEY') ?? '',
       bucket: readText(raw, 'MINIO_BUCKET', DEFAULT_STORAGE_BUCKET) ?? DEFAULT_STORAGE_BUCKET,
+    },
+    tracing: {
+      enabled: readBoolean(raw, 'TRACING_ENABLED', environmentName === 'production', problems),
+      exporterEndpoint: readTracingEndpoint(raw, problems),
     },
     logging: {
       level: readEnum(raw, 'LOG_LEVEL', SUPPORTED_LOG_LEVELS, DEFAULT_LOG_LEVEL, problems),
