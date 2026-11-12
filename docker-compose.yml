@@ -47,6 +47,10 @@ x-backend-environment: &backend-environment
   MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY is required; copy .env.example to .env}
   MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY is required; copy .env.example to .env}
   MINIO_BUCKET: ${MINIO_BUCKET:-accounting-local}
+  # The scrape credential of /api/metrics (FND-016). Required by the
+  # observability profile: Prometheus presents it from the rendered token
+  # file; without it the backend refuses every scrape with 401.
+  METRICS_TOKEN: ${METRICS_TOKEN:?METRICS_TOKEN is required; copy .env.example to .env}
 
 services:
   # --- Infrastructure ------------------------------------------------------
