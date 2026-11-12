@@ -1,0 +1,19 @@
+# Grafana dashboard provisioning (FND-017).
+#
+# Mounted read-only at /etc/grafana/provisioning/dashboards/ by the `grafana`
+# service: the backend dashboard below is loaded from its JSON file on first
+# boot. Dashboards are files in the repository, reviewed like code; changes
+# made in the Grafana UI are lost on restart on purpose — export them back
+# into infrastructure/observability/grafana/dashboards/ instead.
+apiVersion: 1
+
+providers:
+  - name: backend
+    orgId: 1
+    folder: Backend
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards

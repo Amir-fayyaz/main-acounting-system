@@ -1,0 +1,187 @@
+# promtool rule tests for the backend alert rules (FND-017).
+#
+# Every alert in rules.yml gets a firing and a non-firing case, driven by
+# synthetic series rather than a live stack, so CI proves the thresholds and
+# `for` windows without infrastructure. Run with:
+#
+#   promtool check test-files rules.spec.yml
+#
+# (wired into the CI observability job against the pinned prom/prometheus
+# image, so the same promtool version evaluates rules in review and locally).
+rule_files:
+  - rules.yml
+
+evaluation_interval: 1m
+
+tests:
+  # --- BackendScrapeTargetDown ---------------------------------------------
+  - interval: 1m
+    input_series:
+      # Healthy for the first 6 minutes, then the target stops answering.
+      - series: 'up{job="backend-metrics",instance="backend:3000"}'
+        values: '1+0x5 0+0x20'
+    alert_rule_test:
+      # Up: no alert, not even briefly.
+      - eval_time: 5m
+        alertname: BackendScrapeTargetDown
+        exp_alerts: []
+      # Down for 4 minutes (>= the 3m window): firing.
+      - eval_time: 10m
+        alertname: BackendScrapeTargetDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              job: backend-metrics
+              instance: backend:3000
+            exp_annotations:
+              summary: Backend metrics scrape is failing
+              description: Prometheus has been unable to scrape the backend exposition for 3 minutes.
+
+  # --- BackendHttp5xxRateHigh -----------------------------------------------
+  - interval: 1m
+    input_series:
+      - series: 'http_request_duration_seconds_count{method="GET",route="/api/health",status_code="200"}'
+        values: '0+60x60'
+      # Clean traffic for 20 minutes, then 10 server errors per minute.
+      - series: 'http_request_duration_seconds_count{method="GET",route="/api/health",status_code="500"}'
+        values: '0+0x20 0+10x40'
+    alert_rule_test:
+      # All-2xx traffic: the error ratio is empty/zero, never an alert.
+      - eval_time: 10m
+        alertname: BackendHttp5xxRateHigh
+        exp_alerts: []
+      # ~14% of requests failing, sustained past the 5m window: firing.
+      - eval_time: 45m
+        alertname: BackendHttp5xxRateHigh
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+            exp_annotations:
+              summary: HTTP 5xx rate above 5% for 5 minutes
+              description: The server error ratio has been above 5% of all requests for 5 minutes.
+
+  # --- BackendJobFailureRateHigh --------------------------------------------
+  - interval: 1m
+    input_series:
+      - series: 'job_execution_duration_seconds_count{job_name="sample.echo",status="success"}'
+        values: '0+60x60'
+      - series: 'job_execution_duration_seconds_count{job_name="sample.echo",status="failure"}'
+        values: '0+0x20 0+30x40'
+    alert_rule_test:
+      # Healthy worker: failures stay at zero.
+      - eval_time: 15m
+        alertname: BackendJobFailureRateHigh
+        exp_alerts: []
+      # ~27% failure ratio over the 15m rate window, sustained: firing.
+      - eval_time: 45m
+        alertname: BackendJobFailureRateHigh
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+            exp_annotations:
+              summary: Background job failure rate above 20%
+              description: At least 20% of job executions have failed over the last 15 minutes, for 10 minutes.
+
+  # --- BackendJobQueueDepthGrowing ------------------------------------------
+  - interval: 1m
+    input_series:
+      # Rising depth: one more envelope waiting every minute.
+      - series: 'job_queue_depth'
+        values: '10+1x60'
+    alert_rule_test:
+      # Rising but only ~9 minutes past the deriv window: still inside the
+      # 15m `for` window — pending, not firing.
+      - eval_time: 10m
+        alertname: BackendJobQueueDepthGrowing
+        exp_alerts: []
+      # Rising for ~19 minutes (condition first true at ~1m, when the 15m
+      # deriv window holds two points): firing past the 15m `for` window.
+      - eval_time: 20m
+        alertname: BackendJobQueueDepthGrowing
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+            exp_annotations:
+              summary: Job queue depth keeps growing
+              description: The queue depth trend has been rising for 15 minutes; consumers are falling behind.
+
+  - interval: 1m
+    input_series:
+      # Flat depth: producers and consumers in balance. deriv stays 0 — the
+      # trend alert must never fire on a stable, non-zero backlog.
+      - series: 'job_queue_depth'
+        values: '10+0x40'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: BackendJobQueueDepthGrowing
+        exp_alerts: []
+
+  # --- OutboxPendingEventsHigh ----------------------------------------------
+  - interval: 1m
+    input_series:
+      # Draining normally for 10 minutes, then stuck above the threshold.
+      - series: 'outbox_pending_events'
+        values: '10+0x10 60+0x20'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: OutboxPendingEventsHigh
+        exp_alerts: []
+      # >50 un-published events for 20 minutes (window is 10m): firing.
+      - eval_time: 30m
+        alertname: OutboxPendingEventsHigh
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+            exp_annotations:
+              summary: Outbox is not draining
+              description: More than 50 outbox events have been un-published for 10 minutes.
+
+  - interval: 1m
+    input_series:
+      # Busy but healthy outbox: pending work below the threshold forever.
+      - series: 'outbox_pending_events'
+        values: '40+0x40'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: OutboxPendingEventsHigh
+        exp_alerts: []
+
+  # --- DatabasePoolWaitingRequests ------------------------------------------
+  - interval: 1m
+    input_series:
+      - series: 'database_pool_connections{state="active"}'
+        values: '5+0x40'
+      - series: 'database_pool_connections{state="idle"}'
+        values: '3+0x40'
+      # No waiters for 10 minutes, then one request queued for a connection.
+      - series: 'database_pool_connections{state="waiting"}'
+        values: '0+0x10 1+0x20'
+    alert_rule_test:
+      # Idle capacity, no waiters: healthy.
+      - eval_time: 5m
+        alertname: DatabasePoolWaitingRequests
+        exp_alerts: []
+      # A request has waited for 20 minutes (window is 5m): firing.
+      - eval_time: 30m
+        alertname: DatabasePoolWaitingRequests
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              state: waiting
+            exp_annotations:
+              summary: Database connection pool exhausted
+              description: Requests have been waiting for a pool connection for 5 minutes.
+
+  - interval: 1m
+    input_series:
+      - series: 'database_pool_connections{state="active"}'
+        values: '8+0x40'
+      - series: 'database_pool_connections{state="idle"}'
+        values: '0+0x40'
+      # Pool saturated but nobody queued (steady state): no alert.
+      - series: 'database_pool_connections{state="waiting"}'
+        values: '0+0x40'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: DatabasePoolWaitingRequests
+        exp_alerts: []

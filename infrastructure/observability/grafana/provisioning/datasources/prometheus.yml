@@ -1,0 +1,19 @@
+# Grafana datasource provisioning (FND-017).
+#
+# Mounted read-only at /etc/grafana/provisioning/datasources/ by the `grafana`
+# service: the datasource exists on first boot, no manual step. It points at
+# the Prometheus container by Compose service name; credentials are none
+# (Prometheus listens inside the Compose network only), and the datasource is
+# locked (editable: false) so the dashboard cannot silently be re-pointed.
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      httpMethod: POST
+      timeInterval: 15s

@@ -5,9 +5,11 @@ import { SECRET_REDACTOR } from '../config/app-config.tokens.js';
 import type { SecretHolder } from '../config/secrets.js';
 import { DatabaseModule, type Database } from '../database/database.module.js';
 import { DATABASE } from '../database/database.tokens.js';
+import { MetricsModule } from '../observability/metrics.module.js';
 import { RedisModule } from '../redis/redis.module.js';
 import type { EventPublisherPort } from './event-publisher.port.js';
 import { createOutboxPublishJob, createOutboxPublishSchedule } from './outbox-jobs.js';
+import { OutboxMetricsBinder } from './outbox-metrics.binder.js';
 import { OutboxRecorder } from './outbox-recorder.js';
 import { OutboxPublisher } from './outbox.publisher.js';
 import type { OutboxStore } from './outbox-store.port.js';
@@ -35,9 +37,13 @@ import {
  * It owns no business rule and no consumer: the records it stores are generic
  * event envelopes, and handling them belongs to the module that published the
  * event (ADR-003).
+ *
+ * `MetricsModule` is imported only to hand the `outbox_pending_events` gauge
+ * its provider (`OutboxMetricsBinder`, FND-017) — the metrics layer reads the
+ * outbox, never the other way around, and the port gains no count method.
  */
 @Module({
-  imports: [AppConfigModule, DatabaseModule, RedisModule],
+  imports: [AppConfigModule, DatabaseModule, MetricsModule, RedisModule],
   providers: [
     {
       provide: OUTBOX_STORE,
@@ -71,6 +77,7 @@ import {
         createOutboxPublishSchedule(config.outbox.publishIntervalMs),
       inject: [AppConfigService],
     },
+    OutboxMetricsBinder,
   ],
   exports: [OUTBOX_RECORDER, OUTBOX_PUBLISHER, OUTBOX_STORE, OUTBOX_PUBLISH_JOB, OUTBOX_SCHEDULE],
 })

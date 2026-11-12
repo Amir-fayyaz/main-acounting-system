@@ -430,6 +430,7 @@ configured secrets.
 | `http_request_duration_seconds`  | histogram | `method`, `route`, `status_code`    | HTTP request duration. `route` is the **matched route pattern** (`/api/v1/examples/:id`), never the raw URL, so label cardinality is bounded by the endpoint catalog; a request that matched no route is `unmatched`. |
 | `job_execution_duration_seconds` | histogram | `job_name`, `status`                | Background job attempt duration, recorded by `JobDispatcher`; a retry and a terminal failure are both `failure`.                                                                                                      |
 | `job_queue_depth`                | gauge     | —                                   | Job envelopes waiting in the Redis stream, read at scrape time through the queue port (`JobQueueDepthBinder`).                                                                                                        |
+| `outbox_pending_events`          | gauge     | —                                   | Outbox records not yet published (`pending`, `retrying` or claimed `publishing`), read at scrape time by the outbox infrastructure (`OutboxMetricsBinder`, FND-017); the `OutboxStore` port gains no count method for metrics. |
 | `database_pool_connections`      | gauge     | `state` (`active`/`idle`/`waiting`) | MySQL pool state: in-use, free and queued-waiting connections, read from the pool accounting at scrape time.                                                                                                          |
 
 ### How it is wired
@@ -443,8 +444,22 @@ configured secrets.
 - Every process (API, Worker, Scheduler) imports `MetricsModule` and collects;
   only the API process serves the endpoint, from
   `MetricsEndpointModule`.
-- Distributed tracing (OpenTelemetry), Grafana dashboards and alert rules are
-  explicitly out of scope for FND-014.
+- Distributed tracing (OpenTelemetry) is explicitly out of scope for FND-014.
+
+### Local monitoring stack (FND-017)
+
+The local Prometheus/Grafana/Alertmanager stack lives in
+`infrastructure/observability/` under the Compose profile `observability` — it
+never starts with the plain `docker compose up -d`; start and stop it with
+`pnpm obs:up` / `pnpm obs:down`. It scrapes `backend:3000/api/metrics` with the
+`METRICS_TOKEN` bearer token, rendered at start-up from `.env` into a
+git-ignored file; the scrape target is UP only while this process answers, so
+`up{job="backend-metrics"} == 0` is the readiness-down alert (`/api/health/ready`
+stays the Compose healthcheck's job — Prometheus cannot parse its JSON body).
+The alert rules (5xx rate, scrape target down, job failure rate, queue-depth
+growth, outbox lag, pool waiters) and their meaning are documented in
+`infrastructure/README.md`; every rule is covered by a `promtool` test that
+runs in CI.
 
 ## Distributed tracing (FND-015)
 
