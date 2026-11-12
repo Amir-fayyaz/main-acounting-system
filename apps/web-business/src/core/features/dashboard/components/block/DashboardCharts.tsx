@@ -1,7 +1,7 @@
-import { Card, CardContent, CardHeader } from '@repo/web/ui';
+import { Card, CardContent, CardHeader, H2 } from '@repo/web/ui';
 
-import type { CashflowMonth, PaymentMethodShare } from '../../../assets/@types';
-import { toFaDigits } from '../../../utils/persian-digits';
+import type { CashflowMonth, PaymentMethodShare } from '../../assets/@types';
+import { toFaDigits } from '../../../shared/utils/persian-digits';
 
 const INCOME_COLOR = 'var(--chart-1)';
 const EXPENSE_COLOR = 'var(--muted-foreground)';
@@ -38,7 +38,7 @@ export function CashflowChart({ cashflow }: { cashflow: CashflowMonth[] }) {
     <Card className="gap-4 rounded-lg">
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className={CARD_TITLE_CLASS}>درآمد و هزینه</h2>
+          <H2 className={CARD_TITLE_CLASS}>درآمد و هزینه</H2>
           <div className="flex flex-wrap items-center gap-4 text-[12.5px] text-muted-foreground">
             <ChartLegendItem color={INCOME_COLOR} label="درآمد" />
             <ChartLegendItem color={EXPENSE_COLOR} label="هزینه" />
@@ -115,7 +115,7 @@ export function PaymentDonut({ paymentMethods }: { paymentMethods: PaymentMethod
   return (
     <Card className="gap-4 rounded-lg">
       <CardHeader>
-        <h2 className={CARD_TITLE_CLASS}>روش‌های پرداخت</h2>
+        <H2 className={CARD_TITLE_CLASS}>روش‌های پرداخت</H2>
       </CardHeader>
       <CardContent>
         <div className="flex flex-wrap items-center justify-center gap-5">

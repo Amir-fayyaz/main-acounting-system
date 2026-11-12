@@ -1,12 +1,13 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 
-import { Card, CardContent, CardHeader } from '@repo/web/ui';
+import { Card, CardContent, CardHeader, H2 } from '@repo/web/ui';
 import { cn } from '@repo/web/ui/utils/cn';
 
-import type { Cheque, ChequeStatus, DashboardTask, Invoice } from '../../../assets/@types';
-import { toFaDigits } from '../../../utils/persian-digits';
-import { chequeStatusLabel } from '../../../utils/status-label';
+import type { DashboardTask } from '../../assets/@types';
+import type { Cheque, ChequeStatus, Invoice } from '../../../panel/assets/@types/finance';
+import { toFaDigits } from '../../../shared/utils/persian-digits';
+import { chequeStatusLabel } from '../../../panel/utils/status-label';
 
 const CARD_TITLE_CLASS = 'text-[15px] font-bold';
 
@@ -56,7 +57,7 @@ function ListCard({
     <Card className="gap-4 rounded-lg">
       <CardHeader>
         <div className="flex items-center justify-between gap-2">
-          <h2 className={CARD_TITLE_CLASS}>{title}</h2>
+          <H2 className={CARD_TITLE_CLASS}>{title}</H2>
           {action}
         </div>
       </CardHeader>
