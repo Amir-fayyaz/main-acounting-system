@@ -1,9 +1,13 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { UsersPage } from '@/core/features/users';
 
 export const metadata: Metadata = { title: 'کاربران و نقش‌ها' };
 
 export default function UsersPageRoute() {
-  return <UsersPage />;
-
+  return (
+    <Suspense fallback={null}>
+      <UsersPage />
+    </Suspense>
+  );
 }
