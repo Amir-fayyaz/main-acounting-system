@@ -92,4 +92,15 @@ describe('MetricsService', () => {
     // failing the exposition and hiding every other metric with it.
     expect(output).toContain('job_queue_depth 0');
   });
+
+  it('does not hang the scrape when the queue depth provider never settles', async () => {
+    // A Redis client stuck reconnecting neither answers nor rejects; the
+    // scrape must still come back, at the cost of the read budget alone.
+    const service = new MetricsService(undefined, 20);
+    service.setQueueDepthProvider(() => new Promise<number>(() => undefined));
+
+    const output = await exposition(service);
+
+    expect(output).toContain('job_queue_depth 0');
+  });
 });

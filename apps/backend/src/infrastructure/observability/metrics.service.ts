@@ -29,6 +29,9 @@ const ZERO_POOL_STATS: DatabasePoolStats = { active: 0, idle: 0, waiting: 0 };
 /** The supported callback for the `job_queue_depth` gauge. */
 export type QueueDepthProvider = () => Promise<number>;
 
+/** How long a single scrape waits for a queue-depth read before giving up on it. */
+const QUEUE_DEPTH_READ_TIMEOUT_MS = 2_000;
+
 /**
  * The process metrics layer (FND-014, 10-observability).
  *
@@ -66,7 +69,11 @@ export class MetricsService implements JobMetrics {
   private readonly databasePoolConnections: Gauge<string>;
   private queueDepthProvider?: QueueDepthProvider;
 
-  constructor(@Optional() @Inject(MYSQL_CONNECTION_POOL) private readonly pool?: unknown) {
+  constructor(
+    @Optional() @Inject(MYSQL_CONNECTION_POOL) private readonly pool?: unknown,
+    /** Test seam: how long one scrape waits for a queue-depth read. */
+    @Optional() private readonly queueDepthReadTimeoutMs: number = QUEUE_DEPTH_READ_TIMEOUT_MS,
+  ) {
     collectDefaultMetrics({ register: this.registry });
 
     this.httpRequestDuration = new Histogram({
@@ -97,10 +104,13 @@ export class MetricsService implements JobMetrics {
         }
 
         try {
-          this.jobQueueDepth.set(await provider());
+          this.jobQueueDepth.set(
+            await this.withReadTimeout(provider(), this.queueDepthReadTimeoutMs),
+          );
         } catch {
-          // The queue is unreachable; the gauge keeps its last value (0)
-          // rather than failing the scrape and hiding every other metric.
+          // The queue is unreachable (or too slow to answer within the scrape
+          // budget); the gauge keeps its last value (0) rather than failing —
+          // or worse, hanging — the scrape and hiding every other metric.
         }
       },
     });
@@ -159,6 +169,28 @@ export class MetricsService implements JobMetrics {
    */
   setQueueDepthProvider(provider: QueueDepthProvider): void {
     this.queueDepthProvider = provider;
+  }
+
+  /**
+   * Bounds one awaited read so a dependency that neither answers nor rejects
+   * (a Redis client stuck reconnecting, for instance) cannot hang the scrape:
+   * a metric that never arrives must cost at most the timeout, never the
+   * endpoint.
+   */
+  private withReadTimeout<T>(read: Promise<T>, timeoutMs: number): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('metric read timed out')), timeoutMs);
+      read.then(
+        (value) => {
+          clearTimeout(timer);
+          resolve(value);
+        },
+        (error: unknown) => {
+          clearTimeout(timer);
+          reject(error);
+        },
+      );
+    });
   }
 
   private readPoolStats(): DatabasePoolStats {
