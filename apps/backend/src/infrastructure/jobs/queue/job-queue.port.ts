@@ -48,4 +48,11 @@ export interface JobQueuePort {
    * atomically before it is promoted. Returns how many were promoted.
    */
   promoteDue(limit: number): Promise<number>;
+
+  /**
+   * How many envelopes are currently waiting in the queue — the depth the
+   * `job_queue_depth` gauge reports (FND-014). Used for observability only:
+   * the queue never makes a decision from it.
+   */
+  pendingCount(): Promise<number>;
 }

@@ -37,6 +37,10 @@ class RecordingQueue implements JobQueuePort {
   async promoteDue(): Promise<number> {
     return 0;
   }
+
+  async pendingCount(): Promise<number> {
+    return this.pushed.length;
+  }
 }
 
 const versionedJob: RegisteredJob = {
