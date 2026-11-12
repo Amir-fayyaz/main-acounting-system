@@ -43,6 +43,7 @@ src/
     ├── redis/                  Redis connection (non-authoritative, TECH-007)
     ├── storage/                Object storage port + MinIO adapter (TECH-008)
     ├── readiness/              Dependency probes behind /api/health/ready
+    ├── observability/          Process metrics: registry, HTTP/job/pool/queue collectors (FND-014)
     ├── jobs/                   Background-job infrastructure: queue port + Redis Streams
     │                           adapter, dispatcher, retry policy, idempotency, scheduling,
     │                           sample jobs (FND-007)
@@ -50,7 +51,7 @@ src/
     │                           event bus adapter, outbox job/schedule (SHR-006)
     ├── api/                    Cross-cutting REST baseline: versioning, error contract,
     │                           validation, pagination, serialization, OpenAPI (FND-006)
-    └── presentation/           Operational + reference endpoints (health, example)
+    └── presentation/           Operational + reference endpoints (health, metrics, example)
 test/                           HTTP-level (e2e) tests, incl. job integration tests
 ```
 
@@ -363,6 +364,7 @@ and they follow the same REST style as every other controller (ADR-013).
 | ------ | ------------------- | ----------------------------------------------------------------------------------------------------------- |
 | GET    | `/api/health`       | **Liveness.** The process is running. Dependency-free: a stopped MySQL never makes a healthy API look dead. |
 | GET    | `/api/health/ready` | **Readiness.** Probes MySQL, Redis and object storage in parallel; 200 when all are up, 503 otherwise.      |
+| GET    | `/api/metrics`      | **Metrics.** Prometheus text exposition of the process and its technical performance (FND-014).             |
 
 ```jsonc
 // GET /api/health → 200
@@ -393,6 +395,45 @@ Contract notes:
 - Docker Compose binds the `backend` container's single health state to
   **readiness** (`/api/health/ready`); use `/api/health` where only "the process
   is alive" is meant.
+
+## Metrics (FND-014)
+
+The process exposes a Prometheus scrape endpoint, `GET /api/metrics`, served by
+`MetricsController` (`src/infrastructure/presentation/metrics/`) from the one
+registry the `MetricsService` (`src/infrastructure/observability/`) owns. It
+follows the health endpoint's conventions: a `VERSION_NEUTRAL` operational path
+under the `/api` prefix, reachable without authentication (`@Public()`) because
+a monitoring system holds no user identity, and `Cache-Control: no-store` so no
+proxy serves a stale scrape.
+
+The exposition is **technical only**: counters, gauges and histograms about the
+process and its infrastructure. No business value, tenant data, credential or
+connection detail is ever exported — the integration test proves it against the
+configured secrets.
+
+### What is exported
+
+| Metric                           | Type      | Labels                              | Meaning                                                                                                                                                                                                               |
+| -------------------------------- | --------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nodejs_*`, `process_*`          | various   | —                                   | Standard Node.js process metrics (memory, event loop lag, active handles, GC).                                                                                                                                        |
+| `http_request_duration_seconds`  | histogram | `method`, `route`, `status_code`    | HTTP request duration. `route` is the **matched route pattern** (`/api/v1/examples/:id`), never the raw URL, so label cardinality is bounded by the endpoint catalog; a request that matched no route is `unmatched`. |
+| `job_execution_duration_seconds` | histogram | `job_name`, `status`                | Background job attempt duration, recorded by `JobDispatcher`; a retry and a terminal failure are both `failure`.                                                                                                      |
+| `job_queue_depth`                | gauge     | —                                   | Job envelopes waiting in the Redis stream, read at scrape time through the queue port (`JobQueueDepthBinder`).                                                                                                        |
+| `database_pool_connections`      | gauge     | `state` (`active`/`idle`/`waiting`) | MySQL pool state: in-use, free and queued-waiting connections, read from the pool accounting at scrape time.                                                                                                          |
+
+### How it is wired
+
+- The `MetricsInterceptor` is a global API convention, registered in
+  `bootstrap.ts` together with the other conventions, so every request is timed
+  and counted without any controller opting in.
+- The `JobDispatcher` records through the `JOB_METRICS` port
+  (`src/infrastructure/jobs/job-metrics.ts`); the jobs module binds it to the
+  metrics layer, and a no-op default keeps the dispatcher usable without one.
+- Every process (API, Worker, Scheduler) imports `MetricsModule` and collects;
+  only the API process serves the endpoint, from
+  `MetricsEndpointModule`.
+- Distributed tracing (OpenTelemetry), Grafana dashboards and alert rules are
+  explicitly out of scope for FND-014.
 
 ## REST API and OpenAPI baseline (FND-006)
 

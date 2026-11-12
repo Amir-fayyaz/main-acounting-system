@@ -228,16 +228,19 @@ importers:
         version: 18.0.3
       drizzle-orm:
         specifier: ^0.45.3
-        version: 0.45.3(@types/pg@8.23.1)(mysql2@3.24.4(@types/node@24.19.0))(pg@8.23.0)
+        version: 0.45.3(@opentelemetry/api@1.10.0)(@types/pg@8.23.1)(mysql2@3.24.4(@types/node@24.19.0))(pg@8.23.0)
       minio:
         specifier: ^8.0.7
         version: 8.0.7
       mysql2:
         specifier: ^3.24.4
         version: 3.24.4(@types/node@24.19.0)
+      prom-client:
+        specifier: ^15.1.3
+        version: 15.1.3
       redis:
         specifier: ^6.2.1
-        version: 6.2.1
+        version: 6.2.1(@opentelemetry/api@1.10.0)
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
@@ -283,7 +286,7 @@ importers:
         version: 2.0.0(@swc/core@1.16.2(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.11)(vite@8.3.1(@types/node@24.19.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))(webpack@5.106.2(@swc/core@1.16.2(@swc/helpers@0.5.23))(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.28))
       vitest:
         specifier: ^5.0.2
-        version: 5.0.2(@types/node@24.19.0)(@vitest/coverage-v8@5.0.2)(jsdom@30.1.2(@noble/hashes@1.8.0))(vite@8.3.1(@types/node@24.19.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+        version: 5.0.2(@opentelemetry/api@1.10.0)(@types/node@24.19.0)(@vitest/coverage-v8@5.0.2)(jsdom@30.1.2(@noble/hashes@1.8.0))(vite@8.3.1(@types/node@24.19.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
   apps/frontend:
     dependencies:
@@ -328,10 +331,10 @@ importers:
         version: 1.55.0(@types/react@19.3.0)(react@19.2.4)
       next:
         specifier: 16.2.5
-        version: 16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       nextjs-toploader:
         specifier: ^3.9.17
-        version: 3.9.17(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 3.9.17(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       radix-ui:
         specifier: ^1.6.7
         version: 1.7.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -369,6 +372,9 @@ importers:
         specifier: ^5.0.15
         version: 5.0.15(@types/react@19.3.0)(react@19.2.4)(use-sync-external-store@1.7.0(react@19.2.4))
     devDependencies:
+      '@opentelemetry/api':
+        specifier: ^1.10.0
+        version: 1.10.0
       '@storybook/addon-a11y':
         specifier: ^10.4.0
         version: 10.6.1(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))
@@ -383,7 +389,7 @@ importers:
         version: 10.6.1(react@19.2.4)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(vitest@5.0.2)
       '@storybook/nextjs-vite':
         specifier: ^10.4.0
-        version: 10.6.1(@babel/core@7.29.7(supports-color@8.1.1))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(supports-color@8.1.1)(typescript@5.9.3)(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+        version: 10.6.1(@babel/core@7.29.7(supports-color@8.1.1))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(supports-color@8.1.1)(typescript@5.9.3)(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.3.3
@@ -431,7 +437,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^5.0.0
-        version: 5.0.2(@types/node@20.19.43)(@vitest/coverage-v8@5.0.2)(jsdom@30.1.2(@noble/hashes@1.8.0))(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+        version: 5.0.2(@opentelemetry/api@1.10.0)(@types/node@20.19.43)(@vitest/coverage-v8@5.0.2)(jsdom@30.1.2(@noble/hashes@1.8.0))(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
   apps/web-admin:
     dependencies:
@@ -476,10 +482,10 @@ importers:
         version: 1.55.0(@types/react@19.3.0)(react@19.2.4)
       next:
         specifier: 16.2.5
-        version: 16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       nextjs-toploader:
         specifier: ^3.9.17
-        version: 3.9.17(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 3.9.17(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       radix-ui:
         specifier: ^1.6.7
         version: 1.7.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -514,6 +520,9 @@ importers:
         specifier: ^5.0.15
         version: 5.0.15(@types/react@19.3.0)(react@19.2.4)(use-sync-external-store@1.7.0(react@19.2.4))
     devDependencies:
+      '@opentelemetry/api':
+        specifier: ^1.10.0
+        version: 1.10.0
       '@storybook/addon-a11y':
         specifier: ^10.4.0
         version: 10.6.1(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))
@@ -528,7 +537,7 @@ importers:
         version: 10.6.1(react@19.2.4)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(vitest@5.0.2)
       '@storybook/nextjs-vite':
         specifier: ^10.4.0
-        version: 10.6.1(@babel/core@7.29.7(supports-color@8.1.1))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(supports-color@8.1.1)(typescript@5.9.3)(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+        version: 10.6.1(@babel/core@7.29.7(supports-color@8.1.1))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(supports-color@8.1.1)(typescript@5.9.3)(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.3.3
@@ -576,7 +585,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^5.0.0
-        version: 5.0.2(@types/node@20.19.43)(@vitest/coverage-v8@5.0.2)(jsdom@30.1.2(@noble/hashes@1.8.0))(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+        version: 5.0.2(@opentelemetry/api@1.10.0)(@types/node@20.19.43)(@vitest/coverage-v8@5.0.2)(jsdom@30.1.2(@noble/hashes@1.8.0))(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
   apps/web-business:
     dependencies:
@@ -621,10 +630,10 @@ importers:
         version: 1.55.0(@types/react@19.3.0)(react@19.2.4)
       next:
         specifier: 16.2.5
-        version: 16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       nextjs-toploader:
         specifier: ^3.9.17
-        version: 3.9.17(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 3.9.17(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       radix-ui:
         specifier: ^1.6.7
         version: 1.7.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -662,6 +671,9 @@ importers:
         specifier: ^5.0.15
         version: 5.0.15(@types/react@19.3.0)(react@19.2.4)(use-sync-external-store@1.7.0(react@19.2.4))
     devDependencies:
+      '@opentelemetry/api':
+        specifier: ^1.10.0
+        version: 1.10.0
       '@storybook/addon-a11y':
         specifier: ^10.4.0
         version: 10.6.1(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))
@@ -676,7 +688,7 @@ importers:
         version: 10.6.1(react@19.2.4)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(vitest@5.0.2)
       '@storybook/nextjs-vite':
         specifier: ^10.4.0
-        version: 10.6.1(@babel/core@7.29.7(supports-color@8.1.1))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(supports-color@8.1.1)(typescript@5.9.3)(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+        version: 10.6.1(@babel/core@7.29.7(supports-color@8.1.1))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(supports-color@8.1.1)(typescript@5.9.3)(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.3.3
@@ -724,7 +736,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^5.0.0
-        version: 5.0.2(@types/node@20.19.43)(@vitest/coverage-v8@5.0.2)(jsdom@30.1.2(@noble/hashes@1.8.0))(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+        version: 5.0.2(@opentelemetry/api@1.10.0)(@types/node@20.19.43)(@vitest/coverage-v8@5.0.2)(jsdom@30.1.2(@noble/hashes@1.8.0))(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
   packages/web:
     dependencies:
@@ -763,7 +775,7 @@ importers:
         version: 1.55.0(@types/react@19.3.0)(react@19.2.4)
       next:
         specifier: 16.2.5
-        version: 16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       radix-ui:
         specifier: ^1.6.7
         version: 1.7.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -788,7 +800,7 @@ importers:
     devDependencies:
       '@storybook/nextjs-vite':
         specifier: ^10.6.1
-        version: 10.6.1(@babel/core@7.29.7(supports-color@8.1.1))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(supports-color@8.1.1)(typescript@5.9.3)(vite@8.3.1(@types/node@24.19.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+        version: 10.6.1(@babel/core@7.29.7(supports-color@8.1.1))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(supports-color@8.1.1)(typescript@5.9.3)(vite@8.3.1(@types/node@24.19.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.3.3
@@ -2173,6 +2185,10 @@ packages:
   '@nolyfill/is-core-module@1.0.39':
     resolution: {integrity: sha512-nn5ozdjYQpUCZlWGuxcJY/KpxkWQs4DcbMCmKojjyrYDEAGy4Ce19NN4v5MduafTwJlbKc99UA8YhSVqq9yPZA==}
     engines: {node: '>=12.4.0'}
+
+  '@opentelemetry/api@1.10.0':
+    resolution: {integrity: sha512-lMkyes8iHrG+mk6WH7X70MdCLI2RS0FwNBY1PyQ8UemaijE2m5mv5A0Niy3HtbYTFrgkUEQjFMXmSAk2hQDuPQ==}
+    engines: {node: '>=8.0.0'}
 
   '@oxc-parser/binding-android-arm-eabi@0.127.0':
     resolution: {integrity: sha512-0LC7ye4hvqbIKxAzThzvswgHLFu2AURKzYLeSVvLdu2TBOYWQDmHnTqPLeA597BcUCxiLqLsS4CJ5uoI5WYWCQ==}
@@ -4178,6 +4194,9 @@ packages:
   bidi-js@1.1.0:
     resolution: {integrity: sha512-fX1Onk0tdVPC7obPWB5EbJ1z7NVhLq4m2xZLq2YXBkxzMXIGRpNMU88n0EPgWseKl12J7zXs7qrDxPK4sRs2fg==}
 
+  bintrees@1.0.2:
+    resolution: {integrity: sha512-VOMgTMwjAaUG580SXn3LacVgjurrbMme7ZZNYGSSV7mmtY6QQRh0Eg3pwIcntQ77DErK1L0NxkbetjcoXzVwKw==}
+
   block-stream2@2.1.0:
     resolution: {integrity: sha512-suhjmLI57Ewpmq00qaygS8UgEq2ly2PCItenIyhMqVjo4t4pGzqMvfgJuX8iWTeSDdfSSqS6j38fL4ToNL7Pfg==}
 
@@ -5948,6 +5967,7 @@ packages:
 
   node-abort-controller@3.1.1:
     resolution: {integrity: sha512-AGK2yQKIjRuqnc6VkX2Xj5d+QW8xZ87pa1UK6yA6ouUyuxfHuMP6umE5QK7UmTeOAymo+Zx1Fxiuw9rVx8taHQ==}
+    deprecated: This package is no longer needed on supported Node.js versions. Node.js 16+ includes AbortController and AbortSignal as built-in globals. All Node.js versions requiring this polyfill are end-of-life. Use the built-in globals instead.
 
   node-emoji@2.2.0:
     resolution: {integrity: sha512-Z3lTE9pLaJF47NyMhd4ww1yFTAP8YhYI8SleJiHzM46Fgpm5cnNzSl9XfzFNqbaz+VlJrIj3fXQ4DeN1Rjm6cw==}
@@ -6182,6 +6202,11 @@ packages:
 
   probe-image-size@7.4.0:
     resolution: {integrity: sha512-cdEprVtZxV+awMde9X+4jILBFYh4CARxVrQaMl4wY4YcPWbul9jntXrIW95NInBDyJwcVUP3U0T6yukN8rMBaQ==}
+
+  prom-client@15.1.3:
+    resolution: {integrity: sha512-6ZiOBfCywsD4k1BN9IX0uZhF+tJkV8q8llP64G5Hajs4JOeVLPCwpPVcpXy3BwYiUGgyJzsJJQeOIv7+hDSq8g==}
+    engines: {node: ^16 || ^18 || >=20}
+    deprecated: prom-client has been replaced by @prometheus-io/client
 
   prompts@2.4.2:
     resolution: {integrity: sha512-NxNv/kLguCA7p3jE8oL2aEBsrJWgAakBpgmgK6lpPWV+WuOmY6r2/zbAVnP+T8bQlA0nzHXSJSJW0Hq7ylaD2Q==}
@@ -6719,6 +6744,9 @@ packages:
   tapable@2.3.3:
     resolution: {integrity: sha512-uxc/zpqFg6x7C8vOE7lh6Lbda8eEL9zmVm/PLeTPBRhh1xCgdWaQ+J1CUieGpIfm2HdtsUpRv+HshiasBMcc6A==}
     engines: {node: '>=6'}
+
+  tdigest@0.1.3:
+    resolution: {integrity: sha512-zbRt+lT+/H4fRItHshczHErVCQnitJk8MfMT24MqFJf3YL7SJJPqGIGeuOdvxXxM/AHFzKBl7WoyaYwqO9s3Kw==}
 
   terser-webpack-plugin@5.6.1:
     resolution: {integrity: sha512-201R5j+sJpK8nFWwKVyNfZot8FaJbLZDq5evriVzbV1wDtSXDjRUDRfJzHpAaxFDMEhsZL1QkeqM61wgsS3KaQ==}
@@ -8563,6 +8591,8 @@ snapshots:
 
   '@nolyfill/is-core-module@1.0.39': {}
 
+  '@opentelemetry/api@1.10.0': {}
+
   '@oxc-parser/binding-android-arm-eabi@0.127.0':
     optional: true
 
@@ -9447,25 +9477,27 @@ snapshots:
 
   '@radix-ui/rect@1.1.3': {}
 
-  '@redis/bloom@6.2.1(@redis/client@6.2.1)':
+  '@redis/bloom@6.2.1(@redis/client@6.2.1(@opentelemetry/api@1.10.0))':
     dependencies:
-      '@redis/client': 6.2.1
+      '@redis/client': 6.2.1(@opentelemetry/api@1.10.0)
 
-  '@redis/client@6.2.1':
+  '@redis/client@6.2.1(@opentelemetry/api@1.10.0)':
     dependencies:
       cluster-key-slot: 1.1.2
+    optionalDependencies:
+      '@opentelemetry/api': 1.10.0
 
-  '@redis/json@6.2.1(@redis/client@6.2.1)':
+  '@redis/json@6.2.1(@redis/client@6.2.1(@opentelemetry/api@1.10.0))':
     dependencies:
-      '@redis/client': 6.2.1
+      '@redis/client': 6.2.1(@opentelemetry/api@1.10.0)
 
-  '@redis/search@6.2.1(@redis/client@6.2.1)':
+  '@redis/search@6.2.1(@redis/client@6.2.1(@opentelemetry/api@1.10.0))':
     dependencies:
-      '@redis/client': 6.2.1
+      '@redis/client': 6.2.1(@opentelemetry/api@1.10.0)
 
-  '@redis/time-series@6.2.1(@redis/client@6.2.1)':
+  '@redis/time-series@6.2.1(@redis/client@6.2.1(@opentelemetry/api@1.10.0))':
     dependencies:
-      '@redis/client': 6.2.1
+      '@redis/client': 6.2.1(@opentelemetry/api@1.10.0)
 
   '@rolldown/binding-android-arm-eabi@1.2.11':
     optional: true
@@ -9565,7 +9597,7 @@ snapshots:
       '@storybook/icons': 2.1.0(react@19.2.4)
       storybook: 10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4)
     optionalDependencies:
-      vitest: 5.0.2(@types/node@20.19.43)(@vitest/coverage-v8@5.0.2)(jsdom@30.1.2(@noble/hashes@1.8.0))(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+      vitest: 5.0.2(@opentelemetry/api@1.10.0)(@types/node@20.19.43)(@vitest/coverage-v8@5.0.2)(jsdom@30.1.2(@noble/hashes@1.8.0))(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
     transitivePeerDependencies:
       - react
 
@@ -9587,18 +9619,18 @@ snapshots:
     dependencies:
       react: 19.2.4
 
-  '@storybook/nextjs-vite@10.6.1(@babel/core@7.29.7(supports-color@8.1.1))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(supports-color@8.1.1)(typescript@5.9.3)(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))':
+  '@storybook/nextjs-vite@10.6.1(@babel/core@7.29.7(supports-color@8.1.1))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(supports-color@8.1.1)(typescript@5.9.3)(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))':
     dependencies:
       '@storybook/builder-vite': 10.6.1(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
       '@storybook/react': 10.6.1(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(supports-color@8.1.1)(typescript@5.9.3)
       '@storybook/react-vite': 10.6.1(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(supports-color@8.1.1)(typescript@5.9.3)(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
-      next: 16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      next: 16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
       storybook: 10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4)
       styled-jsx: 5.1.6(@babel/core@7.29.7(supports-color@8.1.1))(react@19.2.4)
       vite: 8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
-      vite-plugin-storybook-nextjs: 10.6.1(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(supports-color@8.1.1)(typescript@5.9.3)(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+      vite-plugin-storybook-nextjs: 10.6.1(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(supports-color@8.1.1)(typescript@5.9.3)(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
     optionalDependencies:
       '@types/react': 19.3.0
       '@types/react-dom': 19.3.0(@types/react@19.3.0)
@@ -9609,18 +9641,18 @@ snapshots:
       - rollup
       - supports-color
 
-  '@storybook/nextjs-vite@10.6.1(@babel/core@7.29.7(supports-color@8.1.1))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(supports-color@8.1.1)(typescript@5.9.3)(vite@8.3.1(@types/node@24.19.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))':
+  '@storybook/nextjs-vite@10.6.1(@babel/core@7.29.7(supports-color@8.1.1))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(supports-color@8.1.1)(typescript@5.9.3)(vite@8.3.1(@types/node@24.19.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))':
     dependencies:
       '@storybook/builder-vite': 10.6.1(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(vite@8.3.1(@types/node@24.19.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
       '@storybook/react': 10.6.1(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(supports-color@8.1.1)(typescript@5.9.3)
       '@storybook/react-vite': 10.6.1(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(supports-color@8.1.1)(typescript@5.9.3)(vite@8.3.1(@types/node@24.19.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
-      next: 16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      next: 16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
       storybook: 10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4)
       styled-jsx: 5.1.6(@babel/core@7.29.7(supports-color@8.1.1))(react@19.2.4)
       vite: 8.3.1(@types/node@24.19.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
-      vite-plugin-storybook-nextjs: 10.6.1(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(supports-color@8.1.1)(typescript@5.9.3)(vite@8.3.1(@types/node@24.19.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+      vite-plugin-storybook-nextjs: 10.6.1(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(supports-color@8.1.1)(typescript@5.9.3)(vite@8.3.1(@types/node@24.19.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
     optionalDependencies:
       '@types/react': 19.3.0
       '@types/react-dom': 19.3.0(@types/react@19.3.0)
@@ -9871,7 +9903,7 @@ snapshots:
       picocolors: 1.1.1
       redent: 3.0.0
     optionalDependencies:
-      vitest: 5.0.2(@types/node@20.19.43)(@vitest/coverage-v8@5.0.2)(jsdom@30.1.2(@noble/hashes@1.8.0))(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+      vitest: 5.0.2(@opentelemetry/api@1.10.0)(@types/node@20.19.43)(@vitest/coverage-v8@5.0.2)(jsdom@30.1.2(@noble/hashes@1.8.0))(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
   '@testing-library/react@16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
@@ -10242,7 +10274,7 @@ snapshots:
       obug: 2.2.1
       std-env: 4.2.0
       tinyrainbow: 3.1.1
-      vitest: 5.0.2(@types/node@24.19.0)(@vitest/coverage-v8@5.0.2)(jsdom@30.1.2(@noble/hashes@1.8.0))(vite@8.3.1(@types/node@24.19.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+      vitest: 5.0.2(@opentelemetry/api@1.10.0)(@types/node@24.19.0)(@vitest/coverage-v8@5.0.2)(jsdom@30.1.2(@noble/hashes@1.8.0))(vite@8.3.1(@types/node@24.19.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
   '@vitest/expect@3.2.4':
     dependencies:
@@ -10599,6 +10631,8 @@ snapshots:
   bidi-js@1.1.0:
     dependencies:
       require-from-string: 2.0.2
+
+  bintrees@1.0.2: {}
 
   block-stream2@2.1.0:
     dependencies:
@@ -10989,8 +11023,9 @@ snapshots:
       esbuild: 0.25.12
       tsx: 4.23.15
 
-  drizzle-orm@0.45.3(@types/pg@8.23.1)(mysql2@3.24.4(@types/node@24.19.0))(pg@8.23.0):
+  drizzle-orm@0.45.3(@opentelemetry/api@1.10.0)(@types/pg@8.23.1)(mysql2@3.24.4(@types/node@24.19.0))(pg@8.23.0):
     optionalDependencies:
+      '@opentelemetry/api': 1.10.0
       '@types/pg': 8.23.1
       mysql2: 3.24.4(@types/node@24.19.0)
       pg: 8.23.0
@@ -12582,7 +12617,7 @@ snapshots:
   neo-async@2.6.2:
     optional: true
 
-  next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@next/env': 16.2.5
       '@swc/helpers': 0.5.15
@@ -12601,14 +12636,15 @@ snapshots:
       '@next/swc-linux-x64-musl': 16.2.5
       '@next/swc-win32-arm64-msvc': 16.2.5
       '@next/swc-win32-x64-msvc': 16.2.5
+      '@opentelemetry/api': 1.10.0
       sharp: 0.34.5
     transitivePeerDependencies:
       - '@babel/core'
       - babel-plugin-macros
 
-  nextjs-toploader@3.9.17(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  nextjs-toploader@3.9.17(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
-      next: 16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      next: 16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       nprogress: 0.2.0
       prop-types: 15.8.1
       react: 19.2.4
@@ -12915,6 +12951,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  prom-client@15.1.3:
+    dependencies:
+      '@opentelemetry/api': 1.10.0
+      tdigest: 0.1.3
+
   prompts@2.4.2:
     dependencies:
       kleur: 3.0.3
@@ -13114,13 +13155,13 @@ snapshots:
       indent-string: 4.0.0
       strip-indent: 3.0.0
 
-  redis@6.2.1:
+  redis@6.2.1(@opentelemetry/api@1.10.0):
     dependencies:
-      '@redis/bloom': 6.2.1(@redis/client@6.2.1)
-      '@redis/client': 6.2.1
-      '@redis/json': 6.2.1(@redis/client@6.2.1)
-      '@redis/search': 6.2.1(@redis/client@6.2.1)
-      '@redis/time-series': 6.2.1(@redis/client@6.2.1)
+      '@redis/bloom': 6.2.1(@redis/client@6.2.1(@opentelemetry/api@1.10.0))
+      '@redis/client': 6.2.1(@opentelemetry/api@1.10.0)
+      '@redis/json': 6.2.1(@redis/client@6.2.1(@opentelemetry/api@1.10.0))
+      '@redis/search': 6.2.1(@redis/client@6.2.1(@opentelemetry/api@1.10.0))
+      '@redis/time-series': 6.2.1(@redis/client@6.2.1(@opentelemetry/api@1.10.0))
     transitivePeerDependencies:
       - '@node-rs/xxhash'
       - '@opentelemetry/api'
@@ -13635,6 +13676,10 @@ snapshots:
 
   tapable@2.3.3: {}
 
+  tdigest@0.1.3:
+    dependencies:
+      bintrees: 1.0.2
+
   terser-webpack-plugin@5.6.1(@swc/core@1.16.2(@swc/helpers@0.5.23))(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.28)(webpack@5.106.2(@swc/core@1.16.2(@swc/helpers@0.5.23))(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.28)):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
@@ -13946,13 +13991,13 @@ snapshots:
 
   verkit@0.5.0: {}
 
-  vite-plugin-storybook-nextjs@10.6.1(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(supports-color@8.1.1)(typescript@5.9.3)(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)):
+  vite-plugin-storybook-nextjs@10.6.1(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(supports-color@8.1.1)(typescript@5.9.3)(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)):
     dependencies:
       '@next/env': 16.3.6
       '@rollup/pluginutils': 5.4.0
       magic-string: 0.30.21
       module-alias: 2.3.4
-      next: 16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      next: 16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       pathe: 2.0.3
       probe-image-size: 7.4.0(supports-color@8.1.1)
       semver: 7.8.5
@@ -13965,13 +14010,13 @@ snapshots:
       - supports-color
       - typescript
 
-  vite-plugin-storybook-nextjs@10.6.1(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(supports-color@8.1.1)(typescript@5.9.3)(vite@8.3.1(@types/node@24.19.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)):
+  vite-plugin-storybook-nextjs@10.6.1(next@16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.2.4))(supports-color@8.1.1)(typescript@5.9.3)(vite@8.3.1(@types/node@24.19.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)):
     dependencies:
       '@next/env': 16.3.6
       '@rollup/pluginutils': 5.4.0
       magic-string: 0.30.21
       module-alias: 2.3.4
-      next: 16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      next: 16.2.5(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.10.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       pathe: 2.0.3
       probe-image-size: 7.4.0(supports-color@8.1.1)
       semver: 7.8.5
@@ -14038,7 +14083,7 @@ snapshots:
       tsx: 4.23.15
       yaml: 2.9.1
 
-  vitest@5.0.2(@types/node@20.19.43)(@vitest/coverage-v8@5.0.2)(jsdom@30.1.2(@noble/hashes@1.8.0))(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)):
+  vitest@5.0.2(@opentelemetry/api@1.10.0)(@types/node@20.19.43)(@vitest/coverage-v8@5.0.2)(jsdom@30.1.2(@noble/hashes@1.8.0))(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/mocker': 5.0.2(vite@8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
@@ -14055,13 +14100,14 @@ snapshots:
       vite: 8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
       why-is-node-running: 3.2.2
     optionalDependencies:
+      '@opentelemetry/api': 1.10.0
       '@types/node': 20.19.43
       '@vitest/coverage-v8': 5.0.2(vitest@5.0.2)
       jsdom: 30.1.2(@noble/hashes@1.8.0)
     transitivePeerDependencies:
       - msw
 
-  vitest@5.0.2(@types/node@24.19.0)(@vitest/coverage-v8@5.0.2)(jsdom@30.1.2(@noble/hashes@1.8.0))(vite@8.3.1(@types/node@24.19.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)):
+  vitest@5.0.2(@opentelemetry/api@1.10.0)(@types/node@24.19.0)(@vitest/coverage-v8@5.0.2)(jsdom@30.1.2(@noble/hashes@1.8.0))(vite@8.3.1(@types/node@24.19.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/mocker': 5.0.2(vite@8.3.1(@types/node@24.19.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
@@ -14078,6 +14124,7 @@ snapshots:
       vite: 8.3.1(@types/node@24.19.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
       why-is-node-running: 3.2.2
     optionalDependencies:
+      '@opentelemetry/api': 1.10.0
       '@types/node': 24.19.0
       '@vitest/coverage-v8': 5.0.2(vitest@5.0.2)
       jsdom: 30.1.2(@noble/hashes@1.8.0)
