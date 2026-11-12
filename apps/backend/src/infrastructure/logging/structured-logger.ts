@@ -108,6 +108,9 @@ function buildRecord(
   const context = LogContext.current();
 
   const correlationId = fields?.correlationId ?? context?.correlationId;
+  // Recorded alongside the correlation id, never instead of it (FND-016);
+  // only the ambient scope provides it — callers cannot spoof a trace id.
+  const traceId = context?.traceId;
   const tenantId = fields?.tenantId ?? TenantScope.currentTenantId();
   const userId = fields?.userId ?? ActorScope.current()?.userId;
 
@@ -120,6 +123,7 @@ function buildRecord(
     service: fields?.service ?? context?.service ?? options.service,
     message: redactText(message, options.secrets),
     ...(correlationId === undefined ? {} : { correlationId }),
+    ...(traceId === undefined ? {} : { traceId }),
     ...(tenantId === undefined ? {} : { tenantId }),
     ...(userId === undefined ? {} : { userId }),
     ...(fields?.error === undefined ? {} : { error: reduceError(fields.error, options.secrets) }),

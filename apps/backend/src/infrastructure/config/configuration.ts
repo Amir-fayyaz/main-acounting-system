@@ -175,18 +175,24 @@ function readBoolean(
 }
 
 /**
- * Reads the OTLP exporter endpoint (FND-015).
+ * Reads the OTLP exporter endpoint (FND-015, FND-016).
  *
- * An unset value falls back to the local collector default; a set value that is
- * not an HTTP(S) URL is invalid — the SDK cannot build a usable exporter from
- * it, and a typo must fail the boot, not silently drop every span.
+ * The endpoint is **required when tracing is enabled**: an SDK that exports
+ * nowhere silently discards every span, so an unset value is a boot-time
+ * validation error, not a default. When tracing is disabled the endpoint is
+ * unused and falls back to the local-collector default purely to fill the
+ * typed shape. A set value that is not an HTTP(S) URL is invalid — the SDK
+ * cannot build a usable exporter from it, and a typo must fail the boot.
  */
-function readTracingEndpoint(raw: RawConfiguration, problems: string[]): string {
-  const endpoint =
-    readText(raw, 'OTEL_EXPORTER_OTLP_ENDPOINT') ?? DEFAULT_TRACING_EXPORTER_ENDPOINT;
+function readTracingEndpoint(raw: RawConfiguration, enabled: boolean, problems: string[]): string {
+  const endpoint = readText(raw, 'OTEL_EXPORTER_OTLP_ENDPOINT') ?? DEFAULT_TRACING_EXPORTER_ENDPOINT;
 
   if (!/^https?:\/\//i.test(endpoint)) {
     problems.push('OTEL_EXPORTER_OTLP_ENDPOINT must be an http(s) URL');
+  }
+
+  if (enabled && readText(raw, 'OTEL_EXPORTER_OTLP_ENDPOINT') === undefined) {
+    problems.push('OTEL_EXPORTER_OTLP_ENDPOINT is required when TRACING_ENABLED=true');
   }
 
   return endpoint;
@@ -268,6 +274,8 @@ export function loadConfiguration(raw: RawConfiguration = process.env): Configur
   const problems: string[] = [];
 
   const environmentName = readEnvironmentName(raw, problems);
+  // Read once: the required-endpoint rule below must see the same value.
+  const tracingEnabled = readBoolean(raw, 'TRACING_ENABLED', environmentName === 'production', problems);
 
   // Credentials are mandatory in production only. In development and test their
   // absence is reported by the dependency that needs them (readiness, connection
@@ -277,6 +285,12 @@ export function loadConfiguration(raw: RawConfiguration = process.env): Configur
       if (!readText(raw, key)) {
         problems.push(`${key} is required when NODE_ENV=production`);
       }
+    }
+    // The scrape endpoint is deny-by-default (FND-016): a production process
+    // without a scrape credential would serve /api/metrics anonymously or
+    // dead, and both are wrong, so it does not boot.
+    if (!readText(raw, 'METRICS_TOKEN')) {
+      problems.push('METRICS_TOKEN is required when NODE_ENV=production');
     }
   }
 
@@ -316,8 +330,14 @@ export function loadConfiguration(raw: RawConfiguration = process.env): Configur
       bucket: readText(raw, 'MINIO_BUCKET', DEFAULT_STORAGE_BUCKET) ?? DEFAULT_STORAGE_BUCKET,
     },
     tracing: {
-      enabled: readBoolean(raw, 'TRACING_ENABLED', environmentName === 'production', problems),
-      exporterEndpoint: readTracingEndpoint(raw, problems),
+      enabled: tracingEnabled,
+      exporterEndpoint: readTracingEndpoint(raw, tracingEnabled, problems),
+    },
+    metrics: {
+      // Required to boot in production (deny-by-default scrape boundary,
+      // FND-016); a development/test process without one simply has no scrape
+      // credential and every /api/metrics request is refused.
+      token: readText(raw, 'METRICS_TOKEN'),
     },
     logging: {
       level: readEnum(raw, 'LOG_LEVEL', SUPPORTED_LOG_LEVELS, DEFAULT_LOG_LEVEL, problems),

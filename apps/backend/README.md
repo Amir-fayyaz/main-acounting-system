@@ -404,9 +404,18 @@ The process exposes a Prometheus scrape endpoint, `GET /api/metrics`, served by
 `MetricsController` (`src/infrastructure/presentation/metrics/`) from the one
 registry the `MetricsService` (`src/infrastructure/observability/`) owns. It
 follows the health endpoint's conventions: a `VERSION_NEUTRAL` operational path
-under the `/api` prefix, reachable without authentication (`@Public()`) because
-a monitoring system holds no user identity, and `Cache-Control: no-store` so no
-proxy serves a stale scrape.
+under the `/api` prefix, and `Cache-Control: no-store` so no proxy serves a
+stale scrape.
+
+**It is not anonymous (FND-016).** A monitoring system holds no user identity,
+so it is marked `@Public()` — the identity authorization boundary does not
+apply — but the deny-by-default rule of ADR-010 does: `MetricsTokenGuard`
+requires a valid `METRICS_TOKEN` bearer credential on every request, because
+the exposition discloses route names and traffic patterns. A production
+process refuses to boot without a configured token (fail-fast in the
+configuration validation); a development process without one simply refuses
+every scrape. The comparison is constant-time (SHA-256 + `timingSafeEqual`),
+and the token never appears in an error body, a log line or the exposition.
 
 The exposition is **technical only**: counters, gauges and histograms about the
 process and its infrastructure. No business value, tenant data, credential or
@@ -465,26 +474,32 @@ What is wired per process:
 
 ### Configuration
 
-| Key                           | Meaning                                 | Default                                            |
-| ----------------------------- | --------------------------------------- | -------------------------------------------------- |
-| `TRACING_ENABLED`             | Whether the SDK starts in this process. | `true` only in production; off in development/test |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | Base URL of the OTLP/HTTP collector.    | `http://localhost:4318`                            |
+| Key | Meaning | Default |
+| --- | --- | --- |
+| `TRACING_ENABLED` | Whether the SDK starts in this process. | `true` only in production; off in development/test |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | Base URL of the OTLP/HTTP collector. | **Required when `TRACING_ENABLED=true`** (FND-016) — tracing that silently exports nowhere is a boot-time validation error, not a default |
 
 Both go through the shared validation layer (`loadConfiguration`), like every
-other key: a non-HTTP(S) endpoint stops the process at boot instead of
-silently dropping every span. Setting `TRACING_ENABLED=false` (or leaving it
-unset in dev) leaves the API at its no-op defaults and boots the application
-exactly as before this file existed.
+other key: an unset endpoint while tracing is on, or a non-HTTP(S) endpoint,
+stops the process at boot instead of silently dropping every span. Setting
+`TRACING_ENABLED=false` (or leaving it unset in dev) leaves the API at its
+no-op defaults and boots the application exactly as before this file existed.
 
 ### Correlation alignment
 
-`resolveCorrelationId` (`src/infrastructure/api/correlation/`) resolves the id
-in this order: a validated caller `x-correlation-id` header wins; otherwise
-the **trace id of the active span** is used; the HTTP middleware generates a
-UUID only when neither applies. With tracing on, the `correlationId` echoed in
-error responses and written to every structured log line (FND-011) is the same
-32-hex value the spans carry — a trace can be found from a log and the other
-way around.
+The documented precedence rule (FND-016), applied consistently by
+`correlation-id.ts`, `LogContext` and the job envelope:
+
+- A caller-supplied `x-correlation-id` **wins** and stays the correlation id
+  everywhere (response echo, log lines, job payloads) — it is explicit
+  upstream intent.
+- The OpenTelemetry trace id is recorded **alongside** it (`LogContext`'s
+  `traceId` field, emitted as a `traceId` field on every structured log
+  line), never instead of it, so an upstream correlation id and a trace can
+  both be followed.
+- Without a caller header, the trace id **is** the correlation id, so the two
+  ids coincide and a trace is found from a log and the other way around.
+- With neither, a fresh UUID is generated.
 
 ### Background-job propagation
 
@@ -496,7 +511,8 @@ serialized, not inherited:
 - The Worker (`worker-runner.service.ts`) extracts it and runs the dispatch
   inside a span **linked** to that context — a link, not a parent, because the
   producing span has already ended. The envelope's `correlationId` becomes the
-  ambient `LogContext` id for the handler's log lines.
+  ambient `LogContext` id for the handler's log lines, with the producing
+  trace id recorded alongside it (the same precedence rule as HTTP, FND-016).
 
 A malformed or missing `traceparent` costs the link, never the job.
 

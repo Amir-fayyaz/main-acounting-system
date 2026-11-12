@@ -10,6 +10,7 @@ import type {
   HttpConfiguration,
   JobsConfiguration,
   LoggingConfiguration,
+  MetricsConfiguration,
   OutboxConfiguration,
   RateLimitConfiguration,
   RedisConfiguration,
@@ -71,6 +72,10 @@ export class AppConfigService {
 
   get tracing(): TracingConfiguration {
     return this.configuration.tracing;
+  }
+
+  get metrics(): MetricsConfiguration {
+    return this.configuration.metrics;
   }
 
   get logging(): LoggingConfiguration {
