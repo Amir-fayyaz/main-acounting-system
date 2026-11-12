@@ -71,10 +71,21 @@ describe('Distributed tracing (e2e)', () => {
     const { default: request } = await import('supertest');
     const response = await request(app.getHttpServer()).get('/api/health').expect(200);
 
-    const spans = exporter.getFinishedSpans();
-    const serverSpan = spans.find((span) => span.kind === 1 /* SERVER */);
+    // The server span ends on the response `finish` event, which can run
+    // *after* the supertest promise resolves — on a slow runner the assertion
+    // would otherwise race an empty exporter. Wait (bounded) for the spans of
+    // this request to land.
+    const deadline = Date.now() + 5_000;
+    let spans = exporter.getFinishedSpans();
+    let serverSpan = spans.find((span) => span.kind === 1 /* SERVER */);
+    while (serverSpan === undefined && Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      spans = exporter.getFinishedSpans();
+      serverSpan = spans.find((span) => span.kind === 1);
+    }
 
-    expect(serverSpan).toBeDefined();
+    const names = spans.map((span) => `${span.name}#${span.kind}`).join(', ');
+    expect(serverSpan, `no SERVER span among [${names}]`).toBeDefined();
 
     const traceId = serverSpan?.spanContext().traceId;
     const spansOfTheRequest = spans.filter((span) => span.spanContext().traceId === traceId);
