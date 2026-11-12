@@ -9,10 +9,11 @@ export function usePurchaseFilters() {
   const searchParams = useSearchParams();
 
   const status = searchParams.get('status') ?? '';
+  const search = searchParams.get('search') ?? '';
   const discountState = searchParams.get('discountState') ?? '';
 
   const replaceFilter = useCallback(
-    (key: 'status' | 'discountState', value: string) => {
+    (key: 'status' | 'discountState' | 'search', value: string) => {
       const params = new URLSearchParams(searchParams.toString());
       if (value) {
         params.set(key, value);
@@ -39,5 +40,7 @@ export function usePurchaseFilters() {
     [replaceFilter],
   );
 
-  return { status, discountState, setStatus, setDiscountState };
+  const setSearch = useCallback((value: string) => replaceFilter('search', value), [replaceFilter]);
+
+  return { status, discountState, search, setStatus, setDiscountState, setSearch };
 }

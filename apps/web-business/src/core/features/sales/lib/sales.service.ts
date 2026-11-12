@@ -88,22 +88,25 @@ export async function createSale(input: CreateSaleInput): Promise<Sale> {
 
   const rate = RATES[input.seller] ?? 0;
   const comm = Math.round(((total - taxAmount) * rate) / 100);
+  const paid = Math.max(0, Math.min(Number(input.paid ?? 0), total));
+  const status: Sale['status'] =
+    paid >= total && total > 0 ? 'تسویه‌شده' : paid > 0 ? 'پرداخت جزئی' : 'تسویه‌نشده';
 
   const sale: Sale = {
     id: createSaleId(),
     no: (2200 + getMockSales().length + 1).toLocaleString('fa-IR'),
     cust: input.cust,
     seller: input.seller,
-    date: new Date().toLocaleDateString('fa-IR'),
+    date: input.date?.trim() || new Date().toLocaleDateString('fa-IR'),
     disc: discountAmount,
     pct: discountPercent,
     discountState: discountAmount > 0 ? 'با تخفیف' : 'بدون تخفیف',
     total: total.toFixed(2),
-    paid: '0.00',
+    paid: paid.toFixed(2),
     comm: comm.toFixed(2),
     rate,
     desc: input.desc,
-    status: 'تسویه‌نشده',
+    status,
     currency: 'IRR',
   };
 

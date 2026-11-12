@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  SearchInput,
   Select,
   SelectContent,
   SelectItem,
@@ -38,10 +37,6 @@ export function SalesToolbar({
 }: SalesToolbarProps) {
   return (
     <div className={cn('flex flex-wrap items-center gap-2.5', className)}>
-      <div className="max-w-xs min-w-50 flex-1">
-        <SearchInput title="جستجو در فاکتورها…" />
-      </div>
-
       <Select value={status || ALL} onValueChange={(n) => onStatusChange(n === ALL ? '' : n)}>
         <SelectTrigger aria-label="وضعیت" className="w-36">
           <SelectValue placeholder="وضعیت" />

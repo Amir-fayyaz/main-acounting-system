@@ -98,7 +98,7 @@ export function useSettings(): UseSettingsResult {
       const updated = await updateSettings(input);
       setSettings(updated);
       setErrors(EMPTY_ERRORS);
-      toast.success(SAVED_MESSAGE);
+      toast.success(SAVED_MESSAGE, { position: 'top-center' });
     } catch (error) {
       toast.error(error instanceof Error && error.message ? error.message : SAVE_ERROR_MESSAGE);
     } finally {

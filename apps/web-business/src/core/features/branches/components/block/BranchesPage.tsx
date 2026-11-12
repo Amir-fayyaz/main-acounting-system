@@ -5,7 +5,6 @@ import { usePagination } from '@repo/web';
 import { Button, H1, P, SectionLayout } from '@repo/web';
 import { Plus, Printer } from 'lucide-react';
 import { toast } from 'sonner';
-import { useSearchParams } from 'next/navigation';
 
 import type { Branch, CreateBranchInput } from '../../assets/@types/branch';
 import { createBranch, listAllBranches } from '../../lib/branches.service';
@@ -25,10 +24,7 @@ const PRINT_ERROR_MESSAGE = 'آماده‌سازی گزارش چاپ با مشک
 
 export function BranchesPage() {
   const { page, limit, setPage, setLimit, queryParams } = usePagination();
-  const searchParams = useSearchParams();
-  const { status, setStatus } = useBranchFilters();
-
-  const search = searchParams.get('search') ?? '';
+  const { status, search, setStatus, setSearch } = useBranchFilters();
 
   const { state, refresh } = useBranches({ ...queryParams, search, status });
 
@@ -126,7 +122,8 @@ export function BranchesPage() {
           onLimitChange={setLimit}
           loading={isLoading}
           error={errorMessage}
-          searchTerm={search}
+          search={search}
+          onSearchChange={setSearch}
         />
       </div>
 

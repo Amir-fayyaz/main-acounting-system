@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  SearchInput,
   Select,
   SelectContent,
   SelectItem,
@@ -23,10 +22,6 @@ export type PeopleToolbarProps = {
 export function PeopleToolbar({ kind, onKindChange, className }: PeopleToolbarProps) {
   return (
     <div className={cn('flex flex-wrap items-center gap-2.5', className)}>
-      <div className="max-w-xs min-w-50 flex-1">
-        <SearchInput title="جستجو در اشخاص…" />
-      </div>
-
       <Select
         value={kind || ALL_KIND}
         onValueChange={(next) => onKindChange(next === ALL_KIND ? '' : next)}

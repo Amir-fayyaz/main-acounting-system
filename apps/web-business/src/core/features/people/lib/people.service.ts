@@ -1,4 +1,9 @@
-import type { CreatePersonInput, Person, ListPeopleParams } from '../assets/@types/person';
+import type {
+  CreatePersonInput,
+  ListPeopleParams,
+  Person,
+  PersonSortItem,
+} from '../assets/@types/person';
 import { getMockPeople, hasMockPersonName, insertMockPerson } from '../assets/mock/people.mock';
 
 export const PEOPLE_DEFAULT_LIMIT = 20;
@@ -38,10 +43,29 @@ function filterPeople(params: ListPeopleParams): Person[] {
   });
 }
 
+function comparePeople(a: Person, b: Person, sort: PersonSortItem): number {
+  const key = sort.id as keyof Person;
+  if (key === 'recv' || key === 'pay') {
+    return Number(a[key]) - Number(b[key]);
+  }
+  return String(a[key]).localeCompare(String(b[key]), 'fa');
+}
+
+function sortPeople(people: Person[], sort: PersonSortItem[] | undefined): Person[] {
+  if (!sort?.length) return people;
+  return [...people].sort((a, b) => {
+    for (const item of sort) {
+      const result = comparePeople(a, b, item);
+      if (result !== 0) return item.desc ? -result : result;
+    }
+    return 0;
+  });
+}
+
 export async function listAllPeople(
-  params: Pick<ListPeopleParams, 'search' | 'kind'> = {},
+  params: Pick<ListPeopleParams, 'search' | 'kind' | 'sort'> = {},
 ): Promise<Person[]> {
-  return filterPeople(params);
+  return sortPeople(filterPeople(params), params.sort);
 }
 
 export async function listPeople(params: ListPeopleParams = {}): Promise<PersonListResponse> {
@@ -52,7 +76,7 @@ export async function listPeople(params: ListPeopleParams = {}): Promise<PersonL
       ? (params.page as number)
       : 1;
 
-  const filtered = filterPeople(params);
+  const filtered = sortPeople(filterPeople(params), params.sort);
 
   const total = filtered.length;
   const totalPages = Math.max(1, Math.ceil(total / limit));

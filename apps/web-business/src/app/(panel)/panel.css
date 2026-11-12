@@ -90,6 +90,15 @@ body:has(.panel-preview) > footer {
     overflow-wrap: anywhere;
   }
 
+  /* Interactive DataTable chrome (search, density, columns, paging) never prints. */
+  [data-slot='data-table'] > div:has([role='search']),
+  [data-slot='data-table-pagination'],
+  [data-slot='data-table'] [role='search'],
+  [data-slot='data-table'] button[aria-label='ستون‌ها'],
+  [data-slot='data-table'] button[aria-label='فشرده‌سازی ردیف‌ها'] {
+    display: none;
+  }
+
   [data-slot='table-container'] {
     overflow: visible;
   }

@@ -43,6 +43,31 @@ describe('people service', () => {
     expect((await listAllPeople({ kind: 'تأمین‌کننده' })).length).toBe(4);
   });
 
+  it('sorts numeric balances descending', async () => {
+    const { data } = await listPeople({ sort: [{ id: 'recv', desc: true }], limit: 100 });
+    const values = data.map((person) => Number(person.recv));
+
+    expect(values).toEqual([...values].sort((a, b) => b - a));
+  });
+
+  it('applies multi-column sorting in priority order', async () => {
+    const { data } = await listPeople({
+      sort: [
+        { id: 'kind', desc: false },
+        { id: 'pay', desc: true },
+      ],
+      limit: 100,
+    });
+
+    for (let i = 1; i < data.length; i += 1) {
+      const previous = data[i - 1]!;
+      const current = data[i]!;
+      if (previous.kind === current.kind) {
+        expect(Number(previous.pay)).toBeGreaterThanOrEqual(Number(current.pay));
+      }
+    }
+  });
+
   it('creates a person that the list then returns first', async () => {
     const created = await createPerson({
       name: 'شخص تست یکتا',

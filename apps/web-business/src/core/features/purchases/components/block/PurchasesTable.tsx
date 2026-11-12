@@ -73,7 +73,8 @@ export type PurchasesTableProps = {
   onLimitChange?: (limit: number) => void;
   loading?: boolean;
   error?: string;
-  searchTerm?: string;
+  search?: string;
+  onSearchChange?: (search: string) => void;
 };
 
 export function PurchasesTable({
@@ -85,7 +86,8 @@ export function PurchasesTable({
   onLimitChange,
   loading = false,
   error,
-  searchTerm = '',
+  search = '',
+  onSearchChange,
 }: PurchasesTableProps) {
   return (
     <DataTable<Purchase>
@@ -93,11 +95,16 @@ export function PurchasesTable({
       columns={purchasesColumns}
       data={data}
       rowKey={(purchase) => purchase.id}
+      rowNumbers
       loading={loading}
       error={error}
-      searchTerm={searchTerm}
+      search={search}
+      onSearchChange={onSearchChange}
+      searchPlaceholder="جستجو در خریدها…"
+      toolbar={{ search: true, columns: true, density: true }}
+      searchTerm={search}
       emptyMessage="هنوز فاکتور خریدی ثبت نشده است."
-      searchEmptyMessage={`نتیجه‌ای برای «${searchTerm}» پیدا نشد.`}
+      searchEmptyMessage={`نتیجه‌ای برای «${search}» پیدا نشد.`}
       meta={meta}
       page={page}
       limit={limit}

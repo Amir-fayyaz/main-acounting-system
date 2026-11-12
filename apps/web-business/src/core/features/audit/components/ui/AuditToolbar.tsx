@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  SearchInput,
   Select,
   SelectContent,
   SelectItem,
@@ -21,10 +20,6 @@ export type AuditToolbarProps = {
 export function AuditToolbar({ outcome, onOutcomeChange, className }: AuditToolbarProps) {
   return (
     <div className={cn('flex flex-wrap items-center gap-2.5', className)}>
-      <div className="max-w-xs min-w-50 flex-1">
-        <SearchInput title="جستجو در تاریخچه…" />
-      </div>
-
       <Select value={outcome || ALL} onValueChange={(n) => onOutcomeChange(n === ALL ? '' : n)}>
         <SelectTrigger aria-label="نتیجه" className="w-36">
           <SelectValue placeholder="نتیجه" />

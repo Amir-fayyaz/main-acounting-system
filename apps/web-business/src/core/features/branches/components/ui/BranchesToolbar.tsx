@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  SearchInput,
   Select,
   SelectContent,
   SelectItem,
@@ -26,16 +25,12 @@ export type BranchesToolbarProps = {
 /**
  * Search + status filter for the branches list.
  *
- * The search field is the shared URL-synced `SearchInput`; the status control
- * is fully controlled through props so the page owns URL state.
+ * Search now lives in the shared DataTable toolbar; the status control is
+ * fully controlled through props so the page owns URL state.
  */
 export function BranchesToolbar({ value, onChange, className }: BranchesToolbarProps) {
   return (
     <div className={cn('flex flex-wrap items-center gap-2.5', className)}>
-      <div className="max-w-xs min-w-50 flex-1">
-        <SearchInput title="جستجو در شعب…" />
-      </div>
-
       <Select
         value={value || ALL_STATUS}
         onValueChange={(next) => onChange(next === ALL_STATUS ? '' : next)}

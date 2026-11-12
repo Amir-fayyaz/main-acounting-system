@@ -8,7 +8,7 @@ import {
   type PersonListResponse,
 } from '../lib/people.service';
 
-export type UsePeopleParams = Pick<ListPeopleParams, 'page' | 'limit' | 'search' | 'kind'>;
+export type UsePeopleParams = Pick<ListPeopleParams, 'page' | 'limit' | 'search' | 'kind' | 'sort'>;
 
 export type UsePeopleState =
   | { status: 'loading' }
@@ -21,7 +21,7 @@ export interface UsePeopleResult {
 }
 
 export function usePeople(params: UsePeopleParams): UsePeopleResult {
-  const { page = 1, limit = 20, search = '', kind } = params;
+  const { page = 1, limit = 20, search = '', kind, sort } = params;
 
   const [version, setVersion] = useState(0);
   const [result, setResult] = useState<{
@@ -29,12 +29,12 @@ export function usePeople(params: UsePeopleParams): UsePeopleResult {
     state: UsePeopleState;
   } | null>(null);
 
-  const key = JSON.stringify({ page, limit, search, kind: kind ?? null, version });
+  const key = JSON.stringify({ page, limit, search, kind: kind ?? null, sort: sort ?? null, version });
 
   useEffect(() => {
     let isActive = true;
 
-    listPeople({ page, limit, search, kind })
+    listPeople({ page, limit, search, kind, sort })
       .then((response) => {
         if (isActive) setResult({ key, state: { status: 'success', response } });
       })
@@ -45,7 +45,7 @@ export function usePeople(params: UsePeopleParams): UsePeopleResult {
     return () => {
       isActive = false;
     };
-  }, [key, page, limit, search, kind]);
+  }, [key, page, limit, search, kind, sort]);
 
   const state: UsePeopleState =
     result !== null && result.key === key ? result.state : { status: 'loading' };

@@ -34,6 +34,12 @@ function filterEvents(params: ListAuditParams): AuditEvent[] {
   });
 }
 
+export async function listAllAudit(
+  params: Pick<ListAuditParams, 'search' | 'outcome'> = {},
+): Promise<AuditEvent[]> {
+  return filterEvents(params);
+}
+
 export async function listAudit(params: ListAuditParams = {}): Promise<AuditListResponse> {
   const limit = normalizeLimit(params.limit);
   const requestedPage =

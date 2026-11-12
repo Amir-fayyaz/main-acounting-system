@@ -48,7 +48,8 @@ export type AuditTableProps = {
   onLimitChange?: (limit: number) => void;
   loading?: boolean;
   error?: string;
-  searchTerm?: string;
+  search?: string;
+  onSearchChange?: (search: string) => void;
 };
 
 export function AuditTable({
@@ -60,7 +61,8 @@ export function AuditTable({
   onLimitChange,
   loading = false,
   error,
-  searchTerm = '',
+  search = '',
+  onSearchChange,
 }: AuditTableProps) {
   return (
     <DataTable<AuditEvent>
@@ -68,11 +70,16 @@ export function AuditTable({
       columns={auditColumns}
       data={data}
       rowKey={(event) => event.id}
+      rowNumbers
       loading={loading}
       error={error}
-      searchTerm={searchTerm}
+      search={search}
+      onSearchChange={onSearchChange}
+      searchPlaceholder="جستجو در تاریخچه…"
+      toolbar={{ search: true, columns: true, density: true }}
+      searchTerm={search}
       emptyMessage="هنوز رویدادی ثبت نشده است."
-      searchEmptyMessage={`نتیجه‌ای برای «${searchTerm}» پیدا نشد.`}
+      searchEmptyMessage={`نتیجه‌ای برای «${search}» پیدا نشد.`}
       meta={meta}
       page={page}
       limit={limit}

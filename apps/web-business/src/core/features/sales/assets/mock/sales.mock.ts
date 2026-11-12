@@ -48,13 +48,9 @@ function num(min: number, max: number, step: number, seed: number): number {
 }
 
 function day(offset: number): string {
-  // Simple Jalali-like day string; keep consistent with reference day(-i)
   const d = new Date();
   d.setDate(d.getDate() + offset);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${y}/${m}/${dd}`;
+  return d.toLocaleDateString('fa-IR');
 }
 
 function createSeedSales(): Sale[] {

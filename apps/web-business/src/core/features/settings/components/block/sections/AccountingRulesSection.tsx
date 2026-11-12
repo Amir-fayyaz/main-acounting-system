@@ -51,7 +51,8 @@ export function AccountingRulesSection({ value, onChange, disabled }: Accounting
           description={row.description}
           checked={value[row.key]}
           onCheckedChange={(checked) => onChange({ [row.key]: checked })}
-          disabled={disabled || row.locked === true}
+          disabled={disabled}
+          locked={row.locked}
         />
       ))}
     </div>

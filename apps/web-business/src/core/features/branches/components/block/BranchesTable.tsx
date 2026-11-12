@@ -9,13 +9,7 @@ export function formatMonthlySales(value: Money): string {
   const numericValue = Number(value);
   if (!Number.isFinite(numericValue)) return value;
 
-  const formatted = new Intl.NumberFormat('fa-IR', {
-    maximumFractionDigits: 1,
-  }).format(numericValue);
-
-  if (numericValue >= 1e9) return `${formatted} میلیارد ریال`;
-  if (numericValue >= 1e6) return `${formatted} میلیون ریال`;
-  return `${formatted} ریال`;
+  return new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 }).format(numericValue);
 }
 
 export const branchesColumns: DataTableColumn<Branch>[] = [
@@ -23,7 +17,11 @@ export const branchesColumns: DataTableColumn<Branch>[] = [
     key: 'code',
     header: 'کد',
     headerClassName: 'text-start',
-    className: 'text-start font-mono text-sm text-muted-foreground',
+    className: 'text-start text-sm text-muted-foreground tabular-nums',
+    cell: (branch) =>
+      Number.isFinite(Number(branch.code))
+        ? Number(branch.code).toLocaleString('fa-IR', { useGrouping: false })
+        : branch.code,
   },
   {
     key: 'name',
@@ -42,16 +40,18 @@ export const branchesColumns: DataTableColumn<Branch>[] = [
     header: 'صندوق‌ها',
     headerClassName: 'text-end',
     className: 'text-end tabular-nums',
+    type: 'number',
   },
   {
     key: 'userCount',
     header: 'کاربران',
     headerClassName: 'text-end',
     className: 'text-end tabular-nums',
+    type: 'number',
   },
   {
     key: 'monthlySales',
-    header: 'فروش ماه',
+    header: 'فروش ماه (ریال)',
     headerClassName: 'text-end',
     className: 'text-end font-medium tabular-nums',
     cell: (branch) => formatMonthlySales(branch.monthlySales),
@@ -74,7 +74,8 @@ export type BranchesTableProps = {
   onLimitChange?: (limit: number) => void;
   loading?: boolean;
   error?: string;
-  searchTerm?: string;
+  search?: string;
+  onSearchChange?: (search: string) => void;
 };
 
 export function BranchesTable({
@@ -86,7 +87,8 @@ export function BranchesTable({
   onLimitChange,
   loading = false,
   error,
-  searchTerm = '',
+  search = '',
+  onSearchChange,
 }: BranchesTableProps) {
   return (
     <DataTable<Branch>
@@ -94,11 +96,16 @@ export function BranchesTable({
       columns={branchesColumns}
       data={data}
       rowKey={(branch) => branch.id}
+      rowNumbers
       loading={loading}
       error={error}
-      searchTerm={searchTerm}
+      search={search}
+      onSearchChange={onSearchChange}
+      searchPlaceholder="جستجو در شعب…"
+      toolbar={{ search: true, columns: true, density: true }}
+      searchTerm={search}
       emptyMessage="هنوز شعبه‌ای ثبت نشده است."
-      searchEmptyMessage={`نتیجه‌ای برای «${searchTerm}» پیدا نشد.`}
+      searchEmptyMessage={`نتیجه‌ای برای «${search}» پیدا نشد.`}
       meta={meta}
       page={page}
       limit={limit}

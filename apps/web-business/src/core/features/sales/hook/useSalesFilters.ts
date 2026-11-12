@@ -11,6 +11,7 @@ export function useSalesFilters() {
   const status = searchParams.get('status') ?? '';
   const seller = searchParams.get('seller') ?? '';
   const discountState = searchParams.get('dstate') ?? '';
+  const search = searchParams.get('search') ?? '';
 
   const update = useCallback(
     (patch: Record<string, string>) => {
@@ -30,6 +31,7 @@ export function useSalesFilters() {
   const setStatus = useCallback((v: string) => update({ status: v }), [update]);
   const setSeller = useCallback((v: string) => update({ seller: v }), [update]);
   const setDiscountState = useCallback((v: string) => update({ dstate: v }), [update]);
+  const setSearch = useCallback((v: string) => update({ search: v }), [update]);
 
-  return { status, seller, discountState, setStatus, setSeller, setDiscountState };
+  return { status, seller, discountState, search, setStatus, setSeller, setDiscountState, setSearch };
 }

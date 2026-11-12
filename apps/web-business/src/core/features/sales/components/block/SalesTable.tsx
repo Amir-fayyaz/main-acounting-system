@@ -90,7 +90,8 @@ export type SalesTableProps = {
   onLimitChange?: (limit: number) => void;
   loading?: boolean;
   error?: string;
-  searchTerm?: string;
+  search?: string;
+  onSearchChange?: (search: string) => void;
 };
 
 export function SalesTable({
@@ -102,7 +103,8 @@ export function SalesTable({
   onLimitChange,
   loading = false,
   error,
-  searchTerm = '',
+  search = '',
+  onSearchChange,
 }: SalesTableProps) {
   return (
     <DataTable<Sale>
@@ -110,11 +112,16 @@ export function SalesTable({
       columns={salesColumns}
       data={data}
       rowKey={(sale) => sale.id}
+      rowNumbers
       loading={loading}
       error={error}
-      searchTerm={searchTerm}
+      search={search}
+      onSearchChange={onSearchChange}
+      searchPlaceholder="جستجو در فاکتورها…"
+      toolbar={{ search: true, columns: true, density: true }}
+      searchTerm={search}
       emptyMessage="هنوز فاکتوری ثبت نشده است."
-      searchEmptyMessage={`نتیجه‌ای برای «${searchTerm}» پیدا نشد.`}
+      searchEmptyMessage={`نتیجه‌ای برای «${search}» پیدا نشد.`}
       meta={meta}
       page={page}
       limit={limit}

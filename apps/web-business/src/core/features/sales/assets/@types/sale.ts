@@ -45,6 +45,10 @@ export interface CreateSaleInput {
   gross: string;
   discountPercent: string;
   taxPercent: string;
+  /** Total paid across payment rows. */
+  paid?: string;
+  /** Issue date (Jalali); defaults to today. */
+  date?: string;
 }
 
 /** Filters accepted by the sale list endpoint. */

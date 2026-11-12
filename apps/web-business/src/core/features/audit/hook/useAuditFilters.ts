@@ -9,6 +9,7 @@ export function useAuditFilters() {
   const searchParams = useSearchParams();
 
   const outcome = searchParams.get('outcome') ?? '';
+  const search = searchParams.get('search') ?? '';
 
   const setOutcome = useCallback(
     (next: string) => {
@@ -23,5 +24,18 @@ export function useAuditFilters() {
     [pathname, router, searchParams],
   );
 
-  return { outcome, setOutcome };
+  const setSearch = useCallback(
+    (next: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (next) params.set('search', next);
+      else params.delete('search');
+      params.delete('page');
+      const nextQuery = params.toString();
+      if (nextQuery === searchParams.toString()) return;
+      router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname);
+    },
+    [pathname, router, searchParams],
+  );
+
+  return { outcome, search, setOutcome, setSearch };
 }

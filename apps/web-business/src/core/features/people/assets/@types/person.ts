@@ -31,6 +31,12 @@ export interface CreatePersonInput {
   phone: string;
 }
 
+/** One sort criterion; the array order is the priority order. */
+export interface PersonSortItem {
+  id: string;
+  desc: boolean;
+}
+
 /** Filters accepted by the person list endpoint. */
 export interface ListPeopleParams {
   /** 1-based page number. */
@@ -41,4 +47,6 @@ export interface ListPeopleParams {
   search?: string;
   /** Raw party kind, or an empty string for "all". */
   kind?: string;
+  /** Multi-column sort, highest priority first. */
+  sort?: PersonSortItem[];
 }
