@@ -17,8 +17,8 @@ describe('MetricsService', () => {
   it('observes job executions as histogram samples by name and status', async () => {
     const service = new MetricsService();
 
-    service.observeJobExecution('sample.echo', 'success', 0.2);
-    service.observeJobExecution('sample.echo', 'failure', 0.5);
+    service.observeExecution('sample.echo', 'success', 0.2);
+    service.observeExecution('sample.echo', 'failure', 0.5);
 
     const output = await exposition(service);
 

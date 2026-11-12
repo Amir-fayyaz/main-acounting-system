@@ -1,7 +1,7 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { Gauge, Histogram, Registry, collectDefaultMetrics } from 'prom-client';
 import { MYSQL_CONNECTION_POOL } from '../database/database.tokens.js';
-import type { JobExecutionStatus } from '../jobs/job-metrics.js';
+import type { JobExecutionStatus, JobMetrics } from '../jobs/job-metrics.js';
 
 /**
  * The shape `prom-client` reads the connection accounting from.
@@ -57,7 +57,7 @@ export type QueueDepthProvider = () => Promise<number>;
  * ones.
  */
 @Injectable()
-export class MetricsService {
+export class MetricsService implements JobMetrics {
   readonly registry = new Registry();
 
   private readonly httpRequestDuration: Histogram<string>;
@@ -142,8 +142,13 @@ export class MetricsService {
       .observe(Math.max(durationSeconds, 0));
   }
 
-  /** Records one finished job execution (`success` or `failure`). */
-  observeJobExecution(jobName: string, status: JobExecutionStatus, durationSeconds: number): void {
+  /**
+   * Records one finished job execution (`success` or `failure`).
+   *
+   * This is the {@link JobMetrics} port implementation the `JobDispatcher`
+   * records through: the method name is the port's, not the metric's.
+   */
+  observeExecution(jobName: string, status: JobExecutionStatus, durationSeconds: number): void {
     this.jobExecutionDuration.labels(jobName, status).observe(Math.max(durationSeconds, 0));
   }
 
