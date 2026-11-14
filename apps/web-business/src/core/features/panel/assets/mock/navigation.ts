@@ -30,6 +30,7 @@ export const accountingPanelConfig = {
           icon: 'CiRead',
           children: [
             { label: 'دفتر روزنامه', href: '/journal' },
+            { label: 'ثبت سند جدید', href: '/journal/new' },
             { label: 'تراز آزمایشی', href: '/trial' },
           ],
         },

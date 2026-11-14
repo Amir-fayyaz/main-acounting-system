@@ -4,13 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { CiCirclePlus, CiReceipt } from 'react-icons/ci';
 
-import {
-  Button,
-  DataTable,
-  SearchInput,
-  type DataTableColumn,
-  type PaginatedResponse,
-} from '@repo/web';
+import { Button, DataTable, SearchInput, type PaginatedResponse } from '@repo/web';
 import { ListPage } from '../../../panel/components/ui/ListPage';
 import { StatusFilter } from '../../../panel/components/ui/StatusFilter';
 import { useListQuery } from '../../../panel/hooks/useListQuery';
@@ -18,7 +12,7 @@ import { useListQuery } from '../../../panel/hooks/useListQuery';
 import type { JournalEntry, JournalStats } from '../../assets/@types';
 import { getJournalStats, listJournalEntries } from '../../lib/journal-api';
 import { formatMoneyAmount, toPersianDigits } from '../../utils/journal-formatters';
-import { JournalStatusBadge } from '../ui/JournalStatusBadge';
+import { journalColumns } from '../ui/journal-columns';
 
 type ListStatsState = React.ComponentProps<typeof ListPage>['stats'];
 
@@ -40,34 +34,6 @@ const STATUS_OPTIONS = [
   { value: 'balanced', label: 'تراز' },
   { value: 'draft', label: 'پیش‌نویس' },
 ] as const;
-
-const columns: DataTableColumn<JournalEntry>[] = [
-  {
-    key: 'number',
-    header: 'شماره سند',
-    cell: (entry) => toPersianDigits(entry.number),
-  },
-  {
-    key: 'date',
-    header: 'تاریخ',
-  },
-  {
-    key: 'description',
-    header: 'شرح',
-  },
-  {
-    key: 'amount',
-    header: 'مبلغ (ریال)',
-    className: 'text-end tabular-nums',
-    headerClassName: 'text-end',
-    cell: (entry) => formatMoneyAmount(entry.amount),
-  },
-  {
-    key: 'status',
-    header: 'وضعیت',
-    cell: (entry) => <JournalStatusBadge status={entry.status} />,
-  },
-];
 
 export function JournalPage() {
   const { page, limit, setPage, setLimit, queryParams, status, setStatus, search } = useListQuery();
@@ -149,23 +115,22 @@ export function JournalPage() {
     >
       <DataTable<JournalEntry>
         aria-label="دفتر روزنامه"
-        columns={columns}
+        columns={journalColumns}
         data={state.status === 'success' ? state.response.data : []}
         rowKey={(entry) => entry.id}
         loading={state.status === 'loading'}
-        error={
-          state.status === 'error'
-            ? 'دریافت اسناد با مشکل مواجه شد. لطفاً دوباره تلاش کنید.'
+        emptyMessage="سندی ثبت نشده است."
+        pagination={
+          state.status === 'success'
+            ? {
+                page,
+                pageSize: limit,
+                total: state.response.total,
+                onPageChange: setPage,
+                onPageSizeChange: setLimit,
+              }
             : undefined
         }
-        emptyMessage="هنوز موردی ثبت نشده است."
-        searchEmptyMessage={`نتیجه‌ای برای «${search}» پیدا نشد. عبارت دیگری را جستجو کنید.`}
-        searchTerm={search}
-        meta={state.status === 'success' ? state.response.meta : undefined}
-        page={page}
-        limit={limit}
-        onPageChange={setPage}
-        onLimitChange={setLimit}
       />
     </ListPage>
   );

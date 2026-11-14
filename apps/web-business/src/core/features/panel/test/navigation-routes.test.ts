@@ -19,7 +19,9 @@ const hrefs = links.map((link) => link.href);
 const EXPECTED_DESTINATIONS = [
   '/',
   '/journal',
+  '/journal/new',
   '/trial',
+  '/fiscal-periods',
   '/accounts',
   '/checks',
   '/pos',
