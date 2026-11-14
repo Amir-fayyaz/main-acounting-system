@@ -1,12 +1,17 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  DEFAULT_API_BASE_URL,
+  DEFAULT_API_PREFIX,
   ApiError,
   apiRequest,
+  apiUrl,
   createHttpApiError,
   getFieldErrors,
+  getApiBaseUrl,
   normalizeApiError,
   serializeApiError,
+  setApiBaseUrl,
 } from '@repo/web/api';
 
 const fetchMock = vi.fn();
@@ -186,5 +191,73 @@ describe('API error normalization', () => {
     expect(getFieldErrors(error, ['page'] as const)).toEqual({
       page: 'page is below the minimum allowed value',
     });
+  });
+});
+
+describe('apiUrl helper and apiRequest baseUrl support', () => {
+  it('به صورت خودکار آدرس پایه پیش‌فرض و /api/v1 را اعمال می‌کند', () => {
+    expect(DEFAULT_API_BASE_URL).toBe('http://localhost:3000/api');
+    expect(DEFAULT_API_PREFIX).toBe('/api/v1');
+
+    // بدون پاس دادن هیچ baseUrl، خودکار از پیش‌فرض localhost:3000/api استفاده می‌شود:
+    expect(apiUrl('/invoices')).toBe('http://localhost:3000/api/v1/invoices');
+    expect(apiUrl('invoices')).toBe('http://localhost:3000/api/v1/invoices');
+    expect(apiUrl('/api/v1/invoices')).toBe('http://localhost:3000/api/v1/invoices');
+    expect(apiUrl('api/v1/invoices')).toBe('http://localhost:3000/api/v1/invoices');
+    expect(apiUrl('/v1/invoices')).toBe('http://localhost:3000/api/v1/invoices');
+  });
+
+  it('اگر baseUrl خالی پاس داده شود، فقط مسیر نسبی /api/v1 را برمی‌گرداند', () => {
+    expect(apiUrl('/invoices', '')).toBe('/api/v1/invoices');
+    expect(apiUrl('invoices', '')).toBe('/api/v1/invoices');
+  });
+
+  it('آدرس‌های کامل http(s) را بدون تغییر نگه می‌دارد', () => {
+    expect(apiUrl('https://service.domain/api/v2/items')).toBe(
+      'https://service.domain/api/v2/items',
+    );
+    expect(apiUrl('http://localhost:3000/health')).toBe('http://localhost:3000/health');
+  });
+
+  it('baseUrl را به صورت استاندارد بدون تکرار /api ترکیب می‌کند', () => {
+    expect(apiUrl('/invoices', 'http://localhost:3000')).toBe(
+      'http://localhost:3000/api/v1/invoices',
+    );
+    expect(apiUrl('/invoices', 'http://localhost:3000/api')).toBe(
+      'http://localhost:3000/api/v1/invoices',
+    );
+    expect(apiUrl('/invoices', 'http://localhost:3000/api/v1')).toBe(
+      'http://localhost:3000/api/v1/invoices',
+    );
+  });
+
+  it('پارامترهای جستجو (query params) و هش را حفظ می‌کند', () => {
+    expect(apiUrl('/invoices?page=1&limit=20')).toBe(
+      'http://localhost:3000/api/v1/invoices?page=1&limit=20',
+    );
+    expect(apiUrl('/api/v1/invoices?page=1&limit=20')).toBe(
+      'http://localhost:3000/api/v1/invoices?page=1&limit=20',
+    );
+    expect(apiUrl('/invoices?page=1', 'http://backend:3000/api')).toBe(
+      'http://backend:3000/api/v1/invoices?page=1',
+    );
+  });
+
+  it('apiRequest بدون تنظیم دستی baseUrl، خودکار از پیش‌فرض برای ارسال درخواست استفاده می‌کند', async () => {
+    fetchMock.mockResolvedValue(json(200, { ok: true }));
+
+    await apiRequest('/tenants/123/fiscal-years');
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:3000/api/v1/tenants/123/fiscal-years',
+      expect.anything(),
+    );
+  });
+
+  it('امکان تغییر سراسری آدرس پایه با setApiBaseUrl وجود دارد', () => {
+    setApiBaseUrl('http://staging.server/api');
+    expect(getApiBaseUrl()).toBe('http://staging.server/api');
+    expect(apiUrl('/invoices')).toBe('http://staging.server/api/v1/invoices');
+    setApiBaseUrl(undefined);
   });
 });

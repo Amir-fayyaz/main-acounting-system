@@ -7,6 +7,8 @@
 ```ts
 import {
   apiRequest,
+  apiUrl,
+  DEFAULT_API_PREFIX,
   getFieldErrors,
   normalizeApiError,
   serializeApiError,
@@ -93,6 +95,24 @@ await apiRequest('/api/v1/auth/sign-out', {
   method: 'POST',
   responseType: 'void',
 });
+```
+
+### آدرس‌دهی خودکار با `apiRequest` و `apiUrl`
+
+به طور پیش‌فرض، `apiRequest` و `apiUrl` آدرس پایه و پیشوند نسخه API را خودکار اعمال می‌کنند:
+
+- در سرور (Docker / SSR): از `INTERNAL_API_BASE_URL` یا `NEXT_PUBLIC_API_BASE_URL`
+- در کلاینت (مرورگر): از `NEXT_PUBLIC_API_BASE_URL`
+- مقدار پیش‌فرض لوکال: `http://localhost:3000/api`
+
+بنابراین نیازی به نوشتن مکرر نشانی سرور یا `/api/v1` نیست:
+
+```ts
+import { apiRequest } from '@repo/web/api';
+
+// هر دو حالت زیر به http://localhost:3000/api/v1/invoices تبدیل می‌شوند:
+const invoices = await apiRequest('/invoices', { parse: parseInvoiceList });
+const details = await apiRequest('/api/v1/invoices/123', { parse: parseInvoice });
 ```
 
 ## `normalizeApiError`

@@ -65,6 +65,44 @@ export class ApiError extends Error {
   }
 }
 
+export const DEFAULT_API_BASE_URL = 'http://localhost:3000/api';
+export const DEFAULT_API_PREFIX = '/api/v1';
+
+declare const process: { env?: Record<string, string | undefined> } | undefined;
+
+let configuredBaseUrl: string | undefined;
+
+/** Allows overriding the default API base URL (e.g. for testing or custom runtime environments). */
+export function setApiBaseUrl(url: string | undefined): void {
+  configuredBaseUrl = url;
+}
+
+/**
+ * Resolves the active API base URL.
+ * Order of precedence:
+ * 1. Runtime override via `setApiBaseUrl(...)`
+ * 2. On server (SSR / Server Actions / Docker): `INTERNAL_API_BASE_URL` -> `NEXT_PUBLIC_API_BASE_URL` -> `DEFAULT_API_BASE_URL`
+ * 3. On client: `NEXT_PUBLIC_API_BASE_URL` -> `DEFAULT_API_BASE_URL`
+ */
+export function getApiBaseUrl(): string {
+  if (configuredBaseUrl !== undefined && configuredBaseUrl.trim() !== '') {
+    return configuredBaseUrl;
+  }
+
+  if (typeof process !== 'undefined' && process.env) {
+    if (typeof window === 'undefined') {
+      return (
+        process.env.INTERNAL_API_BASE_URL ||
+        process.env.NEXT_PUBLIC_API_BASE_URL ||
+        DEFAULT_API_BASE_URL
+      );
+    }
+    return process.env.NEXT_PUBLIC_API_BASE_URL || DEFAULT_API_BASE_URL;
+  }
+
+  return DEFAULT_API_BASE_URL;
+}
+
 export const DEFAULT_API_ERROR_MESSAGES = {
   network: 'Unable to connect to the server.',
   aborted: 'The request was cancelled.',
@@ -84,9 +122,61 @@ export const DEFAULT_API_ERROR_MESSAGES = {
 export type ApiResponseType = 'json' | 'text' | 'blob' | 'arrayBuffer' | 'formData' | 'void';
 export type ApiDataParser<T> = (data: unknown) => T;
 
+/**
+ * Builds a standardized API endpoint URL prefixed with `/api/v1`.
+ * Prevents duplicate `/api` or `/v1` segments and cleanly normalizes base and path slashes.
+ *
+ * @example
+ * apiUrl('/invoices') // -> '/api/v1/invoices'
+ * apiUrl('invoices') // -> '/api/v1/invoices'
+ * apiUrl('/api/v1/invoices') // -> '/api/v1/invoices'
+ * apiUrl('/invoices', 'http://localhost:3000') // -> 'http://localhost:3000/api/v1/invoices'
+ * apiUrl('/invoices', 'http://localhost:3000/api') // -> 'http://localhost:3000/api/v1/invoices'
+ */
+export function apiUrl(path: string, baseUrl?: string): string {
+  if (/^https?:\/\//i.test(path)) {
+    return path;
+  }
+
+  const trimmed = path.trim();
+  const queryIndex = trimmed.search(/[?#]/);
+  const pathPart = queryIndex === -1 ? trimmed : trimmed.slice(0, queryIndex);
+  const searchPart = queryIndex === -1 ? '' : trimmed.slice(queryIndex);
+
+  const cleanPath = pathPart.replace(/^\/+/, '');
+  let route = cleanPath;
+
+  if (route === 'api/v1' || route.startsWith('api/v1/')) {
+    route = route.slice(6).replace(/^\/+/, '');
+  } else if (route === 'v1' || route.startsWith('v1/')) {
+    route = route.slice(2).replace(/^\/+/, '');
+  }
+
+  const suffix = route ? `/${route}` : '';
+  const fullSuffix = `${suffix}${searchPart}`;
+
+  // If baseUrl is explicitly set to empty string, return only relative path '/api/v1/...'
+  if (baseUrl === '') {
+    return `${DEFAULT_API_PREFIX}${fullSuffix}`;
+  }
+
+  const effectiveBase = (baseUrl && baseUrl.trim() !== '' ? baseUrl : getApiBaseUrl()).trim();
+  const trimmedBase = effectiveBase.replace(/\/+$/, '');
+
+  if (trimmedBase.endsWith('/api/v1')) {
+    return `${trimmedBase}${fullSuffix}`;
+  }
+  if (trimmedBase.endsWith('/api')) {
+    return `${trimmedBase}/v1${fullSuffix}`;
+  }
+
+  return `${trimmedBase}${DEFAULT_API_PREFIX}${fullSuffix}`;
+}
+
 type BaseApiRequestOptions = RequestInit & {
   readonly responseType?: ApiResponseType;
   readonly parse?: ApiDataParser<unknown>;
+  readonly baseUrl?: string;
 };
 
 type JsonApiRequestOptions<T> = Omit<BaseApiRequestOptions, 'responseType' | 'parse'> & {
@@ -149,11 +239,13 @@ export async function apiRequest(
   input: RequestInfo | URL,
   options: BaseApiRequestOptions = {},
 ): Promise<unknown> {
-  const { responseType = 'json', parse, ...requestInit } = options;
+  const { responseType = 'json', parse, baseUrl, ...requestInit } = options;
   let response: Response;
 
+  const target = resolveTarget(input, baseUrl);
+
   try {
-    response = await fetch(input, requestInit);
+    response = await fetch(target, requestInit);
   } catch (error: unknown) {
     throw errorFromFetchFailure(error);
   }
@@ -334,6 +426,13 @@ function invalidResponseError(): ApiError {
     code: 'INVALID_RESPONSE',
     message: DEFAULT_API_ERROR_MESSAGES.invalidResponse,
   });
+}
+
+function resolveTarget(input: RequestInfo | URL, baseUrl?: string): RequestInfo | URL {
+  if (typeof input === 'string') {
+    return apiUrl(input, baseUrl);
+  }
+  return input;
 }
 
 function isAbortError(error: unknown): boolean {
