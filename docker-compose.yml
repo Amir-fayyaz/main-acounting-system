@@ -282,11 +282,18 @@ services:
     ports:
       - '127.0.0.1:9090:9090'
     volumes:
-      - ./infrastructure/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      # Default: the containerised-backend target (prometheus.yml). To monitor
+      # a host-run stack (`pnpm dev:local`), set in .env:
+      #   PROMETHEUS_CONFIG=./infrastructure/observability/prometheus/prometheus.host.yml
+      - ${PROMETHEUS_CONFIG:-./infrastructure/observability/prometheus/prometheus.yml}:/etc/prometheus/prometheus.yml:ro
       - ./infrastructure/observability/alerts:/etc/prometheus/alerts:ro
       # Rendered at start-up by `pnpm obs:up` from .env; never committed.
       - ./infrastructure/observability/runtime/metrics_token:/run/secrets/metrics_token:ro
       - prometheus-data:/prometheus
+    # Lets the container resolve host.docker.internal on Linux daemons too
+    # (Docker Desktop resolves it natively); harmless on Desktop.
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     networks:
       - accounting
 
@@ -301,7 +308,7 @@ services:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
       GF_USERS_ALLOW_SIGN_UP: 'false'
     ports:
-      - '127.0.0.1:3002:3000'
+      - '127.0.0.1:${GRAFANA_PORT:-3002}:3000'
     volumes:
       - ./infrastructure/observability/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./infrastructure/observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
