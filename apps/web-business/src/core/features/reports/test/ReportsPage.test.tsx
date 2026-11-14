@@ -35,10 +35,70 @@ function mockSuccess() {
   );
 }
 
+function mockEmpty() {
+  api.listReportGroups.mockResolvedValue([]);
+  api.findReport.mockImplementation(() => null);
+}
+
+function mockError() {
+  api.listReportGroups.mockRejectedValue(new Error('failed'));
+}
+
 describe('ReportsPage', () => {
+  it('renders the loading skeleton while report groups are pending', () => {
+    api.listReportGroups.mockReturnValue(new Promise(() => {}));
+
+    render(<ReportsPage />);
+
+    expect(screen.getByLabelText('در حال بارگذاری گزارش‌ها')).toHaveAttribute('aria-busy', 'true');
+  });
+
+  it('renders an alert and retry button when report groups fail to load', async () => {
+    mockError();
+
+    render(<ReportsPage />);
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(
+      'دریافت اطلاعات گزارش با مشکل مواجه شد. لطفاً دوباره تلاش کنید.',
+    );
+    expect(screen.getByRole('button', { name: 'تلاش مجدد' })).toBeInTheDocument();
+  });
+
+  it('retries loading when the retry button is clicked after an error', async () => {
+    api.listReportGroups
+      .mockRejectedValueOnce(new Error('failed'))
+      .mockResolvedValueOnce(reportGroups);
+
+    api.findReport.mockImplementation(
+      (groups: readonly { items: readonly { id: string; label: string }[] }[], id: string) => {
+        for (const group of groups) {
+          const report = group.items.find((item) => item.id === id);
+          if (report) return report.label;
+        }
+        return null;
+      },
+    );
+
+    render(<ReportsPage />);
+
+    await screen.findByRole('alert');
+    expect(screen.getByRole('button', { name: 'تلاش مجدد' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'تلاش مجدد' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('گزارشات مالی')).toBeInTheDocument();
+    });
+  });
+
   it('renders the page title and description', async () => {
     mockSuccess();
+
     render(<ReportsPage />);
+    await waitFor(() => {
+      expect(screen.getByText('گزارش‌ها')).toBeInTheDocument();
+    });
     expect(screen.getByText('گزارش‌ها')).toBeInTheDocument();
     expect(
       screen.getByText('گزارش‌های مالی، خزانه‌داری، فروش و مدیریتی'),
@@ -47,6 +107,7 @@ describe('ReportsPage', () => {
 
   it('renders all four report groups', async () => {
     mockSuccess();
+
     render(<ReportsPage />);
     await waitFor(() => {
       expect(screen.getByText('گزارشات مالی')).toBeInTheDocument();
@@ -58,6 +119,7 @@ describe('ReportsPage', () => {
 
   it('renders report items under each group', async () => {
     mockSuccess();
+
     render(<ReportsPage />);
     await waitFor(() => {
       expect(screen.getByText('ترازنامه')).toBeInTheDocument();
@@ -70,6 +132,7 @@ describe('ReportsPage', () => {
 
   it('renders "باز کردن" span next to each report item', async () => {
     mockSuccess();
+
     render(<ReportsPage />);
     await waitFor(() => {
       const bazKon = screen.getAllByText('باز کردن');
@@ -83,6 +146,7 @@ describe('ReportsPage', () => {
 
   it('opens the report dialog when a report item is clicked', async () => {
     mockSuccess();
+
     render(<ReportsPage />);
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /ترازنامه/ })).toBeInTheDocument();
@@ -96,6 +160,7 @@ describe('ReportsPage', () => {
 
   it('dialog contains branch and status selects', async () => {
     mockSuccess();
+
     render(<ReportsPage />);
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /ترازنامه/ })).toBeInTheDocument();
@@ -107,6 +172,7 @@ describe('ReportsPage', () => {
 
   it('dialog contains four action buttons', async () => {
     mockSuccess();
+
     render(<ReportsPage />);
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /ترازنامه/ })).toBeInTheDocument();
@@ -120,6 +186,7 @@ describe('ReportsPage', () => {
 
   it('closes the dialog when بستن is clicked', async () => {
     mockSuccess();
+
     render(<ReportsPage />);
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /ترازنامه/ })).toBeInTheDocument();
@@ -132,6 +199,7 @@ describe('ReportsPage', () => {
 
   it('confirms a date range via نمایش گزارش button', async () => {
     mockSuccess();
+
     render(<ReportsPage />);
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /ترازنامه/ })).toBeInTheDocument();
@@ -153,6 +221,7 @@ describe('ReportsPage', () => {
 
   it('shows toast when Excel button is clicked', async () => {
     mockSuccess();
+
     render(<ReportsPage />);
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /ترازنامه/ })).toBeInTheDocument();
@@ -165,6 +234,7 @@ describe('ReportsPage', () => {
 
   it('shows toast when PDF button is clicked', async () => {
     mockSuccess();
+
     render(<ReportsPage />);
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /ترازنامه/ })).toBeInTheDocument();
@@ -177,6 +247,7 @@ describe('ReportsPage', () => {
 
   it('shows toast when نمایش گزارش button is clicked', async () => {
     mockSuccess();
+
     render(<ReportsPage />);
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /ترازنامه/ })).toBeInTheDocument();
@@ -191,6 +262,7 @@ describe('ReportsPage', () => {
 
   it('does NOT show toast when بستن button is clicked', async () => {
     mockSuccess();
+
     render(<ReportsPage />);
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /ترازنامه/ })).toBeInTheDocument();
@@ -199,5 +271,14 @@ describe('ReportsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /بستن/ }));
 
     expect(mockToast).not.toHaveBeenCalled();
+  });
+
+  it('renders an empty state when no report groups are returned', async () => {
+    mockEmpty();
+
+    render(<ReportsPage />);
+    await waitFor(() => {
+      expect(screen.getByText('هیچ گزارش در دسترس نیست.')).toBeInTheDocument();
+    });
   });
 });

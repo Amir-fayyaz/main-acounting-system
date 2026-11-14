@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import type { ReportGroup } from '../assets/@types/reports';
 import { branches, statuses } from '../assets/mock/reports';
@@ -13,24 +13,34 @@ export type ReportsState =
 
 export function useReports() {
   const [state, setState] = useState<ReportsState>({ status: 'loading' });
+  const isMounted = useRef(true);
 
-  useEffect(() => {
-    let isMounted = true;
-
+  const fetchReports = () => {
     listReportGroups()
       .then((reportGroups) => {
-        if (isMounted) {
+        if (isMounted.current) {
           setState({ status: 'success', reportGroups });
         }
       })
       .catch(() => {
-        if (isMounted) setState({ status: 'error' });
+        if (isMounted.current) {
+          setState({ status: 'error' });
+        }
       });
+  };
+
+  useEffect(() => {
+    fetchReports();
 
     return () => {
-      isMounted = false;
+      isMounted.current = false;
     };
   }, []);
+
+  const retry = () => {
+    setState({ status: 'loading' });
+    fetchReports();
+  };
 
   return {
     state,
@@ -40,5 +50,6 @@ export function useReports() {
       if (state.status !== 'success') return null;
       return findReport(state.reportGroups, reportId);
     },
+    retry,
   };
 }
