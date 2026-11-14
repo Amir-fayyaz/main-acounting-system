@@ -232,6 +232,7 @@ jobs:
           env MYSQL_PASSWORD=dummy MYSQL_ROOT_PASSWORD=dummy \
             MINIO_ACCESS_KEY=dummy MINIO_SECRET_KEY=dummy \
             GRAFANA_ADMIN_PASSWORD=dummy \
+            METRICS_TOKEN=dummy \
             docker compose --profile observability config --quiet
 
       - name: Static check (no secrets, all ports on 127.0.0.1)
