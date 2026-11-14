@@ -1,0 +1,88 @@
+# Alert rules for the backend (FND-017; ADR-015 section 7, 10-observability).
+#
+# Fire on *sustained, actionable* conditions only — every rule carries a `for`
+# window measured in minutes, so a single failed request, one scrape hiccup or
+# a short queue blip never pages anyone. What each alert means is documented in
+# infrastructure/README.md; the firing/non-firing series for each one live in
+# rules.spec.yml and run in CI (`promtool test rules`).
+groups:
+  - name: backend.rules
+    rules:
+      # The scrape target not answering (for three straight minutes) means the
+      # API process is down, wedged, or refusing scrapes — everything else on
+      # this dashboard goes dark with it.
+      - alert: BackendScrapeTargetDown
+        expr: up{job="backend-metrics"} == 0
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: Backend metrics scrape is failing
+          description: Prometheus has been unable to scrape the backend exposition for 3 minutes.
+
+      # Sustained 5% error ratio over a rolling 5-minute window — a single
+      # failed request is noise; five minutes of them is a regression.
+      - alert: BackendHttp5xxRateHigh
+        expr: >
+          sum(rate(http_request_duration_seconds_count{status_code=~"5.."}[5m]))
+          /
+          sum(rate(http_request_duration_seconds_count[5m]))
+          > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: HTTP 5xx rate above 5% for 5 minutes
+          description: The server error ratio has been above 5% of all requests for 5 minutes.
+
+      # More than 20% of finished job executions failing over a 15-minute
+      # window — individual job failures retry (ADR-008); a sustained failure
+      # ratio means the work itself is broken.
+      - alert: BackendJobFailureRateHigh
+        expr: >
+          sum(rate(job_execution_duration_seconds_count{status="failure"}[15m]))
+          /
+          sum(rate(job_execution_duration_seconds_count[15m]))
+          > 0.2
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: Background job failure rate above 20%
+          description: At least 20% of job executions have failed over the last 15 minutes, for 10 minutes.
+
+      # Queue depth growing over a sustained window: the trend line rising for
+      # 15 minutes means producers outpace workers (or the worker is down) —
+      # a flat non-zero depth is backpressure, not an incident.
+      - alert: BackendJobQueueDepthGrowing
+        expr: deriv(job_queue_depth[15m]) > 0
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: Job queue depth keeps growing
+          description: The queue depth trend has been rising for 15 minutes; consumers are falling behind.
+
+      # Outbox records not yet published (pending, retrying or claimed) stuck
+      # above 50 for 10 minutes: the transactional outbox is not draining, so
+      # domain events are not reaching the bus (ADR-004 section 14).
+      - alert: OutboxPendingEventsHigh
+        expr: outbox_pending_events > 50
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: Outbox is not draining
+          description: More than 50 outbox events have been un-published for 10 minutes.
+
+      # Any request waiting for a connection for 5 minutes: the pool is
+      # exhausted (a leak, a slow query, or a too-small limit) and request
+      # latency will follow.
+      - alert: DatabasePoolWaitingRequests
+        expr: database_pool_connections{state="waiting"} > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Database connection pool exhausted
+          description: Requests have been waiting for a pool connection for 5 minutes.

@@ -31,6 +31,7 @@ jobs:
       has_frontends: ${{ steps.matrix.outputs.has_frontends }}
       backend: ${{ steps.matrix.outputs.backend }}
       docker: ${{ steps.filter.outputs.docker }}
+      observability: ${{ steps.filter.outputs.observability }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -60,6 +61,12 @@ jobs:
             docker:
               - '**/Dockerfile'
               - '**/.dockerignore'
+            observability:
+              - 'infrastructure/observability/**'
+              - 'docker-compose.yml'
+              - 'tooling/scripts/obs.mjs'
+              - 'tooling/scripts/obs/**'
+              - 'tooling/scripts/check-observability.mjs'
 
       - name: Build job matrix
         id: matrix
@@ -173,12 +180,74 @@ jobs:
           exit $status
 
   # ---------------------------------------------------------------
-  # 5) یه چک نهایی که توی branch protection به‌عنوان required ست کن
+  # 5) Observability stack config (FND-017): promtool checks, rule
+  #    tests (firing + non-firing per alert), compose config and the
+  #    no-secrets/localhost static check
+  # ---------------------------------------------------------------
+  observability:
+    name: Observability config
+    needs: changes
+    if: needs.changes.outputs.observability == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # promtool validates the config and both rule files with the exact
+      # version the stack runs, so review and runtime never disagree.
+      - name: promtool check config and rules
+        run: |
+          # The scrape-token file is a start-up artifact (git-ignored); the
+          # config check only needs the path to exist.
+          mkdir -p infrastructure/observability/runtime
+          : > infrastructure/observability/runtime/metrics_token
+
+          docker run --rm \
+            -v "$PWD/infrastructure/observability/prometheus:/etc/prometheus" \
+            -v "$PWD/infrastructure/observability/alerts:/etc/prometheus/alerts" \
+            -v "$PWD/infrastructure/observability/runtime:/run/secrets" \
+            --entrypoint promtool prom/prometheus:v3.16.0 \
+            check config /etc/prometheus/prometheus.yml
+
+          docker run --rm \
+            -v "$PWD/infrastructure/observability/alerts:/alerts" \
+            --entrypoint promtool prom/prometheus:v3.16.0 \
+            check rules /alerts/rules.yml
+
+      # One firing and one non-firing case per alert, driven by synthetic
+      # series — thresholds and `for` windows proven without infrastructure.
+      - name: promtool test rules
+        run: |
+          docker run --rm \
+            -v "$PWD/infrastructure/observability/alerts:/alerts" \
+            --entrypoint promtool prom/prometheus:v3.16.0 \
+            test rules /alerts/rules.spec.yml
+
+      - name: docker compose --profile observability config
+        run: |
+          # Interpolation requires the same variables the stack demands
+          # locally (`:?` guards); dummies are enough to prove the model is
+          # valid — no container starts here.
+          env MYSQL_PASSWORD=dummy MYSQL_ROOT_PASSWORD=dummy \
+            MINIO_ACCESS_KEY=dummy MINIO_SECRET_KEY=dummy \
+            GRAFANA_ADMIN_PASSWORD=dummy \
+            METRICS_TOKEN=dummy \
+            docker compose --profile observability config --quiet
+
+      - name: Static check (no secrets, all ports on 127.0.0.1)
+        run: node tooling/scripts/check-observability.mjs
+
+      - name: Tooling unit tests
+        run: node --test tooling/scripts/obs/*.test.mjs
+
+  # ---------------------------------------------------------------
+  # 6) یه چک نهایی که توی branch protection به‌عنوان required ست کن
   #    (چون jobهای شرطی ممکنه skip بشن)
   # ---------------------------------------------------------------
   ci-status:
     name: CI status
-    needs: [changes, frontend, backend, dockerfile-lint]
+    needs: [changes, frontend, backend, dockerfile-lint, observability]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 2

@@ -183,6 +183,76 @@ Run from a clean state (`pnpm dev:reset`, then the startup flow above):
    retries with a growing `retryDelayMs`, then `exhausted its attempts and was
 parked` with `status: failed` — while the worker stays up and keeps consuming.
 
+## Local monitoring stack (FND-017)
+
+An opt-in local monitoring stack — Prometheus, Grafana and Alertmanager — lives
+in `infrastructure/observability/` under the Compose profile `observability`.
+The plain `docker compose up -d` (and `pnpm infra:up`) **never** starts it.
+
+### Starting the stack
+
+```bash
+pnpm obs:up     # renders the scrape token, then docker compose --profile observability up -d
+pnpm obs:down   # stops the stack again
+```
+
+`obs:up` first renders `infrastructure/observability/runtime/metrics_token`
+from `METRICS_TOKEN` in `.env` (restrictive permissions, git-ignored, never
+echoed) and refuses to start without it, because Prometheus cannot scrape the
+deny-by-default `/api/metrics` endpoint without the bearer token (FND-016).
+
+| Service      | URL                        | Notes                                                    |
+| ------------ | -------------------------- | -------------------------------------------------------- |
+| Prometheus   | http://127.0.0.1:9090      | Scrapes `backend:3000/api/metrics`; alerts on `/alerts`   |
+| Grafana      | http://127.0.0.1:3002      | Admin credentials from `.env` (`GRAFANA_ADMIN_*`); datasource and the *Backend* dashboard are provisioned from files |
+| Alertmanager | http://127.0.0.1:9093      | **Null receiver** — alerts are visible in the UI and delivered nowhere |
+
+Every published port is bound to `127.0.0.1`: these are operator tools, never
+network services. `pnpm obs:check` (also a CI job) proves no token or default
+password is committed and no port escapes localhost.
+
+**Scraping needs the containerised backend.** Prometheus targets
+`backend:3000` — the Compose service name. A host-run `pnpm dev` backend is not
+reachable from the Compose network under that name; run the full
+`docker compose --profile app up -d` stack (or override the target) so the
+target shows UP. The scrape of the metrics exposition is also the Prom-visible
+readiness signal: `GET /api/health/ready` answers JSON, which Prometheus cannot
+parse as metrics text, so it stays the Compose healthcheck's job.
+
+### Alert rules (`infrastructure/observability/alerts/rules.yml`)
+
+All alerts fire on *sustained* conditions only — never on a single failed
+request or one bad scrape (10-observability, ADR-015 section 7). Each rule has
+a firing and a non-firing case in `rules.spec.yml`, executed in CI with
+`promtool test rules`.
+
+| Alert | Fires when | Severity |
+| ----- | ---------- | -------- |
+| `BackendScrapeTargetDown` | The metrics scrape has failed for 3 minutes — the process is down, wedged, or refusing scrapes (readiness) | critical |
+| `BackendHttp5xxRateHigh` | Server errors exceed 5% of requests over a 5-minute window, for 5 minutes | critical |
+| `BackendJobFailureRateHigh` | More than 20% of job executions failed over the last 15 minutes, for 10 minutes | critical |
+| `BackendJobQueueDepthGrowing` | The queue-depth trend keeps rising for 15 minutes — producers outpace workers | warning |
+| `OutboxPendingEventsHigh` | More than 50 outbox events un-published for 10 minutes — the transactional outbox is not draining | critical |
+| `DatabasePoolWaitingRequests` | Requests have been waiting for a pool connection for 5 minutes | warning |
+
+### Where the files live
+
+```
+infrastructure/observability/
+├── prometheus/prometheus.yml      # scrape config (bearer token from a file)
+├── alerts/rules.yml               # the alert rules above
+├── alerts/rules.spec.yml          # promtool tests: firing + non-firing per alert
+├── grafana/provisioning/…         # datasource + dashboard provisioning
+├── grafana/dashboards/backend.json
+├── alertmanager/alertmanager.yml  # null receiver
+└── runtime/                       # git-ignored start-up artifacts (token file)
+```
+
+Config checks run in CI: `promtool check config` / `check rules`, `promtool
+test rules`, `docker compose --profile observability config`, and the static
+no-secrets check. Dashboards and rules are files in the repository, reviewed
+like code — changes made in the Grafana UI are lost on restart on purpose.
+
 ## Open decision — MinIO container images
 
 TECH-008 approves MinIO as the MVP file storage provider. MinIO stopped publishing

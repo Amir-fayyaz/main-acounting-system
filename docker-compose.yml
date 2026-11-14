@@ -13,6 +13,11 @@
 # This starts MySQL, Redis, MinIO, the backend, the worker, the scheduler and the
 # frontend; the worker and scheduler are the background-job processes (FND-007).
 #
+# Local monitoring (Prometheus, Grafana, Alertmanager, FND-017) is opt-in and
+# never starts with either of the two commands above:
+#   pnpm obs:up        # renders the scrape token from .env, then starts the stack
+#   pnpm obs:down
+#
 # Shutdown (development data is kept in named volumes):
 #   docker compose --profile app down
 #
@@ -42,6 +47,10 @@ x-backend-environment: &backend-environment
   MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY is required; copy .env.example to .env}
   MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY is required; copy .env.example to .env}
   MINIO_BUCKET: ${MINIO_BUCKET:-accounting-local}
+  # The scrape credential of /api/metrics (FND-016). Required by the
+  # observability profile: Prometheus presents it from the rendered token
+  # file; without it the backend refuses every scrape with 401.
+  METRICS_TOKEN: ${METRICS_TOKEN:?METRICS_TOKEN is required; copy .env.example to .env}
 
 services:
   # --- Infrastructure ------------------------------------------------------
@@ -255,11 +264,79 @@ services:
       retries: 10
       start_period: 45s
 
+  # --- Local monitoring (profile: observability, FND-017) -------------------
+  # Opt-in: the plain `docker compose up -d` above never starts these. Start
+  # the whole stack with `pnpm obs:up` — it first renders the Prometheus
+  # bearer-token file from METRICS_TOKEN in .env (git-ignored, restrictive
+  # permissions) and only then runs `docker compose --profile observability up -d`.
+  #
+  # Every published port is bound to 127.0.0.1: these are operator tools, not
+  # network services, and none of them must ever be reachable from the LAN.
+  # Scraping works only against a *containerised* backend (--profile app): a
+  # host-run `pnpm dev` backend is not reachable from this network as
+  # `backend:3000` (see infrastructure/README.md).
+  prometheus:
+    profiles: ['observability']
+    image: prom/prometheus:v3.16.0
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:9090:9090'
+    volumes:
+      # Default: the containerised-backend target (prometheus.yml). To monitor
+      # a host-run stack (`pnpm dev:local`), set in .env:
+      #   PROMETHEUS_CONFIG=./infrastructure/observability/prometheus/prometheus.host.yml
+      - ${PROMETHEUS_CONFIG:-./infrastructure/observability/prometheus/prometheus.yml}:/etc/prometheus/prometheus.yml:ro
+      - ./infrastructure/observability/alerts:/etc/prometheus/alerts:ro
+      # Rendered at start-up by `pnpm obs:up` from .env; never committed.
+      - ./infrastructure/observability/runtime/metrics_token:/run/secrets/metrics_token:ro
+      - prometheus-data:/prometheus
+    # Lets the container resolve host.docker.internal on Linux daemons too
+    # (Docker Desktop resolves it natively); harmless on Desktop.
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    networks:
+      - accounting
+
+  grafana:
+    profiles: ['observability']
+    image: grafana/grafana:12.4.15
+    restart: unless-stopped
+    # No default password: the admin credential comes from .env and the
+    # process refuses to start without one (the :? required-variable check).
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD is required; copy .env.example to .env}
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+    ports:
+      - '127.0.0.1:${GRAFANA_PORT:-3002}:3000'
+    volumes:
+      - ./infrastructure/observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infrastructure/observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - accounting
+
+  alertmanager:
+    profiles: ['observability']
+    image: prom/alertmanager:v0.28.1
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:9093:9093'
+    volumes:
+      - ./infrastructure/observability/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    networks:
+      - accounting
+
 volumes:
   # Development data. `docker compose down` keeps these; `down -v` removes them.
   mysql-data:
   redis-data:
   minio-data:
+  # Observability state (FND-017). Local scrapes and dashboard edits only.
+  prometheus-data:
+  grafana-data:
 
 networks:
   accounting:

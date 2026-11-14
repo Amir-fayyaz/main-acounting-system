@@ -40,7 +40,6 @@ describe('Metrics endpoint (e2e)', () => {
     // A test fixture, not application configuration: the spec simulates the
     // environment variable a deployment sets, so the endpoint is exercised
     // behind the same token boundary as production (FND-016).
-    // eslint-disable-next-line no-restricted-properties
     env['METRICS_TOKEN'] = SCRAPE_TOKEN;
 
     app = await createApp();
@@ -124,11 +123,12 @@ describe('Metrics endpoint (e2e)', () => {
     expect(response.text).toContain('database_pool_connections{state="waiting"}');
   });
 
-  it('exposes job execution and queue-depth metrics', async () => {
+  it('exposes job execution, queue-depth and outbox metrics', async () => {
     const response = await scrape();
 
     expect(response.text).toContain('job_execution_duration_seconds');
     expect(response.text).toContain('job_queue_depth');
+    expect(response.text).toContain('outbox_pending_events');
   });
 
   it('never exposes credentials or connection details', async () => {
