@@ -120,17 +120,14 @@ export function JournalPage() {
         rowKey={(entry) => entry.id}
         loading={state.status === 'loading'}
         emptyMessage="سندی ثبت نشده است."
-        pagination={
-          state.status === 'success'
-            ? {
-                page,
-                pageSize: limit,
-                total: state.response.total,
-                onPageChange: setPage,
-                onPageSizeChange: setLimit,
-              }
-            : undefined
-        }
+        searchEmptyMessage={`نتیجه‌ای برای «${search}» پیدا نشد. عبارت دیگری را جستجو کنید.`}
+        searchTerm={search}
+        meta={state.status === 'success' ? state.response.meta : undefined}
+        page={page}
+        limit={limit}
+        onPageChange={setPage}
+        onLimitChange={setLimit}
+        toolbar={{ search: false }}
       />
     </ListPage>
   );

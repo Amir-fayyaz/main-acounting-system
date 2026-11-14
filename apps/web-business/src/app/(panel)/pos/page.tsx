@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
-import { PanelPlaceholder } from '@/core/features/panel/components/block/placeholder/PanelPlaceholder';
+
+import { PosPage } from '@/core/features/pos';
 
 export const metadata: Metadata = { title: 'دستگاه‌های POS' };
 
-export default function PanelPage() {
-  return <PanelPlaceholder title="دستگاه‌های POS" />;
+export default function Page() {
+  return <PosPage />;
 }

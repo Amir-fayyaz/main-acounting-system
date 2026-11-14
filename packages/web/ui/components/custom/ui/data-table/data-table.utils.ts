@@ -1,11 +1,6 @@
 import type { PaginationMeta } from './data-table.types';
 
-import {
-  DEFAULT_LIMIT,
-  DEFAULT_PAGE,
-  MAX_LIMIT,
-  MIN_LIMIT,
-} from '@repo/web/ui/utils/pagination';
+import { DEFAULT_LIMIT, DEFAULT_PAGE, MAX_LIMIT, MIN_LIMIT } from '@repo/web/ui/utils/pagination';
 
 export const DEFAULT_PAGE_SIZES = [10, 20, 50, 100] as const;
 
@@ -26,14 +21,10 @@ export function sanitizeMeta(meta: PaginationMeta): Required<PaginationMeta> {
 }
 
 /** Merges the current limit into the valid page sizes, sorted ascending. */
-export function resolvePageSizes(
-  pageSizes: number[] | undefined,
-  current: number,
-): number[] {
+export function resolvePageSizes(pageSizes: number[] | undefined, current: number): number[] {
   const requested = pageSizes ?? [...DEFAULT_PAGE_SIZES];
   const valid = requested.filter(
-    (size) =>
-      Number.isSafeInteger(size) && size >= MIN_LIMIT && size <= MAX_LIMIT,
+    (size) => Number.isSafeInteger(size) && size >= MIN_LIMIT && size <= MAX_LIMIT,
   );
 
   const sizes = valid.length > 0 ? valid : [...DEFAULT_PAGE_SIZES];
@@ -41,3 +32,5 @@ export function resolvePageSizes(
 
   return [...merged].sort((left, right) => left - right);
 }
+
+export { reorderById } from './lib/reorder';
