@@ -62,6 +62,9 @@ export interface AccountTreeNode {
 
 export interface AccountRepository
   extends LoadsById<EntityId, Account>, AddsAggregate<Account>, UpdatesAggregate<Account> {
+  /** Deletes an unused account that is no longer required. */
+  delete(account: Account): Promise<void>;
+
   /**
    * Every account of one tenant as a flat list, ordered by code.
    *

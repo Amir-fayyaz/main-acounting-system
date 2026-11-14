@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 import { SECRET_REDACTOR } from '../config/app-config.tokens.js';
 import { AppConfigService } from '../config/app-config.service.js';
 import type { SecretHolder } from '../config/secrets.js';
@@ -9,6 +9,7 @@ import { TenantContextMissingError } from '../../shared/tenant/tenant.errors.js'
 import { TenantIsolationViolationError } from '../../shared/tenant/tenant.errors.js';
 import { classifyJobError } from './job.errors.js';
 import type { RegisteredJob } from './job.definition.js';
+import { JOB_METRICS, NoOpJobMetrics, type JobMetrics } from './job-metrics.js';
 import { IDEMPOTENCY_TTL_SECONDS, JOB_STATE_TTL_SECONDS } from './job-keys.js';
 import { JobRegistry } from './job.registry.js';
 import { IDEMPOTENCY_GUARD, JOB_LOGGER, JOB_QUEUE } from './job.tokens.js';
@@ -78,6 +79,7 @@ export class JobDispatcher {
     @Inject(IDEMPOTENCY_GUARD) private readonly idempotency: IdempotencyGuard,
     config: AppConfigService,
     @Inject(SECRET_REDACTOR) private readonly secrets: SecretHolder,
+    @Optional() @Inject(JOB_METRICS) private readonly metrics: JobMetrics = new NoOpJobMetrics(),
   ) {
     this.policy = {
       maxAttempts: config.jobs.maxAttempts,
@@ -87,6 +89,29 @@ export class JobDispatcher {
   }
 
   async dispatch(claimed: ClaimedJob): Promise<JobStatus> {
+    const startedAtMs = Date.now();
+
+    try {
+      const status = await this.executeClaimed(claimed);
+      this.metrics.observeExecution(
+        claimed.envelope.type,
+        status === 'completed' ? 'success' : 'failure',
+        (Date.now() - startedAtMs) / 1000,
+      );
+
+      return status;
+    } catch (error) {
+      this.metrics.observeExecution(
+        claimed.envelope.type,
+        'failure',
+        (Date.now() - startedAtMs) / 1000,
+      );
+
+      throw error;
+    }
+  }
+
+  private async executeClaimed(claimed: ClaimedJob): Promise<JobStatus> {
     const { envelope } = claimed;
     const startedAtMs = Date.now();
     const startedAt = new Date(startedAtMs).toISOString();

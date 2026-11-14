@@ -64,12 +64,12 @@ export class Account {
   private constructor(
     private readonly _id: EntityId,
     private readonly _tenantId: string,
-    private readonly _code: AccountCode,
+    private _code: AccountCode,
     private _name: string,
     private _level: number,
-    private readonly _parentId: string | null,
-    private readonly _type: AccountType,
-    private readonly _normalBalance: NormalBalance,
+    private _parentId: string | null,
+    private _type: AccountType,
+    private _normalBalance: NormalBalance,
     private _postable: boolean,
     private _active: boolean,
     private readonly _system: boolean,
@@ -141,7 +141,10 @@ export class Account {
     }
 
     if (parent._normalBalance.value !== input.normalBalance.value) {
-      throw new AccountNormalBalanceMismatchError(input.normalBalance.value, parent._normalBalance.value);
+      throw new AccountNormalBalanceMismatchError(
+        input.normalBalance.value,
+        parent._normalBalance.value,
+      );
     }
 
     if (parent._postable) {
@@ -311,6 +314,35 @@ export class Account {
     }
 
     this._active = active;
+    this._updatedAt = now;
+  }
+
+  public changeCode(code: AccountCode, now: DateTime): void {
+    if (this._system) {
+      throw new AccountSystemProtectedError();
+    }
+
+    this._code = code;
+    this._updatedAt = now;
+  }
+
+  public changeType(type: AccountType, normalBalance: NormalBalance, now: DateTime): void {
+    if (this._system) {
+      throw new AccountSystemProtectedError();
+    }
+
+    this._type = type;
+    this._normalBalance = normalBalance;
+    this._updatedAt = now;
+  }
+
+  public changeParent(parentId: string | null, level: number, now: DateTime): void {
+    if (this._system) {
+      throw new AccountSystemProtectedError();
+    }
+
+    this._parentId = parentId;
+    this._level = level;
     this._updatedAt = now;
   }
 

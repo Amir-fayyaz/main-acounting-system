@@ -30,6 +30,16 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 export interface LogContextValues {
   /** The request correlation id assigned by the HTTP boundary. */
   readonly correlationId?: string;
+  /**
+   * The OpenTelemetry trace id of the request (FND-015, FND-016), recorded
+   * *alongside* the correlation id — never instead of it. When no caller
+   * header is supplied, the correlation id **is** this trace id, so a log line
+   * and its spans share one id; when the caller supplies its own
+   * `x-correlation-id`, that value stays the correlation id and the trace id
+   * rides next to it, so an upstream correlation id and a trace can both be
+   * followed without one overwriting the other.
+   */
+  readonly traceId?: string;
   /** The process/service name, so an aggregated line says who wrote it. */
   readonly service?: string;
 }
@@ -72,6 +82,7 @@ function merge(outer: LogContextValues | undefined, inner: LogContextValues): Lo
   return Object.freeze({
     ...outer,
     ...(inner.correlationId === undefined ? {} : { correlationId: inner.correlationId }),
+    ...(inner.traceId === undefined ? {} : { traceId: inner.traceId }),
     ...(inner.service === undefined ? {} : { service: inner.service }),
   });
 }

@@ -195,6 +195,12 @@ export class RedisJobQueue implements JobQueuePort {
     return promoted;
   }
 
+  async pendingCount(): Promise<number> {
+    const client = await this.client();
+
+    return await client.xLen(this.keys.stream);
+  }
+
   private async client(): Promise<RedisClient> {
     await this.connection.ensureConnected();
 
