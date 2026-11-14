@@ -6,7 +6,7 @@ import { cn } from '@repo/web/ui/utils/cn';
 
 import type { DashboardTask } from '../../assets/@types';
 import type { Cheque, ChequeStatus, Invoice } from '../../../panel/assets/@types/finance';
-import { toFaDigits } from '../../../shared/utils/persian-digits';
+import { toFaDigits } from '../../../shared';
 import { chequeStatusLabel } from '../../../panel/utils/status-label';
 
 const CARD_TITLE_CLASS = 'text-[15px] font-bold';
