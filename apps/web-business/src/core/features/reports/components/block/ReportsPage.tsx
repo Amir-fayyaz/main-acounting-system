@@ -4,7 +4,7 @@ import { H1, P, SectionLayout } from '@repo/web/ui';
 
 import { useState } from 'react';
 
-import { reportGroups } from '../../assets/mock/reports';
+import { useReports } from '../../hook/useReports';
 import { ReportGroupCard } from '../ui/ReportGroupCard';
 import { DateRangeDialog } from '../ui/DateRangeDialog';
 
@@ -15,13 +15,7 @@ export function ReportsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedReportLabel, setSelectedReportLabel] = useState<string | null>(null);
 
-  const findReport = (reportId: string) => {
-    for (const group of reportGroups) {
-      const report = group.items.find((item) => item.id === reportId);
-      if (report) return report.label;
-    }
-    return null;
-  };
+  const { state, branches, statuses, findReport } = useReports();
 
   return (
     <SectionLayout className="flex flex-1 flex-col py-6 sm:py-8 [&>.pages-container]:flex [&>.pages-container]:flex-1 [&>.pages-container]:flex-col [&>.pages-container]:gap-6 [&>.pages-container]:space-y-0 [&>.pages-container]:px-4 sm:[&>.pages-container]:px-6">
@@ -31,22 +25,24 @@ export function ReportsPage() {
           <P className="text-sm text-muted-foreground">{PAGE_DESCRIPTION}</P>
         </div>
       </div>
-      <div className="mt-5 grid gap-4 lg:grid-cols-2">
-        {reportGroups.map((group) => (
-          <ReportGroupCard
-            key={group.id}
-            group={group}
-            onReportSelect={(reportId) => {
-              const label = findReport(reportId);
-              if (label) {
-                setSelectedReportLabel(label);
-                setDialogOpen(true);
-              }
-            }}
-          />
-        ))}
-      </div>
-      {selectedReportLabel && (
+      {state.status === 'success' && (
+        <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          {state.reportGroups.map((group) => (
+            <ReportGroupCard
+              key={group.id}
+              group={group}
+              onReportSelect={(reportId) => {
+                const label = findReport(reportId);
+                if (label) {
+                  setSelectedReportLabel(label);
+                  setDialogOpen(true);
+                }
+              }}
+            />
+          ))}
+        </div>
+      )}
+      {selectedReportLabel && state.status === 'success' && (
         <DateRangeDialog
           open={dialogOpen}
           onOpenChange={(open) => {
@@ -54,6 +50,8 @@ export function ReportsPage() {
             if (!open) setSelectedReportLabel(null);
           }}
           reportLabel={selectedReportLabel}
+          branches={branches}
+          statuses={statuses}
           onConfirm={() => {
             setDialogOpen(false);
             setSelectedReportLabel(null);
