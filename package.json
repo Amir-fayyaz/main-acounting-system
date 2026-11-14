@@ -19,7 +19,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "deps:check": "pnpm --filter @accounting-saas/backend deps:check",
-    "test": "pnpm -r test && pnpm test:tooling",
+    "test": "pnpm --filter @accounting-saas/backend test && pnpm test:tooling",
     "test:tooling": "node --test \"tooling/scripts/**/*.test.mjs\"",
     "seed": "pnpm --filter @accounting-saas/backend seed",
     "test:backend:e2e": "pnpm --filter @accounting-saas/backend test:e2e",
