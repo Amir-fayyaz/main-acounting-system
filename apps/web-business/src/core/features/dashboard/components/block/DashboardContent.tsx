@@ -1,4 +1,4 @@
-import type { DashboardSnapshot } from '../../assets/@types';
+import type { DashboardSnapshot } from '../../assets/@types/dashboard';
 import type { Cheque, Invoice } from '../../../panel/assets/@types/finance';
 
 import { DashboardCharts } from './DashboardCharts';

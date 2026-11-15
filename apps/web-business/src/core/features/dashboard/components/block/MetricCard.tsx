@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@repo/web/ui';
 import { cn } from '@repo/web/ui/utils/cn';
 
-import type { DashboardMetric } from '../../assets/@types';
+import type { DashboardMetric } from '../../assets/@types/dashboard';
 import { formatShortMoney, splitShortMoney } from '../../../shared';
 
 export function MetricCard({ label, value, description, trend, highlight }: DashboardMetric) {

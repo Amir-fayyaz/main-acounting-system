@@ -14,4 +14,4 @@ export type {
   DashboardSnapshot,
   DashboardTask,
   PaymentMethodShare,
-} from './assets/@types';
+} from './assets/@types/dashboard';

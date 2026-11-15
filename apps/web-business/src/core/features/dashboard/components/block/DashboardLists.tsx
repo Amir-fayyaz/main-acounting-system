@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 import { cn } from '@repo/web/ui/utils/cn';
 
-import type { DashboardTask } from '../../assets/@types';
+import type { DashboardTask } from '../../assets/@types/dashboard';
 import type { Cheque, ChequeStatus, Invoice } from '../../../panel/assets/@types/finance';
 import { toFaDigits } from '../../../shared';
 import { chequeStatusLabel } from '../../../panel/utils/status-label';
