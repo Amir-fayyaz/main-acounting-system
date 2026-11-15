@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { usePagination } from '@repo/web';
-import { Button, Card, CardContent, H1, P, SectionLayout } from '@repo/web';
+import { Button, H1, P, SectionLayout } from '@repo/web';
 import { Plus, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -14,8 +14,8 @@ import { usePurchaseFilters } from '../../hook/usePurchaseFilters';
 import { PurchasesToolbar } from '../ui/PurchasesToolbar';
 import { PurchasesTable } from './PurchasesTable';
 import { PurchasesPrintView } from './PurchasesPrintView';
+import { PurchasesStats } from './PurchasesStats';
 import { AddPurchaseDialog } from './dialogs/AddPurchaseDialog';
-import { formatMoney } from '../../utils/format';
 
 type PrintSnapshot = {
   purchases: Purchase[];
@@ -57,10 +57,6 @@ export function PurchasesPage() {
   const response = state.status === 'success' ? state.response : undefined;
   const allPurchases: Purchase[] = state.status === 'success' ? state.all : [];
   const errorMessage = state.status === 'error' ? 'دریافت فهرست خریدها با مشکل مواجه شد. لطفاً دوباره تلاش کنید.' : undefined;
-
-  const totalAmount = allPurchases.reduce((sum, p) => sum + Number(p.total), 0);
-  const totalDiscount = allPurchases.reduce((sum, p) => sum + p.discount, 0);
-  const discountedCount = allPurchases.filter((p) => p.discount > 0).length;
 
   async function handleCreate(input: Parameters<typeof createPurchase>[0]) {
     await createPurchase(input);
@@ -113,26 +109,7 @@ export function PurchasesPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3 print:hidden">
-        <Card className="gap-2">
-          <CardContent className="grid gap-1 py-4">
-            <span className="text-sm text-muted-foreground">جمع خرید (پس از تخفیف)</span>
-            <b className="text-lg font-semibold">{formatMoney(totalAmount)} ریال</b>
-          </CardContent>
-        </Card>
-        <Card className="gap-2">
-          <CardContent className="grid gap-1 py-4">
-            <span className="text-sm text-muted-foreground">جمع تخفیف‌ها</span>
-            <b className="text-lg font-semibold">{formatMoney(totalDiscount)} ریال</b>
-          </CardContent>
-        </Card>
-        <Card className="gap-2">
-          <CardContent className="grid gap-1 py-4">
-            <span className="text-sm text-muted-foreground">فاکتورهای دارای تخفیف</span>
-            <b className="text-lg font-semibold">{formatMoney(discountedCount)}</b>
-          </CardContent>
-        </Card>
-      </div>
+      <PurchasesStats purchases={allPurchases} />
 
       <PurchasesToolbar
         status={status}

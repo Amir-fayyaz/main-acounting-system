@@ -14,6 +14,7 @@ import {
 import { cn } from '@repo/web/ui/utils/cn';
 
 import type { Person } from '../../assets/@types/person';
+import { formatMoney } from '../../utils/format';
 import { peopleColumns } from './PeopleTable';
 
 const PRINT_DATE_TIME_FORMATTER = new Intl.DateTimeFormat('fa-IR', {
@@ -42,13 +43,6 @@ function formatCount(value: number): string {
   return PRINT_NUMBER_FORMATTER.format(value);
 }
 
-function formatAmount(value: string | number): string {
-  const numericValue = Number(value);
-  if (!Number.isFinite(numericValue)) return String(value);
-
-  return PRINT_NUMBER_FORMATTER.format(numericValue);
-}
-
 function renderCell(person: Person, key: string | undefined) {
   switch (key) {
     case 'name':
@@ -60,9 +54,9 @@ function renderCell(person: Person, key: string | undefined) {
     case 'branch':
       return person.branch;
     case 'recv':
-      return formatAmount(person.recv);
+      return formatMoney(person.recv);
     case 'pay':
-      return formatAmount(person.pay);
+      return formatMoney(person.pay);
     default:
       return null;
   }

@@ -21,7 +21,7 @@ import {
 } from '@repo/web';
 
 import type { CreatePersonInput, PersonKind } from '../../../assets/@types/person';
-import { validatePersonForm } from '../../../lib/people.validation';
+import { validatePersonForm } from '../../../lib/person-form.schema';
 
 type FieldName = keyof CreatePersonInput;
 

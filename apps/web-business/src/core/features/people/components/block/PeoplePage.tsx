@@ -77,10 +77,6 @@ export function PeoplePage() {
     }
   }
 
-  const handleKindChange = (nextKind: string) => {
-    setKind(nextKind);
-  };
-
   return (
     <SectionLayout>
       <div className="flex flex-wrap items-end justify-between gap-3 print:hidden">
@@ -108,7 +104,7 @@ export function PeoplePage() {
         </div>
       </div>
 
-      <PeopleToolbar kind={kind} onKindChange={handleKindChange} className="print:hidden" />
+      <PeopleToolbar kind={kind} onKindChange={setKind} className="print:hidden" />
 
       <div className="print:hidden">
         <PeopleTable
