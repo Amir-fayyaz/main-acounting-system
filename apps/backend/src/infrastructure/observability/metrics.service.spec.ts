@@ -57,6 +57,35 @@ describe('MetricsService', () => {
     expect(output).toContain('job_queue_depth 0');
   });
 
+  it('reports outbox pending events through the registered provider at scrape time (FND-017)', async () => {
+    const service = new MetricsService();
+    let pending = 2;
+    service.setOutboxPendingProvider(async () => pending);
+
+    const before = await exposition(service);
+    expect(before).toContain('outbox_pending_events 2');
+
+    pending = 7;
+    const after = await exposition(service);
+    expect(after).toContain('outbox_pending_events 7');
+  });
+
+  it('reports zero outbox pending events when no provider is bound, and keeps the last value on a failing read', async () => {
+    const service = new MetricsService();
+    service.setOutboxPendingProvider(async () => 5);
+
+    expect(await exposition(service)).toContain('outbox_pending_events 5');
+
+    // The store goes unreachable mid-flight: the scrape must survive and keep
+    // the last value rather than throwing or hanging (same trade as the
+    // queue gauge).
+    service.setOutboxPendingProvider(() => Promise.reject(new Error('mysql down')));
+    expect(await exposition(service)).toContain('outbox_pending_events 5');
+
+    const bare = new MetricsService();
+    expect(await exposition(bare)).toContain('outbox_pending_events 0');
+  });
+
   it('reports the database pool state from the connection accounting', async () => {
     const service = new MetricsService({
       pool: {

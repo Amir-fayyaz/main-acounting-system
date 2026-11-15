@@ -1,0 +1,98 @@
+{
+  "title": "Backend — API, jobs, outbox, pool",
+  "uid": "backend-overview",
+  "tags": ["backend", "fnd-017"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "templating": { "list": [] },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Scrape target",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [{ "refId": "A", "expr": "up{job=\"backend-metrics\"}" }],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "title": "Request rate (req/s)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 9, "x": 6, "y": 0 },
+      "targets": [{ "refId": "A", "expr": "sum(rate(http_request_duration_seconds_count[5m]))" }]
+    },
+    {
+      "id": 3,
+      "title": "HTTP 5xx rate (%)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 9, "x": 15, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * sum(rate(http_request_duration_seconds_count{status_code=~\"5..\"}[5m])) / sum(rate(http_request_duration_seconds_count[5m]))"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percent", "max": 100 }, "overrides": [] }
+    },
+    {
+      "id": 4,
+      "title": "Request latency p50 / p95 / p99 (s)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        { "refId": "A", "expr": "histogram_quantile(0.5, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p50" },
+        { "refId": "B", "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95" },
+        { "refId": "C", "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p99" }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Job execution rate by outcome",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(job_execution_duration_seconds_count[5m])) by (status)", "legendFormat": "{{status}}" }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Job queue depth",
+      "type": "timeseries",
+      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 16 },
+      "targets": [{ "refId": "A", "expr": "job_queue_depth" }]
+    },
+    {
+      "id": 7,
+      "title": "Outbox pending events",
+      "type": "timeseries",
+      "gridPos": { "h": 7, "w": 8, "x": 8, "y": 16 },
+      "targets": [{ "refId": "A", "expr": "outbox_pending_events" }],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 50 }] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 8,
+      "title": "MySQL pool state",
+      "type": "timeseries",
+      "gridPos": { "h": 7, "w": 8, "x": 16, "y": 16 },
+      "targets": [
+        { "refId": "A", "expr": "database_pool_connections", "legendFormat": "{{state}}" }
+      ]
+    }
+  ]
+}

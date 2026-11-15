@@ -1,0 +1,23 @@
+# Alertmanager configuration for the local monitoring stack (FND-017).
+#
+# Mounted read-only at /etc/alertmanager/alertmanager.yml by the `alertmanager`
+# service. The only receiver is deliberately a **null receiver**: alerts are
+# grouped and marked handled, but nothing is delivered anywhere. Real
+# notification channels (email, chat, paging) are a deployment concern —
+# out of scope for this stack (FND-017) — and wiring one here without a
+# tested destination would be worse than silence, because it would look like
+# a delivery guarantee.
+route:
+  receiver: null-receiver
+  group_by: ['alertname', 'severity']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+
+receivers:
+  # Delivers nowhere on purpose (FND-017). Every routed alert still shows in
+  # the Alertmanager UI at http://127.0.0.1:9093, which is all a local stack
+  # needs; a deployment replaces this receiver with its real channels.
+  - name: null-receiver
+
+inhibit_rules: []
