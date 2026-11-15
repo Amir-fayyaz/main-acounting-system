@@ -1,3 +1,4 @@
+import { normalizeMoneyInput } from '../../shared';
 import {
   CHEQUE_CURRENCY,
   type Cheque,
@@ -5,7 +6,6 @@ import {
   type CreateChequeRequest,
   type UpdateChequeRequest,
 } from '../assets/@types/cheque.types';
-import { normalizeMoneyInput } from '../utils/money';
 
 export function mapChequeFormValuesToCreateRequest(values: ChequeFormValues): CreateChequeRequest {
   return {

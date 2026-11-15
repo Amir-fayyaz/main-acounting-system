@@ -1,11 +1,9 @@
 'use client';
 
 import type { ComponentProps } from 'react';
-
 import { Input, Muted } from '@repo/web/ui';
 import { cn } from '@repo/web/ui/utils/cn';
-
-import { toAsciiDigits, toPersianDigits } from '../../utils/format';
+import { toAsciiDigits, toFaDigits } from '../../../shared';
 
 interface SayadFieldProps extends Omit<
   ComponentProps<typeof Input>,
@@ -43,10 +41,10 @@ export function SayadField({
       />
       <div className="flex flex-wrap items-center justify-between gap-1">
         <Muted className="text-xs">
-          شناسه صیادی باید {toPersianDigits(expectedLength)} رقم باشد.
+          شناسه صیادی باید {toFaDigits(expectedLength)} رقم باشد.
         </Muted>
         <Muted className="text-xs tabular-nums" aria-live="polite">
-          {toPersianDigits(digitCount)} / {toPersianDigits(expectedLength)}
+          {toFaDigits(digitCount)} / {toFaDigits(expectedLength)}
         </Muted>
       </div>
     </div>

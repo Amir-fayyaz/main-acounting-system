@@ -1,12 +1,10 @@
+import { normalizeIban, normalizeJalaliDate, toAsciiDigits } from '../../shared';
 import type {
   CreatePosTerminalRequest,
   PosTerminal,
   PosTerminalDto,
 } from '../assets/@types/pos-terminal.types';
 import { isCanonicalFee, normalizeFeeInput } from '../utils/fee';
-import { toAsciiDigits } from '../utils/format';
-import { normalizeIban } from '../utils/iban';
-import { normalizeJalaliDate } from '../utils/jalali';
 import { PosApiError } from './pos-api.errors';
 
 function normalizeDigits(value: string): string {

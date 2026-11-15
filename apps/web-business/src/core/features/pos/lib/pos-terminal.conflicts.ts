@@ -1,5 +1,5 @@
+import { toAsciiDigits } from '../../shared';
 import type { PosTerminalDto } from '../assets/@types/pos-terminal.types';
-import { toAsciiDigits } from '../utils/format';
 
 export const DUPLICATE_TERMINAL_MESSAGE = 'ترمینالی با این شماره قبلاً ثبت شده است.';
 

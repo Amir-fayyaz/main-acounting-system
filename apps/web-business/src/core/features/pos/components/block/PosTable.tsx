@@ -1,14 +1,12 @@
 'use client';
 
 import type { ReactNode } from 'react';
-
 import { DataTable, type DataTableColumn, type PaginationMeta } from '@repo/web/ui';
 import { cn } from '@repo/web/ui/utils/cn';
-
+import { formatCountFa, formatJalaliDateFa, toFaDigits } from '../../../shared';
 import type { PosTerminal } from '../../assets/@types/pos-terminal.types';
 import { POS_PAGE_SIZES } from '../../lib/pos.config';
 import { formatFeePercentFa } from '../../utils/fee';
-import { formatCountFa, formatJalaliDateFa, toPersianDigits } from '../../utils/format';
 import { formatIbanMaskFa } from '../../utils/iban';
 import { PosStatusBadge } from '../ui/PosStatusBadge';
 
@@ -65,7 +63,7 @@ export function PosTable({
       header: 'شماره ترمینال',
       headerClassName: HEADER_CLASS,
       className: 'whitespace-nowrap font-semibold tabular-nums text-foreground',
-      cell: (terminal: PosTerminal) => toPersianDigits(terminal.terminalNumber),
+      cell: (terminal: PosTerminal) => toFaDigits(terminal.terminalNumber),
     },
     {
       key: 'merchantNumber',
@@ -73,7 +71,7 @@ export function PosTable({
       headerClassName: HEADER_CLASS,
       className: 'whitespace-nowrap text-xs tabular-nums text-muted-foreground',
       cell: (terminal: PosTerminal) =>
-        terminal.merchantNumber ? toPersianDigits(terminal.merchantNumber) : EMPTY_VALUE,
+        terminal.merchantNumber ? toFaDigits(terminal.merchantNumber) : EMPTY_VALUE,
     },
     {
       key: 'bank',

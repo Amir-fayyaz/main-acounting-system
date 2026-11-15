@@ -1,14 +1,12 @@
 'use client';
 
 import { AlertCircle, RotateCcw } from 'lucide-react';
-
 import { Button, Skeleton } from '@repo/web/ui';
 import Modal from '@web/ui/components/custom/ui/modal/Modal';
-
+import { Notice } from '../../../../shared';
 import type { Cheque } from '../../../assets/@types/cheque.types';
 import { useChequeFormRules } from '../../../hook/useChequeFormRules';
 import type { SaveCheque } from '../../../hook/useSaveCheque';
-import { ChequeNotice } from '../../ui/ChequeNotice';
 import { ChequeFormContent } from './ChequeFormContent';
 
 export type ChequeFormDialogMode = 'create' | 'edit';
@@ -58,9 +56,9 @@ export function ChequeFormDialog({
         </div>
       ) : rulesState.state.status === 'error' ? (
         <div className="space-y-4">
-          <ChequeNotice tone="danger" icon={<AlertCircle className="size-4" />}>
+          <Notice tone="danger" icon={<AlertCircle className="size-4" />}>
             {rulesState.state.message}
-          </ChequeNotice>
+          </Notice>
           <Button type="button" variant="outline" className="gap-1.5" onClick={rulesState.retry}>
             <RotateCcw className="size-4" aria-hidden />
             تلاش دوباره

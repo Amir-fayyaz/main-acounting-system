@@ -1,11 +1,10 @@
 import type { PaginatedResponse } from '@repo/web';
-
+import { toAsciiDigits } from '../../shared';
 import type {
   PosTerminal,
   PosTerminalDto,
   PosTerminalListParams,
 } from '../assets/@types/pos-terminal.types';
-import { toAsciiDigits } from '../utils/format';
 import { POS_STATUS_LABELS } from './pos.config';
 import { mapPosTerminalDtoListToPosTerminals } from './pos-api.mapper';
 

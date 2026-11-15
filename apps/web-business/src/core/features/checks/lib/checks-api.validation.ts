@@ -1,3 +1,4 @@
+import { isPositiveMoney, normalizeJalaliDate, toAsciiDigits, toFaDigits } from '../../shared';
 import type {
   ChequeDto,
   ChequeFieldErrors,
@@ -5,9 +6,6 @@ import type {
   CreateChequeRequest,
 } from '../assets/@types/cheque.types';
 import { isChequeDirection } from '../assets/@types/cheque.types';
-import { toAsciiDigits, toPersianDigits } from '../utils/format';
-import { normalizeJalaliDate } from '../utils/jalali';
-import { isPositiveMoney } from '../utils/money';
 import {
   DUPLICATE_SAYAD_MESSAGE,
   duplicateNumberMessage,
@@ -38,13 +36,13 @@ export function validateChequePayload(
   const dueDate = normalizeJalaliDate(payload.dueDate);
 
   if (!new RegExp(rules.chequeNumber.pattern).test(number)) {
-    fieldErrors.number = `شماره چک باید بین ${toPersianDigits(
+    fieldErrors.number = `شماره چک باید بین ${toFaDigits(
       rules.chequeNumber.minLength,
-    )} تا ${toPersianDigits(rules.chequeNumber.maxLength)} رقم باشد.`;
+    )} تا ${toFaDigits(rules.chequeNumber.maxLength)} رقم باشد.`;
   }
 
   if (!new RegExp(rules.sayad.pattern).test(sayadId)) {
-    fieldErrors.sayadId = `شناسه صیادی باید ${toPersianDigits(rules.sayad.length)} رقم باشد.`;
+    fieldErrors.sayadId = `شناسه صیادی باید ${toFaDigits(rules.sayad.length)} رقم باشد.`;
   }
 
   if (!isChequeDirection(payload.direction)) {

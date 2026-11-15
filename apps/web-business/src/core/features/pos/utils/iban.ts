@@ -1,11 +1,6 @@
-import { toAsciiDigits } from './format';
+import { normalizeIban } from '../../shared';
 
-export function normalizeIban(value: string): string {
-  return toAsciiDigits(value)
-    .replace(/[\s-]/g, '')
-    .toUpperCase();
-}
-
+/** شبا را برای نمایش در جدول ماسک می‌کند؛ مقادیر غیر ایرانی دست‌نخورده برمی‌گردند. */
 export function formatIbanMaskFa(value: string | null): string {
   if (!value) return '—';
 

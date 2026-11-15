@@ -1,5 +1,5 @@
+import { addJalaliDaysToDate, todayJalali } from '../../shared';
 import type { Cheque, ChequeFormValues } from '../assets/@types/cheque.types';
-import { addJalaliDaysToDate, todayJalali } from '../utils/jalali';
 
 export function createEmptyChequeFormValues(): ChequeFormValues {
   return {

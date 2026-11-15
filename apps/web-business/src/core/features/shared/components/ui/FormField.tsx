@@ -2,7 +2,7 @@ import { cloneElement, isValidElement, type ReactNode } from 'react';
 
 import { InputErrorMassage, Muted } from '@repo/web/ui';
 
-interface AccountFieldProps {
+interface FormFieldProps {
   id: string;
   label: string;
   hint?: string;
@@ -10,7 +10,7 @@ interface AccountFieldProps {
   children: ReactNode;
 }
 
-export function AccountField({ id, label, hint, error, children }: AccountFieldProps) {
+export function FormField({ id, label, hint, error, children }: FormFieldProps) {
   const messageId = `${id}-message`;
   const hasMessage = Boolean(error || hint);
   const control =

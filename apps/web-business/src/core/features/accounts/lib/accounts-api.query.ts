@@ -1,5 +1,5 @@
 import type { PaginatedResponse } from '@repo/web';
-
+import { toAsciiDigits } from '../../shared';
 import type {
   Account,
   AccountDto,
@@ -7,7 +7,6 @@ import type {
   AccountStats,
 } from '../assets/@types/account.types';
 import { ACCOUNT_CURRENCY } from '../assets/@types/account.types';
-import { toAsciiDigits } from '../utils/format';
 import { sumMoney } from '../utils/money';
 import { ACCOUNT_STATUS_LABELS, ACCOUNT_TYPE_LABELS } from './accounts.config';
 import { mapAccountDtoListToAccounts } from './accounts-api.mapper';

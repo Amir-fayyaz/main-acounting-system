@@ -1,10 +1,9 @@
+import { normalizeIban, normalizeMoneyInput } from '../../shared';
 import {
   ACCOUNT_CURRENCY,
   type AccountFormValues,
   type CreateAccountRequest,
 } from '../assets/@types/account.types';
-import { normalizeIban } from '../utils/iban';
-import { normalizeMoneyInput } from '../utils/money';
 
 export function createEmptyAccountFormValues(): AccountFormValues {
   return {

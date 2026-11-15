@@ -2,14 +2,11 @@
 
 import { Pencil } from 'lucide-react';
 import type { ReactNode } from 'react';
-
 import { Button, DataTable, type DataTableColumn, type PaginationMeta } from '@repo/web/ui';
 import { cn } from '@repo/web/ui/utils/cn';
-
+import { formatCountFa, formatJalaliDateFa, formatMoneyFa, toFaDigits } from '../../../shared';
 import type { Cheque } from '../../assets/@types/cheque.types';
 import { CHEQUE_PAGE_SIZES } from '../../lib/checks.config';
-import { formatCountFa, formatJalaliDateFa, toPersianDigits } from '../../utils/format';
-import { formatMoneyFa } from '../../utils/money';
 import { ChequeDirectionBadge } from '../ui/ChequeDirectionBadge';
 import { ChequeStatusBadge } from '../ui/ChequeStatusBadge';
 
@@ -55,7 +52,7 @@ export function ChecksTable({
       header: 'شماره چک',
       headerClassName: HEADER_CLASS,
       className: 'font-semibold tabular-nums text-foreground',
-      cell: (cheque: Cheque) => toPersianDigits(cheque.number),
+      cell: (cheque: Cheque) => toFaDigits(cheque.number),
     },
     {
       key: 'sayadId',
@@ -64,7 +61,7 @@ export function ChecksTable({
       className: 'text-xs tabular-nums text-muted-foreground',
       cell: (cheque: Cheque) => (
         <span dir="ltr" className="inline-block text-start">
-          {toPersianDigits(cheque.sayadId)}
+          {toFaDigits(cheque.sayadId)}
         </span>
       ),
     },
@@ -148,7 +145,7 @@ export function ChecksTable({
           size="sm"
           variant="ghost"
           className="h-8 gap-1.5 px-2 text-xs"
-          aria-label={`ویرایش چک ${toPersianDigits(cheque.number)}`}
+          aria-label={`ویرایش چک ${toFaDigits(cheque.number)}`}
           onClick={() => {
             onEdit(cheque);
           }}

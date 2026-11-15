@@ -2,16 +2,14 @@
 
 import { AlertCircle, Info } from 'lucide-react';
 import type { FormEvent } from 'react';
-
 import { Button } from '@repo/web/ui';
 import Modal from '@web/ui/components/custom/ui/modal/Modal';
-
+import { Notice } from '../../../../shared';
 import type {
   CreatePosTerminalRequest,
   PosTerminal,
 } from '../../../assets/@types/pos-terminal.types';
 import { usePosTerminalForm } from '../../../hook/usePosTerminalForm';
-import { PosNotice } from '../../ui/PosNotice';
 import { PosTerminalFormFields } from './PosTerminalFormFields';
 
 interface PosTerminalFormDialogProps {
@@ -53,15 +51,15 @@ export function PosTerminalFormDialog({
       hideDefaultFooter
     >
       <form noValidate onSubmit={handleSubmit} className="space-y-4" aria-label="فرم دستگاه جدید">
-        <PosNotice icon={<Info className="size-4" />}>
+        <Notice icon={<Info className="size-4" />}>
           شماره ترمینال باید یکتا باشد؛ بررسی نهایی سمت سرور انجام می‌شود. دستگاه جدید با وضعیت
           «فعال» ثبت می‌شود.
-        </PosNotice>
+        </Notice>
 
         {formError ? (
-          <PosNotice tone="danger" icon={<AlertCircle className="size-4" />}>
+          <Notice tone="danger" icon={<AlertCircle className="size-4" />}>
             {formError}
-          </PosNotice>
+          </Notice>
         ) : null}
 
         <PosTerminalFormFields values={values} errors={errors} setField={setField} />

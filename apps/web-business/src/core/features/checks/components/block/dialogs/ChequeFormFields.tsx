@@ -1,7 +1,7 @@
 'use client';
 
 import { Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/web/ui';
-
+import { FormField } from '../../../../shared';
 import type {
   ChequeDirection,
   ChequeFormErrors,
@@ -9,7 +9,6 @@ import type {
   ChequeFormValues,
 } from '../../../assets/@types/cheque.types';
 import { CHEQUE_BANKS, CHEQUE_DIRECTION_OPTIONS } from '../../../lib/checks.config';
-import { ChequeField } from '../../ui/ChequeField';
 import { SayadField } from '../../ui/SayadField';
 
 const CONTROL_CLASS = 'text-start tabular-nums';
@@ -43,7 +42,7 @@ export function ChequeFormFields({
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <ChequeField id={numberId} label="شماره چک" error={errors.number}>
+      <FormField id={numberId} label="شماره چک" error={errors.number}>
         <Input
           id={numberId}
           dir="ltr"
@@ -57,9 +56,9 @@ export function ChequeFormFields({
             setField('number', event.target.value);
           }}
         />
-      </ChequeField>
+      </FormField>
 
-      <ChequeField id={sayadId} label="شناسه صیادی" error={errors.sayadId}>
+      <FormField id={sayadId} label="شناسه صیادی" error={errors.sayadId}>
         <SayadField
           id={sayadId}
           expectedLength={rules.sayad.length}
@@ -69,9 +68,9 @@ export function ChequeFormFields({
             setField('sayadId', value);
           }}
         />
-      </ChequeField>
+      </FormField>
 
-      <ChequeField id={directionId} label="نوع چک" error={errors.direction}>
+      <FormField id={directionId} label="نوع چک" error={errors.direction}>
         <Select
           value={values.direction}
           onValueChange={(value) => {
@@ -95,9 +94,9 @@ export function ChequeFormFields({
             ))}
           </SelectContent>
         </Select>
-      </ChequeField>
+      </FormField>
 
-      <ChequeField id={counterpartyId} label="طرف حساب" error={errors.counterparty}>
+      <FormField id={counterpartyId} label="طرف حساب" error={errors.counterparty}>
         <Input
           id={counterpartyId}
           autoComplete="off"
@@ -107,9 +106,9 @@ export function ChequeFormFields({
             setField('counterparty', event.target.value);
           }}
         />
-      </ChequeField>
+      </FormField>
 
-      <ChequeField id={bankId} label="بانک" error={errors.bank}>
+      <FormField id={bankId} label="بانک" error={errors.bank}>
         <Select
           value={values.bank}
           onValueChange={(value) => {
@@ -133,9 +132,9 @@ export function ChequeFormFields({
             ))}
           </SelectContent>
         </Select>
-      </ChequeField>
+      </FormField>
 
-      <ChequeField
+      <FormField
         id={amountId}
         label="مبلغ (ریال)"
         error={errors.amount}
@@ -153,9 +152,9 @@ export function ChequeFormFields({
             setField('amount', event.target.value);
           }}
         />
-      </ChequeField>
+      </FormField>
 
-      <ChequeField
+      <FormField
         id={registeredDateId}
         label="تاریخ ثبت"
         error={errors.registeredDate}
@@ -174,9 +173,9 @@ export function ChequeFormFields({
             setField('registeredDate', event.target.value);
           }}
         />
-      </ChequeField>
+      </FormField>
 
-      <ChequeField
+      <FormField
         id={dueDateId}
         label="تاریخ سررسید"
         error={errors.dueDate}
@@ -195,7 +194,7 @@ export function ChequeFormFields({
             setField('dueDate', event.target.value);
           }}
         />
-      </ChequeField>
+      </FormField>
     </div>
   );
 }

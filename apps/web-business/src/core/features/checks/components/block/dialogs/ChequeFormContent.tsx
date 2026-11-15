@@ -2,9 +2,8 @@
 
 import { AlertCircle, Info } from 'lucide-react';
 import { useEffect, useRef, type FormEvent } from 'react';
-
 import { Button } from '@repo/web/ui';
-
+import { Notice } from '../../../../shared';
 import type {
   Cheque,
   ChequeFormRules,
@@ -13,7 +12,6 @@ import type {
 import { useChequeForm } from '../../../hook/useChequeForm';
 import type { SaveCheque } from '../../../hook/useSaveCheque';
 import { createDefaultChequeDates } from '../../../lib/cheque-form.values';
-import { ChequeNotice } from '../../ui/ChequeNotice';
 import { ChequeFormFields } from './ChequeFormFields';
 
 interface ChequeFormContentProps {
@@ -65,16 +63,16 @@ export function ChequeFormContent({
 
   return (
     <form noValidate onSubmit={handleSubmit} className="space-y-4" aria-label="فرم چک">
-      <ChequeNotice icon={<Info className="size-4" />}>
+      <Notice icon={<Info className="size-4" />}>
         {rules.duplicateNumberScope === 'global'
           ? 'شماره چک و شناسه صیادی در کل سامانه باید یکتا باشند. قواعد شماره و شناسه از سرور خوانده می‌شود.'
           : 'شماره چک در هر بانک و شناسه صیادی در کل سامانه باید یکتا باشد. قواعد شماره و شناسه از سرور خوانده می‌شود.'}
-      </ChequeNotice>
+      </Notice>
 
       {formError ? (
-        <ChequeNotice tone="danger" icon={<AlertCircle className="size-4" />}>
+        <Notice tone="danger" icon={<AlertCircle className="size-4" />}>
           {formError}
-        </ChequeNotice>
+        </Notice>
       ) : null}
 
       <ChequeFormFields

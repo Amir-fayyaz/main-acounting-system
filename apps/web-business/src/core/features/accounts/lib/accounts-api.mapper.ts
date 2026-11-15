@@ -1,3 +1,4 @@
+import { normalizeIban, normalizeMoneyInput } from '../../shared';
 import {
   ACCOUNT_CURRENCY,
   type Account,
@@ -5,8 +6,6 @@ import {
   type AccountType,
   type CreateAccountRequest,
 } from '../assets/@types/account.types';
-import { normalizeIban } from '../utils/iban';
-import { normalizeMoneyInput } from '../utils/money';
 import { AccountApiError } from './accounts-api.errors';
 
 export function mapAccountDtoToAccount(dto: AccountDto): Account {

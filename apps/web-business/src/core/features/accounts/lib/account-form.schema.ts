@@ -1,12 +1,10 @@
 import { z } from 'zod';
-
+import { mapZodErrorsToKnownFields, normalizeIban, normalizeMoneyInput } from '../../shared';
 import {
   ACCOUNT_TYPES,
   type AccountFormErrors,
   type AccountFormValues,
 } from '../assets/@types/account.types';
-import { normalizeIban } from '../utils/iban';
-import { normalizeMoneyInput } from '../utils/money';
 import { ACCOUNT_IBAN_PATTERN } from './accounts.config';
 
 const ACCOUNT_FORM_FIELDS = new Set<keyof AccountFormValues>([
@@ -76,15 +74,5 @@ export type AccountFormSchema = typeof accountFormSchema;
 export type AccountFormOutput = z.output<AccountFormSchema>;
 
 export function mapZodErrorsToAccountFormErrors(error: z.ZodError): AccountFormErrors {
-  const errors: AccountFormErrors = {};
-
-  for (const issue of error.issues) {
-    const field = issue.path[0];
-    if (typeof field !== 'string') continue;
-    if (!ACCOUNT_FORM_FIELDS.has(field as keyof AccountFormValues)) continue;
-    const key = field as keyof AccountFormValues;
-    if (!errors[key]) errors[key] = issue.message;
-  }
-
-  return errors;
+  return mapZodErrorsToKnownFields(error, ACCOUNT_FORM_FIELDS);
 }

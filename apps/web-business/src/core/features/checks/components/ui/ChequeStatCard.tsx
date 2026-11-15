@@ -1,9 +1,7 @@
 import type { ReactNode } from 'react';
-
 import { Card, CardContent } from '@repo/web/ui';
 import { cn } from '@repo/web/ui/utils/cn';
-
-import { formatCountFa } from '../../utils/format';
+import { formatCountFa } from '../../../shared';
 
 type ChequeStatTone = 'default' | 'positive' | 'danger' | 'brand';
 

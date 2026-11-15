@@ -1,12 +1,11 @@
 import type { PaginatedResponse } from '@repo/web';
-
+import { toAsciiDigits } from '../../shared';
 import type {
   Cheque,
   ChequeDto,
   ChequeListParams,
   ChequeStats,
 } from '../assets/@types/cheque.types';
-import { toAsciiDigits } from '../utils/format';
 import { CHEQUE_DIRECTION_LABELS, CHEQUE_STATUS_LABELS } from './checks.config';
 import { mapChequeDtoListToCheques } from './checks-api.mapper';
 

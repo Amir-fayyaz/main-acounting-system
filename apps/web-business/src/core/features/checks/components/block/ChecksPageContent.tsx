@@ -4,17 +4,13 @@ import { Plus } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
-
 import { Button, H1, Muted, SectionLayout } from '@repo/web/ui';
 import { usePagination } from '@repo/web';
-
+import { PrintButton, PrintStyles, toFaDigits } from '../../../shared';
 import type { Cheque } from '../../assets/@types/cheque.types';
 import { useChequeFilters } from '../../hook/useChequeFilters';
 import { useCheques } from '../../hook/useCheques';
 import { useSaveCheque } from '../../hook/useSaveCheque';
-import { toPersianDigits } from '../../utils/format';
-import { ChequePrintButton } from '../ui/ChequePrintButton';
-import { ChecksPrintStyles } from './ChecksPrintStyles';
 import { ChecksStats } from './ChecksStats';
 import { ChecksTable } from './ChecksTable';
 import { ChecksToolbar } from './ChecksToolbar';
@@ -49,7 +45,7 @@ export function ChecksPageContent() {
 
   return (
     <SectionLayout>
-      <ChecksPrintStyles />
+      <PrintStyles scope="checks" />
       <div data-checks-print className="flex flex-col gap-5">
         <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-1">
@@ -60,7 +56,7 @@ export function ChecksPageContent() {
           </div>
 
           <div data-checks-actions className="flex flex-wrap items-center gap-2 print:hidden">
-            <ChequePrintButton />
+            <PrintButton />
 
             <Button
               className="gap-1.5"
@@ -126,7 +122,7 @@ export function ChecksPageContent() {
           saveCheque={saveCheque}
           onSaved={(saved) => {
             refresh();
-            const number = toPersianDigits(saved.number);
+            const number = toFaDigits(saved.number);
             toast.success(
               dialog.mode === 'edit' ? `چک ${number} ویرایش شد.` : `چک ${number} ثبت شد.`,
             );

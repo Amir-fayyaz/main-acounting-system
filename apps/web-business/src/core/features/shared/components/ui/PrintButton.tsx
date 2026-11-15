@@ -4,7 +4,7 @@ import { Printer } from 'lucide-react';
 
 import { Button } from '@repo/web/ui';
 
-export function PosPrintButton() {
+export function PrintButton() {
   return (
     <Button
       type="button"

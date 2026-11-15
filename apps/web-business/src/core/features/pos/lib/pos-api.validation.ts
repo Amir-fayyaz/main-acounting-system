@@ -1,10 +1,10 @@
+import { toAsciiDigits } from '../../shared';
 import type {
   CreatePosTerminalRequest,
   PosTerminalDto,
   PosTerminalFieldErrors,
 } from '../assets/@types/pos-terminal.types';
 import { isFeeInRange, normalizeFeeInput } from '../utils/fee';
-import { toAsciiDigits } from '../utils/format';
 import {
   DUPLICATE_TERMINAL_MESSAGE,
   findDuplicateTerminal,

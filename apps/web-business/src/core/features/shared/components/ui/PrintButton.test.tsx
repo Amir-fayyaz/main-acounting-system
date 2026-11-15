@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { ChequePrintButton } from '../components/ui/ChequePrintButton';
+import { PrintButton } from './PrintButton';
 
 const originalPrint = window.print;
 
@@ -14,7 +14,7 @@ afterEach(() => {
   });
 });
 
-describe('ChequePrintButton', () => {
+describe('PrintButton', () => {
   it('opens the browser print dialog', async () => {
     const printMock = vi.fn();
     Object.defineProperty(window, 'print', {
@@ -24,7 +24,7 @@ describe('ChequePrintButton', () => {
     });
     const user = userEvent.setup();
 
-    render(<ChequePrintButton />);
+    render(<PrintButton />);
 
     await user.click(screen.getByRole('button', { name: 'چاپ' }));
 

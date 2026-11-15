@@ -1,10 +1,9 @@
+import { isCanonicalMoney, normalizeIban } from '../../shared';
 import type {
   AccountFieldErrors,
   CreateAccountRequest,
 } from '../assets/@types/account.types';
 import { isAccountType } from '../assets/@types/account.types';
-import { normalizeIban } from '../utils/iban';
-import { isCanonicalMoney } from '../utils/money';
 import { ACCOUNT_IBAN_PATTERN } from './accounts.config';
 import { AccountApiError } from './accounts-api.errors';
 

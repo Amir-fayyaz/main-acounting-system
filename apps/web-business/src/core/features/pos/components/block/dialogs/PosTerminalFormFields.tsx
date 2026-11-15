@@ -1,12 +1,11 @@
 'use client';
 
 import { Input } from '@repo/web/ui';
-
+import { FormField } from '../../../../shared';
 import type {
   PosTerminalFormErrors,
   PosTerminalFormValues,
 } from '../../../assets/@types/pos-terminal.types';
-import { PosField } from '../../ui/PosField';
 
 const CONTROL_CLASS = 'text-start tabular-nums';
 
@@ -32,7 +31,7 @@ export function PosTerminalFormFields({
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <PosField id={titleId} label="عنوان دستگاه" error={errors.title}>
+      <FormField id={titleId} label="عنوان دستگاه" error={errors.title}>
         <Input
           id={titleId}
           autoComplete="off"
@@ -42,9 +41,9 @@ export function PosTerminalFormFields({
             setField('title', event.target.value);
           }}
         />
-      </PosField>
+      </FormField>
 
-      <PosField
+      <FormField
         id={terminalId}
         label="شماره ترمینال"
         error={errors.terminalNumber}
@@ -62,9 +61,9 @@ export function PosTerminalFormFields({
             setField('terminalNumber', event.target.value);
           }}
         />
-      </PosField>
+      </FormField>
 
-      <PosField
+      <FormField
         id={merchantId}
         label="شماره پذیرنده"
         error={errors.merchantNumber}
@@ -82,9 +81,9 @@ export function PosTerminalFormFields({
             setField('merchantNumber', event.target.value);
           }}
         />
-      </PosField>
+      </FormField>
 
-      <PosField id={bankId} label="بانک" error={errors.bank} hint="اختیاری.">
+      <FormField id={bankId} label="بانک" error={errors.bank} hint="اختیاری.">
         <Input
           id={bankId}
           autoComplete="off"
@@ -94,9 +93,9 @@ export function PosTerminalFormFields({
             setField('bank', event.target.value);
           }}
         />
-      </PosField>
+      </FormField>
 
-      <PosField
+      <FormField
         id={feeId}
         label="کارمزد (٪)"
         error={errors.feePercent}
@@ -114,7 +113,7 @@ export function PosTerminalFormFields({
             setField('feePercent', event.target.value);
           }}
         />
-      </PosField>
+      </FormField>
     </div>
   );
 }

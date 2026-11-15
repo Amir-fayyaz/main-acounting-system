@@ -4,16 +4,13 @@ import { Plus } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
-
 import { Button, H1, Muted, SectionLayout } from '@repo/web/ui';
 import { usePagination } from '@repo/web';
-
+import { PrintButton, PrintStyles } from '../../../shared';
 import type { PosTerminal } from '../../assets/@types/pos-terminal.types';
 import { useCreatePosTerminal } from '../../hook/useCreatePosTerminal';
 import { usePosStatusFilter } from '../../hook/usePosStatusFilter';
 import { usePosTerminals } from '../../hook/usePosTerminals';
-import { PosPrintButton } from '../ui/PosPrintButton';
-import { PosPrintStyles } from './PosPrintStyles';
 import { PosTable } from './PosTable';
 import { PosToolbar } from './PosToolbar';
 import { PosTerminalFormDialog } from './dialogs/PosTerminalFormDialog';
@@ -39,7 +36,7 @@ export function PosPageContent() {
 
   return (
     <SectionLayout>
-      <PosPrintStyles />
+      <PrintStyles scope="pos" />
       <div data-pos-print className="flex flex-col gap-5">
         <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-1">
@@ -52,7 +49,7 @@ export function PosPageContent() {
           </div>
 
           <div data-pos-actions className="flex flex-wrap items-center gap-2 print:hidden">
-            <PosPrintButton />
+            <PrintButton />
 
             <Button
               className="gap-1.5"

@@ -1,5 +1,5 @@
+import { toAsciiDigits } from '../../shared';
 import type { ChequeDto, ChequeFormRules } from '../assets/@types/cheque.types';
-import { toAsciiDigits } from '../utils/format';
 
 export const DUPLICATE_SAYAD_MESSAGE = 'این شناسه صیادی قبلاً ثبت شده است.';
 
