@@ -13,14 +13,9 @@ interface SayadFieldProps extends Omit<
 > {
   value: string;
   onValueChange: (value: string) => void;
-  /** طول مجاز شناسه از قواعد API می‌آید. */
   expectedLength: number;
 }
 
-/**
- * فیلد شناسه صیادی: فقط ارقام، طول کنترل‌شده و شمارنده‌ی ارقام.
- * قانون نهایی یکتایی/اعتبار در API اعمال می‌شود.
- */
 export function SayadField({
   value,
   onValueChange,

@@ -1,9 +1,5 @@
 'use client';
 
-/**
- * استایل چاپ فهرست چک‌ها، هم‌راستا با نمونه‌ی `cheques.html`:
- * فقط عنوان، آمار و جدول چاپ می‌شود و پوسته‌ی پنل، ابزارها، عملیات و صفحه‌بندی حذف می‌شوند.
- */
 const PRINT_STYLES = `
 @media print {
   body:has([data-checks-print]) [data-slot='sidebar'],

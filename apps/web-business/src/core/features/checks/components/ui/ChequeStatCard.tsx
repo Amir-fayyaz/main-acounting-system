@@ -16,7 +16,6 @@ const TONE_CLASSES: Record<ChequeStatTone, string> = {
 
 interface ChequeStatCardProps {
   label: string;
-  /** `null` وقتی داده هنوز/دیگر در دسترس نیست. */
   value: number | null;
   icon?: ReactNode;
   tone?: ChequeStatTone;

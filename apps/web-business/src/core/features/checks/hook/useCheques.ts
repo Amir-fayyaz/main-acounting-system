@@ -23,13 +23,11 @@ export type UseChequesState =
 
 export interface UseChequesResult {
   state: UseChequesState;
-  /** دریافت دوباره‌ی فهرست و آمار با همان پارامترهای فعلی. */
   refresh: () => void;
 }
 
 const FALLBACK_ERROR = 'دریافت فهرست چک‌ها با مشکل مواجه شد. لطفاً دوباره تلاش کنید.';
 
-/** فهرست + آمار چک‌ها را برای پارامترهای فعلی URL دریافت می‌کند. */
 export function useCheques(params: UseChequesParams): UseChequesResult {
   const { page = 1, limit = 20, search = '', status, direction } = params;
   const [version, setVersion] = useState(0);

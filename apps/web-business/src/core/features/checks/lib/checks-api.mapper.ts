@@ -1,13 +1,29 @@
-import type { Cheque, ChequeDto } from '../assets/@types/cheque.types';
+import {
+  CHEQUE_CURRENCY,
+  type Cheque,
+  type ChequeDto,
+  type CreateChequeRequest,
+  type UpdateChequeRequest,
+} from '../assets/@types/cheque.types';
+import { toAsciiDigits } from '../utils/format';
 import { normalizeJalaliDate } from '../utils/jalali';
 import { normalizeMoneyInput } from '../utils/money';
-import { toAsciiDigits } from '../utils/format';
 import { ChequeApiError } from './checks-api.errors';
 
-/**
- * DTO سرور را به مدل نمایش تبدیل و مقادیر پول/تاریخ را canonical می‌کند.
- * داده‌ی ناسازگار با قرارداد به خطای API تبدیل می‌شود تا در حالت error دیده شود.
- */
+function normalizeDigits(value: string): string {
+  return toAsciiDigits(value).trim();
+}
+
+function normalizeRequestDates(payload: CreateChequeRequest): {
+  registeredDate: string;
+  dueDate: string;
+} {
+  return {
+    registeredDate: normalizeJalaliDate(payload.registeredDate) ?? '',
+    dueDate: normalizeJalaliDate(payload.dueDate) ?? '',
+  };
+}
+
 export function mapChequeDtoToCheque(dto: ChequeDto): Cheque {
   const amount = normalizeMoneyInput(dto.amount.amount);
   const registeredDate = normalizeJalaliDate(dto.registeredDate);
@@ -24,8 +40,8 @@ export function mapChequeDtoToCheque(dto: ChequeDto): Cheque {
   return {
     id: dto.id,
     revision: dto.revision,
-    number: toAsciiDigits(dto.number).trim(),
-    sayadId: toAsciiDigits(dto.sayadId).trim(),
+    number: normalizeDigits(dto.number),
+    sayadId: normalizeDigits(dto.sayadId),
     direction: dto.direction,
     counterparty: dto.counterparty.trim(),
     bank: dto.bank.trim(),
@@ -41,4 +57,51 @@ export function mapChequeDtoToCheque(dto: ChequeDto): Cheque {
 
 export function mapChequeDtoListToCheques(dtos: readonly ChequeDto[]): Cheque[] {
   return dtos.map(mapChequeDtoToCheque);
+}
+
+export function mapCreateChequeRequestToDto(
+  payload: CreateChequeRequest,
+  id: string,
+): ChequeDto {
+  const { registeredDate, dueDate } = normalizeRequestDates(payload);
+
+  return {
+    id,
+    revision: 1,
+    number: normalizeDigits(payload.number),
+    sayadId: normalizeDigits(payload.sayadId),
+    direction: payload.direction,
+    counterparty: payload.counterparty.trim(),
+    bank: payload.bank.trim(),
+    amount: {
+      amount: payload.amount.amount,
+      currency: CHEQUE_CURRENCY,
+    },
+    registeredDate,
+    dueDate,
+    status: 'pending',
+  };
+}
+
+export function mapUpdateChequeRequestToDto(
+  payload: UpdateChequeRequest,
+  current: ChequeDto,
+): ChequeDto {
+  const { registeredDate, dueDate } = normalizeRequestDates(payload);
+
+  return {
+    ...current,
+    revision: current.revision + 1,
+    number: normalizeDigits(payload.number),
+    sayadId: normalizeDigits(payload.sayadId),
+    direction: payload.direction,
+    counterparty: payload.counterparty.trim(),
+    bank: payload.bank.trim(),
+    amount: {
+      amount: payload.amount.amount,
+      currency: CHEQUE_CURRENCY,
+    },
+    registeredDate,
+    dueDate,
+  };
 }

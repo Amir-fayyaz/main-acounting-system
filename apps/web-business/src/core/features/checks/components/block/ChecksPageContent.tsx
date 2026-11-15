@@ -1,33 +1,23 @@
 'use client';
 
-import { ArrowDownLeft, ArrowUpRight, Clock, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import {
-  Button,
-  H1,
-  Muted,
-  SearchInput,
-  SectionLayout,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@repo/web/ui';
+import { Button, H1, Muted, SectionLayout } from '@repo/web/ui';
 import { usePagination } from '@repo/web';
 
-import type { Cheque, ChequeDirection, ChequeStatus } from '../../assets/@types/cheque.types';
-import { useCheques } from '../../hook/useCheques';
+import type { Cheque } from '../../assets/@types/cheque.types';
 import { useChequeFilters } from '../../hook/useChequeFilters';
-import { CHEQUE_DIRECTION_OPTIONS, CHEQUE_STATUS_OPTIONS } from '../../lib/checks.config';
+import { useCheques } from '../../hook/useCheques';
+import { useSaveCheque } from '../../hook/useSaveCheque';
 import { toPersianDigits } from '../../utils/format';
 import { ChequePrintButton } from '../ui/ChequePrintButton';
-import { ChequeStatCard } from '../ui/ChequeStatCard';
 import { ChecksPrintStyles } from './ChecksPrintStyles';
+import { ChecksStats } from './ChecksStats';
 import { ChecksTable } from './ChecksTable';
+import { ChecksToolbar } from './ChecksToolbar';
 import { ChequeFormDialog } from './dialogs/ChequeFormDialog';
 
 type DialogState = { mode: 'create' } | { mode: 'edit'; cheque: Cheque };
@@ -35,6 +25,7 @@ type DialogState = { mode: 'create' } | { mode: 'edit'; cheque: Cheque };
 export function ChecksPageContent() {
   const { page, limit, setPage, setLimit, queryParams } = usePagination();
   const { status, direction, setStatus, setDirection } = useChequeFilters();
+  const saveCheque = useSaveCheque();
   const searchParams = useSearchParams();
   const search = searchParams.get('search')?.trim() ?? '';
   const [dialog, setDialog] = useState<DialogState | null>(null);
@@ -83,73 +74,14 @@ export function ChecksPageContent() {
           </div>
         </header>
 
-        <section aria-label="خلاصه‌ی وضعیت چک‌ها" className="grid gap-3 sm:grid-cols-3">
-          <ChequeStatCard
-            label="چک‌های دریافتی"
-            value={stats ? stats.received : null}
-            tone="positive"
-            icon={<ArrowDownLeft className="size-5" />}
-          />
-          <ChequeStatCard
-            label="چک‌های پرداختی"
-            value={stats ? stats.issued : null}
-            tone="brand"
-            icon={<ArrowUpRight className="size-5" />}
-          />
-          <ChequeStatCard
-            label="سررسیدشده"
-            value={stats ? stats.overdue : null}
-            tone="danger"
-            icon={<Clock className="size-5" />}
-          />
-        </section>
+        <ChecksStats stats={stats} />
 
-        <div
-          data-checks-toolbar
-          className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center print:hidden"
-        >
-          <div className="w-full sm:max-w-xs">
-            <SearchInput title="جستجو در جدول…" />
-          </div>
-
-          <Select
-            value={status}
-            onValueChange={(value) => {
-              setStatus(value as ChequeStatus | 'all');
-            }}
-          >
-            <SelectTrigger className="w-full sm:w-40" aria-label="وضعیت">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">همه وضعیت‌ها</SelectItem>
-              {CHEQUE_STATUS_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={direction}
-            onValueChange={(value) => {
-              setDirection(value as ChequeDirection | 'all');
-            }}
-          >
-            <SelectTrigger className="w-full sm:w-40" aria-label="نوع چک">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">همه انواع</SelectItem>
-              {CHEQUE_DIRECTION_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <ChecksToolbar
+          status={status}
+          direction={direction}
+          onStatusChange={setStatus}
+          onDirectionChange={setDirection}
+        />
 
         <section
           aria-label="فهرست چک‌ها"
@@ -191,6 +123,7 @@ export function ChecksPageContent() {
           }}
           mode={dialog.mode}
           cheque={dialog.mode === 'edit' ? dialog.cheque : null}
+          saveCheque={saveCheque}
           onSaved={(saved) => {
             refresh();
             const number = toPersianDigits(saved.number);

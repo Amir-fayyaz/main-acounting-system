@@ -30,7 +30,6 @@ export function isPositiveMoney(value: string): boolean {
   return isCanonicalMoney(value) && value !== '0.00';
 }
 
-/** نمایش مبلغ با جداکننده‌ی هزارگان و ارقام فارسی؛ اعشار صفر حذف می‌شود. */
 export function formatMoneyFa(amount: string): string {
   if (!isCanonicalMoney(amount)) return toPersianDigits(amount);
 

@@ -33,10 +33,6 @@ function normalizeAmountInput(value: unknown): string {
   return typeof value === 'string' ? (normalizeMoneyInput(value) ?? '') : '';
 }
 
-/**
- * Schema فرم بر پایه‌ی قواعدی ساخته می‌شود که API اعلام کرده است.
- * این لایه فقط برای UX و اعتبارسنجی فرم است؛ مرجع نهایی، API است.
- */
 export function createChequeFormSchema(rules: ChequeFormRules) {
   const chequeNumberPattern = new RegExp(rules.chequeNumber.pattern);
   const sayadPattern = new RegExp(rules.sayad.pattern);

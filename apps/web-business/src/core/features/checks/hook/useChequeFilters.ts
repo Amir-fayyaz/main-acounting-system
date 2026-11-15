@@ -27,10 +27,6 @@ export interface UseChequeFiltersResult {
   setDirection: (value: ChequeFilterValue<ChequeDirection>) => void;
 }
 
-/**
- * فیلترهای وضعیت/نوع را در URL نگه می‌دارد (هم‌راستا با usePagination).
- * هر تغییر فیلتر، صفحه را به ۱ برمی‌گرداند تا نتیجه از ابتدا دیده شود.
- */
 export function useChequeFilters(): UseChequeFiltersResult {
   const router = useRouter();
   const pathname = usePathname();

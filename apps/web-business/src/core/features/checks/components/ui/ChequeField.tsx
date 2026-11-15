@@ -10,7 +10,6 @@ interface ChequeFieldProps {
   children: ReactNode;
 }
 
-/** فیلد فرم چک: برچسب، کنترل و خطا/راهنمای همان فیلد با اتصال دسترس‌پذیر. */
 export function ChequeField({ id, label, hint, error, children }: ChequeFieldProps) {
   const messageId = `${id}-message`;
   const hasMessage = Boolean(error || hint);
