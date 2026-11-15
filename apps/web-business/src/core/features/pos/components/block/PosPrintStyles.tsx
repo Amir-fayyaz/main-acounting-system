@@ -1,9 +1,5 @@
 'use client';
 
-/**
- * استایل چاپ فهرست دستگاه‌های POS، هم‌راستا با نمونه‌ی `pos.html`:
- * فقط عنوان و جدول چاپ می‌شود و پوسته‌ی پنل، ابزارها و صفحه‌بندی حذف می‌شوند.
- */
 const PRINT_STYLES = `
 @media print {
   body:has([data-pos-print]) [data-slot='sidebar'],

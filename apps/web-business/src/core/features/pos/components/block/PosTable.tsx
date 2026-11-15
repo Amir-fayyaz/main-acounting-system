@@ -8,12 +8,8 @@ import { cn } from '@repo/web/ui/utils/cn';
 import type { PosTerminal } from '../../assets/@types/pos-terminal.types';
 import { POS_PAGE_SIZES } from '../../lib/pos.config';
 import { formatFeePercentFa } from '../../utils/fee';
-import {
-  formatCountFa,
-  formatIbanMaskFa,
-  formatJalaliDateFa,
-  toPersianDigits,
-} from '../../utils/format';
+import { formatCountFa, formatJalaliDateFa, toPersianDigits } from '../../utils/format';
+import { formatIbanMaskFa } from '../../utils/iban';
 import { PosStatusBadge } from '../ui/PosStatusBadge';
 
 const HEADER_CLASS = 'text-start text-xs font-semibold text-muted-foreground';

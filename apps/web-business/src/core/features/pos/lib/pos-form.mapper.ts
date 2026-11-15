@@ -14,7 +14,6 @@ export function createEmptyPosTerminalFormValues(): PosTerminalFormValues {
   };
 }
 
-/** فرم ایجاد را به payload استاندارد API تبدیل می‌کند. */
 export function mapPosFormValuesToCreateRequest(
   values: PosTerminalFormValues,
 ): CreatePosTerminalRequest {

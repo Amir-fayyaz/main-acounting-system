@@ -1,17 +1,18 @@
-import type { PosTerminal, PosTerminalDto } from '../assets/@types/pos-terminal.types';
-import { normalizeFeeInput, isCanonicalFee } from '../utils/fee';
+import type {
+  CreatePosTerminalRequest,
+  PosTerminal,
+  PosTerminalDto,
+} from '../assets/@types/pos-terminal.types';
+import { isCanonicalFee, normalizeFeeInput } from '../utils/fee';
 import { toAsciiDigits } from '../utils/format';
+import { normalizeIban } from '../utils/iban';
 import { normalizeJalaliDate } from '../utils/jalali';
 import { PosApiError } from './pos-api.errors';
 
-function normalizeIban(value: string): string {
-  return toAsciiDigits(value).replace(/[\s-]/g, '').toUpperCase();
+function normalizeDigits(value: string): string {
+  return toAsciiDigits(value).trim();
 }
 
-/**
- * DTO سرور را به مدل نمایش تبدیل و کارمزد/تاریخ/شبا را canonical می‌کند.
- * داده‌ی ناسازگار با قرارداد به خطای API تبدیل می‌شود تا در حالت error دیده شود.
- */
 export function mapPosTerminalDtoToPosTerminal(dto: PosTerminalDto): PosTerminal {
   const feePercent = dto.feePercent === null ? null : normalizeFeeInput(dto.feePercent);
   const activatedOn = dto.activatedOn === null ? null : normalizeJalaliDate(dto.activatedOn);
@@ -36,8 +37,8 @@ export function mapPosTerminalDtoToPosTerminal(dto: PosTerminalDto): PosTerminal
     id: dto.id,
     revision: dto.revision,
     title: dto.title.trim(),
-    terminalNumber: toAsciiDigits(dto.terminalNumber).trim(),
-    merchantNumber: dto.merchantNumber ? toAsciiDigits(dto.merchantNumber).trim() : null,
+    terminalNumber: normalizeDigits(dto.terminalNumber),
+    merchantNumber: dto.merchantNumber ? normalizeDigits(dto.merchantNumber) : null,
     bank: dto.bank?.trim() || null,
     feePercent,
     settlementIban: dto.settlementIban ? normalizeIban(dto.settlementIban) : null,
@@ -50,4 +51,22 @@ export function mapPosTerminalDtoListToPosTerminals(
   dtos: readonly PosTerminalDto[],
 ): PosTerminal[] {
   return dtos.map(mapPosTerminalDtoToPosTerminal);
+}
+
+export function mapCreatePosTerminalRequestToDto(
+  payload: CreatePosTerminalRequest,
+  id: string,
+): PosTerminalDto {
+  return {
+    id,
+    revision: 1,
+    title: payload.title.trim(),
+    terminalNumber: normalizeDigits(payload.terminalNumber),
+    merchantNumber: payload.merchantNumber ? normalizeDigits(payload.merchantNumber) : null,
+    bank: payload.bank?.trim() || null,
+    feePercent: payload.feePercent ? normalizeFeeInput(payload.feePercent) : null,
+    settlementIban: null,
+    activatedOn: null,
+    status: 'active',
+  };
 }

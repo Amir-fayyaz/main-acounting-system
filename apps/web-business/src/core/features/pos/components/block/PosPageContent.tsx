@@ -5,32 +5,23 @@ import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import {
-  Button,
-  H1,
-  Muted,
-  SearchInput,
-  SectionLayout,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@repo/web/ui';
+import { Button, H1, Muted, SectionLayout } from '@repo/web/ui';
 import { usePagination } from '@repo/web';
 
-import type { PosStatus, PosTerminal } from '../../assets/@types/pos-terminal.types';
+import type { PosTerminal } from '../../assets/@types/pos-terminal.types';
+import { useCreatePosTerminal } from '../../hook/useCreatePosTerminal';
 import { usePosStatusFilter } from '../../hook/usePosStatusFilter';
 import { usePosTerminals } from '../../hook/usePosTerminals';
-import { POS_STATUS_OPTIONS } from '../../lib/pos.config';
 import { PosPrintButton } from '../ui/PosPrintButton';
 import { PosPrintStyles } from './PosPrintStyles';
 import { PosTable } from './PosTable';
+import { PosToolbar } from './PosToolbar';
 import { PosTerminalFormDialog } from './dialogs/PosTerminalFormDialog';
 
 export function PosPageContent() {
   const { page, limit, setPage, setLimit, queryParams } = usePagination();
   const { status, setStatus } = usePosStatusFilter();
+  const createTerminal = useCreatePosTerminal();
   const searchParams = useSearchParams();
   const search = searchParams.get('search')?.trim() ?? '';
   const [isDialogOpen, setDialogOpen] = useState(false);
@@ -75,33 +66,7 @@ export function PosPageContent() {
           </div>
         </header>
 
-        <div
-          data-pos-toolbar
-          className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center print:hidden"
-        >
-          <div className="w-full sm:max-w-xs">
-            <SearchInput title="جستجو در جدول…" />
-          </div>
-
-          <Select
-            value={status}
-            onValueChange={(value) => {
-              setStatus(value as PosStatus | 'all');
-            }}
-          >
-            <SelectTrigger className="w-full sm:w-40" aria-label="وضعیت">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">همه وضعیت‌ها</SelectItem>
-              {POS_STATUS_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <PosToolbar status={status} onStatusChange={setStatus} />
 
         <section
           aria-label="فهرست دستگاه‌های POS"
@@ -135,6 +100,7 @@ export function PosPageContent() {
         <PosTerminalFormDialog
           open
           onOpenChange={setDialogOpen}
+          createTerminal={createTerminal}
           onSaved={(saved: PosTerminal) => {
             refresh();
             toast.success(`دستگاه «${saved.title}» ثبت شد.`);

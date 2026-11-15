@@ -16,10 +16,6 @@ export interface UsePosStatusFilterResult {
   setStatus: (value: PosStatusFilter) => void;
 }
 
-/**
- * فیلتر وضعیت را در URL نگه می‌دارد (هم‌راستا با usePagination).
- * هر تغییر فیلتر، صفحه را به ۱ برمی‌گرداند تا نتیجه از ابتدا دیده شود.
- */
 export function usePosStatusFilter(): UsePosStatusFilterResult {
   const router = useRouter();
   const pathname = usePathname();

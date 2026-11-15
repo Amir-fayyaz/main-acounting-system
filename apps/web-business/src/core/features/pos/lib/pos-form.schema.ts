@@ -32,10 +32,6 @@ function normalizeFeeField(value: unknown): string {
   return normalizeFeeInput(value) ?? INVALID_FEE;
 }
 
-/**
- * Schema فرم ترمینال: عنوان و شماره ترمینال الزامی‌اند؛
- * شماره پذیرنده و کارمزد اختیاری‌اند اما در صورت ورود اعتبارسنجی می‌شوند.
- */
 export const posTerminalFormSchema = z.object({
   title: z.preprocess(normalizeTextInput, z.string().min(1, 'عنوان دستگاه را وارد کنید.')),
   terminalNumber: z.preprocess(

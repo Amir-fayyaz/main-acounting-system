@@ -28,7 +28,6 @@ export function isCanonicalFee(value: string): boolean {
   return CANONICAL_FEE_PATTERN.test(value);
 }
 
-/** درصد کارمزد باید بین ۰ تا ۱۰۰ باشد. */
 export function isFeeInRange(value: string): boolean {
   if (!isCanonicalFee(value)) return false;
 
@@ -38,7 +37,6 @@ export function isFeeInRange(value: string): boolean {
   return cents <= MAX_FEE_CENTS;
 }
 
-/** نمایش درصد کارمزد با ارقام فارسی و حذف اعشار صفر؛ `—` برای مقدار خالی. */
 export function formatFeePercentFa(value: string | null): string {
   if (!value) return '—';
   if (!isCanonicalFee(value)) return toPersianDigits(value);

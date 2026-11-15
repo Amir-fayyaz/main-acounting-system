@@ -10,7 +10,6 @@ interface PosFieldProps {
   children: ReactNode;
 }
 
-/** فیلد فرم ترمینال: برچسب، کنترل و خطا/راهنمای همان فیلد با اتصال دسترس‌پذیر. */
 export function PosField({ id, label, hint, error, children }: PosFieldProps) {
   const messageId = `${id}-message`;
   const hasMessage = Boolean(error || hint);
