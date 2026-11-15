@@ -1,9 +1,5 @@
 'use client';
 
-/**
- * استایل چاپ فهرست حساب‌ها، هم‌راستا با نمونه‌ی `accounts.html`:
- * فقط عنوان، آمار و جدول چاپ می‌شود و پوسته‌ی پنل، ابزارها و صفحه‌بندی حذف می‌شوند.
- */
 const PRINT_STYLES = `
 @media print {
   body:has([data-accounts-print]) [data-slot='sidebar'],

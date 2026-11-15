@@ -21,21 +21,26 @@ import type {
 } from '../../../assets/@types/account.types';
 import { useAccountForm } from '../../../hook/useAccountForm';
 import { ACCOUNT_TYPE_OPTIONS } from '../../../lib/accounts.config';
-import { accountsApi } from '../../../lib/accounts-api';
 import { AccountField } from '../../ui/AccountField';
 import { AccountNotice } from '../../ui/AccountNotice';
 
 interface AccountFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  createAccount: (payload: CreateAccountRequest) => Promise<Account>;
   onSaved: (account: Account) => void | Promise<void>;
 }
 
 const CONTROL_CLASS = 'text-start tabular-nums';
 
-export function AccountFormDialog({ open, onOpenChange, onSaved }: AccountFormDialogProps) {
+export function AccountFormDialog({
+  open,
+  onOpenChange,
+  createAccount,
+  onSaved,
+}: AccountFormDialogProps) {
   const handleValidSubmit = async (payload: CreateAccountRequest): Promise<void> => {
-    const created = await accountsApi.create(payload);
+    const created = await createAccount(payload);
     await onSaved(created);
   };
 

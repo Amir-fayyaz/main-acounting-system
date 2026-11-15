@@ -5,7 +5,7 @@ import {
   type AccountFormErrors,
   type AccountFormValues,
 } from '../assets/@types/account.types';
-import { toAsciiDigits } from '../utils/format';
+import { normalizeIban } from '../utils/iban';
 import { normalizeMoneyInput } from '../utils/money';
 import { ACCOUNT_IBAN_PATTERN } from './accounts.config';
 
@@ -22,7 +22,7 @@ function normalizeTextInput(value: unknown): string {
 }
 
 function normalizeIbanInput(value: unknown): string {
-  return typeof value === 'string' ? toAsciiDigits(value).replace(/[\s-]/g, '').toUpperCase() : '';
+  return typeof value === 'string' ? normalizeIban(value) : '';
 }
 
 function normalizeOpeningBalanceInput(value: unknown): string {
@@ -31,10 +31,6 @@ function normalizeOpeningBalanceInput(value: unknown): string {
   return normalizeMoneyInput(value) ?? '';
 }
 
-/**
- * Schema فرم حساب. مقدار خالی موجودی اولیه صفر در نظر گرفته می‌شود؛
- * بانک و شبا فقط برای حساب بانکی الزامی‌اند.
- */
 export const accountFormSchema = z
   .object({
     title: z.preprocess(normalizeTextInput, z.string().min(1, 'عنوان حساب را وارد کنید.')),

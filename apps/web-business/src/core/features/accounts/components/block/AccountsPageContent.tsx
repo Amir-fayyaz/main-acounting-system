@@ -22,6 +22,7 @@ import { usePagination } from '@repo/web';
 import type { Account, AccountType } from '../../assets/@types/account.types';
 import { useAccountFilters } from '../../hook/useAccountFilters';
 import { useAccounts } from '../../hook/useAccounts';
+import { useCreateAccount } from '../../hook/useCreateAccount';
 import { ACCOUNT_TYPE_OPTIONS } from '../../lib/accounts.config';
 import { formatCountFa } from '../../utils/format';
 import { formatMoneyCompactFa } from '../../utils/money';
@@ -34,6 +35,7 @@ import { AccountFormDialog } from './dialogs/AccountFormDialog';
 export function AccountsPageContent() {
   const { page, limit, setPage, setLimit, queryParams } = usePagination();
   const { type, setType } = useAccountFilters();
+  const createAccount = useCreateAccount();
   const searchParams = useSearchParams();
   const search = searchParams.get('search')?.trim() ?? '';
   const [isDialogOpen, setDialogOpen] = useState(false);
@@ -160,6 +162,7 @@ export function AccountsPageContent() {
         <AccountFormDialog
           open
           onOpenChange={setDialogOpen}
+          createAccount={createAccount}
           onSaved={(saved: Account) => {
             refresh();
             toast.success(`حساب «${saved.title}» ثبت شد.`);

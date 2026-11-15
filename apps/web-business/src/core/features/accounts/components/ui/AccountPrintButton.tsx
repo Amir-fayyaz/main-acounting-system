@@ -4,7 +4,6 @@ import { Printer } from 'lucide-react';
 
 import { Button } from '@repo/web/ui';
 
-/** دکمه‌ی چاپ فهرست حساب‌ها؛ خروجی چاپ با استایل اختصاصی صفحه کنترل می‌شود. */
 export function AccountPrintButton() {
   return (
     <Button

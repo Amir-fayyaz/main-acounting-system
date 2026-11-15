@@ -32,7 +32,6 @@ export interface UseAccountFormResult {
 
 const SUBMIT_FALLBACK_ERROR = 'ایجاد حساب انجام نشد. لطفاً دوباره تلاش کنید.';
 
-/** وضعیت فرم ایجاد حساب: اعتبارسنجی Zod و نگاشت خطاهای فیلد API. */
 export function useAccountForm({ onValidSubmit }: UseAccountFormOptions): UseAccountFormResult {
   const [values, setValuesState] = useState<AccountFormValues>(createEmptyAccountFormValues);
   const [errors, setErrors] = useState<AccountFormErrors>({});
