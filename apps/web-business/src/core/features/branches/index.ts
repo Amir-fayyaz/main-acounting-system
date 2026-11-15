@@ -1,2 +1,1 @@
-// Public API for branches. Add page components and hooks here as they are implemented.
-export {};
+export { BranchesPage } from './components/block/BranchesPage';

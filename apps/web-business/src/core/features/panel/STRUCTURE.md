@@ -16,7 +16,7 @@ Domain APIs, mocks, and blocks live under `core/features/panel` causing potentia
 ### A (Platform) - Features: panel, shared, dashboard, reports
 
 ```text
-panel/.../dashboard/* + dashboard-api + dashboard mock/types → features/dashboard
+panel/.../dashboard/* + dashboard-api + dashboard mock/types → features/dashboard (COMPLETED — Phase 1)
 ```
 
 ### B (Fiscal & Journal) - Features: fiscal-periods (exists), journal, trial

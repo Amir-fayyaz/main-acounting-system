@@ -1,13 +1,13 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
-import { JournalView } from '@/core/features/panel/components/block/journal/JournalView';
+import { JournalPage } from '@/core/features/journal';
 
 export const metadata: Metadata = { title: 'دفتر روزنامه' };
 
-export default function PanelPage() {
+export default function Page() {
   return (
     <Suspense fallback={null}>
-      <JournalView />
+      <JournalPage />
     </Suspense>
   );
 }

@@ -1,2 +1,3 @@
-// Public API for trial. Add page components and hooks here as they are implemented.
-export {};
+export { TrialPage } from './components/block/TrialPage';
+export * from './assets/@types';
+export * from './lib/trial-api';

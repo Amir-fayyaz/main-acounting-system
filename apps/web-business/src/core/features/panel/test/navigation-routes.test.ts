@@ -18,17 +18,25 @@ const hrefs = links.map((link) => link.href);
 
 const EXPECTED_DESTINATIONS = [
   '/',
+  '/reports',
+  '/fiscal-periods',
+  '/fiscal-years',
+  '/fiscal-setup',
   '/journal',
+  '/journal/new',
   '/trial',
   '/accounts',
   '/checks',
   '/pos',
+  '/sales',
+  '/sales/new',
+  '/purchases',
   '/people',
   '/branches',
   '/users',
-  '/audit-trail',
-  '/sales',
-  '/purchases',
+  '/staff',
+  '/access',
+  '/audit',
   '/settings',
 ];
 
