@@ -1,0 +1,37 @@
+# Prometheus configuration for the local monitoring stack (FND-017).
+#
+# Mounted read-only at /etc/prometheus/prometheus.yml by the `prometheus`
+# service in docker-compose.yml. The alert rules it evaluates live beside it in
+# infrastructure/observability/alerts/rules.yml, mounted at
+# /etc/prometheus/alerts/.
+#
+# The only scrape target is the containerised backend (`backend:3000`). A
+# backend started on the host with `pnpm dev` is NOT reachable from this
+# container by that name — run the full `--profile app` stack (or override the
+# target) to feed it.
+#
+# Authorization (FND-016): /api/metrics is deny-by-default and requires the
+# METRICS_TOKEN bearer credential. Prometheus reads it from
+# /run/secrets/metrics_token, a file rendered at stack start-up from the local
+# .env by `pnpm obs:up` — never committed, never baked into an image.
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/alerts/rules.yml
+
+scrape_configs:
+  # The metrics exposition is also the Prom-visible readiness signal: a target
+  # is UP only while the process answers HTTP with a valid exposition, so
+  # `up{job="backend-metrics"} == 0` is the readiness-down alert (the JSON
+  # /api/health/ready probe stays the Compose healthcheck's job — Prometheus
+  # cannot parse its JSON body, so scraping it would mark the target down on
+  # every healthy response).
+  - job_name: backend-metrics
+    metrics_path: /api/metrics
+    authorization:
+      type: Bearer
+      credentials_file: /run/secrets/metrics_token
+    static_configs:
+      - targets: ['backend:3000']

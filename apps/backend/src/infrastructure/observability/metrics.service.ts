@@ -29,6 +29,9 @@ const ZERO_POOL_STATS: DatabasePoolStats = { active: 0, idle: 0, waiting: 0 };
 /** The supported callback for the `job_queue_depth` gauge. */
 export type QueueDepthProvider = () => Promise<number>;
 
+/** The supported callback for the `outbox_pending_events` gauge (FND-017). */
+export type OutboxPendingProvider = () => Promise<number>;
+
 /** How long a single scrape waits for a queue-depth read before giving up on it. */
 const QUEUE_DEPTH_READ_TIMEOUT_MS = 2_000;
 
@@ -49,7 +52,11 @@ const QUEUE_DEPTH_READ_TIMEOUT_MS = 2_000;
  *   from the queue port through a provider registered at module init
  *   (`JobQueueDepthBinder`) so the metrics layer never depends on the queue;
  * - `database_pool_connections`, the MySQL pool state (`active`, `idle`,
- *   `waiting`), read defensively from the pool accounting at scrape time.
+ *   `waiting`), read defensively from the pool accounting at scrape time;
+ * - `outbox_pending_events`, the number of outbox records not yet published
+ *   (pending, retrying or stuck publishing), sourced from the outbox
+ *   infrastructure through a provider registered at module init, so the
+ *   metrics layer never depends on the outbox (FND-017).
  *
  * The service also *is* the `JobMetrics` port: the jobs infrastructure binds
  * its `JOB_METRICS` token to this class, so the dispatcher records through the
@@ -67,7 +74,9 @@ export class MetricsService implements JobMetrics {
   private readonly jobExecutionDuration: Histogram<string>;
   private readonly jobQueueDepth: Gauge<string>;
   private readonly databasePoolConnections: Gauge<string>;
+  private readonly outboxPendingEvents: Gauge<string>;
   private queueDepthProvider?: QueueDepthProvider;
+  private outboxPendingProvider?: OutboxPendingProvider;
 
   constructor(
     @Optional() @Inject(MYSQL_CONNECTION_POOL) private readonly pool?: unknown,
@@ -111,6 +120,28 @@ export class MetricsService implements JobMetrics {
           // The queue is unreachable (or too slow to answer within the scrape
           // budget); the gauge keeps its last value (0) rather than failing —
           // or worse, hanging — the scrape and hiding every other metric.
+        }
+      },
+    });
+
+    this.outboxPendingEvents = new Gauge({
+      name: 'outbox_pending_events',
+      help: 'Outbox records not yet published: pending, retrying or claimed by a publisher.',
+      registers: [this.registry],
+      collect: async () => {
+        const provider = this.outboxPendingProvider;
+
+        if (provider === undefined) {
+          return;
+        }
+
+        try {
+          this.outboxPendingEvents.set(
+            await this.withReadTimeout(provider(), this.queueDepthReadTimeoutMs),
+          );
+        } catch {
+          // Same trade as the queue gauge: an unreachable store keeps the last
+          // value instead of failing (or hanging) the whole scrape.
         }
       },
     });
@@ -169,6 +200,15 @@ export class MetricsService implements JobMetrics {
    */
   setQueueDepthProvider(provider: QueueDepthProvider): void {
     this.queueDepthProvider = provider;
+  }
+
+  /**
+   * Registers where the outbox pending gauge reads from. Called by the outbox
+   * infrastructure at module init (FND-017); without a provider the gauge
+   * reports no sample instead of a lie.
+   */
+  setOutboxPendingProvider(provider: OutboxPendingProvider): void {
+    this.outboxPendingProvider = provider;
   }
 
   /**
