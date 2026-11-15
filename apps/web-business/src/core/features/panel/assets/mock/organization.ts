@@ -1,6 +1,6 @@
 import type { AuditEvent, Branch, PanelUser, Person } from '../@types';
-import { padFaDay, toFaDigits } from '../../utils/persian-digits';
-import { createId, makeMoney } from './mock-utils';
+import { padFaDay, toFaDigits } from '../../../shared';
+import { createId, makeMoney } from '../../../shared';
 
 const branchNames = ['دفتر مرکزی', 'شعبه ونک', 'شعبه اصفهان', 'شعبه تبریز'];
 const peopleNames = [

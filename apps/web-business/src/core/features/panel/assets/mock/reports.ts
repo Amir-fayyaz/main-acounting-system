@@ -1,5 +1,5 @@
 import type { ReportDefinition } from '../@types';
-import { createId } from './mock-utils';
+import { createId } from '../../../shared';
 
 const reports: Omit<ReportDefinition, 'id'>[] = [
   { title: 'ترازنامه', group: 'financial', description: 'نمای کلی دارایی‌ها، بدهی‌ها و سرمایه' },

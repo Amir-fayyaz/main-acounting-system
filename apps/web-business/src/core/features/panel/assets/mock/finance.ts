@@ -1,6 +1,6 @@
 import type { BankAccount, Cheque, Invoice, JournalEntry, Purchase } from '../@types';
-import { padFaDay } from '../../utils/persian-digits';
-import { createId, makeMoney } from './mock-utils';
+import { padFaDay } from '../../../shared';
+import { createId, makeMoney } from '../../../shared';
 
 const branches = ['دفتر مرکزی', 'شعبه ونک', 'شعبه اصفهان', 'شعبه تبریز'];
 const banks = ['ملی', 'ملت', 'سامان', 'پاسارگاد', 'صادرات'];
