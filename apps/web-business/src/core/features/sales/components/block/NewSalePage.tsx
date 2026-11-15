@@ -63,7 +63,10 @@ export function NewSalePage() {
   const [formError, setFormError] = useState<string>();
   const [submitting, setSubmitting] = useState(false);
 
-  const subtotal = lines.reduce((sum, line) => sum + parseNumber(line.qty) * parseNumber(line.price), 0);
+  const subtotal = lines.reduce(
+    (sum, line) => sum + parseNumber(line.qty) * parseNumber(line.price),
+    0,
+  );
   const discountAmount = Math.round((subtotal * parseNumber(discountPercent)) / 100);
   const taxable = subtotal - discountAmount;
   const taxAmount = Math.round((taxable * parseNumber(taxPercent)) / 100);
@@ -81,7 +84,9 @@ export function NewSalePage() {
   }
 
   function updatePayment(index: number, patch: Partial<Payment>) {
-    setPayments((current) => current.map((payment, i) => (i === index ? { ...payment, ...patch } : payment)));
+    setPayments((current) =>
+      current.map((payment, i) => (i === index ? { ...payment, ...patch } : payment)),
+    );
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -132,7 +137,9 @@ export function NewSalePage() {
     <SectionLayout>
       <div className="space-y-1">
         <H1 className="text-start text-xl font-bold sm:text-2xl">فاکتور فروش جدید</H1>
-        <P className="text-sm text-muted-foreground">چند روش پرداخت و پرداخت جزئی پشتیبانی می‌شود</P>
+        <P className="text-sm text-muted-foreground">
+          چند روش پرداخت و پرداخت جزئی پشتیبانی می‌شود
+        </P>
       </div>
 
       <form noValidate onSubmit={handleSubmit} className="grid gap-4">
@@ -148,16 +155,25 @@ export function NewSalePage() {
                 </SelectTrigger>
                 <SelectContent>
                   {NAMES.map((name) => (
-                    <SelectItem key={name} value={name}>{name}</SelectItem>
+                    <SelectItem key={name} value={name}>
+                      {name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {errors.cust ? <InputErrorMassage role="alert">{errors.cust}</InputErrorMassage> : null}
+              {errors.cust ? (
+                <InputErrorMassage role="alert">{errors.cust}</InputErrorMassage>
+              ) : null}
             </div>
 
             <div className="grid gap-2">
               <Small className="font-medium">تاریخ</Small>
-              <Input value={date} onChange={(e) => setDate(e.target.value)} aria-label="تاریخ" disabled={submitting} />
+              <Input
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                aria-label="تاریخ"
+                disabled={submitting}
+              />
             </div>
 
             <div className="grid gap-2">
@@ -168,7 +184,9 @@ export function NewSalePage() {
                 </SelectTrigger>
                 <SelectContent>
                   {BRANCHES.map((name) => (
-                    <SelectItem key={name} value={name}>{name}</SelectItem>
+                    <SelectItem key={name} value={name}>
+                      {name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -182,11 +200,15 @@ export function NewSalePage() {
                 </SelectTrigger>
                 <SelectContent>
                   {SELLERS.map((name) => (
-                    <SelectItem key={name} value={name}>{name}</SelectItem>
+                    <SelectItem key={name} value={name}>
+                      {name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {errors.seller ? <InputErrorMassage role="alert">{errors.seller}</InputErrorMassage> : null}
+              {errors.seller ? (
+                <InputErrorMassage role="alert">{errors.seller}</InputErrorMassage>
+              ) : null}
             </div>
 
             <div className="grid gap-2">
@@ -197,7 +219,9 @@ export function NewSalePage() {
                 </SelectTrigger>
                 <SelectContent>
                   {INVOICE_TYPES.map((type) => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -298,7 +322,9 @@ export function NewSalePage() {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => setPayments((current) => [...current, { method: 'کارت', amount: '' }])}
+                onClick={() =>
+                  setPayments((current) => [...current, { method: 'کارت', amount: '' }])
+                }
                 disabled={submitting}
               >
                 <Plus className="size-4" aria-hidden="true" />
@@ -328,7 +354,9 @@ export function NewSalePage() {
                         </SelectTrigger>
                         <SelectContent>
                           {PAYMENT_METHODS.map((method) => (
-                            <SelectItem key={method} value={method}>{method}</SelectItem>
+                            <SelectItem key={method} value={method}>
+                              {method}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -349,7 +377,9 @@ export function NewSalePage() {
                         size="icon"
                         aria-label="حذف"
                         disabled={submitting || payments.length < 2}
-                        onClick={() => setPayments((current) => current.filter((_, i) => i !== index))}
+                        onClick={() =>
+                          setPayments((current) => current.filter((_, i) => i !== index))
+                        }
                       >
                         <Trash2 className="size-4" aria-hidden="true" />
                       </Button>
@@ -373,7 +403,9 @@ export function NewSalePage() {
                   <Input
                     value={discountPercent}
                     inputMode="numeric"
-                    onChange={(e: ChangeEvent<HTMLInputElement>) => setDiscountPercent(e.target.value)}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setDiscountPercent(e.target.value)
+                    }
                     aria-label="تخفیف"
                     disabled={submitting}
                   />
@@ -421,7 +453,15 @@ export function NewSalePage() {
                 </P>
               ) : total > 0 ? (
                 <div>
-                  <Badge variant={status === 'تسویه‌شده' ? 'success' : status === 'پرداخت جزئی' ? 'secondary' : 'destructive'}>
+                  <Badge
+                    variant={
+                      status === 'تسویه‌شده'
+                        ? 'success'
+                        : status === 'پرداخت جزئی'
+                          ? 'secondary'
+                          : 'destructive'
+                    }
+                  >
                     {status}
                   </Badge>
                 </div>
@@ -446,7 +486,12 @@ export function NewSalePage() {
             <Download className="size-4" aria-hidden="true" />
             خروجی PDF
           </Button>
-          <Button type="button" variant="ghost" onClick={() => router.push('/sales')} disabled={submitting}>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => router.push('/sales')}
+            disabled={submitting}
+          >
             انصراف
           </Button>
         </div>

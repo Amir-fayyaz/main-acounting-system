@@ -1,1 +1,1 @@
-export { AuditPage } from './components/block/AuditPage';
+export { AuditPage } from './components/block/AuditPage';

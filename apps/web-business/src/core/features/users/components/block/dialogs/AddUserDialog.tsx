@@ -147,7 +147,9 @@ export function AddUserDialog({ open, onOpenChange, onCreate }: AddUserDialogPro
               aria-invalid={errors.email ? true : undefined}
               disabled={submitting}
             />
-            {errors.email ? <InputErrorMassage role="alert">{errors.email}</InputErrorMassage> : null}
+            {errors.email ? (
+              <InputErrorMassage role="alert">{errors.email}</InputErrorMassage>
+            ) : null}
           </div>
 
           <div className="grid gap-2">

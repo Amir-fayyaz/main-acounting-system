@@ -26,8 +26,16 @@ const PRINT_ERROR_MESSAGE = 'آماده‌سازی گزارش چاپ با مشک
 
 export function SalesPage() {
   const { page, limit, setPage, setLimit, queryParams } = usePagination();
-  const { status, seller, discountState, search, setStatus, setSeller, setDiscountState, setSearch } =
-    useSalesFilters();
+  const {
+    status,
+    seller,
+    discountState,
+    search,
+    setStatus,
+    setSeller,
+    setDiscountState,
+    setSearch,
+  } = useSalesFilters();
 
   const { state } = useSales({ ...queryParams, search, status, seller, discountState });
 
@@ -199,10 +207,7 @@ export function SalesPage() {
       </div>
 
       {printSnapshot ? (
-        <SalesPrintView
-          sales={printSnapshot.sales}
-          generatedAt={printSnapshot.generatedAt}
-        />
+        <SalesPrintView sales={printSnapshot.sales} generatedAt={printSnapshot.generatedAt} />
       ) : null}
     </SectionLayout>
   );

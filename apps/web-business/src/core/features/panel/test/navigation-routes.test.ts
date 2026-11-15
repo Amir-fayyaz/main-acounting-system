@@ -25,6 +25,7 @@ const EXPECTED_DESTINATIONS = [
   '/journal',
   '/journal/new',
   '/trial',
+  '/fiscal-periods',
   '/accounts',
   '/checks',
   '/pos',

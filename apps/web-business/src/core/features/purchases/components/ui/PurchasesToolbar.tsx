@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@repo/web';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/web';
 import { cn } from '@repo/web/ui/utils/cn';
 
 import { PURCHASE_STATUS_OPTIONS } from './PurchaseStatusBadge';
@@ -50,9 +44,7 @@ export function PurchasesToolbar({
 
       <Select
         value={discountState || ALL_DISCOUNT}
-        onValueChange={(next) =>
-          onDiscountStateChange(next === ALL_DISCOUNT ? '' : next)
-        }
+        onValueChange={(next) => onDiscountStateChange(next === ALL_DISCOUNT ? '' : next)}
       >
         <SelectTrigger aria-label="تخفیف" className="w-40">
           <SelectValue placeholder="تخفیف" />

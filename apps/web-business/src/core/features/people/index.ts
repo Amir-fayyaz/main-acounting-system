@@ -1,1 +1,1 @@
-export { PeoplePage } from './components/block/PeoplePage';
+export { PeoplePage } from './components/block/PeoplePage';

@@ -72,9 +72,7 @@ export async function listPeople(params: ListPeopleParams = {}): Promise<PersonL
   const limit = normalizeLimit(params.limit);
 
   const requestedPage =
-    Number.isSafeInteger(params.page) && (params.page ?? 0) >= 1
-      ? (params.page as number)
-      : 1;
+    Number.isSafeInteger(params.page) && (params.page ?? 0) >= 1 ? (params.page as number) : 1;
 
   const filtered = sortPeople(filterPeople(params), params.sort);
 

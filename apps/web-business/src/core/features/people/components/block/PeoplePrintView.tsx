@@ -78,7 +78,9 @@ export function PeoplePrintView({ people, generatedAt }: PeoplePrintViewProps) {
     <div className="branches-print-report hidden bg-card text-foreground print:block">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
         <div className="space-y-1 text-start">
-          <H1 className="text-start text-2xl font-bold tracking-tight sm:text-2xl">مشتریان و تأمین‌کنندگان</H1>
+          <H1 className="text-start text-2xl font-bold tracking-tight sm:text-2xl">
+            مشتریان و تأمین‌کنندگان
+          </H1>
           <P className="text-sm text-muted-foreground">مانده حساب هر شخص</P>
         </div>
 
@@ -145,10 +147,7 @@ export function PeoplePrintView({ people, generatedAt }: PeoplePrintViewProps) {
                   {peopleColumns.map((column) => (
                     <TableCell
                       key={column.key}
-                      className={cn(
-                        'px-3 py-3 align-middle',
-                        column.className,
-                      )}
+                      className={cn('px-3 py-3 align-middle', column.className)}
                     >
                       {renderCell(person, column.key)}
                     </TableCell>

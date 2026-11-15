@@ -78,7 +78,9 @@ export function UsersPrintView({ users, generatedAt }: UsersPrintViewProps) {
     <div className="branches-print-report hidden bg-card text-foreground print:block">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
         <div className="space-y-1 text-start">
-          <H1 className="text-start text-2xl font-bold tracking-tight sm:text-2xl">کاربران و نقش‌ها</H1>
+          <H1 className="text-start text-2xl font-bold tracking-tight sm:text-2xl">
+            کاربران و نقش‌ها
+          </H1>
           <P className="text-sm text-muted-foreground">عضویت‌ها و دسترسی‌ها</P>
         </div>
 

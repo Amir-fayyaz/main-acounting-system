@@ -5,9 +5,9 @@ import { Badge } from '@repo/web';
 import type { SaleStatus } from '../../assets/@types/sale';
 
 const VARIANT: Record<SaleStatus, 'success' | 'secondary' | 'destructive'> = {
-  'تسویه‌شده': 'success',
+  تسویه‌شده: 'success',
   'پرداخت جزئی': 'secondary',
-  'تسویه‌نشده': 'destructive',
+  تسویه‌نشده: 'destructive',
 };
 
 export type SaleStatusBadgeProps = {

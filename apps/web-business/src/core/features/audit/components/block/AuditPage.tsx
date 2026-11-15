@@ -109,10 +109,7 @@ export function AuditPage() {
       </div>
 
       {printSnapshot ? (
-        <AuditPrintView
-          events={printSnapshot.events}
-          generatedAt={printSnapshot.generatedAt}
-        />
+        <AuditPrintView events={printSnapshot.events} generatedAt={printSnapshot.generatedAt} />
       ) : null}
     </SectionLayout>
   );
