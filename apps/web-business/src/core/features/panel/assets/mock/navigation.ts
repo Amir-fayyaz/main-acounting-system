@@ -18,7 +18,11 @@ export const accountingPanelConfig = {
     {
       id: 'finance',
       label: 'مالی',
-      items: [{ label: 'دوره‌های مالی', href: '/fiscal-periods', icon: 'CiCalculator1' }],
+      items: [
+        { label: 'دوره‌های مالی', href: '/fiscal-periods', icon: 'CiCalculator1' },
+        { label: 'سال‌های مالی', href: '/fiscal-years', icon: 'CiGrid41' },
+        { label: 'راه‌اندازی مالی', href: '/fiscal-setup', icon: 'CiSettings' },
+      ],
     },
     {
       id: 'accounting',
@@ -53,7 +57,10 @@ export const accountingPanelConfig = {
           id: 'sales',
           label: 'فروش',
           icon: 'CiShoppingCart',
-          children: [{ label: 'فاکتورهای فروش', href: '/sales' }],
+          children: [
+            { label: 'فاکتورهای فروش', href: '/sales' },
+            { label: 'فاکتور جدید', href: '/sales/new' },
+          ],
         },
         { label: 'خرید', href: '/purchases', icon: 'CiShoppingCart' },
         { label: 'مشتریان و تأمین‌کنندگان', href: '/people', icon: 'CiUser' },
@@ -67,7 +74,6 @@ export const accountingPanelConfig = {
         { label: 'کاربران و نقش‌ها', href: '/users', icon: 'CiLock' },
         { label: 'لیست پرسنل', href: '/staff', icon: 'CiUser' },
         { label: 'مدیریت دسترسی', href: '/access', icon: 'CiSettings' },
-        { label: 'تاریخچه تغییرات', href: '/audit-trail', icon: 'CiFileOn' },
         { label: 'گزارش حسابرسی', href: '/audit', icon: 'CiFileOn' },
         { label: 'تنظیمات', href: '/settings', icon: 'CiSettings' },
       ],

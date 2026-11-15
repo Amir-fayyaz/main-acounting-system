@@ -1,5 +1,5 @@
-import { formatMoney } from './format-money';
-import { toFaDigits } from './persian-digits';
+import { formatMoney } from '../../shared/utils/format-money';
+import { toFaDigits } from '../../shared/utils/persian-digits';
 
 const ZERO = BigInt(0);
 const ONE = BigInt(1);
