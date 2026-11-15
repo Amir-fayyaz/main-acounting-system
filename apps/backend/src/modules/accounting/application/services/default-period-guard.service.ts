@@ -1,5 +1,6 @@
 import type { EntityId } from '../../../../shared/id/entity-id.js';
 import { BusinessDate } from '../../../../shared/time/business-date.js';
+import { businessDateFromMillis } from '../../../../shared/time/jalali-calendar.js';
 import { tenantReferenceFrom } from '../../domain/value-objects/tenant-reference.js';
 import type { FiscalPeriodRepository } from '../../domain/repositories/fiscal-period.repository.js';
 import {
@@ -17,7 +18,7 @@ export class DefaultPeriodGuard implements PeriodGuard {
   ): Promise<PostablePeriod> {
     const tenantRef = tenantReferenceFrom(typeof tenant === 'string' ? tenant : tenant.value);
     const businessDate =
-      date instanceof BusinessDate ? date : BusinessDate.fromUtcMillis(date.getTime());
+      date instanceof BusinessDate ? date : businessDateFromMillis(date.getTime());
 
     // Resolves period with row-level lock (FOR SHARE) to prevent concurrent closing race with FIS-005
     const loaded = await this.periods.findPeriodForDate(tenantRef, businessDate, {
