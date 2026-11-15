@@ -2,23 +2,20 @@
 
 import * as React from 'react';
 
+import type { PaginationControlsProps } from './data-table.types';
+import { resolvePageSizes, sanitizeMeta } from './data-table.utils';
 import {
   Pagination,
   PaginationContent,
   PaginationItem,
   PaginationNext,
   PaginationPrevious,
-} from '@repo/web/ui/components/shadcn/ui/pagination/pagination';
-
-import type { PaginationControlsProps } from './data-table.types';
-import { resolvePageSizes, sanitizeMeta } from './data-table.utils';
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@repo/web/ui/components/shadcn/ui/select/select';
+} from './ui';
 
 /**
  * Presentational pagination bar.
