@@ -5,9 +5,9 @@ import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { PaginatedResponse } from '@repo/web';
-import type { Cheque, Invoice } from '../assets/@types';
+import type { Cheque, Invoice } from '../../panel/assets/@types';
 import { createMockDashboardSnapshot } from '../assets/mock/dashboard';
-import { DashboardBlock } from '../components/block/dashboard/DashboardBlock';
+import { DashboardBlock } from '../components/block/DashboardBlock';
 
 const api = vi.hoisted(() => ({
   getDashboardSnapshot: vi.fn(),
@@ -15,8 +15,8 @@ const api = vi.hoisted(() => ({
   listCheques: vi.fn(),
 }));
 vi.mock('../lib/dashboard-api', () => ({ getDashboardSnapshot: api.getDashboardSnapshot }));
-vi.mock('../lib/invoices-api', () => ({ listInvoices: api.listInvoices }));
-vi.mock('../lib/cheques-api', () => ({ listCheques: api.listCheques }));
+vi.mock('../../panel/lib/invoices-api', () => ({ listInvoices: api.listInvoices }));
+vi.mock('../../panel/lib/cheques-api', () => ({ listCheques: api.listCheques }));
 
 const PANEL_ROUTES_DIR = path.join(process.cwd(), 'src/app/(panel)');
 

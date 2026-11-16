@@ -36,7 +36,12 @@ const SECONDARY_ACTION_CLASS =
   'inline-flex min-h-10 items-center justify-center rounded-md border border-border px-4 text-sm font-medium transition-colors hover:bg-accent';
 
 const columns: DataTableColumn<JournalEntry>[] = [
-  { key: 'number', header: 'شماره سند', cell: (entry) => toFaDigits(entry.number), sortable: false },
+  {
+    key: 'number',
+    header: 'شماره سند',
+    cell: (entry) => toFaDigits(entry.number),
+    sortable: false,
+  },
   { key: 'date', header: 'تاریخ', sortable: false },
   { key: 'description', header: 'شرح', sortable: false },
   {

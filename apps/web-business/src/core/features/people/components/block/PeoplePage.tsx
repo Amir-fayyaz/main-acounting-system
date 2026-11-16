@@ -124,10 +124,7 @@ export function PeoplePage() {
       </div>
 
       {printSnapshot ? (
-        <PeoplePrintView
-          people={printSnapshot.people}
-          generatedAt={printSnapshot.generatedAt}
-        />
+        <PeoplePrintView people={printSnapshot.people} generatedAt={printSnapshot.generatedAt} />
       ) : null}
 
       <AddPersonDialog open={dialogOpen} onOpenChange={setDialogOpen} onCreate={handleCreate} />

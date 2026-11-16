@@ -1,11 +1,6 @@
 'use client';
 
-import {
-  DataTable,
-  type DataTableColumn,
-  type PaginationMeta,
-  type SortItem,
-} from '@repo/web';
+import { DataTable, type DataTableColumn, type PaginationMeta, type SortItem } from '@repo/web';
 
 import type { Person } from '../../assets/@types/person';
 import { formatMoney } from '../../utils/format';

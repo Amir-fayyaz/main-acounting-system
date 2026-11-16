@@ -86,8 +86,12 @@ export function PurchasesPrintView({ purchases, generatedAt }: PurchasesPrintVie
     <div className="branches-print-report hidden bg-card text-foreground print:block">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
         <div className="space-y-1 text-start">
-          <H1 className="text-start text-2xl font-bold tracking-tight sm:text-2xl">فاکتورهای خرید</H1>
-          <P className="text-sm text-muted-foreground">خرید از تأمین‌کنندگان، تخفیف و بدهی‌های باز</P>
+          <H1 className="text-start text-2xl font-bold tracking-tight sm:text-2xl">
+            فاکتورهای خرید
+          </H1>
+          <P className="text-sm text-muted-foreground">
+            خرید از تأمین‌کنندگان، تخفیف و بدهی‌های باز
+          </P>
         </div>
 
         <div className="space-y-1 text-end">
@@ -150,10 +154,7 @@ export function PurchasesPrintView({ purchases, generatedAt }: PurchasesPrintVie
                   {purchasesColumns.map((column) => (
                     <TableCell
                       key={column.key}
-                      className={cn(
-                        'px-3 py-3 align-middle',
-                        column.className,
-                      )}
+                      className={cn('px-3 py-3 align-middle', column.className)}
                     >
                       {renderCell(purchase, column.key)}
                     </TableCell>

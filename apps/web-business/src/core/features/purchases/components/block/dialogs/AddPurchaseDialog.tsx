@@ -68,7 +68,10 @@ export function AddPurchaseDialog({ open, onOpenChange, onCreate }: AddPurchaseD
     onOpenChange(nextOpen);
   }
 
-  function handleChange(field: Exclude<FieldName, 'description'>, event: ChangeEvent<HTMLInputElement>) {
+  function handleChange(
+    field: Exclude<FieldName, 'description'>,
+    event: ChangeEvent<HTMLInputElement>,
+  ) {
     const nextValue = event.target.value;
     setValues((previous) => ({ ...previous, [field]: nextValue }));
     if (errors[field]) {
@@ -148,7 +151,9 @@ export function AddPurchaseDialog({ open, onOpenChange, onCreate }: AddPurchaseD
               aria-invalid={errors.total ? true : undefined}
               disabled={submitting}
             />
-            {errors.total ? <InputErrorMassage role="alert">{errors.total}</InputErrorMassage> : null}
+            {errors.total ? (
+              <InputErrorMassage role="alert">{errors.total}</InputErrorMassage>
+            ) : null}
           </div>
 
           <div className="grid gap-2">

@@ -32,7 +32,10 @@ export function SettingsToggleRow({
 
   return (
     <div className="flex items-start justify-between gap-4 border-t border-border py-4 first:border-t-0 first:pt-0 last:pb-0">
-      <label htmlFor={id} className={cn('space-y-1 select-none', isDisabled ? 'cursor-default' : 'cursor-pointer')}>
+      <label
+        htmlFor={id}
+        className={cn('space-y-1 select-none', isDisabled ? 'cursor-default' : 'cursor-pointer')}
+      >
         <Small className="block text-sm font-bold text-foreground">{label}</Small>
         <P className="text-xs leading-5 text-muted-foreground">{description}</P>
       </label>

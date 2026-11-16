@@ -3,17 +3,12 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import type { ListBranchesParams } from '../assets/@types/branch';
-import {
-  listBranches,
-  type BranchListResponse,
-} from '../lib/branches.service';
+import { listBranches, type BranchListResponse } from '../lib/branches.service';
 
 export type UseBranchesParams = Pick<ListBranchesParams, 'page' | 'limit' | 'search' | 'status'>;
 
 export type UseBranchesState =
-  | { status: 'loading' }
-  | { status: 'error' }
-  | { status: 'success'; response: BranchListResponse };
+  { status: 'loading' } | { status: 'error' } | { status: 'success'; response: BranchListResponse };
 
 export interface UseBranchesResult {
   state: UseBranchesState;

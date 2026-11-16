@@ -56,21 +56,24 @@ export function useSettings(): UseSettingsResult {
     };
   }, [reloadIndex]);
 
-  const patchCompany = useCallback((patch: Partial<CompanyInfo>) => {
-    setSettings((current) =>
-      current ? { ...current, company: { ...current.company, ...patch } } : current,
-    );
+  const patchCompany = useCallback(
+    (patch: Partial<CompanyInfo>) => {
+      setSettings((current) =>
+        current ? { ...current, company: { ...current.company, ...patch } } : current,
+      );
 
-    if (Object.keys(errors).length > 0) {
-      setErrors((current) => {
-        const next = { ...current };
-        for (const key of Object.keys(patch)) {
-          delete next[key as keyof CompanyErrors];
-        }
-        return next;
-      });
-    }
-  }, [errors]);
+      if (Object.keys(errors).length > 0) {
+        setErrors((current) => {
+          const next = { ...current };
+          for (const key of Object.keys(patch)) {
+            delete next[key as keyof CompanyErrors];
+          }
+          return next;
+        });
+      }
+    },
+    [errors],
+  );
 
   const patchRules = useCallback((patch: Partial<AccountingRules>) => {
     setSettings((current) =>

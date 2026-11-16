@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@repo/web';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/web';
 import { cn } from '@repo/web/ui/utils/cn';
 
 import { USER_ROLE_OPTIONS } from '../../lib/users.config';

@@ -56,7 +56,10 @@ export function PurchasesPage() {
   const isLoading = state.status === 'loading';
   const response = state.status === 'success' ? state.response : undefined;
   const allPurchases: Purchase[] = state.status === 'success' ? state.all : [];
-  const errorMessage = state.status === 'error' ? 'دریافت فهرست خریدها با مشکل مواجه شد. لطفاً دوباره تلاش کنید.' : undefined;
+  const errorMessage =
+    state.status === 'error'
+      ? 'دریافت فهرست خریدها با مشکل مواجه شد. لطفاً دوباره تلاش کنید.'
+      : undefined;
 
   async function handleCreate(input: Parameters<typeof createPurchase>[0]) {
     await createPurchase(input);
@@ -141,11 +144,7 @@ export function PurchasesPage() {
         />
       ) : null}
 
-      <AddPurchaseDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onCreate={handleCreate}
-      />
+      <AddPurchaseDialog open={dialogOpen} onOpenChange={setDialogOpen} onCreate={handleCreate} />
     </SectionLayout>
   );
 }

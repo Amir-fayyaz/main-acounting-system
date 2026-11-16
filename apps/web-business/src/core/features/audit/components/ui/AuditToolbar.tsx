@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@repo/web';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/web';
 import { cn } from '@repo/web/ui/utils/cn';
 
 import { AUDIT_OUTCOME_OPTIONS } from './AuditOutcomeBadge';

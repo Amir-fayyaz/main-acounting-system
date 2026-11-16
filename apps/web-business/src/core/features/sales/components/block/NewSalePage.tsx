@@ -10,7 +10,6 @@ import { SaleItemsSection } from './new-sale/SaleItemsSection';
 import { SalePaymentsSection } from './new-sale/SalePaymentsSection';
 import { SaleSummarySection } from './new-sale/SaleSummarySection';
 
-/** Composes the new-sale form sections; all state lives in `useNewSaleForm`. */
 export function NewSalePage() {
   const form = useNewSaleForm();
 
@@ -18,7 +17,9 @@ export function NewSalePage() {
     <SectionLayout>
       <div className="space-y-1">
         <H1 className="text-start text-xl font-bold sm:text-2xl">فاکتور فروش جدید</H1>
-        <P className="text-sm text-muted-foreground">چند روش پرداخت و پرداخت جزئی پشتیبانی می‌شود</P>
+        <P className="text-sm text-muted-foreground">
+          چند روش پرداخت و پرداخت جزئی پشتیبانی می‌شود
+        </P>
       </div>
 
       <form

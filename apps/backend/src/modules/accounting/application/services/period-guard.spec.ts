@@ -4,6 +4,7 @@ import {
   InMemoryFiscalPeriodRepository,
 } from '../../../../../test/support/fiscal-period-doubles.js';
 import { aFiscalYear } from '../../../../../test/support/accounting-doubles.js';
+import { createFiscalCompanyFixture } from '../../../../../test/support/fiscal-fixtures.js';
 import { tenantReferenceFrom } from '../../domain/value-objects/tenant-reference.js';
 import { DefaultPeriodGuard } from './default-period-guard.service.js';
 import { BusinessDate } from '../../../../shared/time/business-date.js';
@@ -141,5 +142,23 @@ describe('PeriodGuard.assertPostable (FIS-006)', () => {
     await expect(guard.assertPostable(TENANT_A, BusinessDate.parse('2026-04-01'))).rejects.toThrow(
       PeriodNotDefinedError,
     );
+  });
+
+  it('integrates seamlessly with the reusable FiscalCompanyFixture (FIS-008)', async () => {
+    const fixture = createFiscalCompanyFixture();
+
+    const openResult = await fixture.periodGuard.assertPostable(
+      fixture.tenantId,
+      fixture.dates.openDate,
+    );
+    expect(openResult.id).toBe(fixture.openPeriod.id.value);
+
+    await expect(
+      fixture.periodGuard.assertPostable(fixture.tenantId, fixture.dates.closedDate),
+    ).rejects.toThrow(PeriodClosedError);
+
+    await expect(
+      fixture.periodGuard.assertPostable(fixture.tenantId, fixture.dates.outsideYearDate),
+    ).rejects.toThrow(PeriodNotDefinedError);
   });
 });

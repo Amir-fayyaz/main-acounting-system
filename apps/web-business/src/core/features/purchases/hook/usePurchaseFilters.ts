@@ -30,10 +30,7 @@ export function usePurchaseFilters() {
     [pathname, router, searchParams],
   );
 
-  const setStatus = useCallback(
-    (value: string) => replaceFilter('status', value),
-    [replaceFilter],
-  );
+  const setStatus = useCallback((value: string) => replaceFilter('status', value), [replaceFilter]);
 
   const setDiscountState = useCallback(
     (value: string) => replaceFilter('discountState', value),

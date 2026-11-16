@@ -126,7 +126,9 @@ export function AddPersonDialog({ open, onOpenChange, onCreate }: AddPersonDialo
             <Small className="font-medium">نوع</Small>
             <Select
               value={values.kind}
-              onValueChange={(next) => setValues((previous) => ({ ...previous, kind: next as PersonKind }))}
+              onValueChange={(next) =>
+                setValues((previous) => ({ ...previous, kind: next as PersonKind }))
+              }
               disabled={submitting}
             >
               <SelectTrigger aria-label="نوع شخص" className="w-full">
