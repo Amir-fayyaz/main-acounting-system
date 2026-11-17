@@ -1,3 +1,5 @@
+import { AccountRoleProtectedError } from '../../domain/errors/account-role.errors.js';
+import { isCompatibleAccountType } from '../../domain/value-objects/account-role.js';
 import type { DomainError } from '../../../../shared/errors/domain-error.js';
 import { Result } from '../../../../shared/errors/result.js';
 import { TenantScope } from '../../../../shared/tenant/tenant-scope.js';
@@ -35,6 +37,7 @@ import type {
   DeleteAccount,
 } from '../commands/account.commands.js';
 import { toAccountView, type AccountView } from '../views/account.view.js';
+import type { AccountRoleRepository } from '../../domain/repositories/account-role.repository.js';
 
 export class CreateAccountUseCase {
   public constructor(
@@ -121,12 +124,13 @@ export class CreateAccountUseCase {
 }
 
 export class UpdateAccountUseCase {
-  public constructor(
+  constructor(
     private readonly repository: AccountRepository,
     private readonly usage: AccountUsagePort,
     private readonly authorization: AccountAuthorizationPort,
     private readonly audit: AccountAuditPort,
     private readonly boundary: TransactionBoundary,
+    private readonly roles?: AccountRoleRepository,
   ) {}
 
   public async execute(command: UpdateAccount): Promise<Result<AccountView, DomainError>> {
@@ -141,6 +145,27 @@ export class UpdateAccountUseCase {
       }
 
       const account = loaded.aggregate;
+      // Protect accounts currently assigned to accounting roles.
+      if (this.roles !== undefined) {
+        const mappings = await this.roles.findByAccount(tenantId, account.id.value);
+
+        if (mappings.length > 0) {
+          const resultingType = command.payload.type ?? account.type.value;
+          const resultingActive = command.payload.active ?? account.active;
+          const resultingPostable = command.payload.postable ?? account.postable;
+
+          const violatesRoleMapping = mappings.some(
+            (mapping) =>
+              !resultingActive ||
+              !resultingPostable ||
+              !isCompatibleAccountType(mapping.role, resultingType),
+          );
+
+          if (violatesRoleMapping) {
+            return Result.fail(new AccountRoleProtectedError());
+          }
+        }
+      }
       const now = DateTime.now();
 
       if (command.payload.code !== undefined && command.payload.code !== account.code.value) {
@@ -245,12 +270,13 @@ export class UpdateAccountUseCase {
 }
 
 export class DeactivateAccountUseCase {
-  public constructor(
+  constructor(
     private readonly repository: AccountRepository,
     private readonly usage: AccountUsagePort,
     private readonly authorization: AccountAuthorizationPort,
     private readonly audit: AccountAuditPort,
     private readonly boundary: TransactionBoundary,
+    private readonly roles?: AccountRoleRepository,
   ) {}
 
   public async execute(command: DeactivateAccount): Promise<Result<AccountView, DomainError>> {
@@ -260,11 +286,22 @@ export class DeactivateAccountUseCase {
       await this.authorization.assertCanManageAccounts(tenantId);
 
       const loaded = await this.repository.get(accountIdFrom(command.payload.id));
+
       if (loaded === undefined || loaded.aggregate.tenantId !== tenantId) {
         return Result.fail(new AccountNotFoundError(command.payload.id));
       }
 
       const account = loaded.aggregate;
+
+      // A mapped account cannot be deactivated before its role is remapped.
+      if (this.roles !== undefined) {
+        const mappings = await this.roles.findByAccount(tenantId, account.id.value);
+
+        if (mappings.length > 0) {
+          return Result.fail(new AccountRoleProtectedError());
+        }
+      }
+
       if (await this.usage.isUsed(account.id.value)) {
         return Result.fail(new AccountInUseError());
       }
@@ -272,17 +309,21 @@ export class DeactivateAccountUseCase {
       const children = (await this.repository.findByTenant(tenantReferenceFrom(tenantId))).filter(
         (entry) => entry.aggregate.parentId === account.id.value && entry.aggregate.active,
       );
+
       if (children.length > 0) {
         return Result.fail(new AccountHasActiveChildrenError());
       }
 
       account.setActive(false, DateTime.now());
+
       await this.repository.update(account, loaded.revision);
+
       await this.audit.record({
         action: 'account.deactivated',
         accountId: account.id.value,
         tenantId,
       });
+
       return Result.ok(toAccountView(account, loaded.revision.next().value));
     });
   }
