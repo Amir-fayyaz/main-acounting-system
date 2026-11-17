@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { signOutAction } from "../lib/auth-storage";
+import { signOutAction } from "@repo/web/session";
 
 export function useSignOut() {
   const router = useRouter();

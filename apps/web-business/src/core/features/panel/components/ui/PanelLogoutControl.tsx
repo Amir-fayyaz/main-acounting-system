@@ -13,7 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@repo/web/ui/components/shadcn/ui/dialog/dialog';
-import { useSignOut } from '@/core/features/auth/hook/useSignOut';
+import { useSignOut } from '@repo/web/session';
 
 export function PanelLogoutControl() {
   const [open, setOpen] = useState(false);

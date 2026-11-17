@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/core/lib/basic-link/BackendBasicLink', () => ({ BASE_URL: 'http://legacy.test/api' }));
 
-import { getSessionApi, signInApi, signOutApi, signUpApi } from '../lib/auth-api';
+import { signInApi, signUpApi } from '../lib/auth-api';
 import { env } from 'process';
 
 const fetchMock = vi.fn();
@@ -46,9 +46,9 @@ describe('آدرس پایه', () => {
 
   it('سمت سرور INTERNAL_API_BASE_URL را ترجیح می‌دهد (Docker)', async () => {
     vi.stubEnv('INTERNAL_API_BASE_URL', 'http://backend:3000/api');
-    fetchMock.mockResolvedValue(json(200, validSessionResponse));
-    await getSessionApi('tok');
-    expect(lastCall().url).toBe('http://backend:3000/api/v1/auth/session');
+    fetchMock.mockResolvedValue(json(201, validSignInResponse));
+    await signInApi({ email: 'a@b.co', password: 'x' });
+    expect(lastCall().url).toBe('http://backend:3000/api/v1/auth/sign-in');
   });
 
   it('بدون هیچ‌کدام از متغیرهای جدید به BASE_URL قدیمی برمی‌گردد', async () => {
@@ -159,35 +159,4 @@ describe('signUpApi', () => {
   });
 });
 
-describe('getSessionApi', () => {
-  it('GET با هدر Bearer و بدون cache', async () => {
-    fetchMock.mockResolvedValue(json(200, validSessionResponse));
-    await getSessionApi('tok');
 
-    const { init } = lastCall();
-    expect(init.method).toBe('GET');
-    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer tok');
-    expect(init.cache).toBe('no-store');
-  });
-
-  it('روی 401 پرتاب می‌کند', async () => {
-    fetchMock.mockResolvedValue(json(401, {}));
-    await expect(getSessionApi('bad')).rejects.toMatchObject({ status: 401 });
-  });
-});
-
-describe('signOutApi', () => {
-  it('با 204 موفق می‌شود و Bearer می‌فرستد', async () => {
-    fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
-    await expect(signOutApi('tok')).resolves.toBeUndefined();
-
-    const { url, init } = lastCall();
-    expect(url).toBe('http://api.test/api/v1/auth/sign-out');
-    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer tok');
-  });
-
-  it('روی 401 پرتاب می‌کند', async () => {
-    fetchMock.mockResolvedValue(json(401, {}));
-    await expect(signOutApi('bad')).rejects.toMatchObject({ status: 401 });
-  });
-});

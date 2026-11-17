@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import type { SessionResponse } from "../assets/@types/auth.types";
-import { clearAuthToken, getSessionAction } from "../lib/auth-storage";
+import type { SessionResponse } from "@repo/web/session";
+import { clearAuthToken, getSessionAction } from "@repo/web/session";
 
 type Status = "loading" | "authenticated" | "unauthenticated";
 
