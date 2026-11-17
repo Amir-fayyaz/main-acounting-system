@@ -1,8 +1,8 @@
-"use client";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { toast } from "sonner";
-import { signOutAction } from "@repo/web/session";
+'use client';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { signOutAction } from '@repo/web/session/storage';
 
 export function useSignOut() {
   const router = useRouter();
@@ -13,12 +13,12 @@ export function useSignOut() {
     try {
       // cookie در هر حال پاک می‌شود؛ حتی اگر API خطا بدهد.
       await signOutAction();
-      toast.success("با موفقیت خارج شدید");
+      toast.success('با موفقیت خارج شدید');
     } catch {
-      toast.error("خطا در ارتباط با سرور. شما از این دستگاه خارج شدید.");
+      toast.error('خطا در ارتباط با سرور. شما از این دستگاه خارج شدید.');
     } finally {
       setLoading(false);
-      router.replace("/login");
+      router.replace('/login');
       router.refresh();
     }
   }

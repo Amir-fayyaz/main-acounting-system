@@ -15,11 +15,6 @@ const validSignInResponse = {
   expiresAt: '2026-01-01T00:00:00.000Z',
   principal: { userId: 'u', displayName: 'Ali', email: 'a@b.co' },
 };
-const validSessionResponse = {
-  sessionId: 's',
-  expiresAt: '2026-01-01T00:00:00.000Z',
-  principal: { userId: 'u', displayName: 'Ali', email: 'a@b.co' },
-};
 
 const lastCall = () => {
   const [url, init] = fetchMock.mock.calls.at(-1)!;
@@ -158,5 +153,3 @@ describe('signUpApi', () => {
     ).rejects.toMatchObject({ status: 409 });
   });
 });
-
-

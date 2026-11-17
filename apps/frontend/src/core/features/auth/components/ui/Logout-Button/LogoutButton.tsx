@@ -2,7 +2,7 @@
 
 import { Button } from '@repo/web/ui';
 import { LogOut } from 'lucide-react';
-import { useSignOut } from '@repo/web/session';
+import { useSignOut } from '@repo/web/session/hooks';
 
 type LogoutButtonProps = {
   className?: string;

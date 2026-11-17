@@ -21,12 +21,11 @@ export async function setAuthToken(token: string, expiresAt?: string, remember =
 }
 
 export async function clearAuthToken() {
-  await removeCookie();
+  return removeCookie();
 }
 
 export type SessionActionResult =
-  | { ok: true; session: SessionResponse }
-  | { ok: false; error: ApiErrorData };
+  { ok: true; session: SessionResponse } | { ok: false; error: ApiErrorData };
 
 export async function getSessionAction(): Promise<SessionActionResult> {
   const token = await getAccessTokenSSR();

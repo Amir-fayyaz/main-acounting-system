@@ -1,8 +1,11 @@
 'use server';
 
-import { setCoockie } from '@/core/lib/coockie/setCoockie';
+import { removeCoockie, setCoockie } from '@/core/lib/coockie/setCoockie';
+import { getAccessTokenSSR } from '@/core/lib/coockie/getAccess';
 import { env } from 'process';
-import { clearAuthToken as clearAuthTokenShared, getSessionAction as getSessionActionShared, signOutAction as signOutActionShared } from '@repo/web/session';
+import { createHttpApiError, serializeApiError } from '@repo/web/api';
+import type { SessionResponse } from '../assets/@types/auth.types';
+import { getSessionApi, signOutApi } from './auth-api';
 
 const REMEMBER_MAX_AGE = 30 * 24 * 60 * 60;
 const FALLBACK_MAX_AGE = (Number(env.AUTH_SESSION_TTL_MINUTES) || 60) * 60;
@@ -19,7 +22,28 @@ export async function setAuthToken(token: string, expiresAt?: string, remember =
 }
 
 export async function clearAuthToken() {
-  return clearAuthTokenShared();
+  return removeCoockie();
 }
 
-export { getSessionActionShared as getSessionAction, signOutActionShared as signOutAction };
+export type SessionActionResult =
+  | { ok: true; session: SessionResponse }
+  | { ok: false; error: ReturnType<typeof serializeApiError> };
+
+export async function getSessionAction(): Promise<SessionActionResult> {
+  const token = await getAccessTokenSSR();
+  if (!token) return { ok: false, error: createHttpApiError(401).toData() };
+  try {
+    return { ok: true, session: await getSessionApi(token) };
+  } catch (error: unknown) {
+    return { ok: false, error: serializeApiError(error) };
+  }
+}
+
+export async function signOutAction(): Promise<void> {
+  const token = await getAccessTokenSSR();
+  try {
+    if (token) await signOutApi(token);
+  } finally {
+    await removeCoockie();
+  }
+}

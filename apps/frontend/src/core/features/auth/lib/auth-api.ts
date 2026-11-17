@@ -1,14 +1,18 @@
 import type {
+  SessionResponse,
   SignInInput,
   SignInResponse,
   SignUpInput,
   SignUpResponse,
 } from '../assets/@types/auth.types';
-import type { SessionResponse } from '@repo/web/session';
 import { apiRequest } from '@repo/web/api';
 import { env } from '@/core/lib/basic-link/env';
 import { BASE_URL } from '@/core/lib/basic-link/BackendBasicLink';
-import { parseSignInResponse, parseSignUpResponse } from './auth-response-parsers';
+import {
+  parseSessionResponse,
+  parseSignInResponse,
+  parseSignUpResponse,
+} from './auth-response-parsers';
 /**
  * آدرس پایه طبق قرارداد infra پروژه:
  * - مرورگر: NEXT_PUBLIC_API_BASE_URL (مثلاً http://localhost:3000/api)
@@ -43,5 +47,25 @@ export async function signInApi(body: SignInInput): Promise<SignInResponse> {
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify(body),
     parse: parseSignInResponse,
+  });
+}
+
+export async function getSessionApi(token: string): Promise<SessionResponse> {
+  return apiRequest(`${authPrefix()}/session`, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    cache: 'no-store',
+    parse: parseSessionResponse,
+  });
+}
+
+export async function signOutApi(token: string): Promise<void> {
+  await apiRequest(`${authPrefix()}/sign-out`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    responseType: 'void',
   });
 }

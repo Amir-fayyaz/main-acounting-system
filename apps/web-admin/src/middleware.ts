@@ -1,31 +1,31 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { isTokenExpired } from '@repo/web/session';
+import { isTokenExpired } from '@repo/web/session/token';
 
 const PUBLIC_PATHS = ['/en', '/fa'];
 const API_PATHS = ['/_next', '/api', '/static'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
-  if (API_PATHS.some(path => pathname.startsWith(path))) {
+
+  if (API_PATHS.some((path) => pathname.startsWith(path))) {
     return NextResponse.next();
   }
-  
-  if (PUBLIC_PATHS.some(path => pathname.startsWith(path))) {
+
+  if (PUBLIC_PATHS.some((path) => pathname.startsWith(path))) {
     return NextResponse.next();
   }
-  
+
   const token = request.cookies.get('Token')?.value;
-  
+
   if (!token) {
     return redirectToLogin(request);
   }
-  
+
   if (isTokenExpired(token)) {
     return redirectToLogin(request);
   }
-  
+
   return NextResponse.next();
 }
 

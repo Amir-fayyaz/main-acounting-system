@@ -1,5 +1,5 @@
 import * as z from 'zod/mini';
-import type { SignInResponse, SignUpResponse } from '../assets/@types/auth.types';
+import type { SessionResponse, SignInResponse, SignUpResponse } from '../assets/@types/auth.types';
 
 const principalSchema = z.object({
   userId: z.string(),
@@ -10,6 +10,12 @@ const principalSchema = z.object({
 const signInResponseSchema = z.object({
   token: z.string(),
   tokenType: z.literal('Bearer'),
+  expiresAt: z.string(),
+  principal: principalSchema,
+});
+
+const sessionResponseSchema = z.object({
+  sessionId: z.string(),
   expiresAt: z.string(),
   principal: principalSchema,
 });
@@ -26,6 +32,10 @@ const signUpResponseSchema = z.object({
 
 export function parseSignInResponse(data: unknown): SignInResponse {
   return parseResponse(signInResponseSchema, data);
+}
+
+export function parseSessionResponse(data: unknown): SessionResponse {
+  return parseResponse(sessionResponseSchema, data);
 }
 
 export function parseSignUpResponse(data: unknown): SignUpResponse {
