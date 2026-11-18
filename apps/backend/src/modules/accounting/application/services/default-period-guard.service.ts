@@ -1,5 +1,6 @@
 import type { EntityId } from '../../../../shared/id/entity-id.js';
 import { BusinessDate } from '../../../../shared/time/business-date.js';
+import { businessDateFromMillis } from '../../../../shared/time/jalali-calendar.js';
 import { tenantReferenceFrom } from '../../domain/value-objects/tenant-reference.js';
 import type { FiscalPeriodRepository } from '../../domain/repositories/fiscal-period.repository.js';
 import {
@@ -16,8 +17,13 @@ export class DefaultPeriodGuard implements PeriodGuard {
     date: Date | BusinessDate,
   ): Promise<PostablePeriod> {
     const tenantRef = tenantReferenceFrom(typeof tenant === 'string' ? tenant : tenant.value);
+
+    // A `Date` is an instant, so the period it belongs to is the one its
+    // *business date* falls in (Asia/Tehran by default, FIS-BR-09/DEC-04), not
+    // the one its UTC timestamp happens to overlap. `BusinessDate` callers have
+    // already stated the business day, so it is used verbatim.
     const businessDate =
-      date instanceof BusinessDate ? date : BusinessDate.fromUtcMillis(date.getTime());
+      date instanceof BusinessDate ? date : businessDateFromMillis(date.getTime());
 
     // Resolves period with row-level lock (FOR SHARE) to prevent concurrent closing race with FIS-005
     const loaded = await this.periods.findPeriodForDate(tenantRef, businessDate, {
