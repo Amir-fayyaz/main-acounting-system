@@ -16,6 +16,7 @@ import {
   ACCOUNT_AUDIT_PORT,
   ACCOUNT_AUTHORIZATION_PORT,
   ACCOUNT_REPOSITORY,
+  ACCOUNT_TEMPLATE_REPOSITORY,
   ACCOUNT_USAGE_PORT,
   ACTIVE_PERIOD_REPOSITORY,
   FISCAL_PERIOD_EVENT_RECORDER,
@@ -64,14 +65,17 @@ import { FiscalPeriodsController } from '../presentation/controllers/fiscal-peri
 import { ACCOUNT_ROLE_REPOSITORY } from '../application/accounting.tokens.js';
 
 import type { AccountRoleRepository } from '../domain/repositories/account-role.repository.js';
+import type { AccountTemplateApplicationRepository } from '../domain/repositories/account-template.repository.js';
 
 import { DrizzleAccountRoleRepository } from './persistence/drizzle-account-role.repository.js';
+import { DrizzleAccountTemplateApplicationRepository } from './persistence/drizzle-account-template.repository.js';
 
 import {
   MapAccountRoleUseCase,
   ResolveAccountRoleUseCase,
   GetRoleCompletenessUseCase,
 } from '../application/use-cases/account-role.use-case.js';
+import { ActivateStandardChartUseCase } from '../application/use-cases/activate-standard-chart.use-case.js';
 
 @Module({
   imports: [DatabaseModule, OutboxModule],
@@ -104,6 +108,12 @@ import {
       provide: ACCOUNT_ROLE_REPOSITORY,
       useFactory: (database: Database): AccountRoleRepository =>
         new DrizzleAccountRoleRepository(database),
+      inject: [DATABASE],
+    },
+    {
+      provide: ACCOUNT_TEMPLATE_REPOSITORY,
+      useFactory: (database: Database): AccountTemplateApplicationRepository =>
+        new DrizzleAccountTemplateApplicationRepository(database),
       inject: [DATABASE],
     },
     {
@@ -213,6 +223,30 @@ import {
       inject: [
         ACCOUNT_REPOSITORY,
         ACCOUNT_USAGE_PORT,
+        ACCOUNT_AUTHORIZATION_PORT,
+        ACCOUNT_AUDIT_PORT,
+        TRANSACTION_BOUNDARY,
+      ],
+    },
+    {
+      provide: ActivateStandardChartUseCase,
+      useFactory: (
+        accounts: AccountRepository,
+        applications: AccountTemplateApplicationRepository,
+        authorization: AccountAuthorizationPort,
+        audit: AccountAuditPort,
+        boundary: TransactionBoundary,
+      ) =>
+        new ActivateStandardChartUseCase(
+          accounts,
+          applications,
+          authorization,
+          audit,
+          boundary,
+        ),
+      inject: [
+        ACCOUNT_REPOSITORY,
+        ACCOUNT_TEMPLATE_REPOSITORY,
         ACCOUNT_AUTHORIZATION_PORT,
         ACCOUNT_AUDIT_PORT,
         TRANSACTION_BOUNDARY,
@@ -374,6 +408,7 @@ import {
     DeactivateAccountUseCase,
     ReactivateAccountUseCase,
     DeleteAccountUseCase,
+    ActivateStandardChartUseCase,
     PERIOD_GUARD,
     MapAccountRoleUseCase,
     ResolveAccountRoleUseCase,

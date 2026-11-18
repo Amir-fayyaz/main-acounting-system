@@ -23,3 +23,4 @@ export * from '../../modules/accounting/infrastructure/persistence/account.schem
 export * from '../outbox/persistence/outbox.schema.js';
 export * from '../seed/persistence/seed-fixture.schema.js';
 export * from '../../modules/accounting/infrastructure/persistence/account-role.schema.js';
+export * from '../../modules/accounting/infrastructure/persistence/account-template.schema.js';
