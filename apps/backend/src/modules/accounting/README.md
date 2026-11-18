@@ -50,3 +50,26 @@ export class PostInvoiceUseCase {
 Concurrency & Race-Safety
 assertPostable reads the fiscal period row with shared locking (FOR SHARE) inside MySQL. A concurrent period closing transaction (CloseFiscalPeriodUseCase) will serialize appropriately, guaranteeing that no posting is ever committed to a closed period.
 ```
+
+## Chart of Accounts (`ACC-001`)
+
+### Standard chart template
+
+A new company gets a complete, valid chart by activating the versioned standard
+template. The definition lives as data in
+`domain/templates/standard-chart.template.ts` (version `ir-standard-v1`) and uses
+numeric hierarchical codes:
+
+- one digit for the five roots: assets, liabilities, equity, revenue, expenses;
+- two digits for a group, four for a general account and six for a postable detail.
+
+`ActivateStandardChartUseCase` creates the whole tree parents-first in one
+transaction and marks every account as `system`. A second activation for the same
+tenant and template version is refused with `ACCOUNT_TEMPLATE_ALREADY_APPLIED`
+and writes nothing. If any write fails, the transaction rolls back the entire
+chart; there is no partial activation.
+
+Template accounts behave like ordinary accounts afterwards: they can receive
+children while non-postable, and can be used for postings when they are postable
+leaves. Their `system` flag keeps them protected from structural changes and
+deletion.

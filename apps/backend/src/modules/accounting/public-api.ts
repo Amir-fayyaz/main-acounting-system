@@ -22,4 +22,8 @@ export {
 export type { PeriodGuard, PostablePeriod } from './application/ports/period-guard.port.js';
 export { DefaultPeriodGuard } from './application/services/default-period-guard.service.js';
 export { PeriodClosedError, PeriodNotDefinedError } from './domain/errors/fiscal-period.errors.js';
+export { ActivateStandardChartUseCase } from './application/use-cases/activate-standard-chart.use-case.js';
+export type { StandardChartActivationView } from './application/use-cases/activate-standard-chart.use-case.js';
+export { ActivateStandardChart } from './application/commands/activate-standard-chart.command.js';
+export { AccountTemplateAlreadyAppliedError } from './domain/errors/account-template.errors.js';
 export { AccountingModule } from './infrastructure/accounting.module.js';
