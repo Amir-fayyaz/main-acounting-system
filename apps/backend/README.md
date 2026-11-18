@@ -78,6 +78,86 @@ businessDateFromMillis(Date.parse('2026-03-20T20:30:00.000Z')).toIsoString();
 // is '2026-03-20' under an explicit 'America/Los_Angeles' timezone.
 ```
 
+## Fiscal periods (FIS-001)
+
+Each company owns fiscal years and their twelve Jalali-month periods. Every
+financial write must pass the accounting module's `PeriodGuard` before it is
+persisted; no module compares dates to period boundaries itself.
+
+### Guard contract
+
+```ts
+import {
+  PERIOD_GUARD,
+  type PeriodGuard,
+  type PostablePeriod,
+  PeriodClosedError,
+  PeriodNotDefinedError,
+} from '../../accounting/public-api.js';
+
+interface PeriodGuard {
+  assertPostable(tenant: EntityId | string, date: Date | BusinessDate): Promise<PostablePeriod>;
+}
+
+interface PostablePeriod {
+  readonly id: string; // store this on the financial operation
+  readonly fiscalYearId: string;
+  readonly sequence: number; // 1..12
+  readonly startDate: string; // inclusive Gregorian YYYY-MM-DD
+  readonly endDate: string;
+}
+```
+
+Call it inside the **same transaction boundary** as the write (FIS-BR-10):
+
+```ts
+return this.boundary.execute(async () => {
+  const period = await this.periodGuard.assertPostable(command.tenantId, command.postingDate);
+  const document = AccountingDocument.create({ ...command, fiscalPeriodId: period.id });
+  await this.documents.add(document);
+  return Result.ok(toView(document));
+});
+```
+
+`assertPostable` resolves the period with `SELECT … FOR SHARE`. Because the
+read sits in the caller's transaction, a concurrent close waits for the posting
+to commit, and a posting that starts after the close sees `closed` and is
+refused. The guard returns the period (so its id can be stored) and never
+guesses another period when the date does not match.
+
+### Calendar rule (DEC-04)
+
+Dates are stored **Gregorian only**, as inclusive `YYYY-MM-DD` values. Jalali is
+a pure conversion and period-bounds helper (`shared/time/jalali-calendar.ts`),
+not a second storage format. Period boundaries are the Jalali months: 31 days
+for months 1–6, 30 for 7–11, and 29 or 30 for Esfand in a leap year.
+
+A JavaScript `Date` is an instant, so the guard assigns it to its **business
+date** — the day it falls on in `Asia/Tehran` (`DEFAULT_BUSINESS_TIME_ZONE`) —
+never to its UTC day. `2026-04-20T20:29:59.999Z` is still `1405-01-31` (period 1
+of 1405); `2026-04-20T20:30:00.000Z` is `1405-02-01` (period 2).
+
+### Error codes
+
+`PERIOD_NOT_DEFINED` and `PERIOD_CLOSED` are `BUSINESS_RULE` domain errors and
+map to HTTP **422** while their codes are preserved in the response:
+
+| Code                          | HTTP | Meaning                                                     |
+| ----------------------------- | ---- | ----------------------------------------------------------- |
+| `PERIOD_NOT_DEFINED`          | 422  | The date is in no fiscal year/period of the company.        |
+| `PERIOD_CLOSED`               | 422  | The period exists but is closed and refuses new operations. |
+| `FISCAL_YEAR_OVERLAP`         | 409  | The year shares at least one day with an existing year.     |
+| `FISCAL_YEAR_LABEL_DUPLICATE` | 409  | The label is already used by another year.                  |
+| `FISCAL_YEAR_INVALID_RANGE`   | 400  | Start is not strictly before end.                           |
+| `FISCAL_PERIOD_NOT_FOUND`     | 404  | The period id is not a period of the company.               |
+| `FISCAL_YEAR_NOT_FOUND`       | 404  | The year id is not a year of the company.                   |
+| `FISCAL_PERIOD_NOT_OPEN`      | 422  | Only an open period can become active.                      |
+| `PERIOD_STATE_INVALID`        | 409  | Invalid transition (close/reopen/active-period rules).      |
+| `REOPEN_REASON_REQUIRED`      | 400  | Reopening requires a non-empty reason.                      |
+
+The module-level consumer guide, including the full usage example, is
+`src/modules/accounting/README.md`.
+
 ## Commands
 
 ```bash
@@ -424,14 +504,14 @@ configured secrets.
 
 ### What is exported
 
-| Metric                           | Type      | Labels                              | Meaning                                                                                                                                                                                                               |
-| -------------------------------- | --------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `nodejs_*`, `process_*`          | various   | —                                   | Standard Node.js process metrics (memory, event loop lag, active handles, GC).                                                                                                                                        |
-| `http_request_duration_seconds`  | histogram | `method`, `route`, `status_code`    | HTTP request duration. `route` is the **matched route pattern** (`/api/v1/examples/:id`), never the raw URL, so label cardinality is bounded by the endpoint catalog; a request that matched no route is `unmatched`. |
-| `job_execution_duration_seconds` | histogram | `job_name`, `status`                | Background job attempt duration, recorded by `JobDispatcher`; a retry and a terminal failure are both `failure`.                                                                                                      |
-| `job_queue_depth`                | gauge     | —                                   | Job envelopes waiting in the Redis stream, read at scrape time through the queue port (`JobQueueDepthBinder`).                                                                                                        |
+| Metric                           | Type      | Labels                              | Meaning                                                                                                                                                                                                                        |
+| -------------------------------- | --------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `nodejs_*`, `process_*`          | various   | —                                   | Standard Node.js process metrics (memory, event loop lag, active handles, GC).                                                                                                                                                 |
+| `http_request_duration_seconds`  | histogram | `method`, `route`, `status_code`    | HTTP request duration. `route` is the **matched route pattern** (`/api/v1/examples/:id`), never the raw URL, so label cardinality is bounded by the endpoint catalog; a request that matched no route is `unmatched`.          |
+| `job_execution_duration_seconds` | histogram | `job_name`, `status`                | Background job attempt duration, recorded by `JobDispatcher`; a retry and a terminal failure are both `failure`.                                                                                                               |
+| `job_queue_depth`                | gauge     | —                                   | Job envelopes waiting in the Redis stream, read at scrape time through the queue port (`JobQueueDepthBinder`).                                                                                                                 |
 | `outbox_pending_events`          | gauge     | —                                   | Outbox records not yet published (`pending`, `retrying` or claimed `publishing`), read at scrape time by the outbox infrastructure (`OutboxMetricsBinder`, FND-017); the `OutboxStore` port gains no count method for metrics. |
-| `database_pool_connections`      | gauge     | `state` (`active`/`idle`/`waiting`) | MySQL pool state: in-use, free and queued-waiting connections, read from the pool accounting at scrape time.                                                                                                          |
+| `database_pool_connections`      | gauge     | `state` (`active`/`idle`/`waiting`) | MySQL pool state: in-use, free and queued-waiting connections, read from the pool accounting at scrape time.                                                                                                                   |
 
 ### How it is wired
 
@@ -489,10 +569,10 @@ What is wired per process:
 
 ### Configuration
 
-| Key | Meaning | Default |
-| --- | --- | --- |
-| `TRACING_ENABLED` | Whether the SDK starts in this process. | `true` only in production; off in development/test |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | Base URL of the OTLP/HTTP collector. | **Required when `TRACING_ENABLED=true`** (FND-016) — tracing that silently exports nowhere is a boot-time validation error, not a default |
+| Key                           | Meaning                                 | Default                                                                                                                                   |
+| ----------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `TRACING_ENABLED`             | Whether the SDK starts in this process. | `true` only in production; off in development/test                                                                                        |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | Base URL of the OTLP/HTTP collector.    | **Required when `TRACING_ENABLED=true`** (FND-016) — tracing that silently exports nowhere is a boot-time validation error, not a default |
 
 Both go through the shared validation layer (`loadConfiguration`), like every
 other key: an unset endpoint while tracing is on, or a non-HTTP(S) endpoint,
