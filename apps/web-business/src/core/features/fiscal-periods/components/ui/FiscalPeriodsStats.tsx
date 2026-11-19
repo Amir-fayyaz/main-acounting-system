@@ -13,7 +13,7 @@ export function FiscalPeriodsStats({ stats }: FiscalPeriodsStatsProps) {
         <CardContent className="pt-6">
           <div className="text-xs text-muted-foreground">دوره‌های باز</div>
           <div className="text-2xl font-bold tabular-nums mt-1 text-success">
-            {toFaDigits(stats.openCount)}
+            {toFaDigits(String(stats.openCount))}
           </div>
         </CardContent>
       </Card>
@@ -22,7 +22,7 @@ export function FiscalPeriodsStats({ stats }: FiscalPeriodsStatsProps) {
         <CardContent className="pt-6">
           <div className="text-xs text-muted-foreground">دوره‌های بسته</div>
           <div className="text-2xl font-bold tabular-nums mt-1 text-muted-foreground">
-            {toFaDigits(stats.closedCount)}
+            {toFaDigits(String(stats.closedCount))}
           </div>
         </CardContent>
       </Card>
@@ -31,7 +31,7 @@ export function FiscalPeriodsStats({ stats }: FiscalPeriodsStatsProps) {
         <CardContent className="pt-6">
           <div className="text-xs text-muted-foreground">کل دوره‌ها</div>
           <div className="text-2xl font-bold tabular-nums mt-1 text-foreground">
-            {toFaDigits(stats.totalCount)}
+            {toFaDigits(String(stats.totalCount))}
           </div>
         </CardContent>
       </Card>

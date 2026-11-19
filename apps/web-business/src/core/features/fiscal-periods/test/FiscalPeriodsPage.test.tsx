@@ -1,9 +1,15 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { FiscalPeriod, FiscalYear } from '../assets/@types';
 import { FiscalPeriodsPage } from '../components/block/FiscalPeriodsPage';
-import { resetFiscalStore } from '../lib/fiscal-periods-api';
+import {
+  closeFiscalPeriodAction,
+  loadFiscalPeriodsAction,
+  loadFiscalYearsAction,
+  reopenFiscalPeriodAction,
+} from '../lib/fiscal-periods.actions';
 
 vi.mock('sonner', () => ({
   toast: {
@@ -13,107 +19,134 @@ vi.mock('sonner', () => ({
   },
 }));
 
+vi.mock('../lib/fiscal-periods.actions', () => ({
+  loadFiscalYearsAction: vi.fn(),
+  loadFiscalPeriodsAction: vi.fn(),
+  closeFiscalPeriodAction: vi.fn(),
+  reopenFiscalPeriodAction: vi.fn(),
+}));
+
+const YEARS: FiscalYear[] = [
+  { id: 'year-1405', title: 'سال مالی ۱۴۰۵', from: '۱۴۰۵/۰۱/۰۱', to: '۱۴۰۵/۱۲/۲۹' },
+];
+
+const PERIODS: FiscalPeriod[] = [
+  {
+    id: 'period-1405-01',
+    yid: 'year-1405',
+    name: 'فروردین ۱۴۰۵',
+    from: '۱۴۰۵/۰۱/۰۱',
+    to: '۱۴۰۵/۰۱/۳۱',
+    status: 'closed',
+  },
+  {
+    id: 'period-1405-02',
+    yid: 'year-1405',
+    name: 'اردیبهشت ۱۴۰۵',
+    from: '۱۴۰۵/۰۲/۰۱',
+    to: '۱۴۰۵/۰۲/۳۱',
+    status: 'open',
+  },
+];
+
 beforeEach(() => {
-  resetFiscalStore();
+  vi.resetAllMocks();
+
+  vi.mocked(loadFiscalYearsAction).mockResolvedValue({ ok: true, years: YEARS });
+  vi.mocked(loadFiscalPeriodsAction).mockResolvedValue({
+    ok: true,
+    periods: PERIODS,
+    stats: { openCount: 1, closedCount: 1, totalCount: 2 },
+  });
 });
 
 describe('FiscalPeriodsPage', () => {
-  it('renders header, KPIs, year selector, and period list', async () => {
+  it('renders the period list and stats loaded from the API', async () => {
     render(<FiscalPeriodsPage />);
 
     expect(screen.getByRole('heading', { level: 1, name: 'دوره‌های مالی' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /ایجاد دوره/ })).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText('دوره‌های باز')).toBeInTheDocument();
-      expect(screen.getByText('دوره‌های بسته')).toBeInTheDocument();
-      expect(screen.getByText('کل دوره‌ها')).toBeInTheDocument();
-      expect(screen.getByRole('table', { name: 'دوره‌های مالی' })).toBeInTheDocument();
-      expect(screen.getByText('آبان ۱۴۰۵')).toBeInTheDocument();
+      expect(screen.getByText('فروردین ۱۴۰۵')).toBeInTheDocument();
     });
+
+    expect(screen.getByText('اردیبهشت ۱۴۰۵')).toBeInTheDocument();
+    expect(screen.getByText('دوره‌های باز')).toBeInTheDocument();
+    expect(screen.getByText('دوره‌های بسته')).toBeInTheDocument();
+    expect(loadFiscalPeriodsAction).toHaveBeenCalledWith('year-1405');
   });
 
-  it('allows starting review and closing a period', async () => {
+  it('closes an open period through the API action', async () => {
     const user = userEvent.setup();
+    vi.mocked(closeFiscalPeriodAction).mockResolvedValue({
+      ok: true,
+      period: { ...PERIODS[1], status: 'closed' },
+    });
+
     render(<FiscalPeriodsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('آبان ۱۴۰۵')).toBeInTheDocument();
+      expect(screen.getByText('اردیبهشت ۱۴۰۵')).toBeInTheDocument();
     });
 
-    // Find the row for آبان ۱۴۰۵ and click "بستن دوره"
-    const row = screen.getByText('آبان ۱۴۰۵').closest('tr')!;
-    const closeBtn = row.querySelector('button:last-child')!;
-    await user.click(closeBtn);
+    const row = screen.getByText('اردیبهشت ۱۴۰۵').closest('tr');
+    expect(row).not.toBeNull();
+    await user.click(within(row as HTMLElement).getByRole('button', { name: 'بستن دوره' }));
 
-    // Dialog appears
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(screen.getByText(/بستن دوره‌ی آبان ۱۴۰۵/)).toBeInTheDocument();
+    const dialog = screen.getByRole('dialog');
+    const confirmButton = within(dialog).getByRole('button', { name: 'بستن دوره' });
+    expect(confirmButton).toBeDisabled();
 
-    const confirmBtn = screen.getByRole('button', { name: 'بستن دوره' });
-    expect(confirmBtn).toBeDisabled();
+    await user.click(within(dialog).getByRole('checkbox'));
+    await user.click(confirmButton);
 
-    // Check confirmation checkbox
-    const checkbox = screen.getByRole('checkbox', { name: /متوجه‌ام و بستن دوره را تأیید می‌کنم/ });
-    await user.click(checkbox);
-    expect(confirmBtn).not.toBeDisabled();
-
-    // Click confirm close
-    await user.click(confirmBtn);
-
+    await waitFor(() => {
+      expect(closeFiscalPeriodAction).toHaveBeenCalledWith('period-1405-02');
+    });
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
 
-  it('allows reopening a closed period with required reason', async () => {
+  it('reopens a closed period with a reason', async () => {
     const user = userEvent.setup();
+    vi.mocked(reopenFiscalPeriodAction).mockResolvedValue({
+      ok: true,
+      period: { ...PERIODS[0], status: 'open' },
+    });
+
     render(<FiscalPeriodsPage />);
 
     await waitFor(() => {
       expect(screen.getByText('فروردین ۱۴۰۵')).toBeInTheDocument();
     });
 
-    const row = screen.getByText('فروردین ۱۴۰۵').closest('tr')!;
-    const reopenBtn = row.querySelector('button')!;
-    expect(reopenBtn).toHaveTextContent('بازگشایی');
-    await user.click(reopenBtn);
+    const row = screen.getByText('فروردین ۱۴۰۵').closest('tr');
+    expect(row).not.toBeNull();
+    await user.click(within(row as HTMLElement).getByRole('button', { name: 'بازگشایی' }));
 
-    // Dialog appears
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(screen.getByText(/بازگشایی دوره‌ی فروردین ۱۴۰۵/)).toBeInTheDocument();
+    const dialog = screen.getByRole('dialog');
+    const confirmButton = within(dialog).getByRole('button', { name: 'بازگشایی دوره' });
+    expect(confirmButton).toBeDisabled();
 
-    const confirmReopenBtn = screen.getByRole('button', { name: 'بازگشایی دوره' });
-    expect(confirmReopenBtn).toBeDisabled();
+    await user.type(within(dialog).getByLabelText(/دلیل بازگشایی/), 'کوتاه');
+    await user.click(within(dialog).getByRole('checkbox'));
+    expect(confirmButton).toBeDisabled();
 
-    // Enter short reason (less than 10 characters)
-    const reasonInput = screen.getByLabelText(/دلیل بازگشایی/);
-    await user.type(reasonInput, 'کوتاه');
+    await user.clear(within(dialog).getByLabelText(/دلیل بازگشایی/));
+    await user.type(
+      within(dialog).getByLabelText(/دلیل بازگشایی/),
+      'اصلاح سند هزینه اداری ثبت‌شده اشتباه',
+    );
+    expect(confirmButton).not.toBeDisabled();
 
-    const checkbox = screen.getByRole('checkbox', { name: /پیامدهای بازگشایی را می‌دانم/ });
-    await user.click(checkbox);
-
-    // Still disabled because reason is too short
-    expect(confirmReopenBtn).toBeDisabled();
-
-    // Enter valid reason (>= 10 characters)
-    fireEvent.change(reasonInput, { target: { value: 'اصلاح سند هزینه اداری ثبت‌شده اشتباه' } });
-    expect(confirmReopenBtn).not.toBeDisabled();
-
-    // Confirm reopen
-    await user.click(confirmReopenBtn);
+    await user.click(confirmButton);
 
     await waitFor(() => {
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    });
-  });
-
-  it('renders audit history card', async () => {
-    render(<FiscalPeriodsPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('تاریخچه‌ی قفل و بازگشایی دوره‌ها')).toBeInTheDocument();
-      expect(screen.getAllByText(/علی رضایی/).length).toBeGreaterThan(0);
+      expect(reopenFiscalPeriodAction).toHaveBeenCalledWith(
+        'period-1405-01',
+        'اصلاح سند هزینه اداری ثبت‌شده اشتباه',
+      );
     });
   });
 });

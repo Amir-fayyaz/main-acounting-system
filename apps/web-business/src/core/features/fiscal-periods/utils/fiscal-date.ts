@@ -1,13 +1,11 @@
 import type { FiscalPeriodStatus } from '../assets/@types';
 
-const PERSIAN_DIGITS = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+export { toFaDigits } from '../../shared/utils/persian-digits';
 
-export function toFaDigits(value: string | number): string {
-  return String(value).replace(/\d/g, (digit) => PERSIAN_DIGITS[Number(digit)]);
-}
+const PERSIAN_DIGIT_OFFSET = 0x06f0;
 
 export function parsePersianDigits(value: string): string {
-  return value.replace(/[۰-۹]/g, (char) => String(PERSIAN_DIGITS.indexOf(char)));
+  return value.replace(/[۰-۹]/g, (char) => String(char.charCodeAt(0) - PERSIAN_DIGIT_OFFSET));
 }
 
 export const MONTH_NAMES = [

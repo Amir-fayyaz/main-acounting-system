@@ -20,7 +20,7 @@ export interface ClosePeriodDialogProps {
   period: FiscalPeriod | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (period: FiscalPeriod) => Promise<void>;
+  onConfirm: (period: FiscalPeriod) => Promise<boolean>;
 }
 
 export function ClosePeriodDialog({
@@ -38,7 +38,9 @@ export function ClosePeriodDialog({
     if (!confirmed) return;
     setIsSubmitting(true);
     try {
-      await onConfirm(period);
+      const closed = await onConfirm(period);
+      if (!closed) return;
+
       onOpenChange(false);
       setConfirmed(false);
     } finally {
