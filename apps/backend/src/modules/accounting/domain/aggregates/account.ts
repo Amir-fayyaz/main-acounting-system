@@ -82,14 +82,12 @@ export class Account {
    * Creates a new root account (level 1, no parent).
    *
    * @throws AccountPostableNotLeafError — a root account cannot be postable if it has children
-   * @throws AccountSystemProtectedError — a system account cannot be postable or active
    * @throws InvalidPrimitiveError — name is blank
    */
   public static create(input: CreateRootAccountInput): Account {
     const id = input.id ? EntityId.from(input.id) : EntityId.generate();
 
     validateName(input.name);
-    validateSystemAccount(input);
     // A new root has no children, so postable is allowed
 
     return new Account(
@@ -121,14 +119,12 @@ export class Account {
    * @throws AccountTypeMismatchError — child type must equal parent type
    * @throws AccountNormalBalanceMismatchError — child normal balance must equal parent's
    * @throws AccountPostableWithChildrenError — parent is postable, cannot receive children
-   * @throws AccountSystemProtectedError — child is marked as system and is postable/active
    * @throws InvalidPrimitiveError — name is blank
    */
   public static createAsChild(input: CreateChildAccountInput): Account {
     const { parent, tenantId } = input;
 
     validateName(input.name);
-    validateSystemAccount(input);
 
     // Check tenant first (as close to original design as possible)
     if (parent._tenantId !== tenantId) {
@@ -370,21 +366,5 @@ export class Account {
 function validateName(name: string): void {
   if (!name || name.trim() === '') {
     throw new InvalidPrimitiveError('Account', 'name must not be blank');
-  }
-}
-
-function validateSystemAccount(input: {
-  readonly system: boolean;
-  readonly postable: boolean;
-  readonly active: boolean;
-  readonly now: DateTime;
-}): void {
-  if (input.system) {
-    if (input.postable) {
-      throw new AccountSystemProtectedError();
-    }
-    if (input.active) {
-      throw new AccountSystemProtectedError();
-    }
   }
 }

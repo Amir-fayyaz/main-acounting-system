@@ -3,16 +3,12 @@
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
 
-import { Card, CardContent, SectionLayout, Skeleton } from '@repo/web/ui';
-import { cn } from '@repo/web/ui/utils/cn';
+import { SectionLayout } from '@repo/web/ui';
 
-import type { DashboardMetric, DashboardSnapshot } from '../../assets/@types';
-import type { Cheque, Invoice } from '../../../panel/assets/@types/finance';
 import { useDashboard } from '../../hook/useDashboard';
 import { PageHeader } from '../../../panel/components/ui/PageHeader';
-import { formatShortMoney, splitShortMoney } from '../../../shared/utils/format-short-money';
-import { DashboardCharts } from './DashboardCharts';
-import { DashboardLists } from './DashboardLists';
+import { DashboardLoading } from './DashboardLoading';
+import { DashboardContent } from './DashboardContent';
 
 const SECONDARY_ACTION_CLASS =
   'inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-border px-4 text-sm font-semibold transition-colors hover:bg-accent';
@@ -21,104 +17,6 @@ const PRIMARY_ACTION_CLASS =
   'inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-brand-dark';
 
 const ERROR_MESSAGE = 'دریافت اطلاعات داشبورد با مشکل مواجه شد. لطفاً دوباره تلاش کنید.';
-
-function DashboardLoading() {
-  return (
-    <div className="space-y-4" aria-label="در حال بارگذاری داشبورد" aria-busy="true">
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {Array.from({ length: 8 }, (_, index) => (
-          <Card key={index} className="rounded-lg">
-            <CardContent className="space-y-3">
-              <Skeleton className="h-4 w-2/3" />
-              <Skeleton className="h-7 w-1/2" />
-              <Skeleton className="h-3 w-1/3" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-      <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
-        <Card className="rounded-lg">
-          <CardContent className="space-y-3">
-            <Skeleton className="h-5 w-1/3" />
-            <Skeleton className="h-44 w-full" />
-          </CardContent>
-        </Card>
-        <Card className="rounded-lg">
-          <CardContent className="space-y-3">
-            <Skeleton className="h-5 w-1/3" />
-            <Skeleton className="h-44 w-full" />
-          </CardContent>
-        </Card>
-      </div>
-      <div className="grid gap-4 lg:grid-cols-3">
-        {Array.from({ length: 3 }, (_, index) => (
-          <Card key={index} className="rounded-lg">
-            <CardContent className="space-y-3">
-              <Skeleton className="h-5 w-1/2" />
-              <Skeleton className="h-4 w-2/3" />
-              <Skeleton className="h-4 w-1/2" />
-              <Skeleton className="h-4 w-3/5" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function MetricCard({ label, value, description, trend, highlight }: DashboardMetric) {
-  const { amount, unit } = splitShortMoney(formatShortMoney(value));
-
-  return (
-    <Card className={cn('rounded-lg', highlight && 'bg-accent')}>
-      <CardContent className="space-y-1.5">
-        <span className="block text-[13px] text-muted-foreground">{label}</span>
-        <b className="block text-[17px] font-bold leading-snug tabular-nums sm:text-[21px]">
-          <span>{amount}</span>
-          {unit ? (
-            <span className="ms-1 text-xs font-medium text-muted-foreground">{unit}</span>
-          ) : null}
-        </b>
-        {description ? (
-          <span
-            className={cn(
-              'block text-xs',
-              trend === 'negative' ? 'text-destructive' : 'text-success',
-            )}
-          >
-            {description}
-          </span>
-        ) : null}
-      </CardContent>
-    </Card>
-  );
-}
-
-function DashboardContent({
-  snapshot,
-  invoices,
-  cheques,
-}: {
-  snapshot: DashboardSnapshot;
-  invoices: Invoice[];
-  cheques: Cheque[];
-}) {
-  const dueCheques = cheques
-    .filter((cheque) => cheque.status === 'near-due' || cheque.status === 'pending')
-    .slice(0, 4);
-
-  return (
-    <div className="space-y-4">
-      <section aria-label="شاخص‌های مالی" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {snapshot.metrics.map((metric) => (
-          <MetricCard key={metric.id} {...metric} />
-        ))}
-      </section>
-      <DashboardCharts cashflow={snapshot.cashflow} paymentMethods={snapshot.paymentMethods} />
-      <DashboardLists invoices={invoices} cheques={dueCheques} tasks={snapshot.tasks} />
-    </div>
-  );
-}
 
 export function DashboardBlock() {
   const state = useDashboard();

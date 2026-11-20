@@ -17,6 +17,10 @@ coverage/
 .env.*
 !.env.example
 
+# Observability runtime (FND-017): the rendered Prometheus scrape token and
+# other start-up material — secrets by construction, never committed.
+infrastructure/observability/runtime/
+
 # Editors / OS
 .DS_Store
 Thumbs.db

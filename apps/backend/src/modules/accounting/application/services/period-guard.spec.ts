@@ -8,6 +8,7 @@ import { createFiscalCompanyFixture } from '../../../../../test/support/fiscal-f
 import { tenantReferenceFrom } from '../../domain/value-objects/tenant-reference.js';
 import { DefaultPeriodGuard } from './default-period-guard.service.js';
 import { BusinessDate } from '../../../../shared/time/business-date.js';
+import { ErrorCategory } from '../../../../shared/errors/error-category.js';
 import {
   PeriodClosedError,
   PeriodNotDefinedError,
@@ -87,6 +88,79 @@ describe('PeriodGuard.assertPostable (FIS-006)', () => {
     expect(res.id).toBe(period.id.value);
   });
 
+  describe('boundary instants around the Asia/Tehran offset (FIS-BR-09; DEC-04)', () => {
+    function seedAdjacentPeriods() {
+      const { periods, guard } = harness();
+      const year = aFiscalYear(tenantReferenceFrom(TENANT_A), 'FY1405');
+      const first = aFiscalPeriod({
+        tenantId: tenantReferenceFrom(TENANT_A),
+        fiscalYearId: year.id,
+        jalaliYear: 1405,
+        sequence: 1,
+        startDate: '2026-03-21',
+        endDate: '2026-04-20',
+        state: 'open',
+      });
+      const second = aFiscalPeriod({
+        tenantId: tenantReferenceFrom(TENANT_A),
+        fiscalYearId: year.id,
+        jalaliYear: 1405,
+        sequence: 2,
+        startDate: '2026-04-21',
+        endDate: '2026-05-21',
+        state: 'open',
+      });
+      periods.seed(first);
+      periods.seed(second);
+      return { guard, first, second };
+    }
+
+    it('assigns the last Tehran instant of a period to that period', async () => {
+      const { guard, first } = seedAdjacentPeriods();
+
+      // 2026-04-20T23:59:59.999+03:30, i.e. the last instant of period 1.
+      const lastInstantOfFirst = new Date('2026-04-20T20:29:59.999Z');
+      const res = await guard.assertPostable(TENANT_A, lastInstantOfFirst);
+
+      expect(res.id).toBe(first.id.value);
+      expect(res.sequence).toBe(1);
+    });
+
+    it('assigns the first Tehran instant of the next day to the next period', async () => {
+      const { guard, second } = seedAdjacentPeriods();
+
+      // 2026-04-21T00:00:00.000+03:30, the same instant as 20:30Z the day before.
+      const firstInstantOfSecond = new Date('2026-04-20T20:30:00.000Z');
+      const res = await guard.assertPostable(TENANT_A, firstInstantOfSecond);
+
+      expect(res.id).toBe(second.id.value);
+      expect(res.sequence).toBe(2);
+    });
+
+    it('refuses a Tehran instant before the first period begins', async () => {
+      const { guard } = seedAdjacentPeriods();
+
+      // 2026-03-21T00:00:00.000+03:30 is the first instant of the year; one
+      // millisecond earlier is still 1404 and no period covers it.
+      const justBeforeTheYear = new Date('2026-03-20T20:29:59.999Z');
+
+      await expect(guard.assertPostable(TENANT_A, justBeforeTheYear)).rejects.toMatchObject({
+        code: 'PERIOD_NOT_DEFINED',
+        category: ErrorCategory.BUSINESS_RULE,
+      });
+    });
+
+    it('starts the first period exactly at the Tehran midnight of its first day', async () => {
+      const { guard, first } = seedAdjacentPeriods();
+
+      // 2026-03-21T00:00:00.000+03:30 = 2026-03-20T20:30:00.000Z.
+      const firstInstantOfYear = new Date('2026-03-20T20:30:00.000Z');
+      const res = await guard.assertPostable(TENANT_A, firstInstantOfYear);
+
+      expect(res.id).toBe(first.id.value);
+    });
+  });
+
   it('refuses with PERIOD_CLOSED when date is inside a closed period', async () => {
     const { periods, guard } = harness();
     const year = aFiscalYear(tenantReferenceFrom(TENANT_A), 'FY1405');
@@ -104,6 +178,12 @@ describe('PeriodGuard.assertPostable (FIS-006)', () => {
     await expect(guard.assertPostable(TENANT_A, BusinessDate.parse('2026-04-01'))).rejects.toThrow(
       PeriodClosedError,
     );
+    await expect(
+      guard.assertPostable(TENANT_A, BusinessDate.parse('2026-04-01')),
+    ).rejects.toMatchObject({
+      code: 'PERIOD_CLOSED',
+      category: ErrorCategory.BUSINESS_RULE,
+    });
   });
 
   it('refuses with PERIOD_NOT_DEFINED when date is outside every fiscal year/period', async () => {
@@ -123,6 +203,12 @@ describe('PeriodGuard.assertPostable (FIS-006)', () => {
     await expect(guard.assertPostable(TENANT_A, BusinessDate.parse('2025-01-01'))).rejects.toThrow(
       PeriodNotDefinedError,
     );
+    await expect(
+      guard.assertPostable(TENANT_A, BusinessDate.parse('2025-01-01')),
+    ).rejects.toMatchObject({
+      code: 'PERIOD_NOT_DEFINED',
+      category: ErrorCategory.BUSINESS_RULE,
+    });
   });
 
   it('maintains tenant isolation: tenant A date is never resolved against tenant B period', async () => {

@@ -1,4 +1,4 @@
-import type { CurrencyCode, Money } from '../../../shared/assets/@types';
+import type { CurrencyCode, Money } from '../../../shared';
 
 export interface DashboardMetric {
   id: string;

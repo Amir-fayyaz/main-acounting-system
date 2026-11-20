@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, H2 } from '@repo/web/ui';
 
-import type { CashflowMonth, PaymentMethodShare } from '../../assets/@types';
-import { toFaDigits } from '../../../shared/utils/persian-digits';
+import type { CashflowMonth, PaymentMethodShare } from '../../assets/@types/dashboard';
+import { toFaDigits } from '../../../shared';
 
 const INCOME_COLOR = 'var(--chart-1)';
 const EXPENSE_COLOR = 'var(--muted-foreground)';

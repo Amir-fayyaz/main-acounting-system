@@ -1,20 +1,16 @@
-import type { ReactNode } from 'react';
 import Link from 'next/link';
 
-import { Card, CardContent, CardHeader, H2 } from '@repo/web/ui';
 import { cn } from '@repo/web/ui/utils/cn';
 
-import type { DashboardTask } from '../../assets/@types';
+import type { DashboardTask } from '../../assets/@types/dashboard';
 import type { Cheque, ChequeStatus, Invoice } from '../../../panel/assets/@types/finance';
-import { toFaDigits } from '../../../shared/utils/persian-digits';
+import { toFaDigits } from '../../../shared';
 import { chequeStatusLabel } from '../../../panel/utils/status-label';
-
-const CARD_TITLE_CLASS = 'text-[15px] font-bold';
+import { EmptyList } from './EmptyList';
+import { ListCard } from './ListCard';
 
 const SMALL_ACTION_CLASS =
   'inline-flex h-8 items-center justify-center rounded-md border border-border bg-card px-2.5 text-[13px] font-semibold transition-colors hover:bg-muted';
-
-const EMPTY_MESSAGE = 'هنوز موردی ثبت نشده است.';
 
 const LIST_CLASS = 'divide-y divide-border';
 const LIST_ITEM_CLASS = 'flex items-center justify-between gap-2.5 py-2.5 first:pt-0';
@@ -42,32 +38,6 @@ function formatMillions(money: string): string {
   if (!/^\d+$/.test(integerPart)) return money;
   const millions = Number(BigInt(integerPart)) / 1e6;
   return `${millions.toLocaleString('fa-IR', { maximumFractionDigits: 1 })} م`;
-}
-
-function ListCard({
-  title,
-  action,
-  children,
-}: {
-  title: string;
-  action?: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <Card className="gap-4 rounded-lg">
-      <CardHeader>
-        <div className="flex items-center justify-between gap-2">
-          <H2 className={CARD_TITLE_CLASS}>{title}</H2>
-          {action}
-        </div>
-      </CardHeader>
-      <CardContent>{children}</CardContent>
-    </Card>
-  );
-}
-
-function EmptyList() {
-  return <p className="py-6 text-center text-sm text-muted-foreground">{EMPTY_MESSAGE}</p>;
 }
 
 export function DashboardLists({

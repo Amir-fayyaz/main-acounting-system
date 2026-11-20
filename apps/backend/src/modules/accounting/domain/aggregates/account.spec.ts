@@ -237,36 +237,22 @@ describe('Account aggregate', () => {
   });
 
   describe('system account protection', () => {
-    it('a system account cannot be made postable during creation', () => {
-      expect(() =>
-        Account.create({
-          tenantId: ROOT_TENANT_ID,
-          code: AccountCode.from('1000'),
-          name: 'System Cash',
-          type: AccountType.from('asset'),
-          normalBalance: NormalBalance.from('debit'),
-          postable: true, // system + postable = error
-          active: false,
-          system: true,
-          now: now(),
-        }),
-      ).toThrow(AccountSystemProtectedError);
-    });
+    it('creates a system account active and postable for the standard chart', () => {
+      const account = Account.create({
+        tenantId: ROOT_TENANT_ID,
+        code: AccountCode.from('110101'),
+        name: 'System Cash',
+        type: AccountType.from('asset'),
+        normalBalance: NormalBalance.from('debit'),
+        postable: true,
+        active: true,
+        system: true,
+        now: now(),
+      });
 
-    it('a system account cannot be active during creation', () => {
-      expect(() =>
-        Account.create({
-          tenantId: ROOT_TENANT_ID,
-          code: AccountCode.from('1000'),
-          name: 'System Cash',
-          type: AccountType.from('asset'),
-          normalBalance: NormalBalance.from('debit'),
-          postable: false,
-          active: true, // system + active = error
-          system: true,
-          now: now(),
-        }),
-      ).toThrow(AccountSystemProtectedError);
+      expect(account.system).toBe(true);
+      expect(account.active).toBe(true);
+      expect(account.postable).toBe(true);
     });
 
     it('a system account cannot have its structural properties changed (rename)', () => {

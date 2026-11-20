@@ -105,24 +105,32 @@ export class ReopenReasonRequiredError extends DomainError {
 
 /**
  * A posting was requested on a date that falls outside every configured fiscal period (FIS-006).
+ *
+ * The date names no frame of the books, so the rule — not a missing resource —
+ * declined the operation: `BUSINESS_RULE`, which the API maps to HTTP 422 while
+ * the code `PERIOD_NOT_DEFINED` is preserved verbatim (FIS-001, section 7).
  */
 export class PeriodNotDefinedError extends DomainError {
   public constructor(message = 'No fiscal period is defined for that date.') {
     super('PERIOD_NOT_DEFINED', message, {
-      category: ErrorCategory.NOT_FOUND,
+      category: ErrorCategory.BUSINESS_RULE,
     });
   }
 }
 
 /**
  * A posting was requested on a date whose fiscal period is already closed (FIS-006).
+ *
+ * A closed period still exists; it simply refuses new operations, so this is a
+ * business-rule refusal (`BUSINESS_RULE`) mapped to HTTP 422, with the code
+ * `PERIOD_CLOSED` preserved verbatim (FIS-001, section 7; FIS-BR-04).
  */
 export class PeriodClosedError extends DomainError {
   public constructor(
     message = 'The fiscal period for that date is closed and cannot be posted into.',
   ) {
     super('PERIOD_CLOSED', message, {
-      category: ErrorCategory.CONFLICT,
+      category: ErrorCategory.BUSINESS_RULE,
     });
   }
 }

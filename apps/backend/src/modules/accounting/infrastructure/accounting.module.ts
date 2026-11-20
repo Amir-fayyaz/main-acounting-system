@@ -16,6 +16,7 @@ import {
   ACCOUNT_AUDIT_PORT,
   ACCOUNT_AUTHORIZATION_PORT,
   ACCOUNT_REPOSITORY,
+  ACCOUNT_TEMPLATE_REPOSITORY,
   ACCOUNT_USAGE_PORT,
   ACTIVE_PERIOD_REPOSITORY,
   FISCAL_PERIOD_EVENT_RECORDER,
@@ -61,6 +62,20 @@ import { DrizzleFiscalPeriodRepository } from './persistence/drizzle-fiscal-peri
 import { DrizzleFiscalYearRepository } from './persistence/drizzle-fiscal-year.repository.js';
 import { FiscalYearsController } from '../presentation/controllers/fiscal-years.controller.js';
 import { FiscalPeriodsController } from '../presentation/controllers/fiscal-periods.controller.js';
+import { ACCOUNT_ROLE_REPOSITORY } from '../application/accounting.tokens.js';
+
+import type { AccountRoleRepository } from '../domain/repositories/account-role.repository.js';
+import type { AccountTemplateApplicationRepository } from '../domain/repositories/account-template.repository.js';
+
+import { DrizzleAccountRoleRepository } from './persistence/drizzle-account-role.repository.js';
+import { DrizzleAccountTemplateApplicationRepository } from './persistence/drizzle-account-template.repository.js';
+
+import {
+  MapAccountRoleUseCase,
+  ResolveAccountRoleUseCase,
+  GetRoleCompletenessUseCase,
+} from '../application/use-cases/account-role.use-case.js';
+import { ActivateStandardChartUseCase } from '../application/use-cases/activate-standard-chart.use-case.js';
 
 @Module({
   imports: [DatabaseModule, OutboxModule],
@@ -87,6 +102,18 @@ import { FiscalPeriodsController } from '../presentation/controllers/fiscal-peri
     {
       provide: ACCOUNT_REPOSITORY,
       useFactory: (database: Database): AccountRepository => new DrizzleAccountRepository(database),
+      inject: [DATABASE],
+    },
+    {
+      provide: ACCOUNT_ROLE_REPOSITORY,
+      useFactory: (database: Database): AccountRoleRepository =>
+        new DrizzleAccountRoleRepository(database),
+      inject: [DATABASE],
+    },
+    {
+      provide: ACCOUNT_TEMPLATE_REPOSITORY,
+      useFactory: (database: Database): AccountTemplateApplicationRepository =>
+        new DrizzleAccountTemplateApplicationRepository(database),
       inject: [DATABASE],
     },
     {
@@ -137,13 +164,15 @@ import { FiscalPeriodsController } from '../presentation/controllers/fiscal-peri
         authorization: AccountAuthorizationPort,
         audit: AccountAuditPort,
         boundary: TransactionBoundary,
-      ) => new UpdateAccountUseCase(repository, usage, authorization, audit, boundary),
+        roles: AccountRoleRepository,
+      ) => new UpdateAccountUseCase(repository, usage, authorization, audit, boundary, roles),
       inject: [
         ACCOUNT_REPOSITORY,
         ACCOUNT_USAGE_PORT,
         ACCOUNT_AUTHORIZATION_PORT,
         ACCOUNT_AUDIT_PORT,
         TRANSACTION_BOUNDARY,
+        ACCOUNT_ROLE_REPOSITORY,
       ],
     },
     {
@@ -154,13 +183,15 @@ import { FiscalPeriodsController } from '../presentation/controllers/fiscal-peri
         authorization: AccountAuthorizationPort,
         audit: AccountAuditPort,
         boundary: TransactionBoundary,
-      ) => new DeactivateAccountUseCase(repository, usage, authorization, audit, boundary),
+        roles: AccountRoleRepository,
+      ) => new DeactivateAccountUseCase(repository, usage, authorization, audit, boundary, roles),
       inject: [
         ACCOUNT_REPOSITORY,
         ACCOUNT_USAGE_PORT,
         ACCOUNT_AUTHORIZATION_PORT,
         ACCOUNT_AUDIT_PORT,
         TRANSACTION_BOUNDARY,
+        ACCOUNT_ROLE_REPOSITORY,
       ],
     },
     {
@@ -196,6 +227,61 @@ import { FiscalPeriodsController } from '../presentation/controllers/fiscal-peri
         ACCOUNT_AUDIT_PORT,
         TRANSACTION_BOUNDARY,
       ],
+    },
+    {
+      provide: ActivateStandardChartUseCase,
+      useFactory: (
+        accounts: AccountRepository,
+        applications: AccountTemplateApplicationRepository,
+        authorization: AccountAuthorizationPort,
+        audit: AccountAuditPort,
+        boundary: TransactionBoundary,
+      ) =>
+        new ActivateStandardChartUseCase(
+          accounts,
+          applications,
+          authorization,
+          audit,
+          boundary,
+        ),
+      inject: [
+        ACCOUNT_REPOSITORY,
+        ACCOUNT_TEMPLATE_REPOSITORY,
+        ACCOUNT_AUTHORIZATION_PORT,
+        ACCOUNT_AUDIT_PORT,
+        TRANSACTION_BOUNDARY,
+      ],
+    },
+    {
+      provide: MapAccountRoleUseCase,
+      useFactory: (
+        accounts: AccountRepository,
+        roles: AccountRoleRepository,
+        authorization: AccountAuthorizationPort,
+        audit: AccountAuditPort,
+        boundary: TransactionBoundary,
+      ) => new MapAccountRoleUseCase(accounts, roles, authorization, audit, boundary),
+      inject: [
+        ACCOUNT_REPOSITORY,
+        ACCOUNT_ROLE_REPOSITORY,
+        ACCOUNT_AUTHORIZATION_PORT,
+        ACCOUNT_AUDIT_PORT,
+        TRANSACTION_BOUNDARY,
+      ],
+    },
+
+    {
+      provide: ResolveAccountRoleUseCase,
+      useFactory: (roles: AccountRoleRepository, accounts: AccountRepository) =>
+        new ResolveAccountRoleUseCase(roles, accounts),
+      inject: [ACCOUNT_ROLE_REPOSITORY, ACCOUNT_REPOSITORY],
+    },
+
+    {
+      provide: GetRoleCompletenessUseCase,
+      useFactory: (roles: AccountRoleRepository, accounts: AccountRepository) =>
+        new GetRoleCompletenessUseCase(roles, accounts),
+      inject: [ACCOUNT_ROLE_REPOSITORY, ACCOUNT_REPOSITORY],
     },
     {
       provide: GenerateFiscalPeriodsUseCase,
@@ -262,7 +348,14 @@ import { FiscalPeriodsController } from '../presentation/controllers/fiscal-peri
         authorization: Authorization,
         boundary: TransactionBoundary,
       ) =>
-        new CloseFiscalPeriodUseCase(periods, activePeriods, events, audit, authorization, boundary),
+        new CloseFiscalPeriodUseCase(
+          periods,
+          activePeriods,
+          events,
+          audit,
+          authorization,
+          boundary,
+        ),
       inject: [
         FISCAL_PERIOD_REPOSITORY,
         ACTIVE_PERIOD_REPOSITORY,
@@ -303,10 +396,8 @@ import { FiscalPeriodsController } from '../presentation/controllers/fiscal-peri
     },
     {
       provide: ListFiscalPeriodsUseCase,
-      useFactory: (
-        years: FiscalYearRepository,
-        periods: FiscalPeriodRepository,
-      ) => new ListFiscalPeriodsUseCase(years, periods),
+      useFactory: (years: FiscalYearRepository, periods: FiscalPeriodRepository) =>
+        new ListFiscalPeriodsUseCase(years, periods),
       inject: [FISCAL_YEAR_REPOSITORY, FISCAL_PERIOD_REPOSITORY],
     },
   ],
@@ -317,7 +408,11 @@ import { FiscalPeriodsController } from '../presentation/controllers/fiscal-peri
     DeactivateAccountUseCase,
     ReactivateAccountUseCase,
     DeleteAccountUseCase,
+    ActivateStandardChartUseCase,
     PERIOD_GUARD,
+    MapAccountRoleUseCase,
+    ResolveAccountRoleUseCase,
+    GetRoleCompletenessUseCase,
   ],
 })
 export class AccountingModule {}

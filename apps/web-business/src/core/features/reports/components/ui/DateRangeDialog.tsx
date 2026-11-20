@@ -23,12 +23,13 @@ import { Download } from 'lucide-react';
 import { toast } from 'sonner';
 
 import type { ReportDateRange } from '../../assets/@types/reports';
-import { branches, statuses } from '../../assets/mock/reports';
 
 export type DateRangeDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   reportLabel: string;
+  branches: readonly string[];
+  statuses: readonly string[];
   onConfirm?: (range: ReportDateRange) => void;
 };
 
@@ -36,6 +37,8 @@ export function DateRangeDialog({
   open,
   onOpenChange,
   reportLabel,
+  branches,
+  statuses,
   onConfirm,
 }: DateRangeDialogProps) {
   const [from, setFrom] = useState('');
