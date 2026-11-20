@@ -1,0 +1,1 @@
+export { PurchasesPage } from './components/block/PurchasesPage';

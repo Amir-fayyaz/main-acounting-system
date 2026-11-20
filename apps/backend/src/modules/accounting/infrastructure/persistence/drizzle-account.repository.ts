@@ -152,6 +152,14 @@ export class DrizzleAccountRepository implements AccountRepository {
 
     return { revision: expectedRevision.next() };
   }
+
+  public async delete(account: Account): Promise<void> {
+    assertTenantOwnership(account.tenantId, 'AccountRepository.delete');
+
+    await scopedDatabase(this.database)
+      .delete(accounts)
+      .where(and(eq(accounts.id, account.id.value), tenantEq(accounts.tenantId)));
+  }
 }
 
 /**

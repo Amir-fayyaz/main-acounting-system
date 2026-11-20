@@ -136,6 +136,7 @@ describe.skipIf(!integrationEnabled)('fiscal year persistence (integration)', ()
         new RecordingFiscalYearEvents(),
         boundary,
       ),
+      { record: async () => undefined },
     );
   });
 

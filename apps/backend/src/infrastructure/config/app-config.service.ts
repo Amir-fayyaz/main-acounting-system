@@ -10,11 +10,13 @@ import type {
   HttpConfiguration,
   JobsConfiguration,
   LoggingConfiguration,
+  MetricsConfiguration,
   OutboxConfiguration,
   RateLimitConfiguration,
   RedisConfiguration,
   SchedulerConfiguration,
   StorageConfiguration,
+  TracingConfiguration,
 } from './configuration.types.js';
 
 /**
@@ -66,6 +68,14 @@ export class AppConfigService {
 
   get storage(): StorageConfiguration {
     return this.configuration.storage;
+  }
+
+  get tracing(): TracingConfiguration {
+    return this.configuration.tracing;
+  }
+
+  get metrics(): MetricsConfiguration {
+    return this.configuration.metrics;
   }
 
   get logging(): LoggingConfiguration {

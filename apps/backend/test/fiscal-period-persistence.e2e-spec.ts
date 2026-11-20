@@ -9,8 +9,11 @@ import { AppConfigService } from '../src/infrastructure/config/app-config.servic
 import { loadConfiguration } from '../src/infrastructure/config/configuration.js';
 import { loadDotEnvFiles } from '../src/infrastructure/config/dotenv.js';
 import { DrizzleTransactionRunner } from '../src/infrastructure/database/drizzle-transaction-runner.js';
+import { CloseFiscalPeriod } from '../src/modules/accounting/application/commands/close-fiscal-period.command.js';
 import { GenerateFiscalPeriods } from '../src/modules/accounting/application/commands/generate-fiscal-periods.command.js';
 import { SelectActivePeriod } from '../src/modules/accounting/application/commands/select-active-period.command.js';
+import { DefaultPeriodGuard } from '../src/modules/accounting/application/services/default-period-guard.service.js';
+import { CloseFiscalPeriodUseCase } from '../src/modules/accounting/application/use-cases/close-fiscal-period.use-case.js';
 import { GenerateFiscalPeriodsUseCase } from '../src/modules/accounting/application/use-cases/generate-fiscal-periods.use-case.js';
 import { SelectActivePeriodUseCase } from '../src/modules/accounting/application/use-cases/select-active-period.use-case.js';
 import { FiscalYear } from '../src/modules/accounting/domain/aggregates/fiscal-year.js';
@@ -35,9 +38,20 @@ import {
   TenantIsolationViolationError,
 } from '../src/shared/tenant/tenant.errors.js';
 import { TenantScope } from '../src/shared/tenant/tenant-scope.js';
-import { createTransactionBoundary, type TransactionBoundary } from '../src/shared/transaction/transaction-boundary.js';
+import {
+  createTransactionBoundary,
+  type TransactionBoundary,
+} from '../src/shared/transaction/transaction-boundary.js';
 import { BusinessDate } from '../src/shared/time/business-date.js';
 import { DateTime } from '../src/shared/time/date-time.js';
+import { Result } from '../src/shared/errors/result.js';
+import type {
+  Authorization,
+  AuthorizationRequest,
+} from '../src/modules/identity/application/ports/authorization.port.js';
+import type { AuthorizationContextView } from '../src/modules/identity/application/authorization/authorization-context.view.js';
+import type { PermissionKey } from '../src/modules/identity/domain/value-objects/permission-key.js';
+import type { AuthenticatedPrincipalView } from '../src/modules/identity/application/views/principal.view.js';
 
 /**
  * Fiscal period persistence against a real MySQL server (FIS-004).
@@ -65,6 +79,19 @@ const integrationEnabled = env.MYSQL_INTEGRATION === '1';
 
 const TENANT_A = '018f0d3c-6d0f-7a4b-9d4e-2b3c4d5e6f70';
 const TENANT_B = '018f0d3d-6d0f-7a4b-9d4e-2b3c4d5e6f71';
+
+const ACCOUNTANT_PRINCIPAL: AuthenticatedPrincipalView = {
+  userId: 'usr-accountant-001',
+  displayName: 'Accountant User',
+  email: 'accountant@example.com',
+};
+
+/** Every role check succeeds; the race under test is about ordering, not roles. */
+const ALLOW_ALL_AUTHORIZATION: Authorization = {
+  authorize: async (_request: AuthorizationRequest) =>
+    Result.ok({} as unknown as AuthorizationContextView),
+  permits: (_context: AuthorizationContextView, _permission: PermissionKey) => true,
+};
 
 /** Runs `work` inside the scope of one tenant. */
 function inTenant<T>(tenantId: string, work: () => Promise<T>): Promise<T> {
@@ -125,6 +152,7 @@ describe.skipIf(!integrationEnabled)('fiscal period persistence (integration)', 
       activePeriods,
       { record: async () => undefined },
       boundary,
+      { record: async () => undefined },
     );
   });
 
@@ -136,8 +164,9 @@ describe.skipIf(!integrationEnabled)('fiscal period persistence (integration)', 
 
   afterAll(async () => {
     if (pool !== undefined) {
-      await pool.query(`DROP TABLE IF EXISTS ${FISCAL_PERIODS_TABLE_NAME}`);
       await pool.query(`DROP TABLE IF EXISTS ${TENANT_ACTIVE_PERIODS_TABLE_NAME}`);
+      await pool.query(`DROP TABLE IF EXISTS ${FISCAL_PERIODS_TABLE_NAME}`);
+      await pool.query(`DROP TABLE IF EXISTS ${FISCAL_YEAR_TABLE_NAME}`);
       await pool.end();
     }
   });
@@ -147,10 +176,7 @@ describe.skipIf(!integrationEnabled)('fiscal period persistence (integration)', 
     const year = FiscalYear.create({
       tenantId: tenantReferenceFrom(tenantId),
       label: FiscalYearLabel.from(label),
-      range: FiscalYearRange.of(
-        BusinessDate.parse('2026-03-21'),
-        BusinessDate.parse('2027-03-20'),
-      ),
+      range: FiscalYearRange.of(BusinessDate.parse('2026-03-21'), BusinessDate.parse('2027-03-20')),
       now: DateTime.parse('2026-10-03T08:00:00.000Z'),
     });
     await inTenant(tenantId, () => fiscalYears.add(year));
@@ -159,21 +185,22 @@ describe.skipIf(!integrationEnabled)('fiscal period persistence (integration)', 
 
   /**
    * The twelve expected monthly bounds of Jalali year 1405 (non-leap, Esfand
-   * has 29 days) — the contiguity acceptance criterion, spelled out.
+   * has 29 days) — the contiguity acceptance criterion, spelled out. Months 1–6
+   * have 31 days, months 7–11 have 30.
    */
   const EXPECTED_1405: readonly [number, string, string][] = [
-    [1, '2026-03-21', '2026-04-19'],
-    [2, '2026-04-20', '2026-05-20'],
-    [3, '2026-05-21', '2026-06-20'],
-    [4, '2026-06-21', '2026-07-21'],
-    [5, '2026-07-22', '2026-08-21'],
-    [6, '2026-08-22', '2026-09-21'],
-    [7, '2026-09-22', '2026-10-21'],
-    [8, '2026-10-22', '2026-11-20'],
-    [9, '2026-11-21', '2026-12-20'],
-    [10, '2026-12-21', '2027-01-19'],
-    [11, '2027-01-20', '2027-02-18'],
-    [12, '2027-02-19', '2027-03-20'],
+    [1, '2026-03-21', '2026-04-20'],
+    [2, '2026-04-21', '2026-05-21'],
+    [3, '2026-05-22', '2026-06-21'],
+    [4, '2026-06-22', '2026-07-22'],
+    [5, '2026-07-23', '2026-08-22'],
+    [6, '2026-08-23', '2026-09-22'],
+    [7, '2026-09-23', '2026-10-22'],
+    [8, '2026-10-23', '2026-11-21'],
+    [9, '2026-11-22', '2026-12-21'],
+    [10, '2026-12-22', '2027-01-20'],
+    [11, '2027-01-21', '2027-02-19'],
+    [12, '2027-02-20', '2027-03-20'],
   ];
 
   describe('generation against real MySQL', () => {
@@ -187,9 +214,7 @@ describe.skipIf(!integrationEnabled)('fiscal period persistence (integration)', 
       expect(outcome.isOk()).toBe(true);
       const view = outcome.valueOrThrow();
       expect(view.jalaliYear).toBe(1405);
-      expect(
-        view.periods.map((p) => [p.sequence, p.startDate, p.endDate]),
-      ).toEqual(EXPECTED_1405);
+      expect(view.periods.map((p) => [p.sequence, p.startDate, p.endDate])).toEqual(EXPECTED_1405);
 
       const stored = await inTenant(TENANT_A, () =>
         periods.findByYear(year.id, tenantReferenceFrom(TENANT_A)),
@@ -295,10 +320,9 @@ describe.skipIf(!integrationEnabled)('fiscal period persistence (integration)', 
       if (first === undefined) {
         throw new Error('the year must have twelve periods');
       }
-      await pool.query(
-        `UPDATE ${FISCAL_PERIODS_TABLE_NAME} SET state = 'closed' WHERE id = ?`,
-        [first.id.value],
-      );
+      await pool.query(`UPDATE ${FISCAL_PERIODS_TABLE_NAME} SET state = 'closed' WHERE id = ?`, [
+        first.id.value,
+      ]);
 
       const outcome = await inTenant(TENANT_A, () =>
         selectActive.execute(new SelectActivePeriod({ periodId: first.id.value })),
@@ -344,6 +368,92 @@ describe.skipIf(!integrationEnabled)('fiscal period persistence (integration)', 
     });
   });
 
+  describe('the guard and the posting share one transaction (FIS-BR-10)', () => {
+    it('lets a close wait for an in-flight guard read, then refuses later posts', async () => {
+      const year = await seedYear(TENANT_A);
+      await inTenant(TENANT_A, () =>
+        generate.execute(new GenerateFiscalPeriods({ fiscalYearId: year.id.value })),
+      );
+      const stored = await inTenant(TENANT_A, () =>
+        periods.findByYear(year.id, tenantReferenceFrom(TENANT_A)),
+      );
+      const first = stored[0]?.aggregate;
+      const second = stored[1]?.aggregate;
+      if (first === undefined || second === undefined) {
+        throw new Error('the year must have twelve periods');
+      }
+
+      // Generation seeds the first open period as active; move the pointer so
+      // closing the first period is a legal transition.
+      await inTenant(TENANT_A, () =>
+        selectActive.execute(new SelectActivePeriod({ periodId: second.id.value })),
+      );
+
+      const guard = new DefaultPeriodGuard(periods);
+      const closeUseCase = new CloseFiscalPeriodUseCase(
+        periods,
+        activePeriods,
+        { record: async () => undefined },
+        { record: async () => undefined },
+        ALLOW_ALL_AUTHORIZATION,
+        boundary,
+      );
+
+      let releaseGuard!: () => void;
+      const guardReleased = new Promise<void>((resolve) => {
+        releaseGuard = resolve;
+      });
+      let guardHeld!: () => void;
+      const guardHasRead = new Promise<void>((resolve) => {
+        guardHeld = resolve;
+      });
+
+      // An in-flight post: its transaction resolves the period with FOR SHARE
+      // and then stays open, exactly as it would while writing the document.
+      const inFlightPost = inTenant(TENANT_A, () =>
+        boundary.execute(async () => {
+          const postable = await guard.assertPostable(TENANT_A, BusinessDate.parse('2026-04-05'));
+          guardHeld();
+          await guardReleased;
+          return postable;
+        }),
+      );
+
+      await guardHasRead;
+
+      let closeSettled = false;
+      const closing = inTenant(TENANT_A, () =>
+        closeUseCase.execute(
+          new CloseFiscalPeriod({
+            periodId: first.id.value,
+            principal: ACCOUNTANT_PRINCIPAL,
+          }),
+        ),
+      ).finally(() => {
+        closeSettled = true;
+      });
+
+      // The close must wait on the guard's shared lock: it cannot slip in
+      // while the posting transaction is still open.
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      expect(closeSettled).toBe(false);
+
+      // The post finishes first; only then does the close commit.
+      releaseGuard();
+      const postable = await inFlightPost;
+      expect(postable.id).toBe(first.id.value);
+
+      const closeOutcome = await closing;
+      expect(closeOutcome.isOk()).toBe(true);
+      expect(closeOutcome.valueOrThrow().state).toBe('closed');
+
+      // A post attempted after the close committed is refused.
+      await expect(
+        inTenant(TENANT_A, () => guard.assertPostable(TENANT_A, BusinessDate.parse('2026-04-05'))),
+      ).rejects.toMatchObject({ code: 'PERIOD_CLOSED' });
+    });
+  });
+
   describe('tenant isolation', () => {
     it('cannot generate another company’s periods', async () => {
       const year = await seedYear(TENANT_B);
@@ -353,9 +463,7 @@ describe.skipIf(!integrationEnabled)('fiscal period persistence (integration)', 
       );
 
       expect(outcome.errorOrThrow()?.code).toBe('FISCAL_YEAR_NOT_FOUND');
-      const [rows] = await pool.query(
-        `SELECT COUNT(*) AS count FROM ${FISCAL_PERIODS_TABLE_NAME}`,
-      );
+      const [rows] = await pool.query(`SELECT COUNT(*) AS count FROM ${FISCAL_PERIODS_TABLE_NAME}`);
       expect(Number((rows as Array<{ count: number }>)[0].count)).toBe(0);
     });
 
@@ -373,9 +481,9 @@ describe.skipIf(!integrationEnabled)('fiscal period persistence (integration)', 
       await expect(
         periods.findByYear(year.id, tenantReferenceFrom(TENANT_A)),
       ).rejects.toBeInstanceOf(TenantContextMissingError);
-      await expect(
-        activePeriods.periodIdFor(tenantReferenceFrom(TENANT_A)),
-      ).rejects.toBeInstanceOf(TenantContextMissingError);
+      await expect(activePeriods.periodIdFor(tenantReferenceFrom(TENANT_A))).rejects.toBeInstanceOf(
+        TenantContextMissingError,
+      );
     });
 
     it('selects another company’s period successfully — the scope filter rules', async () => {
@@ -399,7 +507,8 @@ describe.skipIf(!integrationEnabled)('fiscal period persistence (integration)', 
 
       expect(outcome.errorOrThrow()?.code).toBe('FISCAL_PERIOD_NOT_FOUND');
       const [rows] = await pool.query(
-        `SELECT COUNT(*) AS count FROM ${TENANT_ACTIVE_PERIODS_TABLE_NAME}`,
+        `SELECT COUNT(*) AS count FROM ${TENANT_ACTIVE_PERIODS_TABLE_NAME} WHERE tenant_id = ?`,
+        [TENANT_A],
       );
       expect(Number((rows as Array<{ count: number }>)[0].count)).toBe(0);
     });

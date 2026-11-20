@@ -17,7 +17,7 @@ export function createMockDashboardSnapshot(): DashboardSnapshot {
         label: 'موجودی صندوق‌ها',
         value: makeMoney('1340000000.00'),
         currency: 'IRR',
-        description: '۳ صندوق فعال',
+        description: '',
       },
       {
         id: 'today-receipts',
@@ -33,6 +33,7 @@ export function createMockDashboardSnapshot(): DashboardSnapshot {
         value: makeMoney('287000000.00'),
         currency: 'IRR',
         description: '۹ تراکنش',
+        trend: 'negative',
       },
       {
         id: 'today-sales',
@@ -41,6 +42,7 @@ export function createMockDashboardSnapshot(): DashboardSnapshot {
         currency: 'IRR',
         description: 'ماه جاری: ۱۸٫۴ میلیارد ریال',
         trend: 'positive',
+        highlight: true,
       },
       {
         id: 'today-purchases',
@@ -56,6 +58,7 @@ export function createMockDashboardSnapshot(): DashboardSnapshot {
         currency: 'IRR',
         description: '۱۵٫۸٪ حاشیه سود',
         trend: 'positive',
+        highlight: true,
       },
       {
         id: 'receivables',
@@ -109,6 +112,11 @@ export function createMockDashboardSnapshot(): DashboardSnapshot {
       { id: 'card', label: 'کارت', percentage: 41 },
       { id: 'cheque', label: 'چک', percentage: 18 },
       { id: 'transfer', label: 'حواله', percentage: 7 },
+    ],
+    tasks: [
+      { id: createId('task', 1), title: 'تطبیق مغایرت بانک ملت', due: 'امروز' },
+      { id: createId('task', 2), title: 'تأیید اسناد شعبه ونک', due: 'فردا' },
+      { id: createId('task', 3), title: 'ارسال فاکتورهای معوق', due: 'پنجشنبه' },
     ],
   };
 }

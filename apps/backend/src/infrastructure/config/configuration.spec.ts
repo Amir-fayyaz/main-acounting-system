@@ -232,6 +232,8 @@ describe('loadConfiguration', () => {
       MYSQL_PASSWORD: 'database-password',
       MINIO_ACCESS_KEY: 'minio-access',
       MINIO_SECRET_KEY: 'minio-secret',
+      METRICS_TOKEN: 'scrape-token',
+      OTEL_EXPORTER_OTLP_ENDPOINT: 'https://collector.example.internal',
     });
 
     expect(configuration.systemAdmin).toEqual({
@@ -248,6 +250,8 @@ describe('loadConfiguration', () => {
       MYSQL_PASSWORD: 'database-password',
       MINIO_ACCESS_KEY: 'minio-access',
       MINIO_SECRET_KEY: 'minio-secret',
+      METRICS_TOKEN: 'scrape-token',
+      OTEL_EXPORTER_OTLP_ENDPOINT: 'https://collector.example.internal',
     });
 
     expect(configuration.environment.isProduction).toBe(true);
@@ -259,6 +263,8 @@ describe('loadConfiguration', () => {
       MYSQL_PASSWORD: 'database-password',
       MINIO_ACCESS_KEY: 'minio-access',
       MINIO_SECRET_KEY: 'minio-secret',
+      METRICS_TOKEN: 'scrape-token',
+      OTEL_EXPORTER_OTLP_ENDPOINT: 'https://collector.example.internal',
     });
 
     expect(production.logging.format).toBe('json');
@@ -298,6 +304,10 @@ describe('loadConfiguration', () => {
       'MYSQL_PASSWORD is required when NODE_ENV=production',
       'MINIO_ACCESS_KEY is required when NODE_ENV=production',
       'MINIO_SECRET_KEY is required when NODE_ENV=production',
+      'METRICS_TOKEN is required when NODE_ENV=production',
+      // Production enables tracing by default, so the required endpoint rule
+      // applies to a bare production environment too (FND-016).
+      'OTEL_EXPORTER_OTLP_ENDPOINT is required when TRACING_ENABLED=true',
     ]);
   });
 
@@ -364,5 +374,90 @@ describe('loadConfiguration', () => {
     expect(http.runtime.serviceName).toBe('backend');
     expect(worker.database).toEqual(http.database);
     expect(scheduler.jobs).toEqual(http.jobs);
+  });
+
+  it('rejects tracing enabled without an exporter endpoint (FND-016)', () => {
+    let caught: unknown;
+    try {
+      loadConfiguration({ NODE_ENV: 'development', TRACING_ENABLED: 'true' });
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(ConfigurationValidationError);
+    expect((caught as ConfigurationValidationError).problems).toContain(
+      'OTEL_EXPORTER_OTLP_ENDPOINT is required when TRACING_ENABLED=true',
+    );
+  });
+
+  it('accepts tracing enabled with an explicit exporter endpoint, and defaults when disabled', () => {
+    const enabled = loadConfiguration({
+      NODE_ENV: 'development',
+      TRACING_ENABLED: 'true',
+      OTEL_EXPORTER_OTLP_ENDPOINT: 'http://collector:4318',
+    });
+
+    expect(enabled.tracing).toEqual({
+      enabled: true,
+      exporterEndpoint: 'http://collector:4318',
+    });
+
+    // Disabled: the endpoint is unused, so a value is not demanded.
+    const disabled = loadConfiguration({ NODE_ENV: 'development', TRACING_ENABLED: 'false' });
+
+    expect(disabled.tracing.enabled).toBe(false);
+  });
+
+  it('rejects an invalid OTLP endpoint even when tracing is disabled', () => {
+    let caught: unknown;
+    try {
+      loadConfiguration({
+        NODE_ENV: 'development',
+        TRACING_ENABLED: 'false',
+        OTEL_EXPORTER_OTLP_ENDPOINT: 'collector:4318',
+      });
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(ConfigurationValidationError);
+    expect((caught as ConfigurationValidationError).problems).toContain(
+      'OTEL_EXPORTER_OTLP_ENDPOINT must be an http(s) URL',
+    );
+  });
+
+  it('requires the metrics token to boot in production (FND-016)', () => {
+    let caught: unknown;
+    try {
+      loadConfiguration({ NODE_ENV: 'production' });
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(ConfigurationValidationError);
+    expect((caught as ConfigurationValidationError).problems).toContain(
+      'METRICS_TOKEN is required when NODE_ENV=production',
+    );
+  });
+
+  it('reads the metrics token in every environment, required only in production', () => {
+    const development = loadConfiguration({ NODE_ENV: 'development', METRICS_TOKEN: 'scrape-me' });
+
+    expect(development.metrics).toEqual({ token: 'scrape-me' });
+
+    const developmentWithoutToken = loadConfiguration({ NODE_ENV: 'development' });
+
+    expect(developmentWithoutToken.metrics).toEqual({ token: undefined });
+
+    const production = loadConfiguration({
+      NODE_ENV: 'production',
+      MYSQL_PASSWORD: 'database-password',
+      MINIO_ACCESS_KEY: 'minio-access',
+      MINIO_SECRET_KEY: 'minio-secret',
+      METRICS_TOKEN: 'scrape-me',
+      OTEL_EXPORTER_OTLP_ENDPOINT: 'https://collector.example.internal',
+    });
+
+    expect(production.metrics).toEqual({ token: 'scrape-me' });
   });
 });

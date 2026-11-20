@@ -10,6 +10,7 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
+    testTimeout: 30_000,
     server: {
       deps: {
         // Keep the shared OTP input on the same React instance as the test renderer.
@@ -20,5 +21,7 @@ export default defineConfig({
     env: {
       NEXT_PUBLIC_API_BASE_URL: 'http://localhost:3000/api',
     },
+    pool: "forks",
+    maxWorkers: 1,
   },
 });

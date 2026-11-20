@@ -1,4 +1,5 @@
 import type { AuditEvent, Branch, PanelUser, Person } from '../@types';
+import { padFaDay, toFaDigits } from '../../utils/persian-digits';
 import { createId, makeMoney } from './mock-utils';
 
 const branchNames = ['دفتر مرکزی', 'شعبه ونک', 'شعبه اصفهان', 'شعبه تبریز'];
@@ -22,7 +23,7 @@ export function createMockPeople(): Person[] {
     id: createId('person', index + 1),
     name,
     kind: (['customer', 'supplier', 'both'] as const)[index % 3],
-    phone: `۰۹۱۲۱۲۳۴۵${String(index).padStart(2, '۰')}`,
+    phone: `۰۹۱۲۱۲۳۴۵${toFaDigits(String(index).padStart(2, '0'))}`,
     branchName: branchNames[index % branchNames.length],
     receivable: makeMoney(['125000000.00', '0.00', '45000000.00'][index % 3]),
     payable: makeMoney(['0.00', '82000000.00', '15000000.00'][index % 3]),
@@ -78,7 +79,7 @@ export function createMockAuditEvents(): AuditEvent[] {
 
   return Array.from({ length: 20 }, (_, index) => ({
     id: createId('audit', index + 1),
-    occurredAt: `۱۴۰۵/۰۸/${String(5 - (index % 5)).padStart(2, '۰')} · ${String(9 + (index % 8)).padStart(2, '۰')}:۳۰`,
+    occurredAt: `۱۴۰۵/۰۸/${padFaDay(5 - (index % 5))} · ${padFaDay(9 + (index % 8))}:۳۰`,
     actorName: ['علی رضایی', 'مریم صادقی', 'رضا حیدری'][index % 3],
     action: actions[index % actions.length],
     target: targets[index % targets.length],

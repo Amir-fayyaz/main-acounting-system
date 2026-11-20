@@ -7,6 +7,8 @@ export interface ListParams {
   page?: number;
   limit?: number;
   search?: string;
+  status?: string;
+  noPage?: boolean;
 }
 
 export interface CreateResult {

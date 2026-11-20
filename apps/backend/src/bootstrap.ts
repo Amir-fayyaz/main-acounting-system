@@ -11,6 +11,8 @@ import { AppConfigService } from './infrastructure/config/app-config.service.js'
 import { processSecretRedactor } from './infrastructure/config/secrets.js';
 import type { Logger } from './infrastructure/logging/logger.js';
 import { createLogger } from './infrastructure/logging/structured-logger.js';
+import { MetricsInterceptor } from './infrastructure/observability/metrics.interceptor.js';
+import { MetricsService } from './infrastructure/observability/metrics.service.js';
 
 /**
  * Applies the runtime configuration shared by the real process and the tests,
@@ -56,9 +58,15 @@ export function configureApplication(app: INestApplication, logger?: Logger): Ap
   app.useGlobalPipes(createApiValidationPipe());
   // The filter logs a 5xx through the structured logger (FND-011).
   app.useGlobalFilters(new ApiExceptionFilter(structuredLogger));
-  // Order: tenant scope first so the handler (and any nested actor work) sees
-  // an established tenant when the route is tenant-scoped; actor scope second.
-  app.useGlobalInterceptors(new TenantScopeInterceptor(reflector), new ActorScopeInterceptor());
+  // The metrics interceptor is part of the API conventions; a test harness
+  // that assembles a subset of modules may not carry the metrics module, so
+  // the resolution falls back to a standalone collector rather than failing
+  // the whole harness (the interceptor only records through the service).
+  app.useGlobalInterceptors(
+    new MetricsInterceptor(metricsFor(app)),
+    new TenantScopeInterceptor(reflector),
+    new ActorScopeInterceptor(),
+  );
 
   setupOpenApi(app, config, structuredLogger);
   app.enableShutdownHooks();
@@ -70,4 +78,13 @@ export function configureApplication(app: INestApplication, logger?: Logger): Ap
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
   });
   return config;
+}
+
+/** The metrics collector of the app, or a standalone one when the module is absent. */
+function metricsFor(app: INestApplication): MetricsService {
+  try {
+    return app.get(MetricsService);
+  } catch {
+    return new MetricsService();
+  }
 }

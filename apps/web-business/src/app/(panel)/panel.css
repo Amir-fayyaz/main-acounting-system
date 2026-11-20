@@ -1,0 +1,113 @@
+/* panel.css */
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@reference "tailwindcss";
+
+@source '../../../../../packages/web/ui';
+
+/* Keep panel styling inside its route without changing the site's layout. */
+body:has(.panel-preview) > header#top,
+body:has(.panel-preview) > footer {
+  display: none;
+}
+
+/* The prototype sets Vazirmatn for the whole shell; scope it to the panel only. */
+.panel-preview {
+  font-family: var(--font-vazirmatn, sans-serif);
+}
+
+.panel-preview .section-layout {
+  padding-block: --spacing(5);
+}
+
+.panel-preview .pages-container {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: --spacing(6);
+  padding-inline: --spacing(3.5);
+}
+
+.panel-preview .pages-container > * {
+  margin-block: 0;
+}
+
+@media (width >= 40rem) {
+  .panel-preview .section-layout {
+    padding-block: --spacing(7);
+  }
+
+  .panel-preview .pages-container {
+    padding-inline: --spacing(5);
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  [data-slot='sidebar'],
+  [data-slot='sidebar-gap'],
+  [data-slot='sidebar-rail'],
+  [data-slot='sidebar-trigger'],
+  [data-slot='sidebar-wrapper'] > div > header {
+    display: none;
+  }
+
+  .panel-preview .section-layout,
+  .panel-preview .pages-container {
+    padding: 0;
+    gap: 0;
+  }
+
+  .branches-print-report {
+    color-scheme: light;
+    --card: #ffffff;
+    --card-foreground: #1a120a;
+    --foreground: #1a120a;
+    --muted: #f4f3e7;
+    --muted-foreground: #786b5c;
+    --border: #e7dfcf;
+    --accent: #fff1d9;
+    --accent-foreground: #241a12;
+
+    background: var(--card);
+    padding-block-start: 0.5rem;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .branches-print-report [data-slot='table'] {
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .branches-print-report [data-slot='table-head'],
+  .branches-print-report [data-slot='table-cell'] {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  /* Interactive DataTable chrome (search, density, columns, paging) never prints. */
+  [data-slot='data-table'] > div:has([role='search']),
+  [data-slot='data-table-pagination'],
+  [data-slot='data-table'] [role='search'],
+  [data-slot='data-table'] button[aria-label='ستون‌ها'],
+  [data-slot='data-table'] button[aria-label='فشرده‌سازی ردیف‌ها'] {
+    display: none;
+  }
+
+  [data-slot='table-container'] {
+    overflow: visible;
+  }
+
+  [data-slot='table-header'] {
+    display: table-header-group;
+  }
+
+  [data-slot='table-row'] {
+    break-inside: avoid;
+  }
+}

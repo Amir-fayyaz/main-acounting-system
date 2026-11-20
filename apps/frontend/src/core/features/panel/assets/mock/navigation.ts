@@ -8,37 +8,58 @@ export const accountingPanelConfig = {
   monogram: 'ت',
   navigation: [
     {
-      id: 'workspace',
-      label: 'میز کار',
-      items: [{ label: 'میز کار', href: '/panel', icon: 'CiGrid41' }],
-    },
-    {
-      id: 'daily',
-      label: 'عملیات روزانه',
+      id: 'general',
+      label: 'عمومی',
       items: [
-        { label: 'خرید', href: '/panel/purchases', icon: 'CiShoppingCart' },
-        { label: 'فروش', href: '/panel/sales', icon: 'CiShoppingBasket' },
-        { label: 'دریافت / پرداخت', href: '/panel/payments', icon: 'CiCreditCard1' },
-        { label: 'چک‌ها', href: '/panel/checks', icon: 'CiMoneyCheck1' },
-      ],
-    },
-    {
-      id: 'finance',
-      label: 'مالی',
-      items: [
-        { label: 'انبار', href: '/panel/inventory', icon: 'CiBoxes' },
-        { label: 'حسابداری', href: '/panel/accounting', icon: 'CiCalculator1' },
-        { label: 'مغایرت‌گیری', href: '/panel/reconciliation', icon: 'CiRepeat' },
-        { label: 'صندوق اسناد', href: '/panel/documents', icon: 'CiBank' },
-      ],
-    },
-    {
-      id: 'support',
-      label: 'پشتیبان',
-      items: [
-        { label: 'اشخاص', href: '/panel/people', icon: 'CiUser' },
+        { label: 'داشبورد', href: '/panel', icon: 'CiHome' },
         { label: 'گزارش‌ها', href: '/panel/reports', icon: 'CiReceipt' },
-        { label: 'Audit Trail', href: '/panel/audit-trail', icon: 'CiFileOn' },
+      ],
+    },
+    {
+      id: 'accounting',
+      label: 'حسابداری',
+      items: [
+        {
+          id: 'journal-entries',
+          label: 'اسناد حسابداری',
+          icon: 'CiRead',
+          children: [
+            { label: 'دفتر روزنامه', href: '/panel/journal' },
+            { label: 'تراز آزمایشی', href: '/panel/trial' },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'treasury',
+      label: 'خزانه',
+      items: [
+        { label: 'بانک و صندوق', href: '/panel/accounts', icon: 'CiBank' },
+        { label: 'چک‌ها', href: '/panel/checks', icon: 'CiMoneyCheck1', badge: 5 },
+        { label: 'دستگاه‌های POS', href: '/panel/pos', icon: 'CiCreditCard1' },
+      ],
+    },
+    {
+      id: 'commerce',
+      label: 'فروش و خرید',
+      items: [
+        {
+          id: 'sales',
+          label: 'فروش',
+          icon: 'CiShoppingCart',
+          children: [{ label: 'فاکتورهای فروش', href: '/panel/sales' }],
+        },
+        { label: 'خرید', href: '/panel/purchases', icon: 'CiShoppingCart' },
+        { label: 'مشتریان و تأمین‌کنندگان', href: '/panel/people', icon: 'CiUser' },
+      ],
+    },
+    {
+      id: 'organization',
+      label: 'سازمان',
+      items: [
+        { label: 'شعب', href: '/panel/branches', icon: 'CiShop' },
+        { label: 'کاربران و نقش‌ها', href: '/panel/users', icon: 'CiLock' },
+        { label: 'تاریخچه تغییرات', href: '/panel/audit-trail', icon: 'CiFileOn' },
         { label: 'تنظیمات', href: '/panel/settings', icon: 'CiSettings' },
       ],
     },

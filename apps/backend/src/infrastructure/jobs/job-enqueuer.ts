@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { AppConfigService } from '../config/app-config.service.js';
 import { TenantScope } from '../../shared/tenant/tenant-scope.js';
+import { captureJobTraceContext } from './job-tracing.js';
 import { JobRegistry } from './job.registry.js';
 import { JOB_QUEUE } from './job.tokens.js';
 import type { JobEnvelope } from './job.types.js';
@@ -53,6 +54,10 @@ export class JobEnqueuer {
       randomUUID();
     const companyId =
       input.companyId ?? (ambient.state === 'available' ? ambient.tenantId : undefined);
+    // The W3C traceparent of the producing span, when one is active (FND-015).
+    // Captured here — the one place every job is built — so the Worker can link
+    // its execution span back to the request that triggered the work.
+    const traceContext = captureJobTraceContext();
     const envelope: JobEnvelope<TPayload> = {
       jobId: input.jobId ?? randomUUID(),
       type: input.type,
@@ -62,6 +67,7 @@ export class JobEnqueuer {
       maxAttempts: input.maxAttempts ?? definition?.maxAttempts ?? this.config.jobs.maxAttempts,
       correlationId,
       ...(companyId !== undefined ? { companyId } : {}),
+      ...(traceContext !== undefined ? { traceContext } : {}),
       createdAt: new Date().toISOString(),
       enqueuedBy: input.enqueuedBy ?? 'api',
     };

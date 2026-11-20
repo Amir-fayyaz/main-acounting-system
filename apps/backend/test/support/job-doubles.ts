@@ -75,6 +75,10 @@ export class InMemoryJobQueue implements JobQueuePort {
   public async promoteDue(): Promise<number> {
     return 0;
   }
+
+  public async pendingCount(): Promise<number> {
+    return this.pending.length;
+  }
 }
 
 /** An in-memory {@link IdempotencyGuard}: the first caller of a key wins. */

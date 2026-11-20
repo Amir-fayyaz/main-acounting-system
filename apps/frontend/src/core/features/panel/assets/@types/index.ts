@@ -17,6 +17,7 @@ export type {
   CashflowMonth,
   DashboardMetric,
   DashboardSnapshot,
+  DashboardTask,
   PaymentMethodShare,
 } from './dashboard';
 export type { ReportDefinition } from './reports';

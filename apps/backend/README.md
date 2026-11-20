@@ -17,6 +17,8 @@ No business domain is implemented yet — this is the FND-001/FND-002 workspace 
 ```text
 src/
 ├── main.ts                     Web/API process entry point
+├── tracing.ts                  OpenTelemetry bootstrap, imported first by every
+│                               process entry point (FND-015)
 ├── bootstrap.ts                Runtime configuration shared by the API and tests
 ├── app.module.ts               Root module (shared infrastructure + platform endpoints)
 ├── processes/                  Non-HTTP process entry points (FND-009)
@@ -43,14 +45,15 @@ src/
     ├── redis/                  Redis connection (non-authoritative, TECH-007)
     ├── storage/                Object storage port + MinIO adapter (TECH-008)
     ├── readiness/              Dependency probes behind /api/health/ready
+    ├── observability/          Process metrics: registry, HTTP/job/pool/queue collectors (FND-014)
     ├── jobs/                   Background-job infrastructure: queue port + Redis Streams
     │                           adapter, dispatcher, retry policy, idempotency, scheduling,
-    │                           sample jobs (FND-007)
+    │                           sample jobs, trace-context propagation (FND-007, FND-015)
     ├── outbox/                 Transactional outbox: recorder, store, publisher, Redis
     │                           event bus adapter, outbox job/schedule (SHR-006)
     ├── api/                    Cross-cutting REST baseline: versioning, error contract,
     │                           validation, pagination, serialization, OpenAPI (FND-006)
-    └── presentation/           Operational + reference endpoints (health, example)
+    └── presentation/           Operational + reference endpoints (health, metrics, example)
 test/                           HTTP-level (e2e) tests, incl. job integration tests
 ```
 
@@ -74,6 +77,86 @@ businessDateFromMillis(Date.parse('2026-03-20T20:30:00.000Z')).toIsoString();
 // One millisecond earlier is '2026-03-20' (1404-12-29), and the same instant
 // is '2026-03-20' under an explicit 'America/Los_Angeles' timezone.
 ```
+
+## Fiscal periods (FIS-001)
+
+Each company owns fiscal years and their twelve Jalali-month periods. Every
+financial write must pass the accounting module's `PeriodGuard` before it is
+persisted; no module compares dates to period boundaries itself.
+
+### Guard contract
+
+```ts
+import {
+  PERIOD_GUARD,
+  type PeriodGuard,
+  type PostablePeriod,
+  PeriodClosedError,
+  PeriodNotDefinedError,
+} from '../../accounting/public-api.js';
+
+interface PeriodGuard {
+  assertPostable(tenant: EntityId | string, date: Date | BusinessDate): Promise<PostablePeriod>;
+}
+
+interface PostablePeriod {
+  readonly id: string; // store this on the financial operation
+  readonly fiscalYearId: string;
+  readonly sequence: number; // 1..12
+  readonly startDate: string; // inclusive Gregorian YYYY-MM-DD
+  readonly endDate: string;
+}
+```
+
+Call it inside the **same transaction boundary** as the write (FIS-BR-10):
+
+```ts
+return this.boundary.execute(async () => {
+  const period = await this.periodGuard.assertPostable(command.tenantId, command.postingDate);
+  const document = AccountingDocument.create({ ...command, fiscalPeriodId: period.id });
+  await this.documents.add(document);
+  return Result.ok(toView(document));
+});
+```
+
+`assertPostable` resolves the period with `SELECT … FOR SHARE`. Because the
+read sits in the caller's transaction, a concurrent close waits for the posting
+to commit, and a posting that starts after the close sees `closed` and is
+refused. The guard returns the period (so its id can be stored) and never
+guesses another period when the date does not match.
+
+### Calendar rule (DEC-04)
+
+Dates are stored **Gregorian only**, as inclusive `YYYY-MM-DD` values. Jalali is
+a pure conversion and period-bounds helper (`shared/time/jalali-calendar.ts`),
+not a second storage format. Period boundaries are the Jalali months: 31 days
+for months 1–6, 30 for 7–11, and 29 or 30 for Esfand in a leap year.
+
+A JavaScript `Date` is an instant, so the guard assigns it to its **business
+date** — the day it falls on in `Asia/Tehran` (`DEFAULT_BUSINESS_TIME_ZONE`) —
+never to its UTC day. `2026-04-20T20:29:59.999Z` is still `1405-01-31` (period 1
+of 1405); `2026-04-20T20:30:00.000Z` is `1405-02-01` (period 2).
+
+### Error codes
+
+`PERIOD_NOT_DEFINED` and `PERIOD_CLOSED` are `BUSINESS_RULE` domain errors and
+map to HTTP **422** while their codes are preserved in the response:
+
+| Code                          | HTTP | Meaning                                                     |
+| ----------------------------- | ---- | ----------------------------------------------------------- |
+| `PERIOD_NOT_DEFINED`          | 422  | The date is in no fiscal year/period of the company.        |
+| `PERIOD_CLOSED`               | 422  | The period exists but is closed and refuses new operations. |
+| `FISCAL_YEAR_OVERLAP`         | 409  | The year shares at least one day with an existing year.     |
+| `FISCAL_YEAR_LABEL_DUPLICATE` | 409  | The label is already used by another year.                  |
+| `FISCAL_YEAR_INVALID_RANGE`   | 400  | Start is not strictly before end.                           |
+| `FISCAL_PERIOD_NOT_FOUND`     | 404  | The period id is not a period of the company.               |
+| `FISCAL_YEAR_NOT_FOUND`       | 404  | The year id is not a year of the company.                   |
+| `FISCAL_PERIOD_NOT_OPEN`      | 422  | Only an open period can become active.                      |
+| `PERIOD_STATE_INVALID`        | 409  | Invalid transition (close/reopen/active-period rules).      |
+| `REOPEN_REASON_REQUIRED`      | 400  | Reopening requires a non-empty reason.                      |
+
+The module-level consumer guide, including the full usage example, is
+`src/modules/accounting/README.md`.
 
 ## Commands
 
@@ -363,6 +446,7 @@ and they follow the same REST style as every other controller (ADR-013).
 | ------ | ------------------- | ----------------------------------------------------------------------------------------------------------- |
 | GET    | `/api/health`       | **Liveness.** The process is running. Dependency-free: a stopped MySQL never makes a healthy API look dead. |
 | GET    | `/api/health/ready` | **Readiness.** Probes MySQL, Redis and object storage in parallel; 200 when all are up, 503 otherwise.      |
+| GET    | `/api/metrics`      | **Metrics.** Prometheus text exposition of the process and its technical performance (FND-014).             |
 
 ```jsonc
 // GET /api/health → 200
@@ -393,6 +477,139 @@ Contract notes:
 - Docker Compose binds the `backend` container's single health state to
   **readiness** (`/api/health/ready`); use `/api/health` where only "the process
   is alive" is meant.
+
+## Metrics (FND-014)
+
+The process exposes a Prometheus scrape endpoint, `GET /api/metrics`, served by
+`MetricsController` (`src/infrastructure/presentation/metrics/`) from the one
+registry the `MetricsService` (`src/infrastructure/observability/`) owns. It
+follows the health endpoint's conventions: a `VERSION_NEUTRAL` operational path
+under the `/api` prefix, and `Cache-Control: no-store` so no proxy serves a
+stale scrape.
+
+**It is not anonymous (FND-016).** A monitoring system holds no user identity,
+so it is marked `@Public()` — the identity authorization boundary does not
+apply — but the deny-by-default rule of ADR-010 does: `MetricsTokenGuard`
+requires a valid `METRICS_TOKEN` bearer credential on every request, because
+the exposition discloses route names and traffic patterns. A production
+process refuses to boot without a configured token (fail-fast in the
+configuration validation); a development process without one simply refuses
+every scrape. The comparison is constant-time (SHA-256 + `timingSafeEqual`),
+and the token never appears in an error body, a log line or the exposition.
+
+The exposition is **technical only**: counters, gauges and histograms about the
+process and its infrastructure. No business value, tenant data, credential or
+connection detail is ever exported — the integration test proves it against the
+configured secrets.
+
+### What is exported
+
+| Metric                           | Type      | Labels                              | Meaning                                                                                                                                                                                                                        |
+| -------------------------------- | --------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `nodejs_*`, `process_*`          | various   | —                                   | Standard Node.js process metrics (memory, event loop lag, active handles, GC).                                                                                                                                                 |
+| `http_request_duration_seconds`  | histogram | `method`, `route`, `status_code`    | HTTP request duration. `route` is the **matched route pattern** (`/api/v1/examples/:id`), never the raw URL, so label cardinality is bounded by the endpoint catalog; a request that matched no route is `unmatched`.          |
+| `job_execution_duration_seconds` | histogram | `job_name`, `status`                | Background job attempt duration, recorded by `JobDispatcher`; a retry and a terminal failure are both `failure`.                                                                                                               |
+| `job_queue_depth`                | gauge     | —                                   | Job envelopes waiting in the Redis stream, read at scrape time through the queue port (`JobQueueDepthBinder`).                                                                                                                 |
+| `outbox_pending_events`          | gauge     | —                                   | Outbox records not yet published (`pending`, `retrying` or claimed `publishing`), read at scrape time by the outbox infrastructure (`OutboxMetricsBinder`, FND-017); the `OutboxStore` port gains no count method for metrics. |
+| `database_pool_connections`      | gauge     | `state` (`active`/`idle`/`waiting`) | MySQL pool state: in-use, free and queued-waiting connections, read from the pool accounting at scrape time.                                                                                                                   |
+
+### How it is wired
+
+- The `MetricsInterceptor` is a global API convention, registered in
+  `bootstrap.ts` together with the other conventions, so every request is timed
+  and counted without any controller opting in.
+- The `JobDispatcher` records through the `JOB_METRICS` port
+  (`src/infrastructure/jobs/job-metrics.ts`); the jobs module binds it to the
+  metrics layer, and a no-op default keeps the dispatcher usable without one.
+- Every process (API, Worker, Scheduler) imports `MetricsModule` and collects;
+  only the API process serves the endpoint, from
+  `MetricsEndpointModule`.
+- Distributed tracing (OpenTelemetry) is explicitly out of scope for FND-014.
+
+### Local monitoring stack (FND-017)
+
+The local Prometheus/Grafana/Alertmanager stack lives in
+`infrastructure/observability/` under the Compose profile `observability` — it
+never starts with the plain `docker compose up -d`; start and stop it with
+`pnpm obs:up` / `pnpm obs:down`. It scrapes `backend:3000/api/metrics` with the
+`METRICS_TOKEN` bearer token, rendered at start-up from `.env` into a
+git-ignored file; the scrape target is UP only while this process answers, so
+`up{job="backend-metrics"} == 0` is the readiness-down alert (`/api/health/ready`
+stays the Compose healthcheck's job — Prometheus cannot parse its JSON body).
+The alert rules (5xx rate, scrape target down, job failure rate, queue-depth
+growth, outbox lag, pool waiters) and their meaning are documented in
+`infrastructure/README.md`; every rule is covered by a `promtool` test that
+runs in CI.
+
+## Distributed tracing (FND-015)
+
+Every process exports OpenTelemetry traces to an external OTLP/HTTP collector
+(Tempo, Jaeger, …). The collector itself is external infrastructure and out of
+scope; the exporter posts to `<OTEL_EXPORTER_OTLP_ENDPOINT>/v1/traces`.
+
+### Bootstrap
+
+`src/tracing.ts` is the OTel bootstrap, imported **first** (before any other
+import) by `main.ts`, `processes/worker/worker.ts` and
+`processes/scheduler/scheduler.ts`. The auto-instrumentations patch the HTTP,
+Express, Nest, MySQL2 and Redis modules at require time, so the SDK must start
+before the framework is loaded — a late start silently misses every span.
+
+What is wired per process:
+
+- `NodeSDK` with an `AsyncLocalStorageContextManager`, so trace context flows
+  the same way `LogContext`, `TenantScope` and the transaction boundary do.
+- Auto-instrumentations (exported by `buildInstrumentations()`): HTTP
+  (server + client), Express and NestJS (route spans), **MySQL2** — the driver
+  Drizzle actually uses; the issue's "PostgreSQL" wording translates to it —
+  and **Redis** (node-redis via `instrumentation-redis`; the issue's "ioredis"
+  wording translates to the client in use).
+- An `OTLPTraceExporter` pointed at the configured collector, plus SIGTERM /
+  SIGINT flush hooks so a graceful stop does not lose the last spans.
+
+### Configuration
+
+| Key                           | Meaning                                 | Default                                                                                                                                   |
+| ----------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `TRACING_ENABLED`             | Whether the SDK starts in this process. | `true` only in production; off in development/test                                                                                        |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | Base URL of the OTLP/HTTP collector.    | **Required when `TRACING_ENABLED=true`** (FND-016) — tracing that silently exports nowhere is a boot-time validation error, not a default |
+
+Both go through the shared validation layer (`loadConfiguration`), like every
+other key: an unset endpoint while tracing is on, or a non-HTTP(S) endpoint,
+stops the process at boot instead of silently dropping every span. Setting
+`TRACING_ENABLED=false` (or leaving it unset in dev) leaves the API at its
+no-op defaults and boots the application exactly as before this file existed.
+
+### Correlation alignment
+
+The documented precedence rule (FND-016), applied consistently by
+`correlation-id.ts`, `LogContext` and the job envelope:
+
+- A caller-supplied `x-correlation-id` **wins** and stays the correlation id
+  everywhere (response echo, log lines, job payloads) — it is explicit
+  upstream intent.
+- The OpenTelemetry trace id is recorded **alongside** it (`LogContext`'s
+  `traceId` field, emitted as a `traceId` field on every structured log
+  line), never instead of it, so an upstream correlation id and a trace can
+  both be followed.
+- Without a caller header, the trace id **is** the correlation id, so the two
+  ids coincide and a trace is found from a log and the other way around.
+- With neither, a fresh UUID is generated.
+
+### Background-job propagation
+
+A job crosses a process boundary (Redis stream), so its trace context must be
+serialized, not inherited:
+
+- `JobEnqueuer.enqueue` captures the W3C `traceparent` of the producing span
+  into the envelope (`traceContext`, `src/infrastructure/jobs/job-tracing.ts`).
+- The Worker (`worker-runner.service.ts`) extracts it and runs the dispatch
+  inside a span **linked** to that context — a link, not a parent, because the
+  producing span has already ended. The envelope's `correlationId` becomes the
+  ambient `LogContext` id for the handler's log lines, with the producing
+  trace id recorded alongside it (the same precedence rule as HTTP, FND-016).
+
+A malformed or missing `traceparent` costs the link, never the job.
 
 ## REST API and OpenAPI baseline (FND-006)
 

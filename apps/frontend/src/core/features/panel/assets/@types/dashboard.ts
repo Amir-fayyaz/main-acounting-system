@@ -7,6 +7,7 @@ export interface DashboardMetric {
   currency: CurrencyCode;
   description: string;
   trend?: 'positive' | 'negative' | 'neutral';
+  highlight?: boolean;
 }
 
 export interface CashflowMonth {
@@ -22,10 +23,17 @@ export interface PaymentMethodShare {
   percentage: number;
 }
 
+export interface DashboardTask {
+  id: string;
+  title: string;
+  due: string;
+}
+
 export interface DashboardSnapshot {
   metrics: DashboardMetric[];
   cashflow: CashflowMonth[];
   paymentMethods: PaymentMethodShare[];
+  tasks: DashboardTask[];
 }
 
 export interface ActivityItem {

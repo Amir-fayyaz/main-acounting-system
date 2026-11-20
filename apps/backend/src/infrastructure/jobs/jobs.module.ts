@@ -1,11 +1,15 @@
 import { Module } from '@nestjs/common';
 import { AppConfigModule } from '../config/app-config.module.js';
+import { MetricsModule } from '../observability/metrics.module.js';
+import { MetricsService } from '../observability/metrics.service.js';
 import { OutboxModule } from '../outbox/outbox.module.js';
 import { OUTBOX_PUBLISH_JOB, OUTBOX_SCHEDULE } from '../outbox/outbox.tokens.js';
 import { RedisModule } from '../redis/redis.module.js';
 import { RedisIdempotencyGuard } from './idempotency/redis-idempotency.guard.js';
 import { JobDispatcher } from './job-dispatcher.js';
 import { JobEnqueuer } from './job-enqueuer.js';
+import { JOB_METRICS } from './job-metrics.js';
+import { JobQueueDepthBinder } from './job-metrics.binder.js';
 import { JobRegistry } from './job.registry.js';
 import {
   IDEMPOTENCY_GUARD,
@@ -36,7 +40,7 @@ import { ScheduledJobService } from './scheduling/scheduled-job.service.js';
  * composed here, so the queue never learns about the feature that uses it.
  */
 @Module({
-  imports: [AppConfigModule, RedisModule, OutboxModule],
+  imports: [AppConfigModule, RedisModule, OutboxModule, MetricsModule],
   providers: [
     {
       provide: JOB_DEFINITIONS,
@@ -54,12 +58,19 @@ import { ScheduledJobService } from './scheduling/scheduled-job.service.js';
         outboxSchedule,
       ],
     },
+    {
+      // The dispatcher records execution metrics through the shared port; the
+      // Prometheus implementation is the one the metrics layer provides.
+      provide: JOB_METRICS,
+      useExisting: MetricsService,
+    },
     { provide: JOB_QUEUE, useClass: RedisJobQueue },
     { provide: IDEMPOTENCY_GUARD, useClass: RedisIdempotencyGuard },
     { provide: JOB_LOGGER, useClass: NestJobLogger },
     JobRegistry,
     JobEnqueuer,
     JobDispatcher,
+    JobQueueDepthBinder,
     DelayedJobPromoter,
     ScheduledJobService,
   ],

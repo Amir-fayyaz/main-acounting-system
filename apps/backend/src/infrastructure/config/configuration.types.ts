@@ -172,6 +172,39 @@ export interface RateLimitConfiguration {
   readonly maxPerIdentity: number;
 }
 
+/**
+ * Distributed-tracing settings (FND-015, 10-observability).
+ *
+ * They live with every other contract so all three processes (HTTP, worker,
+ * scheduler) validate the same values; no process reads a raw variable itself.
+ */
+export interface TracingConfiguration {
+  /**
+   * Whether the OpenTelemetry SDK starts in this process. Defaults to `true`
+   * only in production, so a fresh checkout instruments nothing until asked.
+   */
+  readonly enabled: boolean;
+  /**
+   * Where completed spans are exported (an OTLP/HTTP collector). **Required
+   * when `enabled` is `true`** (FND-016): tracing that silently exports
+   * nowhere is a lie, so an unset endpoint is a boot-time validation error.
+   */
+  readonly exporterEndpoint: string;
+}
+
+/**
+ * Scrape-endpoint settings (FND-014, FND-016).
+ *
+ * `GET /api/metrics` is deny-by-default (ADR-010): the bearer token is
+ * mandatory in production — the process refuses to boot without one — and is
+ * required for a successful scrape in every environment, so route names and
+ * traffic patterns are never public.
+ */
+export interface MetricsConfiguration {
+  /** The scrape endpoint's `METRICS_TOKEN` bearer credential. */
+  readonly token: string | undefined;
+}
+
 export interface Configuration {
   readonly environment: EnvironmentIdentification;
   readonly runtime: ApplicationRuntime;
@@ -179,6 +212,8 @@ export interface Configuration {
   readonly database: DatabaseConfiguration;
   readonly redis: RedisConfiguration;
   readonly storage: StorageConfiguration;
+  readonly tracing: TracingConfiguration;
+  readonly metrics: MetricsConfiguration;
   readonly logging: LoggingConfiguration;
   readonly authentication: AuthenticationConfiguration;
   readonly rateLimit: RateLimitConfiguration;
