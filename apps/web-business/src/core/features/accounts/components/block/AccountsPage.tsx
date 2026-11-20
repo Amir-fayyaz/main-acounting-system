@@ -23,10 +23,6 @@ function AccountsPageFallback() {
   );
 }
 
-/**
- * صفحه‌ی بانک و صندوق؛ مرز Suspense برای useSearchParams در App Router.
- * صفحه‌ی مسیر فقط این کامپوننت را رندر می‌کند.
- */
 export function AccountsPage() {
   return (
     <Suspense fallback={<AccountsPageFallback />}>

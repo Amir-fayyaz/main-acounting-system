@@ -19,13 +19,11 @@ export type UsePosTerminalsState =
 
 export interface UsePosTerminalsResult {
   state: UsePosTerminalsState;
-  /** دریافت دوباره‌ی فهرست با همان پارامترهای فعلی. */
   refresh: () => void;
 }
 
 const FALLBACK_ERROR = 'دریافت فهرست دستگاه‌های POS با مشکل مواجه شد. لطفاً دوباره تلاش کنید.';
 
-/** فهرست ترمینال‌ها را برای پارامترهای فعلی URL دریافت می‌کند. */
 export function usePosTerminals(params: UsePosTerminalsParams): UsePosTerminalsResult {
   const { page = 1, limit = 20, search = '', status } = params;
   const [version, setVersion] = useState(0);

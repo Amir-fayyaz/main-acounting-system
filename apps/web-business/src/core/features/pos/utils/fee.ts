@@ -1,4 +1,4 @@
-import { DECIMAL_SEPARATOR, toAsciiDigits, toPersianDigits } from './format';
+import { DECIMAL_SEPARATOR, toAsciiDigits, toFaDigits } from '../../shared';
 
 const EDITABLE_FEE_PATTERN = /^\d+(?:\.\d{1,2})?$/;
 const CANONICAL_FEE_PATTERN = /^\d+\.\d{2}$/;
@@ -28,7 +28,6 @@ export function isCanonicalFee(value: string): boolean {
   return CANONICAL_FEE_PATTERN.test(value);
 }
 
-/** درصد کارمزد باید بین ۰ تا ۱۰۰ باشد. */
 export function isFeeInRange(value: string): boolean {
   if (!isCanonicalFee(value)) return false;
 
@@ -38,15 +37,14 @@ export function isFeeInRange(value: string): boolean {
   return cents <= MAX_FEE_CENTS;
 }
 
-/** نمایش درصد کارمزد با ارقام فارسی و حذف اعشار صفر؛ `—` برای مقدار خالی. */
 export function formatFeePercentFa(value: string | null): string {
   if (!value) return '—';
-  if (!isCanonicalFee(value)) return toPersianDigits(value);
+  if (!isCanonicalFee(value)) return toFaDigits(value);
 
   const [integerPart = '0', fractionPart = '00'] = value.split('.');
   const normalizedInteger = integerPart.replace(/^0+(?=\d)/, '') || '0';
   const trimmedFraction = fractionPart.replace(/0+$/, '');
   const fraction = trimmedFraction ? `${DECIMAL_SEPARATOR}${trimmedFraction}` : '';
 
-  return toPersianDigits(`${normalizedInteger}${fraction}٪`);
+  return toFaDigits(`${normalizedInteger}${fraction}٪`);
 }

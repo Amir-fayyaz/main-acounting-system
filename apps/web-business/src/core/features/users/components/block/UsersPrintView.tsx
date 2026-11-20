@@ -14,7 +14,7 @@ import {
 import { cn } from '@repo/web/ui/utils/cn';
 
 import type { User } from '../../assets/@types/user';
-import { USER_STATUS_LABELS } from '../ui/UserStatusBadge';
+import { USER_STATUS_LABELS } from '../../lib/users.config';
 import { usersColumns } from './UsersTable';
 
 const PRINT_DATE_TIME_FORMATTER = new Intl.DateTimeFormat('fa-IR', {
@@ -25,7 +25,7 @@ const PRINT_DATE_TIME_FORMATTER = new Intl.DateTimeFormat('fa-IR', {
 
 const PRINT_NUMBER_FORMATTER = new Intl.NumberFormat('fa-IR');
 
-export function formatPrintTimestamp(date: Date): string {
+function formatPrintTimestamp(date: Date): string {
   return PRINT_DATE_TIME_FORMATTER.format(date);
 }
 

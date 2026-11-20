@@ -1,16 +1,13 @@
-import type { Account, AccountDto } from '../assets/@types/account.types';
-import { toAsciiDigits } from '../utils/format';
-import { normalizeMoneyInput } from '../utils/money';
+import { normalizeIban, normalizeMoneyInput } from '../../shared';
+import {
+  ACCOUNT_CURRENCY,
+  type Account,
+  type AccountDto,
+  type AccountType,
+  type CreateAccountRequest,
+} from '../assets/@types/account.types';
 import { AccountApiError } from './accounts-api.errors';
 
-function normalizeIban(value: string): string {
-  return toAsciiDigits(value).replace(/[\s-]/g, '').toUpperCase();
-}
-
-/**
- * DTO سرور را به مدل نمایش تبدیل و مبلغ/شبا را canonical می‌کند.
- * داده‌ی ناسازگار با قرارداد به خطای API تبدیل می‌شود تا در حالت error دیده شود.
- */
 export function mapAccountDtoToAccount(dto: AccountDto): Account {
   const amount = normalizeMoneyInput(dto.balance.amount);
 
@@ -35,6 +32,30 @@ export function mapAccountDtoToAccount(dto: AccountDto): Account {
       currency: dto.balance.currency,
     },
     status: dto.status,
+  };
+}
+
+export function mapCreateAccountRequestToDto(
+  payload: CreateAccountRequest,
+  id: string,
+): AccountDto {
+  const type: AccountType = payload.type;
+  const openingBalance =
+    normalizeMoneyInput(payload.openingBalance.amount) ?? payload.openingBalance.amount;
+
+  return {
+    id,
+    revision: 1,
+    title: payload.title.trim(),
+    type,
+    bank: type === 'bank' ? (payload.bank?.trim() ?? null) : null,
+    iban: type === 'bank' ? normalizeIban(payload.iban ?? '') : null,
+    branch: null,
+    balance: {
+      amount: openingBalance,
+      currency: ACCOUNT_CURRENCY,
+    },
+    status: 'active',
   };
 }
 

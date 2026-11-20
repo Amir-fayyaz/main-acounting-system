@@ -18,7 +18,6 @@ export interface UseChequeFormRulesResult {
 
 const FALLBACK_ERROR = 'دریافت قواعد فرم چک از سرور امکان‌پذیر نشد.';
 
-/** قواعد Sayad/شماره چک را از API می‌گیرد؛ مرجع اعتبارسنجی سرور است. */
 export function useChequeFormRules(): UseChequeFormRulesResult {
   const [state, setState] = useState<UseChequeFormRulesState>({ status: 'loading' });
   const [version, setVersion] = useState(0);

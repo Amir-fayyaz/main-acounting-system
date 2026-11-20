@@ -4,11 +4,13 @@ import type { ChequeDto } from '../assets/@types/cheque.types';
 import { ChequeApiError } from '../lib/checks-api.errors';
 import { mapChequeDtoToCheque } from '../lib/checks-api.mapper';
 import {
-  createChequeFormValues,
-  createEmptyChequeFormValues,
   mapChequeFormValuesToCreateRequest,
   mapChequeFormValuesToUpdateRequest,
 } from '../lib/cheque-form.mapper';
+import {
+  createChequeFormValues,
+  createEmptyChequeFormValues,
+} from '../lib/cheque-form.values';
 
 function dto(overrides: Partial<ChequeDto> = {}): ChequeDto {
   return {

@@ -17,7 +17,10 @@ import {
 } from '@repo/web';
 
 import type { CreatePurchaseInput } from '../../../assets/@types/purchase';
-import { validatePurchaseForm, type PurchaseFormErrors } from '../../../lib/purchases.validation';
+import {
+  validatePurchaseForm,
+  type PurchaseFormErrors,
+} from '../../../lib/purchase-form.schema';
 
 type FieldName = keyof CreatePurchaseInput;
 

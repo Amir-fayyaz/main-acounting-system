@@ -14,6 +14,7 @@ import {
 import { mapZodErrorsToPosTerminalFormErrors, posTerminalFormSchema } from '../lib/pos-form.schema';
 import { posApi, type PosApi } from '../lib/pos-api';
 import { isPosApiError, resolvePosErrorMessage } from '../lib/pos-api.errors';
+import { DUPLICATE_TERMINAL_MESSAGE } from '../lib/pos-terminal.conflicts';
 
 export interface UsePosTerminalFormOptions {
   onValidSubmit: (payload: CreatePosTerminalRequest) => Promise<void>;
@@ -34,12 +35,7 @@ export interface UsePosTerminalFormResult {
 }
 
 const SUBMIT_FALLBACK_ERROR = 'ثبت دستگاه انجام نشد. لطفاً دوباره تلاش کنید.';
-const DUPLICATE_TERMINAL_MESSAGE = 'ترمینالی با این شماره قبلاً ثبت شده است.';
 
-/**
- * وضعیت فرم ترمینال: اعتبارسنجی Zod، بررسی تکرار شماره ترمینال برای UX
- * و نگاشت خطاهای فیلد سرور. مرجع نهایی همیشه API است.
- */
 export function usePosTerminalForm({
   onValidSubmit,
   duplicateApi,

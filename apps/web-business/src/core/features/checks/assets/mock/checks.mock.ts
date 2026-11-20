@@ -1,3 +1,4 @@
+import { addJalaliDaysToDate } from '../../../shared';
 import type {
   ChequeDirection,
   ChequeDto,
@@ -5,7 +6,6 @@ import type {
   ChequeStatus,
 } from '../@types/cheque.types';
 import { CHEQUE_BANKS } from '../../lib/checks.config';
-import { addJalaliDaysToDate } from '../../utils/jalali';
 
 const COUNTERPARTIES = [
   'شرکت آرمان تجارت',
