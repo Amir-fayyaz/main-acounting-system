@@ -5,7 +5,7 @@ import { isTokenExpired } from '@repo/web/session/token';
 const PUBLIC_PATHS = ['/en', '/fa'];
 const API_PATHS = ['/_next', '/api', '/static'];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (API_PATHS.some((path) => pathname.startsWith(path))) {
