@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatShortMoney, splitShortMoney } from '../utils/format-short-money';
+import { formatShortMoney, splitShortMoney } from '../../shared';
 
 describe('formatShortMoney', () => {
   it('formats billion-scale amounts with one Persian decimal digit', () => {

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-import type { DashboardSnapshot } from '../assets/@types';
+import type { DashboardSnapshot } from '../assets/@types/dashboard';
 import type { Cheque, Invoice } from '../../panel/assets/@types/finance';
 import { getDashboardSnapshot } from '../lib/dashboard-api';
 import { listCheques } from '../../panel/lib/cheques-api';
