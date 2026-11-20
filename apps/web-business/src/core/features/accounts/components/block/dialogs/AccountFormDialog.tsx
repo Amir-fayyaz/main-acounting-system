@@ -2,7 +2,6 @@
 
 import { AlertCircle, Info } from 'lucide-react';
 import type { FormEvent } from 'react';
-
 import {
   Button,
   Input,
@@ -13,7 +12,7 @@ import {
   SelectValue,
 } from '@repo/web/ui';
 import Modal from '@web/ui/components/custom/ui/modal/Modal';
-
+import { FormField, Notice } from '../../../../shared';
 import type {
   Account,
   AccountType,
@@ -21,21 +20,24 @@ import type {
 } from '../../../assets/@types/account.types';
 import { useAccountForm } from '../../../hook/useAccountForm';
 import { ACCOUNT_TYPE_OPTIONS } from '../../../lib/accounts.config';
-import { accountsApi } from '../../../lib/accounts-api';
-import { AccountField } from '../../ui/AccountField';
-import { AccountNotice } from '../../ui/AccountNotice';
 
 interface AccountFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  createAccount: (payload: CreateAccountRequest) => Promise<Account>;
   onSaved: (account: Account) => void | Promise<void>;
 }
 
 const CONTROL_CLASS = 'text-start tabular-nums';
 
-export function AccountFormDialog({ open, onOpenChange, onSaved }: AccountFormDialogProps) {
+export function AccountFormDialog({
+  open,
+  onOpenChange,
+  createAccount,
+  onSaved,
+}: AccountFormDialogProps) {
   const handleValidSubmit = async (payload: CreateAccountRequest): Promise<void> => {
-    const created = await accountsApi.create(payload);
+    const created = await createAccount(payload);
     await onSaved(created);
   };
 
@@ -67,18 +69,18 @@ export function AccountFormDialog({ open, onOpenChange, onSaved }: AccountFormDi
       hideDefaultFooter
     >
       <form noValidate onSubmit={handleSubmit} className="space-y-4" aria-label="فرم حساب جدید">
-        <AccountNotice icon={<Info className="size-4" />}>
+        <Notice icon={<Info className="size-4" />}>
           برای حساب بانکی، نام بانک و شماره شبا الزامی است. موجودی اولیه می‌تواند صفر باشد.
-        </AccountNotice>
+        </Notice>
 
         {formError ? (
-          <AccountNotice tone="danger" icon={<AlertCircle className="size-4" />}>
+          <Notice tone="danger" icon={<AlertCircle className="size-4" />}>
             {formError}
-          </AccountNotice>
+          </Notice>
         ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <AccountField id={titleId} label="عنوان" error={errors.title}>
+          <FormField id={titleId} label="عنوان" error={errors.title}>
             <Input
               id={titleId}
               autoComplete="off"
@@ -88,9 +90,9 @@ export function AccountFormDialog({ open, onOpenChange, onSaved }: AccountFormDi
                 setField('title', event.target.value);
               }}
             />
-          </AccountField>
+          </FormField>
 
-          <AccountField id={typeId} label="نوع" error={errors.type}>
+          <FormField id={typeId} label="نوع" error={errors.type}>
             <Select
               value={values.type}
               onValueChange={(value) => {
@@ -114,9 +116,9 @@ export function AccountFormDialog({ open, onOpenChange, onSaved }: AccountFormDi
                 ))}
               </SelectContent>
             </Select>
-          </AccountField>
+          </FormField>
 
-          <AccountField
+          <FormField
             id={bankId}
             label="نام بانک"
             error={errors.bank}
@@ -132,9 +134,9 @@ export function AccountFormDialog({ open, onOpenChange, onSaved }: AccountFormDi
                 setField('bank', event.target.value);
               }}
             />
-          </AccountField>
+          </FormField>
 
-          <AccountField
+          <FormField
             id={ibanId}
             label="شماره شبا"
             error={errors.iban}
@@ -154,9 +156,9 @@ export function AccountFormDialog({ open, onOpenChange, onSaved }: AccountFormDi
                 setField('iban', event.target.value);
               }}
             />
-          </AccountField>
+          </FormField>
 
-          <AccountField
+          <FormField
             id={balanceId}
             label="موجودی اولیه (ریال)"
             error={errors.openingBalance}
@@ -174,7 +176,7 @@ export function AccountFormDialog({ open, onOpenChange, onSaved }: AccountFormDi
                 setField('openingBalance', event.target.value);
               }}
             />
-          </AccountField>
+          </FormField>
         </div>
 
         <div className="flex flex-col-reverse gap-2 border-t border-border pt-4 sm:flex-row sm:justify-end">

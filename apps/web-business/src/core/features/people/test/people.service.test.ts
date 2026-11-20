@@ -85,8 +85,8 @@ describe('people service', () => {
   });
 
   it('rejects a duplicate person name', async () => {
-    await expect(
-      createPerson({ name: 'شخص تست یکتا', kind: 'مشتری', phone: '' }),
-    ).rejects.toThrow('شخصی با این نام قبلاً ثبت شده است.');
+    await expect(createPerson({ name: 'شخص تست یکتا', kind: 'مشتری', phone: '' })).rejects.toThrow(
+      'شخصی با این نام قبلاً ثبت شده است.',
+    );
   });
 });

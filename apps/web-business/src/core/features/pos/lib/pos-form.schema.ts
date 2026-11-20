@@ -1,11 +1,10 @@
 import { z } from 'zod';
-
+import { mapZodErrorsToKnownFields, toAsciiDigits } from '../../shared';
 import type {
   PosTerminalFormErrors,
   PosTerminalFormValues,
 } from '../assets/@types/pos-terminal.types';
 import { isFeeInRange, normalizeFeeInput } from '../utils/fee';
-import { toAsciiDigits } from '../utils/format';
 
 const POS_FORM_FIELDS = new Set<keyof PosTerminalFormValues>([
   'title',
@@ -32,10 +31,6 @@ function normalizeFeeField(value: unknown): string {
   return normalizeFeeInput(value) ?? INVALID_FEE;
 }
 
-/**
- * Schema فرم ترمینال: عنوان و شماره ترمینال الزامی‌اند؛
- * شماره پذیرنده و کارمزد اختیاری‌اند اما در صورت ورود اعتبارسنجی می‌شوند.
- */
 export const posTerminalFormSchema = z.object({
   title: z.preprocess(normalizeTextInput, z.string().min(1, 'عنوان دستگاه را وارد کنید.')),
   terminalNumber: z.preprocess(
@@ -71,15 +66,5 @@ export type PosTerminalFormSchema = typeof posTerminalFormSchema;
 export type PosTerminalFormOutput = z.output<PosTerminalFormSchema>;
 
 export function mapZodErrorsToPosTerminalFormErrors(error: z.ZodError): PosTerminalFormErrors {
-  const errors: PosTerminalFormErrors = {};
-
-  for (const issue of error.issues) {
-    const field = issue.path[0];
-    if (typeof field !== 'string') continue;
-    if (!POS_FORM_FIELDS.has(field as keyof PosTerminalFormValues)) continue;
-    const key = field as keyof PosTerminalFormValues;
-    if (!errors[key]) errors[key] = issue.message;
-  }
-
-  return errors;
+  return mapZodErrorsToKnownFields(error, POS_FORM_FIELDS);
 }

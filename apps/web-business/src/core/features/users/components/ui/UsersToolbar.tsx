@@ -1,25 +1,14 @@
 'use client';
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@repo/web';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/web';
 import { cn } from '@repo/web/ui/utils/cn';
+
+import { USER_ROLE_OPTIONS } from '../../lib/users.config';
 
 /** Radix Select rejects an empty item value, so "all" uses a sentinel. */
 const ALL_ROLE = '__all__';
 
-export const USER_ROLE_OPTIONS = [
-  'مدیر مالی',
-  'حسابدار ارشد',
-  'صندوقدار',
-  'حسابدار',
-  'مدیر شعبه',
-  'ناظر (فقط مشاهده)',
-] as const;
+export { USER_ROLE_OPTIONS };
 
 export type UsersToolbarProps = {
   /** Current URL role; an empty string means "all". */

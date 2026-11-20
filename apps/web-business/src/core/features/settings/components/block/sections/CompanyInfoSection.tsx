@@ -21,26 +21,9 @@ import type {
   CompanyInfo,
   Currency,
   FiscalSummary,
-  PeriodStatus,
 } from '../../../assets/@types/settings';
+import { CURRENCY_OPTIONS, PERIOD_STATUS_LABELS, PERIOD_STATUS_VARIANT } from '../../../lib/settings.config';
 import { SettingsField } from '../../ui/SettingsField';
-
-const CURRENCY_OPTIONS: ReadonlyArray<{ value: Currency; label: string }> = [
-  { value: 'IRR', label: 'ریال (IRR)' },
-  { value: 'TOMAN', label: 'تومان' },
-];
-
-const PERIOD_STATUS_LABELS: Record<PeriodStatus, string> = {
-  open: 'باز',
-  closed: 'بسته',
-  'no-period': 'بدون دوره',
-};
-
-const PERIOD_STATUS_VARIANT: Record<PeriodStatus, 'success' | 'secondary'> = {
-  open: 'success',
-  closed: 'secondary',
-  'no-period': 'secondary',
-};
 
 export type CompanyInfoSectionProps = {
   value: CompanyInfo;

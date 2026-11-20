@@ -3,17 +3,12 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import type { ListPeopleParams } from '../assets/@types/person';
-import {
-  listPeople,
-  type PersonListResponse,
-} from '../lib/people.service';
+import { listPeople, type PersonListResponse } from '../lib/people.service';
 
 export type UsePeopleParams = Pick<ListPeopleParams, 'page' | 'limit' | 'search' | 'kind' | 'sort'>;
 
 export type UsePeopleState =
-  | { status: 'loading' }
-  | { status: 'error' }
-  | { status: 'success'; response: PersonListResponse };
+  { status: 'loading' } | { status: 'error' } | { status: 'success'; response: PersonListResponse };
 
 export interface UsePeopleResult {
   state: UsePeopleState;
@@ -29,7 +24,14 @@ export function usePeople(params: UsePeopleParams): UsePeopleResult {
     state: UsePeopleState;
   } | null>(null);
 
-  const key = JSON.stringify({ page, limit, search, kind: kind ?? null, sort: sort ?? null, version });
+  const key = JSON.stringify({
+    page,
+    limit,
+    search,
+    kind: kind ?? null,
+    sort: sort ?? null,
+    version,
+  });
 
   useEffect(() => {
     let isActive = true;

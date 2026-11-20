@@ -20,13 +20,11 @@ export type UseAccountsState =
 
 export interface UseAccountsResult {
   state: UseAccountsState;
-  /** دریافت دوباره‌ی فهرست و آمار با همان پارامترهای فعلی. */
   refresh: () => void;
 }
 
 const FALLBACK_ERROR = 'دریافت فهرست حساب‌ها با مشکل مواجه شد. لطفاً دوباره تلاش کنید.';
 
-/** فهرست + آمار حساب‌ها را برای پارامترهای فعلی URL دریافت می‌کند. */
 export function useAccounts(params: UseAccountsParams): UseAccountsResult {
   const { page = 1, limit = 20, search = '', type } = params;
   const [version, setVersion] = useState(0);

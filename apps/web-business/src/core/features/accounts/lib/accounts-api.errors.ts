@@ -9,7 +9,6 @@ interface AccountApiErrorInit {
   fieldErrors?: AccountFormErrors;
 }
 
-/** خطای لایه‌ی API با کد و خطاهای فیلد قابل نمایش در فرم. */
 export class AccountApiError extends Error {
   readonly code: AccountApiErrorCode;
 

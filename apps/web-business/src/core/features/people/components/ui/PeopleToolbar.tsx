@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@repo/web';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/web';
 import { cn } from '@repo/web/ui/utils/cn';
 
 const ALL_KIND = '__all__';

@@ -5,12 +5,13 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ListSalesParams } from '../assets/@types/sale';
 import { listSales, type SaleListResponse } from '../lib/sales.service';
 
-export type UseSalesParams = Pick<ListSalesParams, 'page' | 'limit' | 'search' | 'status' | 'seller' | 'discountState'>;
+export type UseSalesParams = Pick<
+  ListSalesParams,
+  'page' | 'limit' | 'search' | 'status' | 'seller' | 'discountState'
+>;
 
 export type UseSalesState =
-  | { status: 'loading' }
-  | { status: 'error' }
-  | { status: 'success'; response: SaleListResponse };
+  { status: 'loading' } | { status: 'error' } | { status: 'success'; response: SaleListResponse };
 
 export interface UseSalesResult {
   state: UseSalesState;
@@ -26,7 +27,15 @@ export function useSales(params: UseSalesParams): UseSalesResult {
     state: UseSalesState;
   } | null>(null);
 
-  const key = JSON.stringify({ page, limit, search, status: status ?? null, seller: seller ?? null, discountState: discountState ?? null, version });
+  const key = JSON.stringify({
+    page,
+    limit,
+    search,
+    status: status ?? null,
+    seller: seller ?? null,
+    discountState: discountState ?? null,
+    version,
+  });
 
   useEffect(() => {
     let isActive = true;

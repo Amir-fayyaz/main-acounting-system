@@ -38,8 +38,6 @@ describe('AccountingRulesSection', () => {
   it('keeps the locked balance-control rule disabled', () => {
     render(<AccountingRulesSection value={RULES} onChange={vi.fn()} disabled={false} />);
 
-    expect(
-      screen.getByRole('checkbox', { name: 'کنترل توازن بدهکار و بستانکار' }),
-    ).toBeDisabled();
+    expect(screen.getByRole('checkbox', { name: 'کنترل توازن بدهکار و بستانکار' })).toBeDisabled();
   });
 });

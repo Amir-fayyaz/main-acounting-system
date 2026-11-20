@@ -1,6 +1,13 @@
 import type { AuditEvent, AuditOutcome } from '../@types/audit';
 
-const NAMES = ['احمد کریمی', 'مریم صادقی', 'رضا حیدری', 'سارا محمدی', 'کامران اکبری', 'نگار فرهادی'];
+const NAMES = [
+  'احمد کریمی',
+  'مریم صادقی',
+  'رضا حیدری',
+  'سارا محمدی',
+  'کامران اکبری',
+  'نگار فرهادی',
+];
 
 const ACTIONS = [
   'user.signed_in',
@@ -11,7 +18,7 @@ const ACTIONS = [
 ];
 
 const TARGETS = (i: number) => [
-  `فاکتور ${ (2200 + i).toLocaleString('fa-IR') }`,
+  `فاکتور ${(2200 + i).toLocaleString('fa-IR')}`,
   `سند ${(1405000 + i).toLocaleString('fa-IR')}`,
   `چک ${(i + 10).toLocaleString('fa-IR')}`,
   '—',
@@ -45,7 +52,9 @@ function createSeedEvents(): AuditEvent[] {
   for (let i = 0; i < count; i++) {
     result.push({
       id: `audit-${String(i + 1).padStart(4, '0')}`,
-      at: `${day(-(i >> 2))} ${fa(num(8, 18, i * 3))}:${fa(num(10, 59, i * 7)).toString().padStart(2, '0')}`,
+      at: `${day(-(i >> 2))} ${fa(num(8, 18, i * 3))}:${fa(num(10, 59, i * 7))
+        .toString()
+        .padStart(2, '0')}`,
       who: pick(NAMES, i * 5),
       action: pick(ACTIONS, i * 11),
       target: pick(TARGETS(i), i * 13),

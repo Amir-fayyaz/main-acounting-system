@@ -33,5 +33,14 @@ export function useSalesFilters() {
   const setDiscountState = useCallback((v: string) => update({ dstate: v }), [update]);
   const setSearch = useCallback((v: string) => update({ search: v }), [update]);
 
-  return { status, seller, discountState, search, setStatus, setSeller, setDiscountState, setSearch };
+  return {
+    status,
+    seller,
+    discountState,
+    search,
+    setStatus,
+    setSeller,
+    setDiscountState,
+    setSearch,
+  };
 }

@@ -23,7 +23,9 @@
     "ui/**/*.ts",
     "ui/**/*.tsx",
     "styles/**/*.ts",
-    "hooks/**/*.tsx"
+    "hooks/**/*.tsx",
+    "session/**/*.ts",
+    "session/**/*.tsx"
   ],
   "exclude": ["node_modules", "**/*.stories.ts", "**/*.stories.tsx"]
 }

@@ -93,7 +93,9 @@ export function SalesPrintView({ sales, generatedAt }: SalesPrintViewProps) {
     <div className="branches-print-report hidden bg-card text-foreground print:block">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
         <div className="space-y-1 text-start">
-          <H1 className="text-start text-2xl font-bold tracking-tight sm:text-2xl">فاکتورهای فروش</H1>
+          <H1 className="text-start text-2xl font-bold tracking-tight sm:text-2xl">
+            فاکتورهای فروش
+          </H1>
           <P className="text-sm text-muted-foreground">
             فاکتورها، تخفیف، فروشنده و پورسانت، پرداخت‌ها و مانده هر فاکتور
           </P>
@@ -130,7 +132,11 @@ export function SalesPrintView({ sales, generatedAt }: SalesPrintViewProps) {
                   )}
                   style={{ width: PRINT_COLUMN_WIDTHS[column.key ?? ''] }}
                 >
-                  {column.key === 'total' || column.key === 'disc' || column.key === 'paid' || column.key === 'rest' || column.key === 'comm'
+                  {column.key === 'total' ||
+                  column.key === 'disc' ||
+                  column.key === 'paid' ||
+                  column.key === 'rest' ||
+                  column.key === 'comm'
                     ? `${column.header} (ریال)`
                     : column.header}
                 </TableHead>
@@ -161,10 +167,7 @@ export function SalesPrintView({ sales, generatedAt }: SalesPrintViewProps) {
                   {salesColumns.map((column) => (
                     <TableCell
                       key={column.key}
-                      className={cn(
-                        'px-3 py-3 align-middle',
-                        column.className,
-                      )}
+                      className={cn('px-3 py-3 align-middle', column.className)}
                     >
                       {renderCell(sale, column.key)}
                     </TableCell>

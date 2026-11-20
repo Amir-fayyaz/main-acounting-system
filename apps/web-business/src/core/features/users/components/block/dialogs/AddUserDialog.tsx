@@ -21,11 +21,14 @@ import {
 } from '@repo/web';
 
 import type { CreateUserInput } from '../../../assets/@types/user';
-import { USER_ROLE_OPTIONS } from '../../ui/UsersToolbar';
+import {
+  toCreateUserInput,
+  validateUserForm,
+  type UserFormErrors,
+} from '../../../lib/user-form.schema';
+import { USER_ROLE_OPTIONS } from '../../../lib/users.config';
 
-type FieldName = 'name' | 'email' | 'role';
-
-type FormErrors = Partial<Record<FieldName, string>>;
+type FormErrors = UserFormErrors;
 
 const INITIAL_VALUES: CreateUserInput = {
   name: '',
@@ -41,19 +44,6 @@ export type AddUserDialogProps = {
   /** Persists the user; rejects with a message shown inside the dialog. */
   onCreate: (input: CreateUserInput) => Promise<void>;
 };
-
-function validate(values: CreateUserInput): FormErrors {
-  const errors: FormErrors = {};
-  if (!values.name.trim()) errors.name = 'نام را وارد کنید.';
-  const email = values.email.trim();
-  if (!email) {
-    errors.email = 'ایمیل را وارد کنید.';
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    errors.email = 'ایمیل معتبر نیست.';
-  }
-  if (!values.role.trim()) errors.role = 'نقش را انتخاب کنید.';
-  return errors;
-}
 
 export function AddUserDialog({ open, onOpenChange, onCreate }: AddUserDialogProps) {
   const [values, setValues] = useState<CreateUserInput>(INITIAL_VALUES);
@@ -85,18 +75,14 @@ export function AddUserDialog({ open, onOpenChange, onCreate }: AddUserDialogPro
     event.preventDefault();
     if (submitting) return;
 
-    const nextErrors = validate(values);
+    const nextErrors = validateUserForm(values);
     setErrors(nextErrors);
     setFormError(undefined);
     if (Object.keys(nextErrors).length > 0) return;
 
     setSubmitting(true);
     try {
-      await onCreate({
-        name: values.name.trim(),
-        email: values.email.trim(),
-        role: values.role.trim(),
-      });
+      await onCreate(toCreateUserInput(values));
       resetForm();
       onOpenChange(false);
     } catch (error) {
@@ -147,7 +133,9 @@ export function AddUserDialog({ open, onOpenChange, onCreate }: AddUserDialogPro
               aria-invalid={errors.email ? true : undefined}
               disabled={submitting}
             />
-            {errors.email ? <InputErrorMassage role="alert">{errors.email}</InputErrorMassage> : null}
+            {errors.email ? (
+              <InputErrorMassage role="alert">{errors.email}</InputErrorMassage>
+            ) : null}
           </div>
 
           <div className="grid gap-2">

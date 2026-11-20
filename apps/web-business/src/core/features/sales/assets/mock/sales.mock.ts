@@ -22,13 +22,7 @@ const NAMES = [
   'سارا محمدی',
 ];
 
-const DESCS = [
-  'فروش محصولات',
-  'سرویس و نگهداری',
-  'پروژه عمرانی',
-  'خدمات مشاوره',
-  'فروش عمده',
-];
+const DESCS = ['فروش محصولات', 'سرویس و نگهداری', 'پروژه عمرانی', 'خدمات مشاوره', 'فروش عمده'];
 
 const STATUSES: SaleStatus[] = ['تسویه‌شده', 'پرداخت جزئی', 'تسویه‌نشده'];
 
@@ -59,18 +53,14 @@ function createSeedSales(): Sale[] {
   for (let i = 0; i < count; i++) {
     const gross = num(3e6, 9e8, 1e5, i * 7 + 1);
     const pctSeed = pick([0, 0, 5, 10, 15], i * 3);
-    const disc = pctSeed ? Math.round(gross * pctSeed / 100 / 1e5) * 1e5 : 0;
+    const disc = pctSeed ? Math.round((gross * pctSeed) / 100 / 1e5) * 1e5 : 0;
     const t = gross - disc;
     const s = pick(STATUSES, i * 11);
     const sl = pick(SELLERS, i * 13);
     const rate = RATES[sl];
     const paid =
-      s === 'تسویه‌شده'
-        ? t
-        : s === 'پرداخت جزئی'
-          ? Math.round(t * 0.4 / 1e5) * 1e5
-          : 0;
-    const comm = Math.round(t * rate / 100 / 1e4) * 1e4;
+      s === 'تسویه‌شده' ? t : s === 'پرداخت جزئی' ? Math.round((t * 0.4) / 1e5) * 1e5 : 0;
+    const comm = Math.round((t * rate) / 100 / 1e4) * 1e4;
     result.push({
       id: `sale-${String(i + 1).padStart(4, '0')}`,
       no: fa(2200 + count - i),

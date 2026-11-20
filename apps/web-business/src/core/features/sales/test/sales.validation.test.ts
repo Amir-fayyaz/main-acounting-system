@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { validateSaleForm } from '../lib/sales.validation';
+import { validateSaleForm } from '../lib/sale-form.schema';
 
 const VALID = {
   cust: 'شرکت آرمان تجارت',
