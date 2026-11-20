@@ -3,12 +3,7 @@
 import { DataTable, type DataTableColumn, type PaginationMeta, type SortItem } from '@repo/web';
 
 import type { Person } from '../../assets/@types/person';
-
-function formatMoney(value: string): string {
-  const numericValue = Number(value);
-  if (!Number.isFinite(numericValue)) return value;
-  return new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 }).format(numericValue);
-}
+import { formatMoney } from '../../utils/format';
 
 export const peopleColumns: DataTableColumn<Person>[] = [
   {

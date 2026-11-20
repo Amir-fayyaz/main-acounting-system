@@ -9,6 +9,8 @@ const VARIANT: Record<AuditOutcome, 'success' | 'destructive'> = {
   ناموفق: 'destructive',
 };
 
+export const AUDIT_OUTCOME_OPTIONS: ReadonlyArray<AuditOutcome> = ['موفق', 'ناموفق'];
+
 export type AuditOutcomeBadgeProps = {
   outcome: AuditOutcome;
 };

@@ -3,6 +3,8 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/web';
 import { cn } from '@repo/web/ui/utils/cn';
 
+import { AUDIT_OUTCOME_OPTIONS } from './AuditOutcomeBadge';
+
 const ALL = '__all__';
 
 export type AuditToolbarProps = {
@@ -20,8 +22,11 @@ export function AuditToolbar({ outcome, onOutcomeChange, className }: AuditToolb
         </SelectTrigger>
         <SelectContent>
           <SelectItem value={ALL}>نتیجه: همه</SelectItem>
-          <SelectItem value="موفق">موفق</SelectItem>
-          <SelectItem value="ناموفق">ناموفق</SelectItem>
+          {AUDIT_OUTCOME_OPTIONS.map((outcome) => (
+            <SelectItem key={outcome} value={outcome}>
+              {outcome}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>
