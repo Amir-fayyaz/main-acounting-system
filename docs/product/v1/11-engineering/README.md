@@ -31,4 +31,13 @@
 - `25-tenant-membership-validation.md`
 - `26-tenant-isolation.md`
 
+## Monorepo Architecture & Guidelines
+
+- [`27-monorepo-architecture.md`](27-monorepo-architecture.md)
+  Configuration Baseline و ADR مربوط به ساختار Monorepo: Catalog ها، محل قرارگیری Dependencyها،
+  تنظیمات Workspace Root / Turbopack و ارتقای Next.js به 16.3.8.
+
+- [`28-monorepo-handbook.md`](28-monorepo-handbook.md)
+  راهنمای آموزشی تیم: آناتومی Monorepo، قواعد `catalog:` و `workspace:*`، عیب‌یابی و بهترین شیوه‌ها.
+
 Engineering نباید Business Rule یا Architecture Decision را دوباره تعریف کند؛ این پوشه نحوه اجرای آن تصمیم‌ها را مشخص می‌کند.
