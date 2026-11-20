@@ -40,4 +40,8 @@
 - [`28-monorepo-handbook.md`](28-monorepo-handbook.md)
   راهنمای آموزشی تیم: آناتومی Monorepo، قواعد `catalog:` و `workspace:*`، عیب‌یابی و بهترین شیوه‌ها.
 
+- [`29-memory-audit-report.md`](29-memory-audit-report.md)
+  ممیزی RAM: نتایج تجربی تست ۵ دقیقهای RSS، یافتهها (F-1 تا F-10) همراه با دلیل اهمیت هر مورد و
+  برنامه اقدام اولویتبندی شده.
+
 Engineering نباید Business Rule یا Architecture Decision را دوباره تعریف کند؛ این پوشه نحوه اجرای آن تصمیم‌ها را مشخص می‌کند.
