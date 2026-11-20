@@ -1,4 +1,4 @@
-import { toAsciiDigits } from './format';
+import { toAsciiDigits, toFaDigits } from './persian-digits';
 
 const LEAP_REMAINDERS = new Set([1, 5, 9, 13, 17, 22, 26, 30]);
 const MONTH_LENGTHS = [31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29] as const;
@@ -88,4 +88,9 @@ export function todayJalali(reference: Date = new Date()): string {
     parts.find((part) => part.type === type)?.value ?? '';
 
   return `${read('year')}/${read('month').padStart(2, '0')}/${read('day').padStart(2, '0')}`;
+}
+
+/** نمایش تاریخ جلالی با ارقام فارسی و جداکننده‌ی اسلش (1405-07-27 -> ۱۴۰۵/۰۷/۲۷). */
+export function formatJalaliDateFa(value: string): string {
+  return toFaDigits(value.replace(/-/g, '/'));
 }

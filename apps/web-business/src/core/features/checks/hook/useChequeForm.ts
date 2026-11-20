@@ -10,12 +10,14 @@ import type {
   CreateChequeRequest,
 } from '../assets/@types/cheque.types';
 import { createChequeFormSchema, mapZodErrorsToChequeFormErrors } from '../lib/cheque-form.schema';
-import {
-  createChequeFormValues,
-  mapChequeFormValuesToCreateRequest,
-} from '../lib/cheque-form.mapper';
+import { mapChequeFormValuesToCreateRequest } from '../lib/cheque-form.mapper';
+import { createChequeFormValues } from '../lib/cheque-form.values';
 import { checksApi, type ChecksApi } from '../lib/checks-api';
 import { isChequeApiError, resolveChequeErrorMessage } from '../lib/checks-api.errors';
+import {
+  DUPLICATE_SAYAD_MESSAGE,
+  duplicateNumberMessage,
+} from '../lib/cheque-conflicts';
 
 export interface UseChequeFormOptions {
   /** در حالت ویرایش، چک فعلی برای مقدار اولیه و `excludeId` تکرار استفاده می‌شود. */
@@ -41,18 +43,7 @@ export interface UseChequeFormResult {
 }
 
 const SUBMIT_FALLBACK_ERROR = 'ذخیره‌ی چک انجام نشد. لطفاً دوباره تلاش کنید.';
-const DUPLICATE_SAYAD_MESSAGE = 'این شناسه صیادی قبلاً ثبت شده است.';
 
-function resolveDuplicateNumberMessage(scope: ChequeFormRules['duplicateNumberScope']): string {
-  return scope === 'global'
-    ? 'چکی با این شماره قبلاً ثبت شده است.'
-    : 'چکی با این شماره برای همین بانک قبلاً ثبت شده است.';
-}
-
-/**
- * وضعیت فرم چک: اعتبارسنجی Zod بر پایه‌ی قواعد API، بررسی تکرار در لایه‌ی فرم
- * برای UX و نگاشت خطاهای فیلد سرور. مرجع نهایی همیشه API است.
- */
 export function useChequeForm({
   cheque,
   rules,
@@ -116,7 +107,7 @@ export function useChequeForm({
 
       const conflictErrors: ChequeFormErrors = {};
       if (conflict.number) {
-        conflictErrors.number = resolveDuplicateNumberMessage(rules.duplicateNumberScope);
+        conflictErrors.number = duplicateNumberMessage(rules.duplicateNumberScope);
       }
       if (conflict.sayadId) conflictErrors.sayadId = DUPLICATE_SAYAD_MESSAGE;
 

@@ -1,7 +1,8 @@
-import { DECIMAL_SEPARATOR, THOUSANDS_SEPARATOR, toAsciiDigits, toPersianDigits } from './format';
+import { DECIMAL_SEPARATOR, toAsciiDigits } from './persian-digits';
 
 const CANONICAL_MONEY_PATTERN = /^\d+\.\d{2}$/;
 const EDITABLE_MONEY_PATTERN = /^\d+(?:\.\d{1,2})?$/;
+const ZERO_MONEY = '0.00';
 
 /**
  * ورودی کاربر را بدون استفاده از `number` به رشته‌ی canonical با دو رقم اعشار تبدیل می‌کند.
@@ -27,16 +28,5 @@ export function isCanonicalMoney(value: string): boolean {
 }
 
 export function isPositiveMoney(value: string): boolean {
-  return isCanonicalMoney(value) && value !== '0.00';
-}
-
-/** نمایش مبلغ با جداکننده‌ی هزارگان و ارقام فارسی؛ اعشار صفر حذف می‌شود. */
-export function formatMoneyFa(amount: string): string {
-  if (!isCanonicalMoney(amount)) return toPersianDigits(amount);
-
-  const [integerPart = '0', fractionPart = '00'] = amount.split('.');
-  const grouped = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, THOUSANDS_SEPARATOR);
-  const fraction = fractionPart === '00' ? '' : `${DECIMAL_SEPARATOR}${fractionPart}`;
-
-  return toPersianDigits(`${grouped}${fraction}`);
+  return isCanonicalMoney(value) && value !== ZERO_MONEY;
 }

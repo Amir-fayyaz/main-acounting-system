@@ -10,7 +10,6 @@ interface PosApiErrorInit {
   fieldErrors?: PosTerminalFieldErrors;
 }
 
-/** خطای لایه‌ی API با کد و خطاهای فیلد قابل نمایش در فرم. */
 export class PosApiError extends Error {
   readonly code: PosApiErrorCode;
 

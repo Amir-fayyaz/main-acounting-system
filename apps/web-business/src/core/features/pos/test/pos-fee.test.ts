@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { formatFeePercentFa, isFeeInRange, normalizeFeeInput } from '../utils/fee';
-import { formatIbanMaskFa } from '../utils/format';
+import { formatIbanMaskFa } from '../utils/iban';
 
 describe('fee utils', () => {
   it('normalizes Persian inputs and percent signs to canonical hundredths', () => {

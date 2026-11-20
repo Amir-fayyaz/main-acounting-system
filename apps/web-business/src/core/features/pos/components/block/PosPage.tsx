@@ -25,10 +25,6 @@ function PosPageFallback() {
   );
 }
 
-/**
- * صفحه‌ی دستگاه‌های POS؛ مرز Suspense برای useSearchParams در App Router.
- * صفحه‌ی مسیر فقط این کامپوننت را رندر می‌کند.
- */
 export function PosPage() {
   return (
     <Suspense fallback={<PosPageFallback />}>

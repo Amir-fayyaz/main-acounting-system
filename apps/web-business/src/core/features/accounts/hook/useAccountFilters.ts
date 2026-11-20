@@ -16,10 +16,6 @@ export interface UseAccountFiltersResult {
   setType: (value: AccountTypeFilter) => void;
 }
 
-/**
- * فیلتر نوع حساب را در URL نگه می‌دارد (هم‌راستا با usePagination).
- * هر تغییر فیلتر، صفحه را به ۱ برمی‌گرداند تا نتیجه از ابتدا دیده شود.
- */
 export function useAccountFilters(): UseAccountFiltersResult {
   const router = useRouter();
   const pathname = usePathname();

@@ -2,21 +2,22 @@ import type { ReactNode } from 'react';
 
 import { cn } from '@repo/web/ui/utils/cn';
 
-type AccountNoticeTone = 'info' | 'danger';
+export type NoticeTone = 'info' | 'warning' | 'danger';
 
-const TONE_CLASSES: Record<AccountNoticeTone, string> = {
+const TONE_CLASSES: Record<NoticeTone, string> = {
   info: 'border-border bg-muted text-foreground',
+  warning: 'border-primary/40 bg-accent text-accent-foreground',
   danger: 'border-destructive/40 bg-destructive/10 text-destructive',
 };
 
-interface AccountNoticeProps {
-  tone?: AccountNoticeTone;
+interface NoticeProps {
+  tone?: NoticeTone;
   icon?: ReactNode;
   children: ReactNode;
   className?: string;
 }
 
-export function AccountNotice({ tone = 'info', icon, children, className }: AccountNoticeProps) {
+export function Notice({ tone = 'info', icon, children, className }: NoticeProps) {
   return (
     <div
       role={tone === 'danger' ? 'alert' : 'status'}

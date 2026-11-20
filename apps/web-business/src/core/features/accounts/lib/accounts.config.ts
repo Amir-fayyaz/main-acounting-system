@@ -20,10 +20,8 @@ export const ACCOUNT_TYPE_OPTIONS: readonly AccountSelectOption<AccountType>[] =
   Object.entries(ACCOUNT_TYPE_LABELS) as [AccountType, string][]
 ).map(([value, label]) => ({ value, label }));
 
-/** اندازه‌های صفحه مطابق طراحی accounts.html. */
 export const ACCOUNT_PAGE_SIZES = [10, 20, 50] as const;
 
 export const ACCOUNT_BANKS = ['ملی', 'ملت', 'سامان', 'پاسارگاد', 'صادرات'] as const;
 
-/** شماره شبا: IR و دقیقاً ۲۴ رقم. */
 export const ACCOUNT_IBAN_PATTERN = /^IR\d{24}$/;

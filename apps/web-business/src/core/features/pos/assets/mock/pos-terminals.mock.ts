@@ -31,7 +31,6 @@ function resolveStatus(index: number): PosStatus {
   return index % 5 === 4 ? 'inactive' : 'active';
 }
 
-/** حداقل ۲۴ ترمینال نمایشی با تنوع بانک، کارمزد، تاریخ فعال‌سازی و وضعیت. */
 export function createMockPosTerminalDtos(): PosTerminalDto[] {
   return Array.from({ length: 28 }, (_, index) => ({
     id: `pos-${String(1001 + index).padStart(4, '0')}`,

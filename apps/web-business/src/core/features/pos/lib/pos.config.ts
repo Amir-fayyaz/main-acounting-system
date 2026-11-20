@@ -14,7 +14,6 @@ export const POS_STATUS_OPTIONS: readonly PosSelectOption<PosStatus>[] = (
   Object.entries(POS_STATUS_LABELS) as [PosStatus, string][]
 ).map(([value, label]) => ({ value, label }));
 
-/** اندازه‌های صفحه مطابق طراحی pos.html. */
 export const POS_PAGE_SIZES = [10, 20, 50] as const;
 
 export const POS_BANKS = ['ملی', 'ملت', 'سامان', 'پاسارگاد', 'صادرات'] as const;
