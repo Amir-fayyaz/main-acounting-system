@@ -15,6 +15,7 @@ import type { Authorization } from '../../identity/application/ports/authorizati
 import {
   ACCOUNT_AUDIT_PORT,
   ACCOUNT_AUTHORIZATION_PORT,
+  ACCOUNT_POSTING_GUARD,
   ACCOUNT_REPOSITORY,
   ACCOUNT_TEMPLATE_REPOSITORY,
   ACCOUNT_USAGE_PORT,
@@ -50,7 +51,9 @@ import {
   ReactivateAccountUseCase,
   DeleteAccountUseCase,
 } from '../application/use-cases/account-management.use-case.js';
+import { DefaultAccountPostingGuard } from '../application/services/default-account-posting-guard.service.js';
 import { DefaultPeriodGuard } from '../application/services/default-period-guard.service.js';
+import type { AccountPostingGuard } from '../application/ports/account-posting-guard.port.js';
 import type { PeriodGuard } from '../application/ports/period-guard.port.js';
 import type { ActivePeriodRepository } from '../domain/repositories/active-period.repository.js';
 import type { AccountRepository } from '../domain/repositories/account.repository.js';
@@ -140,6 +143,15 @@ import { ActivateStandardChartUseCase } from '../application/use-cases/activate-
       provide: PERIOD_GUARD,
       useFactory: (periods: FiscalPeriodRepository): PeriodGuard => new DefaultPeriodGuard(periods),
       inject: [FISCAL_PERIOD_REPOSITORY],
+    },
+    {
+      // ACC-001.6: the one contract Journal, Purchase and the Agent plan call
+      // before attaching a posting to an account. It reads through the tenant-
+      // scoped repository and owns no state of its own.
+      provide: ACCOUNT_POSTING_GUARD,
+      useFactory: (accounts: AccountRepository): AccountPostingGuard =>
+        new DefaultAccountPostingGuard(accounts),
+      inject: [ACCOUNT_REPOSITORY],
     },
     {
       provide: CreateAccountUseCase,
@@ -410,6 +422,7 @@ import { ActivateStandardChartUseCase } from '../application/use-cases/activate-
     DeleteAccountUseCase,
     ActivateStandardChartUseCase,
     PERIOD_GUARD,
+    ACCOUNT_POSTING_GUARD,
     MapAccountRoleUseCase,
     ResolveAccountRoleUseCase,
     GetRoleCompletenessUseCase,
