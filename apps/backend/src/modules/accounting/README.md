@@ -109,6 +109,76 @@ verbatim (FIS-001 §7):
 Callers must not catch these to "fall back" to another period: the correct
 behavior is to surface the failure to the user.
 
+## Account posting guard (`ACC-001.6`)
+
+`AccountPostingGuard` is the **only** way another module may decide whether an
+account can receive a journal line. Journal posting, Purchase and the Agent plan
+import the contract and the token from the public entry point — never the
+account aggregate, the repository or the HTTP controllers:
+
+```ts
+import {
+  ACCOUNT_POSTING_GUARD,
+  type AccountPostingGuard,
+  AccountInactiveError,
+  AccountNotFoundError,
+  AccountNotPostableError,
+  AccountPostingRejectedError,
+} from '../../accounting/public-api.js';
+
+export class PostInvoiceUseCase {
+  public constructor(
+    @Inject(ACCOUNT_POSTING_GUARD) private readonly accounts: AccountPostingGuard,
+    @Inject(PERIOD_GUARD) private readonly periods: PeriodGuard,
+    @Inject(TRANSACTION_BOUNDARY) private readonly boundary: TransactionBoundary,
+  ) {}
+
+  public async execute(command: PostInvoice): Promise<Result<Invoice, DomainError>> {
+    return this.boundary.execute(async () => {
+      // Same transaction as the write: an account deactivated concurrently
+      // cannot slip a posting in between the check and the insert.
+      await this.periods.assertPostable(command.tenantId, command.postingDate);
+      await this.accounts.assertAllPostable([command.inventoryAccountId, command.payableAccountId]);
+
+      // … persist the invoice and its journal lines
+    });
+  }
+}
+```
+
+### What it checks
+
+The account is resolved in the **current tenant scope**. There is no tenant
+parameter and no way to name another company; the two repository layers (the
+scoped read and the aggregate's `tenantId` comparison) both enforce it.
+
+| Order | Condition                                          | Code                   | HTTP |
+| ----- | -------------------------------------------------- | ---------------------- | ---- |
+| 1     | Missing **or** owned by another tenant             | `ACCOUNT_NOT_FOUND`    | 404  |
+| 2     | Exists but is inactive                             | `ACCOUNT_INACTIVE`     | 422  |
+| 3     | Exists, active, but not postable (a grouping node) | `ACCOUNT_NOT_POSTABLE` | 422  |
+
+A foreign-tenant id and a non-existent id produce the **same** code, message
+and category: the guard never confirms that another company's account exists.
+
+### Single and batch
+
+- `assertPostable(accountId)` — one account, one reason.
+- `assertAllPostable(accountIds)` — checks every id once and reports **all**
+  failures in a single `AccountPostingRejectedError`. Its `code`/`category` are
+  those of the first failure in the caller's order; each `details` entry carries
+  the precise per-account code (`ACCOUNT_NOT_FOUND`, `ACCOUNT_INACTIVE` or
+  `ACCOUNT_NOT_POSTABLE`) and the `accountId`, so the Agent plan can list every
+  problem in one pass. An empty list is accepted. The shared 50-detail safety
+  limit applies; the message always states the full failure count.
+
+Both methods fail closed with `TenantContextMissingError` when no tenant scope
+is established. They read only; they write nothing, raise no event and open no
+transaction — the caller supplies the boundary.
+
+Do not catch these errors to fall back to another account: surface them to the
+user, exactly like a closed fiscal period.
+
 ### Fiscal API
 
 The fiscal-year and fiscal-period endpoints live in

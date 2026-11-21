@@ -5,10 +5,19 @@
 export {
   ACCOUNT_AUDIT_PORT,
   ACCOUNT_AUTHORIZATION_PORT,
+  ACCOUNT_POSTING_GUARD,
   ACCOUNT_REPOSITORY,
   ACCOUNT_USAGE_PORT,
   PERIOD_GUARD,
 } from './application/accounting.tokens.js';
+export type { AccountPostingGuard } from './application/ports/account-posting-guard.port.js';
+export { DefaultAccountPostingGuard } from './application/services/default-account-posting-guard.service.js';
+export {
+  AccountInactiveError,
+  AccountNotFoundError,
+  AccountNotPostableError,
+  AccountPostingRejectedError,
+} from './domain/errors/account.errors.js';
 export type {
   AccountAuditPort,
   AccountAuthorizationPort,

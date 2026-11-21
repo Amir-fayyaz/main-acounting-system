@@ -1,4 +1,5 @@
 import { DomainError } from '../../../../shared/errors/domain-error.js';
+import { MAX_ERROR_DETAILS } from '../../../../shared/errors/error-detail.js';
 import { ErrorCategory } from '../../../../shared/errors/error-category.js';
 
 /**
@@ -227,5 +228,76 @@ export class AccountDeletionForbiddenError extends DomainError {
     super('ACCOUNT_CANNOT_DELETE', 'This account cannot be deleted.', {
       category: ErrorCategory.BUSINESS_RULE,
     });
+  }
+}
+
+/**
+ * An account exists in the current tenant but is inactive, so it can no longer
+ * receive postings (ACC-001.6). The account stays readable in history.
+ */
+export class AccountInactiveError extends DomainError {
+  public constructor(accountId: string) {
+    super('ACCOUNT_INACTIVE', 'This account is inactive and cannot receive postings.', {
+      category: ErrorCategory.BUSINESS_RULE,
+      details: [
+        {
+          code: 'ACCOUNT_INACTIVE',
+          field: 'accountId',
+          message: 'Account is inactive',
+          accountId,
+        },
+      ],
+    });
+  }
+}
+
+/**
+ * An account exists in the current tenant and is active, but it is a grouping
+ * node (not postable), so no journal line may point at it (ACC-001.6).
+ */
+export class AccountNotPostableError extends DomainError {
+  public constructor(accountId: string) {
+    super('ACCOUNT_NOT_POSTABLE', 'This account is not postable and cannot receive postings.', {
+      category: ErrorCategory.BUSINESS_RULE,
+      details: [
+        {
+          code: 'ACCOUNT_NOT_POSTABLE',
+          field: 'accountId',
+          message: 'Account is not postable',
+          accountId,
+        },
+      ],
+    });
+  }
+}
+
+/**
+ * The batch form of the posting guard's refusal (ACC-001.6).
+ *
+ * One error carries every failing account so the Agent plan and other batch
+ * callers can show every problem at once instead of one per round trip. The
+ * error's own `code` and `category` are those of the first failure in the
+ * caller's order; each detail keeps the precise reason for its account, so a
+ * client can still switch on `ACCOUNT_NOT_FOUND` / `ACCOUNT_INACTIVE` /
+ * `ACCOUNT_NOT_POSTABLE` per detail.
+ *
+ * Details are bounded by the shared `MAX_ERROR_DETAILS` safety limit; the
+ * message always reports the full number of failures.
+ */
+export class AccountPostingRejectedError extends DomainError {
+  public constructor(failures: readonly DomainError[]) {
+    const first = failures[0];
+    const details = failures.flatMap((failure) => failure.details).slice(0, MAX_ERROR_DETAILS);
+
+    super(
+      first?.code ?? 'ACCOUNT_NOT_POSTABLE',
+      failures.length === 1
+        ? (first?.message ?? 'The account cannot receive postings.')
+        : `${failures.length} accounts cannot receive postings in this company.`,
+      {
+        category: first?.category ?? ErrorCategory.BUSINESS_RULE,
+        details,
+      },
+    );
   }
 }

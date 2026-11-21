@@ -17,7 +17,9 @@ import {
 } from '../src/shared/persistence/optimistic-concurrency.js';
 import { Revision } from '../src/shared/persistence/revision.js';
 import { DateTime } from '../src/shared/time/date-time.js';
+import { DefaultAccountPostingGuard } from '../src/modules/accounting/application/services/default-account-posting-guard.service.js';
 import { Account } from '../src/modules/accounting/domain/aggregates/account.js';
+import { accountIdFrom } from '../src/modules/accounting/domain/value-objects/account-id.js';
 import { AccountCode } from '../src/modules/accounting/domain/value-objects/account-code.js';
 import { AccountType } from '../src/modules/accounting/domain/value-objects/account-type.js';
 import { NormalBalance } from '../src/modules/accounting/domain/value-objects/account-normal-balance.js';
@@ -84,6 +86,7 @@ function aRootAccount(input: {
   readonly type?: AccountType;
   readonly normalBalance?: NormalBalance;
   readonly postable?: boolean;
+  readonly active?: boolean;
   readonly system?: boolean;
 }): Account {
   return Account.create({
@@ -93,7 +96,7 @@ function aRootAccount(input: {
     type: input.type ?? AccountType.ASSET,
     normalBalance: input.normalBalance ?? NormalBalance.DEBIT,
     postable: input.postable ?? false,
-    active: !(input.system ?? false),
+    active: input.active ?? true,
     system: input.system ?? false,
     now: NOW,
   });
@@ -538,6 +541,84 @@ describe.skipIf(!integrationEnabled)('account persistence (integration)', () => 
       await expect(repository.get(aRootAccount({ code: '1000' }).id)).rejects.toBeInstanceOf(
         TenantContextMissingError,
       );
+    });
+  });
+
+  describe('account posting guard (ACC-001.6)', () => {
+    it('accepts an active, postable account of the current tenant', async () => {
+      const account = aRootAccount({ code: '1100', postable: true });
+      await inTenant(TENANT_A, () => repository.add(account));
+
+      await expect(
+        inTenant(TENANT_A, () =>
+          new DefaultAccountPostingGuard(repository).assertPostable(account.id),
+        ),
+      ).resolves.toBeUndefined();
+    });
+
+    it('rejects an inactive account and a non-postable account', async () => {
+      const inactive = aRootAccount({ code: '1100', active: false });
+      const grouping = aRootAccount({ code: '1200', postable: false });
+      await inTenant(TENANT_A, async () => {
+        await repository.add(inactive);
+        await repository.add(grouping);
+      });
+
+      const guard = new DefaultAccountPostingGuard(repository);
+
+      await expect(
+        inTenant(TENANT_A, () => guard.assertPostable(inactive.id)),
+      ).rejects.toMatchObject({ code: 'ACCOUNT_INACTIVE' });
+
+      await expect(
+        inTenant(TENANT_A, () => guard.assertPostable(grouping.id)),
+      ).rejects.toMatchObject({ code: 'ACCOUNT_NOT_POSTABLE' });
+    });
+
+    it('answers a foreign-tenant id exactly as a non-existent one', async () => {
+      const foreign = aRootAccount({ tenantId: TENANT_B, code: '2000', postable: true });
+      await inTenant(TENANT_B, () => repository.add(foreign));
+
+      const guard = new DefaultAccountPostingGuard(repository);
+      const missingId = accountIdFrom(randomUUID());
+
+      const foreignFailure = await inTenant(TENANT_A, () => guard.assertPostable(foreign.id)).then(
+        () => undefined,
+        (error: unknown) => error as { code: string; message: string },
+      );
+      const missingFailure = await inTenant(TENANT_A, () => guard.assertPostable(missingId)).then(
+        () => undefined,
+        (error: unknown) => error as { code: string; message: string },
+      );
+
+      expect(foreignFailure).toMatchObject({
+        code: 'ACCOUNT_NOT_FOUND',
+        message: missingFailure?.message,
+      });
+    });
+
+    it('reports every failing account of a batch in one error', async () => {
+      const inactive = aRootAccount({ code: '1100', active: false });
+      const foreign = aRootAccount({ tenantId: TENANT_B, code: '2000', postable: true });
+      await inTenant(TENANT_A, () => repository.add(inactive));
+      await inTenant(TENANT_B, () => repository.add(foreign));
+
+      const outcome = await inTenant(TENANT_A, () =>
+        new DefaultAccountPostingGuard(repository).assertAllPostable([
+          inactive.id,
+          foreign.id,
+          accountIdFrom(randomUUID()),
+        ]),
+      ).then(
+        () => undefined,
+        (error: unknown) => error as { details: readonly { code: string }[] },
+      );
+
+      expect(outcome?.details.map((detail) => detail.code)).toEqual([
+        'ACCOUNT_INACTIVE',
+        'ACCOUNT_NOT_FOUND',
+        'ACCOUNT_NOT_FOUND',
+      ]);
     });
   });
 
