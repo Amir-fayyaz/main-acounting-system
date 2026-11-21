@@ -30,7 +30,15 @@
     "./api": "./api/index.ts",
     "./ui/panel": "./ui/panel.ts",
     "./ui/sidebar": "./ui/sidebar.ts",
-    "./ui/utils/pagination": "./ui/utils/pagination.ts"
+    "./ui/utils/pagination": "./ui/utils/pagination.ts",
+    "./session": "./session/index.ts",
+    "./session/types": "./session/assets/@types/session.types.ts",
+    "./session/cookie": "./session/lib/cookie/index.ts",
+    "./session/token": "./session/lib/token/index.ts",
+    "./session/api": "./session/lib/api/index.ts",
+    "./session/storage": "./session/lib/storage/index.ts",
+    "./session/hooks": "./session/hooks/index.ts",
+    "./session/components": "./session/components/index.ts"
   },
   "peerDependencies": {
     "next": "catalog:",
@@ -58,7 +66,8 @@
     "sonner": "catalog:",
     "swiper": "catalog:",
     "tailwind-merge": "catalog:",
-    "tw-animate-css": "catalog:"
+    "tw-animate-css": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "tsx": "catalog:"

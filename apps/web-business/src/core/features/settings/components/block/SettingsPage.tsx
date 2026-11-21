@@ -10,16 +10,8 @@ import { CompanyInfoSection } from './sections/CompanyInfoSection';
 const LOAD_ERROR_MESSAGE = 'دریافت تنظیمات با مشکل مواجه شد. لطفاً دوباره تلاش کنید.';
 
 export function SettingsPage() {
-  const {
-    status,
-    settings,
-    errors,
-    saving,
-    patchCompany,
-    patchRules,
-    handleSave,
-    retryLoad,
-  } = useSettings();
+  const { status, settings, errors, saving, patchCompany, patchRules, handleSave, retryLoad } =
+    useSettings();
 
   return (
     <SectionLayout>

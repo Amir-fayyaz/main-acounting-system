@@ -1,9 +1,9 @@
-"use client";
-import { useCallback, useEffect, useState } from "react";
-import type { SessionResponse } from "../assets/@types/auth.types";
-import { clearAuthToken, getSessionAction } from "../lib/auth-storage";
+'use client';
+import { useCallback, useEffect, useState } from 'react';
+import type { SessionResponse } from '@repo/web/session/types';
+import { clearAuthToken, getSessionAction } from '@repo/web/session/storage';
 
-type Status = "loading" | "authenticated" | "unauthenticated";
+type Status = 'loading' | 'authenticated' | 'unauthenticated';
 
 /**
  * cookie `Token` فقط‌سرور (httpOnly) است؛ بنابراین session از طریق
@@ -11,19 +11,19 @@ type Status = "loading" | "authenticated" | "unauthenticated";
  */
 export function useSession() {
   const [session, setSession] = useState<SessionResponse | null>(null);
-  const [status, setStatus] = useState<Status>("loading");
+  const [status, setStatus] = useState<Status>('loading');
 
   const refresh = useCallback(async () => {
-    setStatus("loading");
+    setStatus('loading');
     const res = await getSessionAction();
     if (res.ok) {
       setSession(res.session);
-      setStatus("authenticated");
+      setStatus('authenticated');
       return;
     }
     if (res.error.status === 401) await clearAuthToken();
     setSession(null);
-    setStatus("unauthenticated");
+    setStatus('unauthenticated');
   }, []);
 
   useEffect(() => {

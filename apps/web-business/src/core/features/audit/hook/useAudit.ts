@@ -8,9 +8,7 @@ import { listAudit, type AuditListResponse } from '../lib/audit.service';
 export type UseAuditParams = Pick<ListAuditParams, 'page' | 'limit' | 'search' | 'outcome'>;
 
 export type UseAuditState =
-  | { status: 'loading' }
-  | { status: 'error' }
-  | { status: 'success'; response: AuditListResponse };
+  { status: 'loading' } | { status: 'error' } | { status: 'success'; response: AuditListResponse };
 
 export interface UseAuditResult {
   state: UseAuditState;

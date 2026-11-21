@@ -1,8 +1,5 @@
 import type { CreatePurchaseInput, Purchase } from '../assets/@types/purchase';
-import {
-  getMockPurchases,
-  insertMockPurchase,
-} from '../assets/mock/purchases.mock';
+import { getMockPurchases, insertMockPurchase } from '../assets/mock/purchases.mock';
 
 export const PURCHASES_DEFAULT_LIMIT = 20;
 export const PURCHASES_MAX_LIMIT = 100;
@@ -72,9 +69,7 @@ export async function listPurchases(
   const limit = normalizeLimit(params.limit);
 
   const requestedPage =
-    Number.isSafeInteger(params.page) && (params.page ?? 0) >= 1
-      ? (params.page as number)
-      : 1;
+    Number.isSafeInteger(params.page) && (params.page ?? 0) >= 1 ? (params.page as number) : 1;
 
   const filtered = filterPurchases(params);
 

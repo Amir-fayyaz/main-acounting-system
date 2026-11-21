@@ -1,9 +1,7 @@
 import type { ReactNode } from 'react';
-
 import { Card, CardContent } from '@repo/web/ui';
 import { cn } from '@repo/web/ui/utils/cn';
-
-import { formatCountFa } from '../../utils/format';
+import { formatCountFa } from '../../../shared';
 
 type ChequeStatTone = 'default' | 'positive' | 'danger' | 'brand';
 
@@ -16,7 +14,6 @@ const TONE_CLASSES: Record<ChequeStatTone, string> = {
 
 interface ChequeStatCardProps {
   label: string;
-  /** `null` وقتی داده هنوز/دیگر در دسترس نیست. */
   value: number | null;
   icon?: ReactNode;
   tone?: ChequeStatTone;

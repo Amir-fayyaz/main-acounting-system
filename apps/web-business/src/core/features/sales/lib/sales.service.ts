@@ -59,9 +59,7 @@ export async function listSales(params: ListSalesParams = {}): Promise<SaleListR
   const limit = normalizeLimit(params.limit);
 
   const requestedPage =
-    Number.isSafeInteger(params.page) && (params.page ?? 0) >= 1
-      ? (params.page as number)
-      : 1;
+    Number.isSafeInteger(params.page) && (params.page ?? 0) >= 1 ? (params.page as number) : 1;
 
   const filtered = filterSales(params);
 

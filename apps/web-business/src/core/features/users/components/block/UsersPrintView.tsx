@@ -14,7 +14,7 @@ import {
 import { cn } from '@repo/web/ui/utils/cn';
 
 import type { User } from '../../assets/@types/user';
-import { USER_STATUS_LABELS } from '../ui/UserStatusBadge';
+import { USER_STATUS_LABELS } from '../../lib/users.config';
 import { usersColumns } from './UsersTable';
 
 const PRINT_DATE_TIME_FORMATTER = new Intl.DateTimeFormat('fa-IR', {
@@ -25,7 +25,7 @@ const PRINT_DATE_TIME_FORMATTER = new Intl.DateTimeFormat('fa-IR', {
 
 const PRINT_NUMBER_FORMATTER = new Intl.NumberFormat('fa-IR');
 
-export function formatPrintTimestamp(date: Date): string {
+function formatPrintTimestamp(date: Date): string {
   return PRINT_DATE_TIME_FORMATTER.format(date);
 }
 
@@ -78,7 +78,9 @@ export function UsersPrintView({ users, generatedAt }: UsersPrintViewProps) {
     <div className="branches-print-report hidden bg-card text-foreground print:block">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
         <div className="space-y-1 text-start">
-          <H1 className="text-start text-2xl font-bold tracking-tight sm:text-2xl">کاربران و نقش‌ها</H1>
+          <H1 className="text-start text-2xl font-bold tracking-tight sm:text-2xl">
+            کاربران و نقش‌ها
+          </H1>
           <P className="text-sm text-muted-foreground">عضویت‌ها و دسترسی‌ها</P>
         </div>
 

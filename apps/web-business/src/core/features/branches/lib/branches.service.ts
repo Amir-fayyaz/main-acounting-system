@@ -1,10 +1,8 @@
 import type { Branch, CreateBranchInput, ListBranchesParams } from '../assets/@types/branch';
 import { getMockBranches, hasMockBranchCode, insertMockBranch } from '../assets/mock/branches.mock';
 
-/** Page size used when the URL does not specify `limit` (shared contract). */
 export const BRANCHES_DEFAULT_LIMIT = 20;
 
-/** Upper bound accepted for `limit` (shared contract). */
 export const BRANCHES_MAX_LIMIT = 100;
 
 export interface BranchListMeta {
@@ -30,13 +28,6 @@ function searchHaystack(branch: Branch): string {
   return [branch.code, branch.name, branch.managerName, branch.status].join(' ').toLowerCase();
 }
 
-/**
- * Lists branches with search, status filtering and pagination.
- *
- * Mock implementation of the future `GET /branches` endpoint: it resolves the
- * same `{ data, meta }` envelope the UI consumes, so only this function has to
- * change when a real API is wired in.
- */
 function filterBranches(params: ListBranchesParams = {}): Branch[] {
   const search = params.search?.trim().toLowerCase() ?? '';
   const status = params.status?.trim() ?? '';
@@ -49,7 +40,6 @@ function filterBranches(params: ListBranchesParams = {}): Branch[] {
   });
 }
 
-/** Returns every branch matching the filters, without pagination. */
 export async function listAllBranches(
   params: Pick<ListBranchesParams, 'search' | 'status'> = {},
 ): Promise<Branch[]> {
@@ -75,10 +65,7 @@ export async function listBranches(params: ListBranchesParams = {}): Promise<Bra
   };
 }
 
-/**
- * Creates a branch. Rejects duplicate branch codes so the dialog can surface
- * the reason instead of silently accepting conflicting data.
- */
+
 export async function createBranch(input: CreateBranchInput): Promise<Branch> {
   if (hasMockBranchCode(input.code)) {
     throw new Error('شعبه‌ای با این کد قبلاً ثبت شده است.');

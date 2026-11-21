@@ -14,6 +14,7 @@ import {
 import { cn } from '@repo/web/ui/utils/cn';
 
 import type { Branch } from '../../assets/@types/branch';
+import { formatBranchAmount, formatBranchCode, formatBranchCount } from '../../utils/format';
 import { BRANCH_STATUS_LABELS } from '../ui/BranchStatusBadge';
 import { branchesColumns } from './BranchesTable';
 
@@ -21,11 +22,6 @@ const PRINT_DATE_TIME_FORMATTER = new Intl.DateTimeFormat('fa-IR', {
   calendar: 'persian',
   dateStyle: 'full',
   timeStyle: 'short',
-});
-
-const PRINT_NUMBER_FORMATTER = new Intl.NumberFormat('fa-IR');
-const PRINT_PLAIN_NUMBER_FORMATTER = new Intl.NumberFormat('fa-IR', {
-  useGrouping: false,
 });
 
 export function formatPrintTimestamp(date: Date): string {
@@ -43,38 +39,20 @@ const PRINT_COLUMN_WIDTHS: Record<string, string> = {
   status: '11%',
 };
 
-function formatCount(value: number): string {
-  return PRINT_NUMBER_FORMATTER.format(value);
-}
-
-function formatAmount(value: string): string {
-  const numericValue = Number(value);
-  if (!Number.isFinite(numericValue)) return value;
-
-  return PRINT_NUMBER_FORMATTER.format(numericValue);
-}
-
-function formatCode(value: string): string {
-  const numericValue = Number(value);
-  if (!Number.isFinite(numericValue)) return value;
-
-  return PRINT_PLAIN_NUMBER_FORMATTER.format(numericValue);
-}
-
 function renderCell(branch: Branch, key: string | undefined) {
   switch (key) {
     case 'code':
-      return formatCode(branch.code);
+      return formatBranchCode(branch.code);
     case 'name':
       return branch.name;
     case 'managerName':
       return branch.managerName;
     case 'cashRegisterCount':
-      return formatCount(branch.cashRegisterCount);
+      return formatBranchCount(branch.cashRegisterCount);
     case 'userCount':
-      return formatCount(branch.userCount);
+      return formatBranchCount(branch.userCount);
     case 'monthlySales':
-      return formatAmount(branch.monthlySales);
+      return formatBranchAmount(branch.monthlySales);
     case 'status':
       return (
         <span
@@ -110,7 +88,7 @@ export function BranchesPrintView({ branches, generatedAt }: BranchesPrintViewPr
             تاریخ چاپ: {formatPrintTimestamp(generatedAt)}
           </Small>
           <Small className="block text-xs font-normal text-muted-foreground">
-            تعداد شعب: {formatCount(branches.length)}
+            تعداد شعب: {formatBranchCount(branches.length)}
           </Small>
         </div>
       </div>
@@ -160,7 +138,7 @@ export function BranchesPrintView({ branches, generatedAt }: BranchesPrintViewPr
                   className="break-inside-avoid border-b border-border last:border-b-0 hover:bg-transparent"
                 >
                   <TableCell className="px-3 py-3 text-center text-xs tabular-nums text-muted-foreground">
-                    {formatCount(index + 1)}
+                    {formatBranchCount(index + 1)}
                   </TableCell>
 
                   {branchesColumns.map((column) => (

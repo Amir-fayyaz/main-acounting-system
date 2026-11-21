@@ -4,7 +4,6 @@ import { Landmark, ListChecks, Plus, Wallet } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
-
 import {
   Button,
   H1,
@@ -18,22 +17,21 @@ import {
   SelectValue,
 } from '@repo/web/ui';
 import { usePagination } from '@repo/web';
-
+import { formatCountFa, PrintButton, PrintStyles } from '../../../shared';
 import type { Account, AccountType } from '../../assets/@types/account.types';
 import { useAccountFilters } from '../../hook/useAccountFilters';
 import { useAccounts } from '../../hook/useAccounts';
+import { useCreateAccount } from '../../hook/useCreateAccount';
 import { ACCOUNT_TYPE_OPTIONS } from '../../lib/accounts.config';
-import { formatCountFa } from '../../utils/format';
 import { formatMoneyCompactFa } from '../../utils/money';
-import { AccountPrintButton } from '../ui/AccountPrintButton';
 import { AccountStatCard } from '../ui/AccountStatCard';
-import { AccountsPrintStyles } from './AccountsPrintStyles';
 import { AccountsTable } from './AccountsTable';
 import { AccountFormDialog } from './dialogs/AccountFormDialog';
 
 export function AccountsPageContent() {
   const { page, limit, setPage, setLimit, queryParams } = usePagination();
   const { type, setType } = useAccountFilters();
+  const createAccount = useCreateAccount();
   const searchParams = useSearchParams();
   const search = searchParams.get('search')?.trim() ?? '';
   const [isDialogOpen, setDialogOpen] = useState(false);
@@ -52,7 +50,7 @@ export function AccountsPageContent() {
 
   return (
     <SectionLayout>
-      <AccountsPrintStyles />
+      <PrintStyles scope="accounts" />
       <div data-accounts-print className="flex flex-col gap-5">
         <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-1">
@@ -65,7 +63,7 @@ export function AccountsPageContent() {
           </div>
 
           <div data-accounts-actions className="flex flex-wrap items-center gap-2 print:hidden">
-            <AccountPrintButton />
+            <PrintButton />
 
             <Button
               className="gap-1.5"
@@ -160,6 +158,7 @@ export function AccountsPageContent() {
         <AccountFormDialog
           open
           onOpenChange={setDialogOpen}
+          createAccount={createAccount}
           onSaved={(saved: Account) => {
             refresh();
             toast.success(`حساب «${saved.title}» ثبت شد.`);

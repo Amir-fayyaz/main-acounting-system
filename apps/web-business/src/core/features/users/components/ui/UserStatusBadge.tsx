@@ -1,11 +1,9 @@
 import { Badge } from '@repo/web';
 
 import type { UserStatus } from '../../assets/@types/user';
+import { USER_STATUS_LABELS } from '../../lib/users.config';
 
-export const USER_STATUS_LABELS: Record<UserStatus, string> = {
-  active: 'فعال',
-  inactive: 'غیرفعال',
-};
+export { USER_STATUS_LABELS };
 
 const STATUS_TONE: Record<UserStatus, 'default' | 'secondary'> = {
   active: 'default',

@@ -33,7 +33,7 @@ function formatFa(n: number): string {
 function createSeedPurchases(): Purchase[] {
   const result: Purchase[] = [];
   for (let i = 0; i < 30; i += 1) {
-    const gross = 5_000_000 + (i * 23_000_000 % 700_000_000);
+    const gross = 5_000_000 + ((i * 23_000_000) % 700_000_000);
     const pct = [0, 0, 3, 5, 8][i % 5];
     const disc = Math.round((gross * pct) / 100);
     const total = gross - disc;

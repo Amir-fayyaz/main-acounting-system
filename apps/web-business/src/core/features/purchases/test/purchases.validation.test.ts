@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { validatePurchaseForm } from '../lib/purchases.validation';
+import { validatePurchaseForm } from '../lib/purchase-form.schema';
 
 const VALID = {
   supplier: 'شرکت آرمان تجارت',

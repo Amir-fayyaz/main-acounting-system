@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePagination } from '@repo/web';
 import { Button, H1, P, SectionLayout } from '@repo/web';
 import { Plus, Printer } from 'lucide-react';
@@ -76,13 +76,6 @@ export function BranchesPage() {
     }
   }
 
-  const handleStatusChange = useCallback(
-    (nextStatus: string) => {
-      setStatus(nextStatus);
-    },
-    [setStatus],
-  );
-
   return (
     <SectionLayout>
       <div className="flex flex-wrap items-end justify-between gap-3 print:hidden">
@@ -110,7 +103,7 @@ export function BranchesPage() {
         </div>
       </div>
 
-      <BranchesToolbar value={status} onChange={handleStatusChange} className="print:hidden" />
+      <BranchesToolbar value={status} onChange={setStatus} className="print:hidden" />
 
       <div className="print:hidden">
         <BranchesTable

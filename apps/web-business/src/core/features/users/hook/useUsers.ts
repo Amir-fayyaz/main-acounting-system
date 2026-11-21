@@ -8,9 +8,7 @@ import { listUsers, type UserListResponse } from '../lib/users.service';
 export type UseUsersParams = Pick<ListUsersParams, 'page' | 'limit' | 'search' | 'role'>;
 
 export type UseUsersState =
-  | { status: 'loading' }
-  | { status: 'error' }
-  | { status: 'success'; response: UserListResponse };
+  { status: 'loading' } | { status: 'error' } | { status: 'success'; response: UserListResponse };
 
 export interface UseUsersResult {
   state: UseUsersState;

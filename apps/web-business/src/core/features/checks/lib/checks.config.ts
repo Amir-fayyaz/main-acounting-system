@@ -27,7 +27,6 @@ export const CHEQUE_DIRECTION_OPTIONS: readonly ChequeSelectOption<ChequeDirecti
   Object.entries(CHEQUE_DIRECTION_LABELS) as [ChequeDirection, string][]
 ).map(([value, label]) => ({ value, label }));
 
-/** اندازه‌های صفحه مطابق طراحی cheques.html. */
 export const CHEQUE_PAGE_SIZES = [10, 20, 50] as const;
 
 export const CHEQUE_BANKS = ['ملی', 'ملت', 'سامان', 'پاسارگاد', 'صادرات'] as const;

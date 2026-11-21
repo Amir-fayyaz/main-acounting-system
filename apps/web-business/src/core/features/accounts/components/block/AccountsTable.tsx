@@ -1,14 +1,11 @@
 'use client';
 
 import type { ReactNode } from 'react';
-
 import { DataTable, type DataTableColumn, type PaginationMeta } from '@repo/web/ui';
 import { cn } from '@repo/web/ui/utils/cn';
-
+import { formatCountFa, formatMoneyFa, toFaDigits } from '../../../shared';
 import type { Account } from '../../assets/@types/account.types';
 import { ACCOUNT_PAGE_SIZES } from '../../lib/accounts.config';
-import { formatCountFa, toPersianDigits } from '../../utils/format';
-import { formatMoneyFa } from '../../utils/money';
 import { AccountStatusBadge } from '../ui/AccountStatusBadge';
 import { AccountTypeBadge } from '../ui/AccountTypeBadge';
 
@@ -81,7 +78,7 @@ export function AccountsTable({
       cell: (account: Account) =>
         account.iban ? (
           <span dir="ltr" className="inline-block text-start">
-            {toPersianDigits(account.iban)}
+            {toFaDigits(account.iban)}
           </span>
         ) : (
           EMPTY_VALUE

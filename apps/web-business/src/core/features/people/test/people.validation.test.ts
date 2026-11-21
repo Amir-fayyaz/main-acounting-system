@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { validatePersonForm } from '../lib/people.validation';
+import { validatePersonForm } from '../lib/person-form.schema';
 
 describe('people validation', () => {
   it('requires a name', () => {

@@ -2,15 +2,9 @@
 
 import { DataTable, type DataTableColumn, type PaginationMeta } from '@repo/web';
 
-import type { Branch, Money } from '../../assets/@types/branch';
+import type { Branch } from '../../assets/@types/branch';
+import { formatBranchAmount, formatBranchCode } from '../../utils/format';
 import { BranchStatusBadge } from '../ui/BranchStatusBadge';
-
-export function formatMonthlySales(value: Money): string {
-  const numericValue = Number(value);
-  if (!Number.isFinite(numericValue)) return value;
-
-  return new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 0 }).format(numericValue);
-}
 
 export const branchesColumns: DataTableColumn<Branch>[] = [
   {
@@ -18,10 +12,7 @@ export const branchesColumns: DataTableColumn<Branch>[] = [
     header: 'کد',
     headerClassName: 'text-start',
     className: 'text-start text-sm text-muted-foreground tabular-nums',
-    cell: (branch) =>
-      Number.isFinite(Number(branch.code))
-        ? Number(branch.code).toLocaleString('fa-IR', { useGrouping: false })
-        : branch.code,
+    cell: (branch) => formatBranchCode(branch.code),
   },
   {
     key: 'name',
@@ -54,7 +45,7 @@ export const branchesColumns: DataTableColumn<Branch>[] = [
     header: 'فروش ماه (ریال)',
     headerClassName: 'text-end',
     className: 'text-end font-medium tabular-nums',
-    cell: (branch) => formatMonthlySales(branch.monthlySales),
+    cell: (branch) => formatBranchAmount(branch.monthlySales),
   },
   {
     key: 'status',

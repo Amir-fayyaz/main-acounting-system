@@ -1,9 +1,9 @@
+import { normalizeIban, normalizeMoneyInput } from '../../shared';
 import {
   ACCOUNT_CURRENCY,
   type AccountFormValues,
   type CreateAccountRequest,
 } from '../assets/@types/account.types';
-import { normalizeMoneyInput } from '../utils/money';
 
 export function createEmptyAccountFormValues(): AccountFormValues {
   return {
@@ -15,7 +15,6 @@ export function createEmptyAccountFormValues(): AccountFormValues {
   };
 }
 
-/** فرم ایجاد را به payload استاندارد API تبدیل می‌کند؛ بانک/شبا برای غیربانکی خالی می‌شود. */
 export function mapAccountFormValuesToCreateRequest(
   values: AccountFormValues,
 ): CreateAccountRequest {
@@ -25,7 +24,7 @@ export function mapAccountFormValuesToCreateRequest(
     title: values.title.trim(),
     type: values.type,
     bank: isBank ? values.bank.trim() : null,
-    iban: isBank ? values.iban.replace(/[\s-]/g, '').toUpperCase() : null,
+    iban: isBank ? normalizeIban(values.iban) : null,
     openingBalance: {
       amount: normalizeMoneyInput(values.openingBalance) ?? '0.00',
       currency: ACCOUNT_CURRENCY,

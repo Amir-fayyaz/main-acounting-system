@@ -16,7 +16,7 @@ import {
 } from '@repo/web';
 
 import type { CreateBranchInput } from '../../../assets/@types/branch';
-import { validateBranchForm, type BranchFormErrors } from '../../../lib/branches.validation';
+import { validateBranchForm, type BranchFormErrors } from '../../../lib/branch-form.schema';
 
 type FieldName = keyof CreateBranchInput;
 

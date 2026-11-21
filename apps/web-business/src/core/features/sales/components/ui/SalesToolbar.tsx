@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@repo/web';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@repo/web';
 import { cn } from '@repo/web/ui/utils/cn';
 
 import { SELLERS } from '../../assets/mock/sales.mock';
@@ -44,7 +38,9 @@ export function SalesToolbar({
         <SelectContent>
           <SelectItem value={ALL}>وضعیت: همه</SelectItem>
           {STATUS_OPTIONS.map((o) => (
-            <SelectItem key={o} value={o}>{o}</SelectItem>
+            <SelectItem key={o} value={o}>
+              {o}
+            </SelectItem>
           ))}
         </SelectContent>
       </Select>
@@ -56,19 +52,26 @@ export function SalesToolbar({
         <SelectContent>
           <SelectItem value={ALL}>فروشنده: همه</SelectItem>
           {SELLERS.map((o) => (
-            <SelectItem key={o} value={o}>{o}</SelectItem>
+            <SelectItem key={o} value={o}>
+              {o}
+            </SelectItem>
           ))}
         </SelectContent>
       </Select>
 
-      <Select value={discountState || ALL} onValueChange={(n) => onDiscountStateChange(n === ALL ? '' : n)}>
+      <Select
+        value={discountState || ALL}
+        onValueChange={(n) => onDiscountStateChange(n === ALL ? '' : n)}
+      >
         <SelectTrigger aria-label="تخفیف" className="w-36">
           <SelectValue placeholder="تخفیف" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value={ALL}>تخفیف: همه</SelectItem>
           {DISCOUNT_OPTIONS.map((o) => (
-            <SelectItem key={o} value={o}>{o}</SelectItem>
+            <SelectItem key={o} value={o}>
+              {o}
+            </SelectItem>
           ))}
         </SelectContent>
       </Select>

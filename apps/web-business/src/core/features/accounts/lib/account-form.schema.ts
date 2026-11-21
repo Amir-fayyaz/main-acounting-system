@@ -1,12 +1,10 @@
 import { z } from 'zod';
-
+import { mapZodErrorsToKnownFields, normalizeIban, normalizeMoneyInput } from '../../shared';
 import {
   ACCOUNT_TYPES,
   type AccountFormErrors,
   type AccountFormValues,
 } from '../assets/@types/account.types';
-import { toAsciiDigits } from '../utils/format';
-import { normalizeMoneyInput } from '../utils/money';
 import { ACCOUNT_IBAN_PATTERN } from './accounts.config';
 
 const ACCOUNT_FORM_FIELDS = new Set<keyof AccountFormValues>([
@@ -22,7 +20,7 @@ function normalizeTextInput(value: unknown): string {
 }
 
 function normalizeIbanInput(value: unknown): string {
-  return typeof value === 'string' ? toAsciiDigits(value).replace(/[\s-]/g, '').toUpperCase() : '';
+  return typeof value === 'string' ? normalizeIban(value) : '';
 }
 
 function normalizeOpeningBalanceInput(value: unknown): string {
@@ -31,10 +29,6 @@ function normalizeOpeningBalanceInput(value: unknown): string {
   return normalizeMoneyInput(value) ?? '';
 }
 
-/**
- * Schema فرم حساب. مقدار خالی موجودی اولیه صفر در نظر گرفته می‌شود؛
- * بانک و شبا فقط برای حساب بانکی الزامی‌اند.
- */
 export const accountFormSchema = z
   .object({
     title: z.preprocess(normalizeTextInput, z.string().min(1, 'عنوان حساب را وارد کنید.')),
@@ -80,15 +74,5 @@ export type AccountFormSchema = typeof accountFormSchema;
 export type AccountFormOutput = z.output<AccountFormSchema>;
 
 export function mapZodErrorsToAccountFormErrors(error: z.ZodError): AccountFormErrors {
-  const errors: AccountFormErrors = {};
-
-  for (const issue of error.issues) {
-    const field = issue.path[0];
-    if (typeof field !== 'string') continue;
-    if (!ACCOUNT_FORM_FIELDS.has(field as keyof AccountFormValues)) continue;
-    const key = field as keyof AccountFormValues;
-    if (!errors[key]) errors[key] = issue.message;
-  }
-
-  return errors;
+  return mapZodErrorsToKnownFields(error, ACCOUNT_FORM_FIELDS);
 }
