@@ -80,6 +80,10 @@ export interface ListQueryParams {
 /**
  * Domain error codes returned by the backend API for fiscal years and periods
  */
+export type FiscalPaginatedResponse<T> = PaginatedDto<T>;
+export type FiscalYearResponseDto = FiscalYearDto;
+export type FiscalPeriodResponseDto = FiscalPeriodDto;
+
 export const FISCAL_ERROR_CODES = {
   YEAR_OVERLAP: 'FISCAL_YEAR_OVERLAP',
   YEAR_LABEL_DUPLICATE: 'FISCAL_YEAR_LABEL_DUPLICATE',

@@ -56,6 +56,7 @@ describe('fiscal-api', () => {
       startDate: '2026-03-21',
       endDate: '2027-03-20',
       status: 'open',
+      revision: 1,
       createdAt: '2026-03-21T00:00:00.000Z',
       updatedAt: '2026-03-21T00:00:00.000Z',
     };
@@ -63,11 +64,11 @@ describe('fiscal-api', () => {
       id: 'p1',
       tenantId: 'test-tenant',
       fiscalYearId: 'new-year-id',
-      name: 'فروردین ۱۴۰۵',
+      jalaliYear: 1405,
+      sequence: 1,
       startDate: '2026-03-21',
       endDate: '2026-04-20',
-      periodNumber: 1,
-      status: 'open',
+      state: 'open',
       createdAt: '2026-03-21T00:00:00.000Z',
       updatedAt: '2026-03-21T00:00:00.000Z',
     };
@@ -76,7 +77,9 @@ describe('fiscal-api', () => {
       meta: { page: 1, limit: 20, total: 1, totalPages: 1 },
     };
 
-    const apiRequestSpy = vi.spyOn(apiModule, 'apiRequest').mockResolvedValue(dummyPaginatedYears);
+    const apiRequestSpy = vi
+      .spyOn(apiModule, 'apiRequest')
+      .mockImplementation(async () => dummyPaginatedYears as never);
 
     await listFiscalYearsApi('test-tenant', { page: 1, limit: 10 });
     expect(apiRequestSpy).toHaveBeenCalledWith(
@@ -84,7 +87,7 @@ describe('fiscal-api', () => {
       expect.objectContaining({ method: 'GET' }),
     );
 
-    apiRequestSpy.mockResolvedValueOnce(dummyYearDto);
+    apiRequestSpy.mockImplementationOnce(async () => dummyYearDto as never);
     await createFiscalYearApi('test-tenant', {
       label: 'FY1405',
       startDate: '2026-03-21',
@@ -102,28 +105,28 @@ describe('fiscal-api', () => {
       }),
     );
 
-    apiRequestSpy.mockResolvedValueOnce(dummyPaginatedPeriods);
+    apiRequestSpy.mockImplementationOnce(async () => dummyPaginatedPeriods as never);
     await listFiscalPeriodsApi('test-tenant', 'new-year-id', { page: 1, limit: 50 });
     expect(apiRequestSpy).toHaveBeenCalledWith(
       '/tenants/test-tenant/fiscal-years/new-year-id/periods?page=1&limit=50',
       expect.objectContaining({ method: 'GET' }),
     );
 
-    apiRequestSpy.mockResolvedValueOnce(dummyPeriodDto);
+    apiRequestSpy.mockImplementationOnce(async () => dummyPeriodDto as never);
     await selectActivePeriodApi('test-tenant', 'period-1');
     expect(apiRequestSpy).toHaveBeenCalledWith(
       '/tenants/test-tenant/fiscal-periods/period-1/select-active',
       expect.objectContaining({ method: 'POST' }),
     );
 
-    apiRequestSpy.mockResolvedValueOnce(dummyPeriodDto);
+    apiRequestSpy.mockImplementationOnce(async () => dummyPeriodDto as never);
     await closeFiscalPeriodApi('test-tenant', 'period-1');
     expect(apiRequestSpy).toHaveBeenCalledWith(
       '/tenants/test-tenant/fiscal-periods/period-1/close',
       expect.objectContaining({ method: 'POST' }),
     );
 
-    apiRequestSpy.mockResolvedValueOnce(dummyPeriodDto);
+    apiRequestSpy.mockImplementationOnce(async () => dummyPeriodDto as never);
     await reopenFiscalPeriodApi('test-tenant', 'period-1', { reason: 'توضیحات بازگشایی' });
     expect(apiRequestSpy).toHaveBeenCalledWith(
       '/tenants/test-tenant/fiscal-periods/period-1/reopen',

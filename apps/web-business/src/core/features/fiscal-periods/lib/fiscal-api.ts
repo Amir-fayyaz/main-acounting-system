@@ -1,5 +1,4 @@
 import { apiRequest } from '@repo/web/api';
-import { getAccessToken } from '@repo/web/session/cookie';
 
 import type {
   CreateFiscalYearPayload,
@@ -12,6 +11,15 @@ import type {
 import { FISCAL_ERROR_CODES } from '../assets/@types/fiscal-api.types';
 
 export const DEFAULT_TENANT_FIXTURE = '018f0d3c-6d0f-7a4b-9d4e-2b3c4d5e6f70';
+
+/**
+ * Reads token from browser document.cookie without using server-only next/headers.
+ */
+function getClientToken(): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(/(?:^|;\s*)Token=([^;]*)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
 
 /**
  * Resolves the active tenant ID for API requests.
@@ -42,7 +50,7 @@ export function setActiveTenantId(tenantId: string): void {
 }
 
 function getAuthHeaders(customToken?: string): Record<string, string> {
-  const token = customToken || (typeof window !== 'undefined' ? getAccessToken() : null);
+  const token = customToken || (typeof window !== 'undefined' ? getClientToken() : null);
   const headers: Record<string, string> = {
     Accept: 'application/json',
     'Content-Type': 'application/json',
@@ -58,7 +66,10 @@ function getAuthHeaders(customToken?: string): Record<string, string> {
 /**
  * Translates backend domain error codes to user-facing Persian messages.
  */
-export function mapFiscalErrorMessage(error: unknown, fallbackMessage: string): string {
+export function mapFiscalErrorMessage(
+  error: unknown,
+  fallbackMessage = 'خطایی در عملیات سال یا دوره‌ی مالی رخ داد',
+): string {
   if (typeof error === 'object' && error !== null) {
     const errObj = error as { code?: string; message?: string };
     if (errObj.code) {

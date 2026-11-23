@@ -165,7 +165,7 @@ export async function createFiscalYear(
 
       return model;
     } catch (err: unknown) {
-      if (isApiError(err) && err.status >= 400 && err.status < 500) {
+      if (isApiError(err) && err.status !== undefined && err.status >= 400 && err.status < 500) {
         throw err;
       }
       // API call failed due to offline server/network; fall back to local store
@@ -246,7 +246,7 @@ export async function selectActiveFiscalPeriod(
     try {
       await selectActivePeriodApi(getActiveTenantId(), periodId);
     } catch (err: unknown) {
-      if (isApiError(err) && err.status >= 400 && err.status < 500) {
+      if (isApiError(err) && err.status !== undefined && err.status >= 400 && err.status < 500) {
         throw err;
       }
     }
@@ -284,7 +284,7 @@ export async function updatePeriodStatus(
         await reopenFiscalPeriodApi(getActiveTenantId(), periodId, { reason });
       }
     } catch (err: unknown) {
-      if (isApiError(err) && err.status >= 400 && err.status < 500) {
+      if (isApiError(err) && err.status !== undefined && err.status >= 400 && err.status < 500) {
         throw err;
       }
     }
