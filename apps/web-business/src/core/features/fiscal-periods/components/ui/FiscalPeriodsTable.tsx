@@ -13,6 +13,7 @@ export interface FiscalPeriodsTableProps {
   onRevertToOpen: (period: FiscalPeriod) => void;
   onSelectClosePeriod: (period: FiscalPeriod) => void;
   onSelectReopenPeriod: (period: FiscalPeriod) => void;
+  onSelectActivePeriod?: (period: FiscalPeriod) => void;
 }
 
 export function FiscalPeriodsTable({
@@ -24,6 +25,7 @@ export function FiscalPeriodsTable({
   onRevertToOpen,
   onSelectClosePeriod,
   onSelectReopenPeriod,
+  onSelectActivePeriod,
 }: FiscalPeriodsTableProps) {
   return (
     <div className="rounded-md border border-border bg-card overflow-hidden">
@@ -64,7 +66,14 @@ export function FiscalPeriodsTable({
           ) : (
             periods.map((period) => (
               <TableRow key={period.id}>
-                <TableCell className="font-medium">{period.name}</TableCell>
+                <TableCell className="font-medium">
+                  {period.name}
+                  {period.isActive && (
+                    <span className="ms-2 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                      دوره‌ی فعال
+                    </span>
+                  )}
+                </TableCell>
                 <TableCell className="tabular-nums font-mono text-sm">
                   {toFaDigits(period.from)}
                 </TableCell>
@@ -78,6 +87,16 @@ export function FiscalPeriodsTable({
                   <div className="flex items-center justify-end gap-1.5">
                     {period.status === 'open' && (
                       <>
+                        {!period.isActive && onSelectActivePeriod && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-xs text-primary hover:bg-primary/10"
+                            onClick={() => onSelectActivePeriod(period)}
+                          >
+                            انتخاب دوره فعال
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
