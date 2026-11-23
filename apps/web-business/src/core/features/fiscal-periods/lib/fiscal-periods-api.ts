@@ -1,3 +1,4 @@
+import { isApiError } from '@repo/web/api';
 import type {
   FiscalAuditLog,
   FiscalPeriod,
@@ -14,7 +15,6 @@ import { MONTH_NAMES, toFaDigits } from '../utils/fiscal-date';
 import {
   getJalaliYearBounds,
   gregorianToJalali,
-  isJalaliLeapYear,
   jalaliDaysInMonth,
 } from '../utils/fiscal-calendar';
 import {
@@ -164,9 +164,11 @@ export async function createFiscalYear(
       ];
 
       return model;
-    } catch (error) {
-      // If caller explicitly requested sync, propagate error
-      throw error;
+    } catch (err: unknown) {
+      if (isApiError(err) && err.status >= 400 && err.status < 500) {
+        throw err;
+      }
+      // API call failed due to offline server/network; fall back to local store
     }
   }
 
@@ -243,8 +245,10 @@ export async function selectActiveFiscalPeriod(
   if (options.syncWithApi) {
     try {
       await selectActivePeriodApi(getActiveTenantId(), periodId);
-    } catch (error) {
-      throw error;
+    } catch (err: unknown) {
+      if (isApiError(err) && err.status >= 400 && err.status < 500) {
+        throw err;
+      }
     }
   }
 
@@ -279,8 +283,10 @@ export async function updatePeriodStatus(
       } else if (newStatus === 'reopened') {
         await reopenFiscalPeriodApi(getActiveTenantId(), periodId, { reason });
       }
-    } catch (error) {
-      throw error;
+    } catch (err: unknown) {
+      if (isApiError(err) && err.status >= 400 && err.status < 500) {
+        throw err;
+      }
     }
   }
 

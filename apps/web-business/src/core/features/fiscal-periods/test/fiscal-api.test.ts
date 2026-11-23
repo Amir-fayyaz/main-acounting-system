@@ -11,7 +11,12 @@ import {
   selectActivePeriodApi,
   setActiveTenantId,
 } from '../lib/fiscal-api';
-import { FISCAL_ERROR_CODES } from '../assets/@types/fiscal-api.types';
+import {
+  FISCAL_ERROR_CODES,
+  type FiscalPaginatedResponse,
+  type FiscalPeriodResponseDto,
+  type FiscalYearResponseDto,
+} from '../assets/@types/fiscal-api.types';
 
 describe('fiscal-api', () => {
   it('manages active tenant ID in localStorage', () => {
@@ -40,10 +45,38 @@ describe('fiscal-api', () => {
   });
 
   it('calls apiRequest with correct endpoints and parameters', async () => {
-    const apiRequestSpy = vi.spyOn(apiModule, 'apiRequest').mockResolvedValue({
+    const dummyPaginatedYears: FiscalPaginatedResponse<FiscalYearResponseDto> = {
       data: [],
       meta: { page: 1, limit: 20, total: 0, totalPages: 0 },
-    } as any);
+    };
+    const dummyYearDto: FiscalYearResponseDto = {
+      id: 'new-year-id',
+      tenantId: 'test-tenant',
+      label: 'FY1405',
+      startDate: '2026-03-21',
+      endDate: '2027-03-20',
+      status: 'open',
+      createdAt: '2026-03-21T00:00:00.000Z',
+      updatedAt: '2026-03-21T00:00:00.000Z',
+    };
+    const dummyPeriodDto: FiscalPeriodResponseDto = {
+      id: 'p1',
+      tenantId: 'test-tenant',
+      fiscalYearId: 'new-year-id',
+      name: 'فروردین ۱۴۰۵',
+      startDate: '2026-03-21',
+      endDate: '2026-04-20',
+      periodNumber: 1,
+      status: 'open',
+      createdAt: '2026-03-21T00:00:00.000Z',
+      updatedAt: '2026-03-21T00:00:00.000Z',
+    };
+    const dummyPaginatedPeriods: FiscalPaginatedResponse<FiscalPeriodResponseDto> = {
+      data: [dummyPeriodDto],
+      meta: { page: 1, limit: 20, total: 1, totalPages: 1 },
+    };
+
+    const apiRequestSpy = vi.spyOn(apiModule, 'apiRequest').mockResolvedValue(dummyPaginatedYears);
 
     await listFiscalYearsApi('test-tenant', { page: 1, limit: 10 });
     expect(apiRequestSpy).toHaveBeenCalledWith(
@@ -51,7 +84,7 @@ describe('fiscal-api', () => {
       expect.objectContaining({ method: 'GET' }),
     );
 
-    apiRequestSpy.mockResolvedValueOnce({ id: 'new-year-id' } as any);
+    apiRequestSpy.mockResolvedValueOnce(dummyYearDto);
     await createFiscalYearApi('test-tenant', {
       label: 'FY1405',
       startDate: '2026-03-21',
@@ -69,21 +102,28 @@ describe('fiscal-api', () => {
       }),
     );
 
-    apiRequestSpy.mockResolvedValueOnce({ id: 'p1' } as any);
+    apiRequestSpy.mockResolvedValueOnce(dummyPaginatedPeriods);
+    await listFiscalPeriodsApi('test-tenant', 'new-year-id', { page: 1, limit: 50 });
+    expect(apiRequestSpy).toHaveBeenCalledWith(
+      '/tenants/test-tenant/fiscal-years/new-year-id/periods?page=1&limit=50',
+      expect.objectContaining({ method: 'GET' }),
+    );
+
+    apiRequestSpy.mockResolvedValueOnce(dummyPeriodDto);
     await selectActivePeriodApi('test-tenant', 'period-1');
     expect(apiRequestSpy).toHaveBeenCalledWith(
       '/tenants/test-tenant/fiscal-periods/period-1/select-active',
       expect.objectContaining({ method: 'POST' }),
     );
 
-    apiRequestSpy.mockResolvedValueOnce({ id: 'p1' } as any);
+    apiRequestSpy.mockResolvedValueOnce(dummyPeriodDto);
     await closeFiscalPeriodApi('test-tenant', 'period-1');
     expect(apiRequestSpy).toHaveBeenCalledWith(
       '/tenants/test-tenant/fiscal-periods/period-1/close',
       expect.objectContaining({ method: 'POST' }),
     );
 
-    apiRequestSpy.mockResolvedValueOnce({ id: 'p1' } as any);
+    apiRequestSpy.mockResolvedValueOnce(dummyPeriodDto);
     await reopenFiscalPeriodApi('test-tenant', 'period-1', { reason: 'توضیحات بازگشایی' });
     expect(apiRequestSpy).toHaveBeenCalledWith(
       '/tenants/test-tenant/fiscal-periods/period-1/reopen',
