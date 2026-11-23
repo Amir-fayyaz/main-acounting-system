@@ -1,3 +1,5 @@
+export * from './fiscal-api.types';
+
 export type FiscalPeriodStatus = 'open' | 'review' | 'closing' | 'closed' | 'reopened';
 
 export interface FiscalYear {
@@ -5,6 +7,12 @@ export interface FiscalYear {
   title: string;
   from: string;
   to: string;
+  status?: 'open' | 'closed';
+  periodsCount?: number;
+  openPeriodsCount?: number;
+  tenantId?: string;
+  startDateIso?: string;
+  endDateIso?: string;
 }
 
 export interface FiscalPeriod {
@@ -14,6 +22,11 @@ export interface FiscalPeriod {
   from: string;
   to: string;
   status: FiscalPeriodStatus;
+  sequence?: number;
+  jalaliYear?: number;
+  startDateIso?: string;
+  endDateIso?: string;
+  isActive?: boolean;
 }
 
 export interface FiscalAuditLog {

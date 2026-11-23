@@ -10,23 +10,80 @@ import {
   createInitialFiscalPeriods,
   createInitialFiscalYears,
 } from '../assets/mock/fiscal';
-import { MONTH_NAMES } from '../utils/fiscal-date';
+import { MONTH_NAMES, toFaDigits } from '../utils/fiscal-date';
+import {
+  getJalaliYearBounds,
+  gregorianToJalali,
+  isJalaliLeapYear,
+  jalaliDaysInMonth,
+} from '../utils/fiscal-calendar';
+import {
+  closeFiscalPeriodApi,
+  createFiscalYearApi,
+  getActiveTenantId,
+  listFiscalPeriodsApi,
+  listFiscalYearsApi,
+  reopenFiscalPeriodApi,
+  selectActivePeriodApi,
+} from './fiscal-api';
+import {
+  buildCreateFiscalYearPayload,
+  mapFiscalPeriodDtoToModel,
+  mapFiscalYearDtoToModel,
+} from './fiscal-mapper';
 
 let years = createInitialFiscalYears();
 let periods = createInitialFiscalPeriods();
 let logs = createInitialAuditLogs();
+let activePeriodId: string | null = periods.find((p) => p.status === 'open')?.id ?? null;
 
 export function resetFiscalStore(): void {
   years = createInitialFiscalYears();
   periods = createInitialFiscalPeriods();
   logs = createInitialAuditLogs();
+  activePeriodId = periods.find((p) => p.status === 'open')?.id ?? null;
 }
 
-export async function getFiscalYears(): Promise<FiscalYear[]> {
+export async function getFiscalYears(options: { preferApi?: boolean } = {}): Promise<FiscalYear[]> {
+  if (options.preferApi) {
+    try {
+      const response = await listFiscalYearsApi();
+      if (response && Array.isArray(response.data)) {
+        const mapped = response.data.map((dto) => mapFiscalYearDtoToModel(dto));
+        if (mapped.length > 0) {
+          years = mapped;
+          return [...years];
+        }
+      }
+    } catch {
+      // Fallback to local store on failure
+    }
+  }
+
   return [...years];
 }
 
-export async function getFiscalPeriods(yearId: string): Promise<FiscalPeriod[]> {
+export async function getFiscalPeriods(
+  yearId: string,
+  options: { preferApi?: boolean } = {},
+): Promise<FiscalPeriod[]> {
+  if (options.preferApi) {
+    try {
+      const response = await listFiscalPeriodsApi(getActiveTenantId(), yearId);
+      if (response && Array.isArray(response.data)) {
+        const mapped = response.data.map((dto) =>
+          mapFiscalPeriodDtoToModel(dto, activePeriodId ?? undefined),
+        );
+        if (mapped.length > 0) {
+          periods = [...periods.filter((p) => p.yid !== yearId), ...mapped];
+          return mapped;
+        }
+      }
+    } catch {
+      // Fallback to local store on failure
+    }
+  }
+
   return periods.filter((p) => p.yid === yearId);
 }
 
@@ -46,6 +103,111 @@ export async function getFiscalStats(yearId: string): Promise<FiscalStats> {
 
 export async function getFiscalAuditLogs(): Promise<FiscalAuditLog[]> {
   return [...logs];
+}
+
+export interface CreateFiscalYearInput {
+  title: string;
+  from?: string;
+  to?: string;
+  jalaliYear?: number;
+  autoGeneratePeriods?: boolean;
+}
+
+/**
+ * Creates a new fiscal year.
+ * When syncWithApi is enabled or possible, calls backend API.
+ */
+export async function createFiscalYear(
+  input: CreateFiscalYearInput,
+  options: { syncWithApi?: boolean } = {},
+): Promise<FiscalYear> {
+  const title = input.title.trim();
+
+  // Determine Jalali year number
+  let jYear = input.jalaliYear;
+  if (!jYear) {
+    const match = title.match(/\d{4}/);
+    jYear = match
+      ? parseInt(match[0], 10)
+      : gregorianToJalali(new Date().toISOString().slice(0, 10)).jYear;
+  }
+
+  if (options.syncWithApi) {
+    try {
+      const payload = buildCreateFiscalYearPayload({
+        label: title,
+        jalaliYear: jYear,
+      });
+
+      const dto = await createFiscalYearApi(getActiveTenantId(), payload);
+
+      // Fetch the generated periods from backend
+      const periodsResponse = await listFiscalPeriodsApi(getActiveTenantId(), dto.id);
+      const generatedPeriods = periodsResponse.data.map((pDto) => mapFiscalPeriodDtoToModel(pDto));
+
+      const model = mapFiscalYearDtoToModel(dto, periodsResponse.data);
+
+      years = [model, ...years.filter((y) => y.id !== model.id)];
+      periods = [...periods.filter((p) => p.yid !== model.id), ...generatedPeriods];
+
+      const nowFa = new Date().toLocaleDateString('fa-IR');
+      logs = [
+        {
+          id: `log-${Date.now()}`,
+          action: 'ایجاد سال مالی',
+          period: model.title,
+          reason: '',
+          who: 'مدیر سیستم',
+          at: nowFa,
+        },
+        ...logs,
+      ];
+
+      return model;
+    } catch (error) {
+      // If caller explicitly requested sync, propagate error
+      throw error;
+    }
+  }
+
+  // Local fallback creation
+  const bounds = getJalaliYearBounds(jYear);
+  const from = input.from || `${toFaDigits(jYear)}/۰۱/۰۱`;
+  const lastDay = jalaliDaysInMonth(jYear, 12);
+  const to = input.to || `${toFaDigits(jYear)}/۱۲/${toFaDigits(lastDay)}`;
+
+  const newYear: FiscalYear = {
+    id: `fy-${jYear}-${Date.now()}`,
+    title,
+    from,
+    to,
+    status: 'open',
+    startDateIso: bounds.startDate,
+    endDateIso: bounds.endDate,
+  };
+
+  years = [newYear, ...years];
+
+  if (input.autoGeneratePeriods !== false) {
+    const generated = await generateMonthlyPeriods(newYear.id);
+    newYear.periodsCount = generated.length;
+    newYear.openPeriodsCount = generated.length;
+  }
+
+  const nowFa = new Date().toLocaleDateString('fa-IR');
+  logs = [
+    {
+      id: `log-${Date.now()}`,
+      action: 'ایجاد سال مالی',
+      period: newYear.title,
+      reason: '',
+      who: 'مدیر سیستم',
+      at: nowFa,
+    },
+    ...logs,
+  ];
+
+  return newYear;
 }
 
 export async function createFiscalPeriod(
@@ -74,11 +236,54 @@ export async function createFiscalPeriod(
   return newPeriod;
 }
 
+export async function selectActiveFiscalPeriod(
+  periodId: string,
+  options: { syncWithApi?: boolean } = {},
+): Promise<void> {
+  if (options.syncWithApi) {
+    try {
+      await selectActivePeriodApi(getActiveTenantId(), periodId);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  activePeriodId = periodId;
+  const p = periods.find((x) => x.id === periodId);
+  if (p) {
+    const nowFa = new Date().toLocaleDateString('fa-IR');
+    logs = [
+      {
+        id: `log-${Date.now()}`,
+        action: 'انتخاب دوره فعال',
+        period: p.name,
+        reason: '',
+        who: 'مدیر مالی',
+        at: nowFa,
+      },
+      ...logs,
+    ];
+  }
+}
+
 export async function updatePeriodStatus(
   periodId: string,
   newStatus: FiscalPeriodStatus,
   reason = '',
+  options: { syncWithApi?: boolean } = {},
 ): Promise<FiscalPeriod> {
+  if (options.syncWithApi) {
+    try {
+      if (newStatus === 'closed') {
+        await closeFiscalPeriodApi(getActiveTenantId(), periodId);
+      } else if (newStatus === 'reopened') {
+        await reopenFiscalPeriodApi(getActiveTenantId(), periodId, { reason });
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
   const index = periods.findIndex((p) => p.id === periodId);
   if (index === -1) {
     throw new Error('دوره مالی پیدا نشد');
@@ -130,6 +335,7 @@ export async function generateMonthlyPeriods(yearId: string): Promise<FiscalPeri
       from: `${yearNum}/${month}/01`,
       to: `${yearNum}/${month}/${lastDay}`,
       status: 'open',
+      sequence: i + 1,
     };
   });
 
