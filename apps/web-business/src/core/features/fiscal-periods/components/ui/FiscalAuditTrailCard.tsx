@@ -18,8 +18,11 @@ export function FiscalAuditTrailCard({ auditLogs }: FiscalAuditTrailCardProps) {
           <div className="text-sm text-muted-foreground py-2">هنوز تغییری ثبت نشده است.</div>
         ) : (
           <ul className="divide-y divide-border text-sm">
-            {auditLogs.map((log) => (
-              <li key={log.id} className="py-2.5 flex flex-wrap items-center justify-between gap-2">
+            {auditLogs.map((log, index) => (
+              <li
+                key={`${log.id}-${index}`}
+                className="py-2.5 flex flex-wrap items-center justify-between gap-2"
+              >
                 <div>
                   <span className="font-medium text-foreground">
                     {log.action} · {log.period}

@@ -37,6 +37,18 @@ let periods = createInitialFiscalPeriods();
 let logs = createInitialAuditLogs();
 let activePeriodId: string | null = periods.find((p) => p.status === 'open')?.id ?? null;
 
+let logCounter = 0;
+function createUniqueLogId(): string {
+  logCounter += 1;
+  return `log-${Date.now()}-${logCounter}`;
+}
+
+let periodCounter = 0;
+function createUniquePeriodId(prefix: string): string {
+  periodCounter += 1;
+  return `${prefix}-${Date.now()}-${periodCounter}`;
+}
+
 export function resetFiscalStore(): void {
   years = createInitialFiscalYears();
   periods = createInitialFiscalPeriods();
@@ -153,7 +165,7 @@ export async function createFiscalYear(
       const nowFa = new Date().toLocaleDateString('fa-IR');
       logs = [
         {
-          id: `log-${Date.now()}`,
+          id: createUniqueLogId(),
           action: 'ایجاد سال مالی',
           period: model.title,
           reason: '',
@@ -199,7 +211,7 @@ export async function createFiscalYear(
   const nowFa = new Date().toLocaleDateString('fa-IR');
   logs = [
     {
-      id: `log-${Date.now()}`,
+      id: createUniqueLogId(),
       action: 'ایجاد سال مالی',
       period: newYear.title,
       reason: '',
@@ -217,7 +229,7 @@ export async function createFiscalPeriod(
 ): Promise<FiscalPeriod> {
   const newPeriod: FiscalPeriod = {
     ...periodData,
-    id: `period-${Date.now()}`,
+    id: createUniquePeriodId('period'),
   };
 
   periods = [...periods, newPeriod];
@@ -225,7 +237,7 @@ export async function createFiscalPeriod(
   const nowFa = new Date().toLocaleDateString('fa-IR');
   logs = [
     {
-      id: `log-${Date.now()}`,
+      id: createUniqueLogId(),
       action: 'ایجاد دوره',
       period: newPeriod.name,
       reason: '',
@@ -258,7 +270,7 @@ export async function selectActiveFiscalPeriod(
     const nowFa = new Date().toLocaleDateString('fa-IR');
     logs = [
       {
-        id: `log-${Date.now()}`,
+        id: createUniqueLogId(),
         action: 'انتخاب دوره فعال',
         period: p.name,
         reason: '',
@@ -312,7 +324,7 @@ export async function updatePeriodStatus(
   const nowFa = new Date().toLocaleDateString('fa-IR');
   logs = [
     {
-      id: `log-${Date.now()}`,
+      id: createUniqueLogId(),
       action,
       period: updated.name,
       reason,
@@ -350,7 +362,7 @@ export async function generateMonthlyPeriods(yearId: string): Promise<FiscalPeri
   const nowFa = new Date().toLocaleDateString('fa-IR');
   logs = [
     {
-      id: `log-${Date.now()}`,
+      id: createUniqueLogId(),
       action: 'تولید ۱۲ دوره‌ی ماهانه',
       period: year.title,
       reason: '',
