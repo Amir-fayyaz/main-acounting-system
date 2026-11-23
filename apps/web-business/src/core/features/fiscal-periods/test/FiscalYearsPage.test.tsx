@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { FiscalYearsPage } from '../components/block/FiscalYearsPage';
-import { resetFiscalStore } from '../lib/fiscal-periods-api';
+import { useFiscalStore } from '../store/useFiscalStore';
 
 vi.mock('sonner', () => ({
   toast: {
@@ -14,7 +14,7 @@ vi.mock('sonner', () => ({
 }));
 
 beforeEach(() => {
-  resetFiscalStore();
+  useFiscalStore.getState().resetStore();
 });
 
 describe('FiscalYearsPage', () => {

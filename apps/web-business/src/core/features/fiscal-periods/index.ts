@@ -11,5 +11,6 @@ export * from './assets/@types';
 export * from './lib/fiscal-periods-api';
 export * from './lib/fiscal-api';
 export * from './lib/fiscal-mapper';
+export * from './store/useFiscalStore';
 export * from './utils/fiscal-date';
 export * from './utils/fiscal-calendar';

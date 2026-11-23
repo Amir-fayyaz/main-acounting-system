@@ -22,51 +22,19 @@ import {
 } from '@repo/web';
 import { PageHeader } from '../../../panel/components/ui/PageHeader';
 
-import type { FiscalPeriod, FiscalYear } from '../../assets/@types';
-import { createFiscalYear, getFiscalPeriods, getFiscalYears } from '../../lib/fiscal-periods-api';
+import type { FiscalYear } from '../../assets/@types';
+import { useFiscalStore } from '../../store/useFiscalStore';
 import { mapFiscalErrorMessage } from '../../lib/fiscal-api';
 import { toFaDigits } from '../../utils/fiscal-date';
 import { NewFiscalYearDialog } from '../ui/NewFiscalYearDialog';
 
 export function FiscalYearsPage() {
-  const [years, setYears] = useState<FiscalYear[]>([]);
-  const [periodsByYear, setPeriodsByYear] = useState<Record<string, FiscalPeriod[]>>({});
-  const [loading, setLoading] = useState(true);
-  const [refreshIndex, setRefreshIndex] = useState(0);
+  const { years, periodsByYear, loading, loadAllYearsData, createYear } = useFiscalStore();
   const [isNewYearOpen, setIsNewYearOpen] = useState(false);
 
   useEffect(() => {
-    let isMounted = true;
-    (async () => {
-      try {
-        const yearList = await getFiscalYears({ preferApi: true });
-        if (!isMounted) return;
-        setYears(yearList);
-
-        const periodMap: Record<string, FiscalPeriod[]> = {};
-        await Promise.all(
-          yearList.map(async (y) => {
-            const periods = await getFiscalPeriods(y.id, { preferApi: true });
-            periodMap[y.id] = periods;
-          }),
-        );
-        if (!isMounted) return;
-        setPeriodsByYear(periodMap);
-      } catch {
-        if (isMounted) {
-          toast.error('خطا در دریافت اطلاعات سال‌های مالی');
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    })();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [refreshIndex]);
+    loadAllYearsData(true);
+  }, [loadAllYearsData]);
 
   const handleCreateYear = async (params: {
     title: string;
@@ -76,7 +44,7 @@ export function FiscalYearsPage() {
     autoGeneratePeriods: boolean;
   }) => {
     try {
-      await createFiscalYear(
+      await createYear(
         {
           title: params.title,
           jalaliYear: params.jalaliYear,
@@ -87,13 +55,9 @@ export function FiscalYearsPage() {
         { syncWithApi: true },
       );
       toast.success('سال مالی جدید با موفقیت ایجاد شد');
-      setRefreshIndex((prev) => prev + 1);
     } catch (err: unknown) {
-      // If API rejected or network failed, fallback will be handled or show error
       const msg = mapFiscalErrorMessage(err, 'خطا در ایجاد سال مالی جدید');
       toast.error(msg);
-      // Reload in case local store was updated
-      setRefreshIndex((prev) => prev + 1);
     }
   };
 
