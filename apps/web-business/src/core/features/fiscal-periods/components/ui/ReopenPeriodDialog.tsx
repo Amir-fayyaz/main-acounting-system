@@ -20,7 +20,7 @@ export interface ReopenPeriodDialogProps {
   period: FiscalPeriod | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (period: FiscalPeriod, reason: string) => Promise<void>;
+  onConfirm: (period: FiscalPeriod, reason: string) => Promise<boolean>;
 }
 
 export function ReopenPeriodDialog({
@@ -41,7 +41,9 @@ export function ReopenPeriodDialog({
     if (!isValid) return;
     setIsSubmitting(true);
     try {
-      await onConfirm(period, reason.trim());
+      const reopened = await onConfirm(period, reason.trim());
+      if (!reopened) return;
+
       onOpenChange(false);
       setReason('');
       setConfirmed(false);
@@ -67,10 +69,6 @@ export function ReopenPeriodDialog({
               بازگشایی دوره‌ی بسته عملیاتی حساس است و همراه با دلیل در تاریخچه‌ی ممیزی ثبت می‌شود.
             </div>
           </div>
-
-          <p className="text-xs text-muted-foreground">
-            این عملیات نیازمند مجوز «بازگشایی دوره مالی» است. دسترسی شما: مدیر مالی ✓
-          </p>
 
           <div className="space-y-1.5">
             <label htmlFor="reopen-reason" className="text-sm font-medium">
