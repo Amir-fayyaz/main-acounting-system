@@ -10,16 +10,52 @@ import {
   createInitialFiscalPeriods,
   createInitialFiscalYears,
 } from '../assets/mock/fiscal';
-import { MONTH_NAMES } from '../utils/fiscal-date';
+import { MONTH_NAMES, parsePersianDigits, toFaDigits } from '../utils/fiscal-date';
 
 let years = createInitialFiscalYears();
 let periods = createInitialFiscalPeriods();
 let logs = createInitialAuditLogs();
+let logSequence = 0;
 
 export function resetFiscalStore(): void {
   years = createInitialFiscalYears();
   periods = createInitialFiscalPeriods();
   logs = createInitialAuditLogs();
+  logSequence = 0;
+}
+
+export function recordAuditLog(action: string, period: string, reason = ''): void {
+  logSequence += 1;
+
+  logs = [
+    {
+      id: `log-${Date.now()}-${logSequence}`,
+      action,
+      period,
+      reason,
+      who: 'علی رضایی',
+      at: new Date().toLocaleDateString('fa-IR'),
+    },
+    ...logs,
+  ];
+}
+
+export function buildMonthlyPeriods(yearId: string, jalaliYear: number): FiscalPeriod[] {
+  const yearNum = toFaDigits(String(jalaliYear));
+
+  return MONTH_NAMES.map((name, index) => {
+    const month = String(index + 1).padStart(2, '0');
+    const lastDay = index < 6 ? '31' : index < 11 ? '30' : '29';
+
+    return {
+      id: `gen-${yearId}-${month}`,
+      yid: yearId,
+      name: `${name} ${yearNum}`,
+      from: `${yearNum}/${month}/01`,
+      to: `${yearNum}/${month}/${lastDay}`,
+      status: 'open',
+    };
+  });
 }
 
 export async function getFiscalYears(): Promise<FiscalYear[]> {
@@ -57,19 +93,7 @@ export async function createFiscalPeriod(
   };
 
   periods = [...periods, newPeriod];
-
-  const nowFa = new Date().toLocaleDateString('fa-IR');
-  logs = [
-    {
-      id: `log-${Date.now()}`,
-      action: 'ایجاد دوره',
-      period: newPeriod.name,
-      reason: '',
-      who: 'علی رضایی',
-      at: nowFa,
-    },
-    ...logs,
-  ];
+  recordAuditLog('ایجاد دوره', newPeriod.name);
 
   return newPeriod;
 }
@@ -98,18 +122,7 @@ export async function updatePeriodStatus(
   else if (newStatus === 'review') action = 'شروع بازبینی';
   else if (newStatus === 'open') action = 'بازگشت به باز';
 
-  const nowFa = new Date().toLocaleDateString('fa-IR');
-  logs = [
-    {
-      id: `log-${Date.now()}`,
-      action,
-      period: updated.name,
-      reason,
-      who: 'علی رضایی',
-      at: nowFa,
-    },
-    ...logs,
-  ];
+  recordAuditLog(action, updated.name, reason);
 
   return updated;
 }
@@ -118,35 +131,11 @@ export async function generateMonthlyPeriods(yearId: string): Promise<FiscalPeri
   const year = years.find((y) => y.id === yearId);
   if (!year) throw new Error('سال مالی پیدا نشد');
 
-  const yearNum = year.from.slice(0, 4);
-  const newPeriods: FiscalPeriod[] = MONTH_NAMES.map((name, i) => {
-    const month = String(i + 1).padStart(2, '0');
-    const lastDay = i < 6 ? '31' : i < 11 ? '30' : '29';
-
-    return {
-      id: `gen-${yearId}-${month}`,
-      yid: yearId,
-      name: `${name} ${yearNum}`,
-      from: `${yearNum}/${month}/01`,
-      to: `${yearNum}/${month}/${lastDay}`,
-      status: 'open',
-    };
-  });
+  const jalaliYear = Number(parsePersianDigits(year.from.slice(0, 4)));
+  const newPeriods = buildMonthlyPeriods(yearId, jalaliYear);
 
   periods = [...periods.filter((p) => p.yid !== yearId), ...newPeriods];
-
-  const nowFa = new Date().toLocaleDateString('fa-IR');
-  logs = [
-    {
-      id: `log-${Date.now()}`,
-      action: 'تولید ۱۲ دوره‌ی ماهانه',
-      period: year.title,
-      reason: '',
-      who: 'علی رضایی',
-      at: nowFa,
-    },
-    ...logs,
-  ];
+  recordAuditLog('تولید ۱۲ دوره‌ی ماهانه', year.title);
 
   return newPeriods;
 }
