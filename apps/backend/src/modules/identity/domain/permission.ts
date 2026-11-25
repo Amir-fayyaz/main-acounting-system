@@ -75,6 +75,17 @@ export const PERMISSION_CATALOG: readonly Permission[] = Object.freeze([
     PermissionKey.from('audit.read'),
     "Read a company's audit trail (who did what, when and with what outcome).",
   ),
+  // ACC-001.7: the chart-of-accounts capabilities arrive with the accounting
+  // module. Reading the chart is separate from changing it, so a reviewer can
+  // be granted the first without the second.
+  new Permission(
+    PermissionKey.from('accounting.account.read'),
+    "Read a company's chart of accounts and role mapping.",
+  ),
+  new Permission(
+    PermissionKey.from('accounting.account.manage'),
+    "Create, update, deactivate and map a company's accounts.",
+  ),
 ]);
 
 /** The catalog indexed by key, built once so lookups are constant time. */

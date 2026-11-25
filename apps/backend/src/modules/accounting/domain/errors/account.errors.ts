@@ -184,7 +184,9 @@ export class AccountCodeDuplicateError extends DomainError {
 export class AccountInUseError extends DomainError {
   public constructor() {
     super('ACCOUNT_IN_USE', 'This account is in use and cannot be structurally changed.', {
-      category: ErrorCategory.BUSINESS_RULE,
+      // ACC-001.7: a used account's structure is locked for the caller's
+      // request, which is a collision with current state (409), not a 422.
+      category: ErrorCategory.CONFLICT,
     });
   }
 }
@@ -206,7 +208,8 @@ export class AccountHasActiveChildrenError extends DomainError {
     super(
       'ACCOUNT_HAS_ACTIVE_CHILDREN',
       'This account cannot be deactivated while it still has active child accounts.',
-      { category: ErrorCategory.STATE_VIOLATION },
+      // ACC-001.7: the request collides with the current chart (409).
+      { category: ErrorCategory.CONFLICT },
     );
   }
 }

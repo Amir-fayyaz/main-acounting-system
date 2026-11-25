@@ -1120,7 +1120,8 @@ describe('role use cases', () => {
       expect(outcome.isOk()).toBe(true);
       const keys = outcome.valueOrThrow().map((permission) => permission.key);
       // Declaration order, so the list is stable across calls. `audit.read`
-      // arrives with the Audit capability (AUD-001) and is declared last.
+      // arrives with the Audit capability (AUD-001); the two accounting
+      // capabilities arrive with the chart-of-accounts API (ACC-001.7).
       expect(keys).toEqual([
         'company.read',
         'company.update',
@@ -1129,6 +1130,8 @@ describe('role use cases', () => {
         'role.read',
         'role.manage',
         'audit.read',
+        'accounting.account.read',
+        'accounting.account.manage',
       ]);
       expect(app.boundary.executions).toBe(0);
     });

@@ -2,6 +2,8 @@ import { AccountRoleProtectedError } from '../../domain/errors/account-role.erro
 import { isCompatibleAccountType } from '../../domain/value-objects/account-role.js';
 import type { DomainError } from '../../../../shared/errors/domain-error.js';
 import { Result } from '../../../../shared/errors/result.js';
+import { toConflict } from '../../../../shared/persistence/optimistic-concurrency.js';
+import { Revision } from '../../../../shared/persistence/revision.js';
 import { TenantScope } from '../../../../shared/tenant/tenant-scope.js';
 import type { TransactionBoundary } from '../../../../shared/transaction/transaction-boundary.js';
 import { DateTime } from '../../../../shared/time/date-time.js';
@@ -14,6 +16,7 @@ import {
   AccountInvalidParentError,
   AccountNotFoundError,
   AccountParentInactiveError,
+  AccountPostableNotLeafError,
   AccountSystemProtectedError,
   AccountTypeMismatchError,
   AccountNormalBalanceMismatchError,
@@ -232,6 +235,17 @@ export class UpdateAccountUseCase {
       }
 
       if (command.payload.postable !== undefined) {
+        if (command.payload.postable) {
+          // A rehydrated aggregate does not know its children (the count is not
+          // persisted), so the leaf rule is checked against the tenant's chart.
+          const hasChildren = (
+            await this.repository.findByTenant(tenantReferenceFrom(tenantId))
+          ).some((entry) => entry.aggregate.parentId === account.id.value);
+          if (hasChildren) {
+            return Result.fail(new AccountPostableNotLeafError());
+          }
+        }
+
         account.setPostable(command.payload.postable, now);
       }
 
@@ -257,14 +271,30 @@ export class UpdateAccountUseCase {
         account.setActive(command.payload.active, now);
       }
 
-      await this.repository.update(account, loaded.revision);
+      // The caller names the state it read. When it does not (an internal
+      // caller), the revision just loaded is used — never a write without one.
+      const expectedRevision =
+        command.payload.revision === undefined
+          ? loaded.revision
+          : Revision.of(command.payload.revision);
+
+      try {
+        await this.repository.update(account, expectedRevision);
+      } catch (error) {
+        const conflict = toConflict(error);
+        if (conflict !== undefined) {
+          return Result.fail(conflict);
+        }
+        throw error;
+      }
+
       await this.audit.record({
         action: 'account.updated',
         accountId: account.id.value,
         tenantId,
       });
 
-      return Result.ok(toAccountView(account, loaded.revision.next().value));
+      return Result.ok(toAccountView(account, expectedRevision.next().value));
     });
   }
 }
@@ -316,7 +346,20 @@ export class DeactivateAccountUseCase {
 
       account.setActive(false, DateTime.now());
 
-      await this.repository.update(account, loaded.revision);
+      const expectedRevision =
+        command.payload.revision === undefined
+          ? loaded.revision
+          : Revision.of(command.payload.revision);
+
+      try {
+        await this.repository.update(account, expectedRevision);
+      } catch (error) {
+        const conflict = toConflict(error);
+        if (conflict !== undefined) {
+          return Result.fail(conflict);
+        }
+        throw error;
+      }
 
       await this.audit.record({
         action: 'account.deactivated',
@@ -324,7 +367,7 @@ export class DeactivateAccountUseCase {
         tenantId,
       });
 
-      return Result.ok(toAccountView(account, loaded.revision.next().value));
+      return Result.ok(toAccountView(account, expectedRevision.next().value));
     });
   }
 }
@@ -362,13 +405,28 @@ export class ReactivateAccountUseCase {
       }
 
       account.setActive(true, DateTime.now());
-      await this.repository.update(account, loaded.revision);
+
+      const expectedRevision =
+        command.payload.revision === undefined
+          ? loaded.revision
+          : Revision.of(command.payload.revision);
+
+      try {
+        await this.repository.update(account, expectedRevision);
+      } catch (error) {
+        const conflict = toConflict(error);
+        if (conflict !== undefined) {
+          return Result.fail(conflict);
+        }
+        throw error;
+      }
+
       await this.audit.record({
         action: 'account.reactivated',
         accountId: account.id.value,
         tenantId,
       });
-      return Result.ok(toAccountView(account, loaded.revision.next().value));
+      return Result.ok(toAccountView(account, expectedRevision.next().value));
     });
   }
 }
