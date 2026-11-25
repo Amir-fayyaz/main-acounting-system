@@ -24,7 +24,9 @@ export class AccountRoleInvalidTargetError extends DomainError {
 export class AccountRoleUnmappedError extends DomainError {
   public constructor(role: string) {
     super('ACCOUNT_ROLE_UNMAPPED', `No account is mapped to role "${role}".`, {
-      category: ErrorCategory.NOT_FOUND,
+      // ACC-001.7: an unmapped role is a business outcome of the company's
+      // configuration, answered as 422 (not a missing HTTP resource).
+      category: ErrorCategory.BUSINESS_RULE,
       details: [
         {
           code: 'ACCOUNT_ROLE_UNMAPPED',

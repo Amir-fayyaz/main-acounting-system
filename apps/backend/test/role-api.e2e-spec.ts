@@ -383,7 +383,7 @@ describe('role and permission resources (e2e)', () => {
     it('lists the platform capabilities in the standard envelope', async () => {
       const response = await request(app.getHttpServer()).get('/api/v1/permissions').expect(200);
 
-      expect(response.body.meta).toEqual({ page: 1, limit: 20, total: 7, totalPages: 1 });
+      expect(response.body.meta).toEqual({ page: 1, limit: 20, total: 9, totalPages: 1 });
       expect(response.body.data.map((permission: { key: string }) => permission.key)).toContain(
         'company.read',
       );

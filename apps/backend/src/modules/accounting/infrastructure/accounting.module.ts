@@ -65,6 +65,13 @@ import { DrizzleFiscalPeriodRepository } from './persistence/drizzle-fiscal-peri
 import { DrizzleFiscalYearRepository } from './persistence/drizzle-fiscal-year.repository.js';
 import { FiscalYearsController } from '../presentation/controllers/fiscal-years.controller.js';
 import { FiscalPeriodsController } from '../presentation/controllers/fiscal-periods.controller.js';
+import { AccountsController } from '../presentation/controllers/accounts.controller.js';
+import { AccountRolesController } from '../presentation/controllers/account-roles.controller.js';
+import {
+  GetAccountTreeUseCase,
+  ListAccountRoleMappingsUseCase,
+  ListAccountsUseCase,
+} from '../application/use-cases/account-query.use-case.js';
 import { ACCOUNT_ROLE_REPOSITORY } from '../application/accounting.tokens.js';
 
 import type { AccountRoleRepository } from '../domain/repositories/account-role.repository.js';
@@ -82,7 +89,12 @@ import { ActivateStandardChartUseCase } from '../application/use-cases/activate-
 
 @Module({
   imports: [DatabaseModule, OutboxModule],
-  controllers: [FiscalYearsController, FiscalPeriodsController],
+  controllers: [
+    FiscalYearsController,
+    FiscalPeriodsController,
+    AccountsController,
+    AccountRolesController,
+  ],
   providers: [
     {
       provide: FISCAL_YEAR_REPOSITORY,
@@ -280,6 +292,24 @@ import { ActivateStandardChartUseCase } from '../application/use-cases/activate-
         ACCOUNT_AUDIT_PORT,
         TRANSACTION_BOUNDARY,
       ],
+    },
+
+    {
+      // ACC-001.7: read-side use cases behind the account and role endpoints.
+      // They are thin tenant-scoped reads — no transaction, no audit.
+      provide: ListAccountsUseCase,
+      useFactory: (accounts: AccountRepository) => new ListAccountsUseCase(accounts),
+      inject: [ACCOUNT_REPOSITORY],
+    },
+    {
+      provide: GetAccountTreeUseCase,
+      useFactory: (accounts: AccountRepository) => new GetAccountTreeUseCase(accounts),
+      inject: [ACCOUNT_REPOSITORY],
+    },
+    {
+      provide: ListAccountRoleMappingsUseCase,
+      useFactory: (roles: AccountRoleRepository) => new ListAccountRoleMappingsUseCase(roles),
+      inject: [ACCOUNT_ROLE_REPOSITORY],
     },
 
     {

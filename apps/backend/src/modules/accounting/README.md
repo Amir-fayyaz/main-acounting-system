@@ -195,3 +195,62 @@ The fiscal-year and fiscal-period endpoints live in
 | `FISCAL_PERIOD_NOT_OPEN`      | 422  | Only an open period can be selected as active.                                                                   |
 | `PERIOD_STATE_INVALID`        | 409  | The requested transition is invalid (closing a closed period, reopening an open one, closing the active period). |
 | `REOPEN_REASON_REQUIRED`      | 400  | A non-empty reason is required to reopen.                                                                        |
+
+## Chart of Accounts (`ACC-001.7`)
+
+The chart is exposed under `/api/v1/tenants/:tenantId/accounts`. The tenant is
+always the path's company, verified against the caller's membership; it is never
+accepted from a body or query field. Reads require
+`accounting.account.read`, writes require `accounting.account.manage`.
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /accounts` | Flat list, paginated. `search` matches code or name after Persian normalization; `type`, `active`, `postable` filter. |
+| `GET /accounts/tree` | Whole chart, or one subtree with `rootId`. One repository query, no N+1. |
+| `POST /accounts` | Create a root, or a child under `parentId`. `system` is never client-settable. |
+| `PATCH /accounts/:id` | Change mutable fields. Requires `version`; a stale version is a 409 `CONFLICT`, never an overwrite. |
+| `POST /accounts/:id/deactivate` | Stop new postings; requires `version`. Refused while active children exist or a role points at the account. |
+| `POST /accounts/:id/reactivate` | Re-enable; the parent must be active. Requires `version`. |
+| `DELETE /accounts/:id` | Remove an unused, childless, non-system account (204). |
+| `POST /accounts/standard-template/activate` | Apply the versioned standard chart once per company. A second call is `ACCOUNT_TEMPLATE_ALREADY_APPLIED` (409). |
+| `GET /account-roles` | Every required role with its account, or `null`. |
+| `GET /account-roles/completeness` | `required` / `mapped` / `missing` / `complete`. |
+| `PUT /account-roles/:role` | Map one role to an active, postable, type-compatible account. |
+
+### Search
+
+`search` is normalized on both sides: Arabic yeh/alef maksura → `ی`, Arabic kaf
+→ `ک`, Persian and Arabic-Indic digits → ASCII, ZWNJ and diacritics removed. A
+user typing `بانك` finds `بانک`, and `۱۱` finds `11`.
+
+### Concurrency
+
+Every mutation of an existing account (update, deactivate, reactivate) carries
+the `version`/`revision` the client last read. The repository write is a
+compare-and-swap; a stale version returns 409 with the shared `CONFLICT` code
+and a `STALE_REVISION` detail, and nothing is written.
+
+### Errors
+
+| Code | HTTP | Meaning |
+| --- | --- | --- |
+| `ACCOUNT_NOT_FOUND` | 404 | Unknown, malformed or foreign account id — indistinguishable on purpose. |
+| `ACCOUNT_CODE_DUPLICATE` | 409 | The code already exists in this company. |
+| `ACCOUNT_IN_USE` | 409 | A used account cannot be structurally changed or deleted. |
+| `ACCOUNT_HAS_ACTIVE_CHILDREN` | 409 | Deactivation would leave active children under an inactive parent. |
+| `ACCOUNT_INVALID_PARENT` | 422 | The parent is missing, inactive or belongs to another company. |
+| `ACCOUNT_POSTABLE_NOT_LEAF` | 422 | Only a childless account may be postable. |
+| `ACCOUNT_HAS_CHILDREN` | 422 | Delete refused while children exist. |
+| `ACCOUNT_SYSTEM_PROTECTED` | 422 | Template accounts cannot be structurally changed or deleted. |
+| `ACCOUNT_ROLE_INVALID_TARGET` | 422 | The target is inactive, non-postable or of an incompatible type. |
+| `ACCOUNT_ROLE_UNMAPPED` | 422 | No account is mapped to the role. |
+| `ACCOUNT_ROLE_ACCOUNT_PROTECTED` | 422 | Remap the role before disabling the account. |
+| `ACCOUNT_TEMPLATE_ALREADY_APPLIED` | 409 | This template version is already active for the company. |
+
+### Guard usage for other modules
+
+Journal, Purchase and the Agent plan must call `AccountPostingGuard` from
+`public-api.ts` inside the same transaction as their write; they never read the
+account table or re-implement the checks. The guard rejects missing
+(including foreign), inactive and non-postable accounts with the stable codes
+documented above.
