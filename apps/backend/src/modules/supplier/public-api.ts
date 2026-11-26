@@ -47,3 +47,10 @@ export {
   supplierIdFrom,
   type SupplierId,
 } from './domain/value-objects/supplier-id.js';
+
+export { SUPPLIER_LOOKUP_PORT } from './application/supplier.tokens.js';
+export type {
+  SupplierLookupPort,
+  SupplierLookupView,
+} from './application/ports/supplier-lookup.port.js';
+export { SupplierLookupService } from './application/services/supplier-lookup.service.js';
