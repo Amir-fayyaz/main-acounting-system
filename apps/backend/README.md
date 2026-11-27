@@ -158,6 +158,27 @@ map to HTTP **422** while their codes are preserved in the response:
 The module-level consumer guide, including the full usage example, is
 `src/modules/accounting/README.md`.
 
+## Items (INV-001.1)
+
+The inventory module contains the item domain model. V1 units are `piece`,
+`kilogram`, `gram`, `meter`, `liter`, `box` and `pack`, defined once in
+`src/modules/inventory/domain/value-objects/unit-of-measure.ts`. An item's unit
+is fixed at creation; `assertUnitUnchanged` refuses changes with
+`ITEM_UNIT_IMMUTABLE`.
+
+Creation requires the existing items and an injected normalization policy.
+Codes and present barcodes must be unique within the tenant, including inactive
+items. A matching normalized name returns a `possibleDuplicate` outcome and
+requires explicit confirmation before creation. Tenant identity and all times
+are explicit domain inputs. Deactivation preserves the record; `assertActive`
+refuses new operations on an inactive item with `ITEM_INACTIVE`.
+
+The normalizer is a function contract awaiting PUR-001 S2 wiring; inventory does
+not implement Persian normalization. Public lookup/search contracts, persistence,
+audit, use cases, API and import are delivered by the later INV-001 sub-issues.
+See `src/modules/inventory/README.md` for the domain decisions and the reusable
+fixture at `test/support/item-fixture.ts`.
+
 ## Commands
 
 ```bash
