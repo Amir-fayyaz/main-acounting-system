@@ -228,8 +228,11 @@ expected, actual?)` is the one way an adapter reports a lost race (a
   comparison only; preserve the user's original text for display. Removing ZWNJ
   means `دارایی‌ها` and `داراییها` compare equal. These canonicalization rules
   are shared data contracts: changing them after normalized values are stored
-  requires re-normalizing those values. The inventory owner must review and
-  approve these shared rules before merge; that approval is still pending.
+  requires re-normalizing those values. A hand-written reference table in
+  `persian-search.spec.ts` pins every rule, and the same spec proves idempotence
+  and locale/timezone independence, so every search and duplicate check can rely
+  on one implementation. The inventory owner must review and approve these
+  shared rules before merge; that approval is still pending.
 - `time/jalali-calendar.ts` — the Jalali (Shamsi) calendar as a pure module:
   `businessDateToJalali` / `businessDateFromJalali`, `isJalaliLeapYear`,
   `jalaliDaysInMonth` (31/31/.../29-or-30 Esfand), `jalaliMonthBounds`,
