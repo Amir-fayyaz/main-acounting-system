@@ -20,10 +20,11 @@
  * - Arabic yeh / alef maksura → Persian yeh `ی`;
  * - Arabic kaf → Persian keheh `ک`;
  * - Persian (`۰`–`۹`) and Arabic-Indic (`٠`–`٩`) digits → ASCII `0`–`9`;
- * - Arabic diacritics and tatweel are removed;
+ * - Arabic combining marks are removed alongside tatweel;
  * - zero-width non-joiner (`U+200C`) is removed, so `دارایی‌ها` and `داراییها`
  *   match each other;
- * - surrounding space is trimmed and runs of whitespace collapse to one space.
+ * - Unicode White_Space characters and `U+FEFF` are converted to ordinary
+ *   spaces, then runs are collapsed and surrounding space is trimmed.
  *
  * No other letter is changed: `ة`/`ه` and `أ`/`ا` are meaningfully different in
  * account names and are left to the author.
@@ -34,6 +35,8 @@ const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
 
 const PERSIAN_DIGIT_PATTERN = /[\u06F0-\u06F9]/g;
 const ARABIC_DIGIT_PATTERN = /[\u0660-\u0669]/g;
+const ARABIC_DIACRITIC_PATTERN = /(?=\p{Script_Extensions=Arabic})\p{M}/gu;
+const UNICODE_WHITESPACE_PATTERN = /[\p{White_Space}\uFEFF]+/gu;
 
 /** The canonical form of `input`, used for comparing search text. */
 export function normalizePersianSearch(input: string): string {
@@ -47,11 +50,12 @@ export function normalizePersianSearch(input: string): string {
     .replace(/\u0643/g, '\u06A9')
     .replace(PERSIAN_DIGIT_PATTERN, (digit) => String(PERSIAN_DIGITS.indexOf(digit)))
     .replace(ARABIC_DIGIT_PATTERN, (digit) => String(ARABIC_DIGITS.indexOf(digit)))
-    .replace(/[\u064B-\u065F\u0670\u0640]/g, '')
+    .replace(ARABIC_DIACRITIC_PATTERN, '')
+    .replace(/\u0640/g, '')
     .replace(/\u200C/g, '')
     .toLowerCase()
-    .trim()
-    .replace(/\s+/g, ' ');
+    .replace(UNICODE_WHITESPACE_PATTERN, ' ')
+    .trim();
 }
 
 /**
