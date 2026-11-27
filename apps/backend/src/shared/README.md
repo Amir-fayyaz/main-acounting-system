@@ -144,6 +144,7 @@ shared/
 ├── time/business-date.ts      a calendar day: business/accounting dates
 ├── time/date-time.ts          a UTC instant: created-at/posted-at
 ├── time/jalali-calendar.ts    Jalali ↔ Gregorian, period bounds, business-date rule
+├── text/persian-search.ts     Persian text normalization and substring matching
 └── primitives/                exact decimal, rounding, calendar, validation
 ```
 
@@ -217,6 +218,21 @@ expected, actual?)` is the one way an adapter reports a lost race (a
   malformed amounts all rejected).
 - `quantity/` — `Quantity`: exact decimal amount plus an opaque unit code, with
   no conversion or equivalence rules.
+- `text/persian-search.ts` — the public text-comparison API: `normalizePersianSearch`
+  returns a deterministic canonical form, and `matchesPersianSearch` checks a
+  normalized substring (an empty normalized query matches everything). The
+  normalizer maps Arabic `ي` and `ى` to Persian `ی`, Arabic `ك` to Persian `ک`,
+  Persian and Arabic-Indic digits to ASCII, removes Arabic combining marks,
+  tatweel and ZWNJ, maps the Unicode White_Space characters and `U+FEFF` to
+  ordinary spaces, collapses them, trims, and lowercases without locale rules. It deliberately leaves `ة`/`ه` and `أ`/`ا` distinct. Use this API for
+  comparison only; preserve the user's original text for display. Removing ZWNJ
+  means `دارایی‌ها` and `داراییها` compare equal. These canonicalization rules
+  are shared data contracts: changing them after normalized values are stored
+  requires re-normalizing those values. A hand-written reference table in
+  `persian-search.spec.ts` pins every rule, and the same spec proves idempotence
+  and locale/timezone independence, so every search and duplicate check can rely
+  on one implementation. The inventory owner must review and approve these
+  shared rules before merge; that approval is still pending.
 - `time/jalali-calendar.ts` — the Jalali (Shamsi) calendar as a pure module:
   `businessDateToJalali` / `businessDateFromJalali`, `isJalaliLeapYear`,
   `jalaliDaysInMonth` (31/31/.../29-or-30 Esfand), `jalaliMonthBounds`,
