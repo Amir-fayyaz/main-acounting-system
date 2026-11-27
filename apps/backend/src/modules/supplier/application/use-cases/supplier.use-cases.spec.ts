@@ -18,6 +18,10 @@ import {
   UpdateSupplierCommand,
 } from '../commands/supplier.commands.js';
 import {
+  SupplierCodeDuplicateError,
+  SupplierIdentificationDuplicateError,
+} from '../../domain/errors/supplier.errors.js';
+import {
   AllowAllSupplierAuthorizationPort,
   RoleBasedSupplierAuthorizationPort,
   SUPPLIER_MANAGE_PERMISSION,
@@ -206,6 +210,52 @@ describe('Supplier Application Use Cases', () => {
     expect(result.errorOrThrow().code).toBe('SUPPLIER_CODE_DUPLICATE');
 
     h.repository.add = originalAdd;
+  });
+
+  it('prefers the supplier error the adapter carried as the persistence cause', async () => {
+    const h = createHarness();
+    h.repository.add = async () => {
+      // No recognisable text in message or operation: only the cause names the
+      // rule, exactly as the Drizzle adapter reports a translated duplicate.
+      throw new PersistenceError(PersistenceFailureKind.CONFLICT, 'SupplierRepository.add', {
+        cause: new SupplierIdentificationDuplicateError('14001234567'),
+      });
+    };
+
+    const result = await TenantScope.run({ state: 'available', tenantId: TENANT_A }, () =>
+      h.createSupplier.execute(
+        new CreateSupplierCommand({
+          code: 'SUP-CAUSE',
+          name: 'شرکت نمونه',
+          identificationNumber: '14001234567',
+        }),
+      ),
+    );
+
+    expect(result.isFail()).toBe(true);
+    expect(result.errorOrThrow().code).toBe('SUPPLIER_IDENTIFICATION_DUPLICATE');
+  });
+
+  it('prefers a code-duplicate cause even when the message mentions identification', async () => {
+    const h = createHarness();
+    h.repository.add = async () => {
+      throw new PersistenceError(PersistenceFailureKind.CONFLICT, 'SupplierRepository.add', {
+        cause: new SupplierCodeDuplicateError('SUP-CAUSE'),
+      });
+    };
+
+    const result = await TenantScope.run({ state: 'available', tenantId: TENANT_A }, () =>
+      h.createSupplier.execute(
+        new CreateSupplierCommand({
+          code: 'SUP-CAUSE',
+          name: 'شرکت نمونه',
+          identificationNumber: '14001234567',
+        }),
+      ),
+    );
+
+    expect(result.isFail()).toBe(true);
+    expect(result.errorOrThrow().code).toBe('SUPPLIER_CODE_DUPLICATE');
   });
 
   it('refuses unauthorized writes and records a denied audit entry', async () => {

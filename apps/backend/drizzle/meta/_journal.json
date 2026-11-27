@@ -71,6 +71,13 @@
       "when": 1795040142399,
       "tag": "0009_nervous_vulcan",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1795805944215,
+      "tag": "0010_supreme_kang",
+      "breakpoints": true
     }
   ]
 }

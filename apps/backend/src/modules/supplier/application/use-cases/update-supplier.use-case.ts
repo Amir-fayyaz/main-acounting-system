@@ -176,6 +176,20 @@ function mapPersistenceConflict(
   code: string,
   identificationNumber?: string,
 ): DomainError | undefined {
+  // The adapter carries the supplier rule it recognized as the cause of the
+  // persistence conflict. Prefer it over parsing text, so a translated
+  // duplicate keeps its exact error class and code.
+  if (error.cause instanceof SupplierCodeDuplicateError) {
+    return new SupplierCodeDuplicateError(code);
+  }
+  if (
+    error.cause instanceof SupplierIdentificationDuplicateError &&
+    identificationNumber !== undefined
+  ) {
+    return new SupplierIdentificationDuplicateError(identificationNumber);
+  }
+
+  // String fallback for adapters and doubles that only carry a message.
   const details = `${error.message} ${error.operation}`.toLowerCase();
   if (details.includes('code') || details.includes('supplier_code')) {
     return new SupplierCodeDuplicateError(code);
