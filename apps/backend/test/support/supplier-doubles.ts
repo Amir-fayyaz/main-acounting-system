@@ -2,6 +2,10 @@ import {
   Supplier,
   type SupplierSnapshot,
 } from '../../src/modules/supplier/domain/aggregates/supplier.js';
+import {
+  SupplierCodeDuplicateError,
+  SupplierIdentificationDuplicateError,
+} from '../../src/modules/supplier/domain/errors/supplier.errors.js';
 import type { SupplierId } from '../../src/modules/supplier/domain/value-objects/supplier-id.js';
 import type {
   ListSuppliersCriteria,
@@ -62,7 +66,7 @@ export class InMemorySupplierRepository implements SupplierRepository {
       if (record.snapshot.tenantId !== supplier.tenantId) continue;
       if (record.snapshot.code.toLowerCase() === codeLower) {
         throw new PersistenceError(PersistenceFailureKind.CONFLICT, 'Suppliers.add.code', {
-          cause: new Error('Duplicate supplier_code constraint violation'),
+          cause: new SupplierCodeDuplicateError(supplier.code.value),
         });
       }
       if (
@@ -73,7 +77,9 @@ export class InMemorySupplierRepository implements SupplierRepository {
           PersistenceFailureKind.CONFLICT,
           'Suppliers.add.identification',
           {
-            cause: new Error('Duplicate identification_number constraint violation'),
+            cause: new SupplierIdentificationDuplicateError(
+              supplier.identificationNumber?.value ?? '',
+            ),
           },
         );
       }
@@ -99,7 +105,7 @@ export class InMemorySupplierRepository implements SupplierRepository {
       if (record.snapshot.tenantId !== supplier.tenantId) continue;
       if (record.snapshot.code.toLowerCase() === codeLower) {
         throw new PersistenceError(PersistenceFailureKind.CONFLICT, 'Suppliers.update.code', {
-          cause: new Error('Duplicate supplier_code constraint violation'),
+          cause: new SupplierCodeDuplicateError(supplier.code.value),
         });
       }
       if (
@@ -110,7 +116,9 @@ export class InMemorySupplierRepository implements SupplierRepository {
           PersistenceFailureKind.CONFLICT,
           'Suppliers.update.identification',
           {
-            cause: new Error('Duplicate identification_number constraint violation'),
+            cause: new SupplierIdentificationDuplicateError(
+              supplier.identificationNumber?.value ?? '',
+            ),
           },
         );
       }
