@@ -197,6 +197,24 @@ describe('SupplierDuplicatePolicy', () => {
       expect(assessment.decision.kind).toBe('clear');
     });
 
+    it('lets an identification conflict win over a possible name match', () => {
+      const assessment = policy.evaluate(
+        {
+          tenantId: TENANT_A,
+          code: SupplierCode.from('SUP-002'),
+          name: SupplierName.from('Acme Trading'),
+          identificationNumber: SupplierIdentificationNumber.from('10100999999'),
+        },
+        [record({ code: 'SUP-001', name: 'Acme Trading', identificationNumber: '10100999999' })],
+      );
+
+      expect(assessment.decision.kind).toBe('conflict');
+      if (assessment.decision.kind === 'conflict') {
+        expect(assessment.decision.error).toBeInstanceOf(SupplierIdentificationDuplicateError);
+        expect(assessment.decision.error.code).toBe('SUPPLIER_IDENTIFICATION_DUPLICATE');
+      }
+    });
+
     it('lets a hard code conflict win over a name match', () => {
       const assessment = policy.evaluate(
         {
