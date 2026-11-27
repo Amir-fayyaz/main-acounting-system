@@ -133,6 +133,20 @@ describe('Supplier aggregate', () => {
       expect(outcome.errorOrThrow().category).toBe('CONFLICT');
     });
 
+    it('still refuses a duplicate code when the existing supplier is inactive', () => {
+      const existing = created({ code: 'SUP-001', name: 'First Supplier' });
+      existing.deactivate(LATER);
+
+      const outcome = create({
+        code: 'sup-001',
+        name: 'Different Supplier',
+        existingSuppliers: [existing],
+      });
+
+      expect(outcome.isFail()).toBe(true);
+      expect(outcome.errorOrThrow().code).toBe('SUPPLIER_CODE_DUPLICATE');
+    });
+
     it('returns a possible duplicate for the same normalized name and creates nothing', () => {
       const existing = created({ code: 'SUP-001', name: 'Acme Trading' });
 
